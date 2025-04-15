@@ -53,7 +53,7 @@ def init_display():
         return None, None, None
 
 
-def draw_graph(screen, history, rect, color, min_val=None, max_val=None):
+def draw_graph(screen, history, rect, color, min_val=None, max_val=None, mode_name=None):
     """
     Draw a time-series graph of the sensor history on the screen.
     
@@ -64,14 +64,17 @@ def draw_graph(screen, history, rect, color, min_val=None, max_val=None):
         color (tuple): RGB color to use for the graph
         min_val (float, optional): The minimum value for scaling (auto-calculated if None)
         max_val (float, optional): The maximum value for scaling (auto-calculated if None)
+        mode_name (str, optional): The name of the sensor mode
     """
     if not history:
+        logger.debug(f"No history data to graph for {mode_name if mode_name else 'unknown mode'}")
         return
     
     # Filter out None values to calculate min/max
     valid_values = [v for v in history if v is not None]
     if not valid_values:
         # No valid data points to graph
+        logger.debug(f"No valid data points in history for {mode_name if mode_name else 'unknown mode'}")
         return
     
     # Auto-scale if min/max not provided
@@ -79,16 +82,21 @@ def draw_graph(screen, history, rect, color, min_val=None, max_val=None):
         min_val = min(valid_values)
         # Add 10% padding at the bottom
         min_val = min_val - (max(valid_values) - min_val) * 0.1
+        logger.debug(f"Auto-scaled min value: {min_val:.2f} for {mode_name if mode_name else 'unknown mode'}")
     
     if max_val is None:
         max_val = max(valid_values)
         # Add 10% padding at the top
         max_val = max_val + (max_val - min(valid_values)) * 0.1
+        logger.debug(f"Auto-scaled max value: {max_val:.2f} for {mode_name if mode_name else 'unknown mode'}")
     
     # Ensure we have a range (avoid division by zero)
     if min_val == max_val:
         min_val -= 0.5
         max_val += 0.5
+        logger.debug(f"Adjusted min/max values to avoid division by zero: {min_val:.2f}/{max_val:.2f}")
+    
+    logger.debug(f"Drawing graph for {mode_name if mode_name else 'unknown mode'} with {len(valid_values)} data points")
     
     # Draw border
     pygame.draw.rect(screen, config.COLOR_GRAPH_BORDER, rect, 1)
@@ -223,7 +231,7 @@ def draw_ui(screen, current_mode_name, sensor_value, unit, note, is_frozen, auto
                 min_val, max_val = config.SENSOR_RANGES[current_mode_name]
             
             # Draw the graph with configured scaling
-            draw_graph(screen, history, graph_rect, config.COLOR_FOREGROUND, min_val, max_val)
+            draw_graph(screen, history, graph_rect, config.COLOR_FOREGROUND, min_val, max_val, current_mode_name)
             
             # Add time scale indicator at the bottom of the graph
             time_text = f"Time ({config.GRAPH_HISTORY_SIZE} seconds →)"

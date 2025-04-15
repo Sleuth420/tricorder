@@ -26,7 +26,7 @@ FONT_SIZE_SMALL = 16
 
 # -- Sensor Modes --
 # List of sensor modes the user can cycle through
-SENSOR_MODES = ["TEMPERATURE", "HUMIDITY", "PRESSURE", "ORIENTATION"]
+SENSOR_MODES = ["TEMPERATURE", "HUMIDITY", "PRESSURE", "ORIENTATION", "ACCELERATION", "CLOCK", "CPU_USAGE", "MEMORY_USAGE", "DISK_USAGE"]
 
 # -- Sensor Range Configuration --
 # Default value ranges for graphing (min, max)
@@ -37,6 +37,10 @@ SENSOR_RANGES = {
     "HUMIDITY": (0, 100),         # Percent: full range of humidity
     "PRESSURE": (950, 1050),      # hPa/millibars: typical atmospheric pressure
     "ORIENTATION": (None, None),  # Auto-scale for orientation values
+    "ACCELERATION": (-2, 2),      # G-force range: typical for handheld movement
+    "CPU_USAGE": (0, 100),        # Percentage range
+    "MEMORY_USAGE": (0, 100),     # Percentage range
+    "DISK_USAGE": (0, 100),       # Percentage range
 }
 
 # -- Graph Settings --

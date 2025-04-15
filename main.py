@@ -1,11 +1,13 @@
 # --- main.py ---
 # Main application file for the Raspberry Pi tricorder
+# Now includes system information displays (clock, CPU, memory, disk)
 
 import sys
 import pygame
 import logging # Add logging import
 import time # Add time import for auto-cycle timing
 import collections # Add for deque to store history
+import platform # Add platform import for system information
 
 # Import our modules
 import config
@@ -22,6 +24,13 @@ def main():
     # --- Initialize Logging First ---
     logging_config.setup_logging() # Setup logging before anything else
     logger.info("Starting tricorder Application...") # Changed from print
+    
+    # Log system information
+    logger.info(f"Platform: {platform.platform()}")
+    logger.info(f"Python version: {platform.python_version()}")
+    logger.info(f"Display size: {config.SCREEN_WIDTH}x{config.SCREEN_HEIGHT}, Fullscreen: {config.FULLSCREEN}")
+    logger.info(f"Available sensor modes: {', '.join(config.SENSOR_MODES)}")
+    logger.info(f"Auto-cycle interval: {config.GRAPH_HISTORY_SIZE} seconds")
 
     # Initialize Display (Pygame)
     screen, clock, fonts = display.init_display()
@@ -103,17 +112,18 @@ def main():
         # Check for auto-cycling if enabled and not frozen
         current_time = time.time()
         if auto_cycle and not is_frozen and (current_time - last_cycle_time >= auto_cycle_interval):
+            prev_mode_index = current_mode_index
             current_mode_index = (current_mode_index + 1) % num_modes
             mode_changed = True
             last_cycle_time = current_time
-            logger.info(f"Auto-cycling to next mode: {config.SENSOR_MODES[current_mode_index]}")
+            logger.info(f"Auto-cycling from {config.SENSOR_MODES[prev_mode_index]} to {config.SENSOR_MODES[current_mode_index]}")
 
         # 2. Get Data
         # -----------
         # Determine the current mode name *after* potential changes
         current_mode_name = config.SENSOR_MODES[current_mode_index]
         if mode_changed:
-             logger.info(f"Mode changed to: {current_mode_name}")
+            logger.info(f"Mode changed to: {current_mode_name}")
 
         # Only read sensors if not frozen OR if the mode just changed
         # Also update readings periodically (once per second) to fill the history buffer
@@ -127,12 +137,25 @@ def main():
                 for mode in config.SENSOR_MODES:
                     value, unit, note = sensors.get_sensor_data(mode)
                     # Only store numerical values in history
-                    try:
-                        numeric_value = float(value)
-                        sensor_history[mode].append(numeric_value)
-                    except (ValueError, TypeError):
-                        # If value isn't numeric, store None to indicate gap in data
-                        sensor_history[mode].append(None)
+                    if mode == "ACCELERATION":
+                        # For acceleration, we'll just store the first value (X component)
+                        # since displaying multiple graph lines is complex
+                        try:
+                            # Extract just the X value using string parsing
+                            x_part = value.split(' ')[0]  # Gets "X:0.12"
+                            x_val = float(x_part.split(':')[1])  # Gets 0.12
+                            sensor_history[mode].append(x_val)
+                        except (ValueError, TypeError, IndexError):
+                            # If parsing fails, store None
+                            sensor_history[mode].append(None)
+                    else:
+                        # For other sensors, try to convert the whole value
+                        try:
+                            numeric_value = float(value)
+                            sensor_history[mode].append(numeric_value)
+                        except (ValueError, TypeError):
+                            # If value isn't numeric, store None to indicate gap in data
+                            sensor_history[mode].append(None)
                     
                     # If this is the current mode, store for display
                     if mode == current_mode_name:

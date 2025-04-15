@@ -1,12 +1,16 @@
 # --- sensors.py ---
 # Handles interaction with the Sense HAT sensors
 
+import logging # Add logging import
+
+# Get a logger for this module
+logger = logging.getLogger(__name__)
+
 # Attempt to import SenseHat, handle potential errors if library not installed
 try:
     from sense_hat import SenseHat
 except ImportError:
-    print("Error: sense_hat library not found.")
-    print("Install using: sudo apt install sense-hat")
+    logger.error("sense_hat library not found. Install using: sudo apt install sense-hat") # Changed from print
     SenseHat = None  # Set to None so checks below fail gracefully
 
 # Global sense object
@@ -23,14 +27,14 @@ def init_sensors():
         try:
             sense = SenseHat()
             sense.low_light = True  # Optional: Dim the 8x8 matrix if distracting
-            print("Sense HAT initialized successfully.")
+            logger.info("Sense HAT initialized successfully.") # Changed from print
             return True
         except Exception as e:
-            print(f"Error initializing Sense HAT: {e}")
+            logger.error(f"Error initializing Sense HAT: {e}", exc_info=True) # Changed from print
             sense = None
             return False
     else:
-        print("Sense HAT library not available.")
+        logger.warning("Sense HAT library not available. Cannot initialize sensors.") # Changed from print
         return False
 
 
@@ -47,6 +51,7 @@ def get_sensor_data(mode_name):
                The 'note_string' will currently always be empty unless specifically added below.
     """
     if not sense:
+        logger.warning(f"Attempted to read sensor '{mode_name}' but Sense HAT is not available.")
         return "Error", "", "Sensor N/A"
 
     value_str = "N/A"
@@ -77,11 +82,12 @@ def get_sensor_data(mode_name):
         #     value_str = f"X:{accel['x']:.2f} Y:{accel['y']:.2f}"
         #     unit = "G"
         else:
+            logger.warning(f"Requested unknown sensor mode: '{mode_name}'")
             value_str = "Unknown Mode"
             unit = ""
 
     except Exception as e:
-        print(f"Error reading sensor {mode_name}: {e}")
+        logger.error(f"Error reading sensor {mode_name}: {e}", exc_info=True) # Changed from print
         value_str = "Read Error"
         unit = ""
 
@@ -96,6 +102,6 @@ def cleanup_sensors():
     if sense:
         try:
             sense.clear()  # Clear the 8x8 LED matrix
-            print("Sense HAT cleared.")
+            logger.info("Sense HAT cleared.") # Changed from print
         except Exception as e:
-            print(f"Error clearing Sense HAT: {e}")
+            logger.error(f"Error clearing Sense HAT: {e}", exc_info=True) # Changed from print

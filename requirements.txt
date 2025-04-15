@@ -1,0 +1,11 @@
+# Requirements for the Tricorder Application
+
+# Core dependencies
+pygame==2.5.2       # For display and UI
+numpy==1.26.0       # For numerical operations, often used with sensor data
+
+# Raspberry Pi specific libraries
+sense-hat==2.6.0    # For Sense HAT sensor access
+
+# Optional utilities that might be useful
+matplotlib==3.8.0   # For advanced graphing capabilities (if needed)

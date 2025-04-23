@@ -159,21 +159,40 @@ class AppState:
             return True
         elif action == "NEXT":
             # Cycle to next sensor in list
+            # Check if we are in a submenu context first (optional, depends on how deep we want cycling)
             sensors = self.config.SENSOR_MODES
-            curr_idx = sensors.index(self.current_sensor)
-            self.current_sensor = sensors[(curr_idx + 1) % len(sensors)]
-            self.is_frozen = False  # Unfreeze when changing
-            logger.debug(f"Sensor view: Next -> {self.current_sensor}")
-            return True
+            try:
+                curr_idx = sensors.index(self.current_sensor)
+                self.current_sensor = sensors[(curr_idx + 1) % len(sensors)]
+                self.is_frozen = False  # Unfreeze when changing
+                logger.debug(f"Sensor view: Next -> {self.current_sensor}")
+                return True
+            except ValueError:
+                logger.warning(f"Current sensor {self.current_sensor} not in SENSOR_MODES list for cycling.")
+                return False
         elif action == "PREV":
-            # Cycle to previous sensor in list
-            sensors = self.config.SENSOR_MODES
-            curr_idx = sensors.index(self.current_sensor)
-            self.current_sensor = sensors[(curr_idx - 1) % len(sensors)]
-            self.is_frozen = False  # Unfreeze when changing
-            logger.debug(f"Sensor view: Prev -> {self.current_sensor}")
-            return True
-        
+            # If we entered this sensor view from a menu, PREV acts as BACK
+            if self.previous_state == STATE_MENU:
+                # Restore the previous state (which should be the menu)
+                self.current_state = self.previous_state
+                # self.previous_state = STATE_SENSOR_VIEW # Update previous state for clarity
+                self.current_sensor = None # Clear the specific sensor context
+                self.is_frozen = False # Ensure unfrozen when returning to menu
+                logger.debug("Sensor view: Back to menu")
+                return True
+            else:
+                # Otherwise (e.g., if we somehow got here from dashboard), cycle to previous sensor
+                sensors = self.config.SENSOR_MODES
+                try:
+                    curr_idx = sensors.index(self.current_sensor)
+                    self.current_sensor = sensors[(curr_idx - 1) % len(sensors)]
+                    self.is_frozen = False  # Unfreeze when changing
+                    logger.debug(f"Sensor view: Prev -> {self.current_sensor}")
+                    return True
+                except ValueError:
+                    logger.warning(f"Current sensor {self.current_sensor} not in SENSOR_MODES list for cycling.")
+                    return False # No change if sensor not found
+
         return False
     
     def get_current_menu_items(self):

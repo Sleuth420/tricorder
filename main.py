@@ -65,6 +65,10 @@ def main():
         # 1. Handle Input
         # ----------------
         events = pygame.event.get()
+        # --- DIAGNOSTIC LOGGING ---
+        # --- REMOVED ---
+        # --- END DIAGNOSTIC LOGGING ---
+
         action = process_input(events, config)
         
         if action == "QUIT":

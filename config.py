@@ -1,3 +1,5 @@
+import pygame # Add pygame import for key constants
+
 # --- config.py ---
 # Stores configuration constants for the tricorder application
 
@@ -57,9 +59,9 @@ AUTO_CYCLE_INTERVAL = 15  # Seconds between auto-cycling in dashboard mode
 # -- Input Mapping (Keyboard for now) --
 # Using 'A' for Previous/Left and 'D' for Next/Right
 # Using Enter/Return for Select
-KEY_PREV = 97   # pygame.K_a ('A' key)
-KEY_NEXT = 100  # pygame.K_d ('D' key)
-KEY_SELECT = 13  # pygame.K_RETURN (Enter key)
+KEY_PREV = pygame.K_a   # Use Pygame constant
+KEY_NEXT = pygame.K_d   # Use Pygame constant
+KEY_SELECT = pygame.K_RETURN # Use Pygame constant
 
 # -- GPIO Pins (Placeholder for later) --
 # (BCM Pin number for physical buttons when added)

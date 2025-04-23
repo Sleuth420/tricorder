@@ -15,6 +15,9 @@ COLOR_ALERT = (255, 0, 0)         # Red Alert (for errors?)
 COLOR_FROZEN = (100, 150, 255)    # Light Blue for Frozen Indicator
 COLOR_GRAPH_BORDER = (50, 50, 50)  # Dark gray for graph borders
 COLOR_GRAPH_GRID = (30, 30, 30)    # Even darker gray for graph grid lines
+COLOR_MENU_HEADER = (80, 0, 100)   # Purple header for menus (retro feel)
+COLOR_SELECTED_BG = (40, 40, 40)   # Dark gray background for selected items
+COLOR_SELECTED_TEXT = (0, 255, 70) # Bright green for selected text
 
 # -- Fonts --
 # (Store font files in a 'fonts' subfolder or use system fonts)
@@ -48,13 +51,15 @@ GRAPH_HISTORY_SIZE = 60  # Number of data points to keep (= seconds at 1 reading
 GRAPH_LINE_WIDTH = 2     # Width of the graph line in pixels
 GRAPH_POINT_SIZE = 3     # Size of the data points in pixels
 
+# -- Dashboard Settings --
+AUTO_CYCLE_INTERVAL = 15  # Seconds between auto-cycling in dashboard mode
+
 # -- Input Mapping (Keyboard for now) --
 # Using 'A' for Previous/Left and 'D' for Next/Right
 # Using Enter/Return for Select
-KEY_PREV = 97   # pygame.K_a ('A' key)  # <<< CHANGED HERE
-KEY_NEXT = 100  # pygame.K_d ('D' key)  # <<< CHANGED HERE
+KEY_PREV = 97   # pygame.K_a ('A' key)
+KEY_NEXT = 100  # pygame.K_d ('D' key)
 KEY_SELECT = 13  # pygame.K_RETURN (Enter key)
-# KEY_EXIT commented out - use Ctrl+C in terminal
 
 # -- GPIO Pins (Placeholder for later) --
 # (BCM Pin number for physical buttons when added)

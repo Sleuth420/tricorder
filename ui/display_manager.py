@@ -5,7 +5,7 @@ import pygame
 import logging
 from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO
 from ui.menu import draw_menu_screen
-from ui.dashboard import draw_dashboard
+from ui.all_sensors_view import draw_all_sensors_view
 from ui.sensor_view import draw_sensor_view
 
 logger = logging.getLogger(__name__)
@@ -80,7 +80,7 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         # Menu state shows sidebar with system info in main content
         draw_menu_screen(screen, app_state, fonts, config)
     elif app_state.current_state == STATE_DASHBOARD:
-        draw_dashboard(screen, app_state, sensor_values, sensor_history, fonts, config)
+        draw_all_sensors_view(screen, app_state, sensor_values, sensor_history, fonts, config)
     elif app_state.current_state == STATE_SENSOR_VIEW:
         # For all sensors, use the standard sensor_view
         draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config)

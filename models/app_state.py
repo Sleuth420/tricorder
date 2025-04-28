@@ -33,6 +33,7 @@ class AppState:
             {"name": "Pressure", "state": STATE_SENSOR_VIEW, "sensor": "PRESSURE"},
             {"name": "Orientation", "state": STATE_SENSOR_VIEW, "sensor": "ORIENTATION"},
             {"name": "Acceleration", "state": STATE_SENSOR_VIEW, "sensor": "ACCELERATION"},
+            {"name": "All Sensors", "state": STATE_DASHBOARD, "sensor": None},
             {"name": "System Info", "state": STATE_SYSTEM_INFO, "sensor": None}
         ]
         

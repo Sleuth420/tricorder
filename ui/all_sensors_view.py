@@ -1,5 +1,5 @@
-# --- ui/dashboard.py ---
-# Handles rendering of the dashboard (auto-cycling sensor view)
+# --- ui/all_sensors_view.py ---
+# Handles rendering of the all sensors view (auto-cycling sensor view)
 
 import pygame
 import logging
@@ -8,9 +8,9 @@ from ui.components.graph import draw_graph
 
 logger = logging.getLogger(__name__)
 
-def draw_dashboard(screen, app_state, sensor_values, sensor_history, fonts, config):
+def draw_all_sensors_view(screen, app_state, sensor_values, sensor_history, fonts, config):
     """
-    Draw the dashboard screen (auto-cycling sensor view).
+    Draw the all sensors view screen (auto-cycling sensor view).
     
     Args:
         screen (pygame.Surface): The surface to draw on
@@ -29,7 +29,7 @@ def draw_dashboard(screen, app_state, sensor_values, sensor_history, fonts, conf
     screen_width = screen.get_width()
     screen_height = screen.get_height()
     
-    # Get the current sensor being displayed in the dashboard
+    # Get the current sensor being displayed in the all sensors view
     current_sensor = app_state.current_sensor
     if not current_sensor and config.SENSOR_MODES:
         current_sensor = config.SENSOR_MODES[0]

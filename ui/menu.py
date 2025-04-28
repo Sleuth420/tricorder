@@ -16,6 +16,7 @@ MENU_CATEGORIES = [
     {"name": "Pressure", "color_key": "COLOR_SIDEBAR_PRESS"},
     {"name": "Orientation", "color_key": "COLOR_SIDEBAR_ORIENT"},
     {"name": "Acceleration", "color_key": "COLOR_SIDEBAR_ACCEL"},
+    {"name": "All Sensors", "color_key": "COLOR_SIDEBAR_ALL"},
     {"name": "System Info", "color_key": "COLOR_SIDEBAR_SYSTEM"}
 ]
 
@@ -50,11 +51,11 @@ def draw_menu_screen(screen, app_state, fonts, config):
         sidebar_rect = pygame.Rect(0, 0, sidebar_width, screen_height)
         _draw_sidebar(screen, sidebar_rect, selected_index, fonts, config)
         
-        # Draw the main content area with System Info (including EM Spectrum/WiFi/Cellular)
+        # Draw the main content area with System Info
         main_content_rect = pygame.Rect(sidebar_width, 0, screen_width - sidebar_width, screen_height)
         
-        # Draw system info (which includes EM Spectrum/WiFi/Cellular)
-        _draw_system_info_content(screen, main_content_rect, app_state, fonts, config)
+        # Draw system info
+        _draw_system_info(screen, main_content_rect, fonts, config)
         
         # Draw footer
         render_footer(
@@ -67,7 +68,7 @@ def draw_menu_screen(screen, app_state, fonts, config):
         )
     elif app_state.current_state == "SYSTEM":
         # System Info view shows system information
-        _draw_system_info_content(screen, pygame.Rect(0, 0, screen_width, screen_height), app_state, fonts, config)
+        _draw_system_info(screen, pygame.Rect(0, 0, screen_width, screen_height), fonts, config)
         
         # Draw footer
         render_footer(
@@ -123,116 +124,14 @@ def _draw_sidebar(screen, rect, selected_index, fonts, config):
             )
             pygame.draw.rect(screen, (255, 255, 255), selection_rect, border_width)
 
-def _draw_em_spectrum_content(screen, rect, app_state, fonts, config):
+def _draw_system_info(screen, rect, fonts, config):
     """
-    Draw the EM Spectrum content directly in the main area (no submenu).
-    Shows both Cellular and WiFi information.
-    """
-    # Draw header
-    header_height = 30
-    header_rect = pygame.Rect(rect.left, rect.top, rect.width, header_height)
-    pygame.draw.rect(screen, config.COLOR_BACKGROUND, header_rect)  # Black header
-    
-    # Draw "EM Spectrum" and "WiFi Pwr" in the header
-    font = fonts['small']
-    header_text1 = font.render("EM Spectrum", True, config.COLOR_FOREGROUND)
-    header_text2 = font.render("WiFi Pwr", True, config.COLOR_FOREGROUND)
-    
-    screen.blit(header_text1, (rect.left + 20, header_rect.centery - header_text1.get_height() // 2))
-    screen.blit(header_text2, (rect.right - header_text2.get_width() - 20, header_rect.centery - header_text2.get_height() // 2))
-    
-    # Calculate content panel dimensions
-    content_y = rect.top + header_height + 5
-    content_height = rect.height - header_height - 10
-    
-    # Determine if we need to adjust layout for smaller space
-    small_space = rect.height < 300
-    
-    if small_space:
-        # Use side-by-side panels for smaller spaces
-        panel_width = (rect.width - 30) // 2
-        panel_height = content_height
-        
-        # Cellular panel (left)
-        cellular_rect = pygame.Rect(rect.left + 10, content_y, panel_width, panel_height)
-        cellular_panel_colors = {
-            'background': config.COLOR_CELLULAR,
-            'border': config.COLOR_ACCENT,
-            'title': config.COLOR_MENU_HEADER,
-            'title_text': (255, 255, 255)
-        }
-        cellular_content = draw_panel(screen, cellular_rect, "Cellular", fonts, cellular_panel_colors)
-        
-        # WiFi panel (right)
-        wifi_rect = pygame.Rect(rect.left + panel_width + 20, content_y, panel_width, panel_height)
-        wifi_panel_colors = {
-            'background': config.COLOR_WIFI,
-            'border': config.COLOR_ACCENT,
-            'title': config.COLOR_MENU_HEADER,
-            'title_text': (255, 255, 255)
-        }
-        wifi_content = draw_panel(screen, wifi_rect, "WiFi", fonts, wifi_panel_colors)
-    else:
-        # Use stacked panels for regular spaces
-        panel_width = rect.width - 20
-        panel_height = content_height // 2 - 10
-        
-        # Cellular panel (top)
-        cellular_rect = pygame.Rect(rect.left + 10, content_y, panel_width, panel_height)
-        cellular_panel_colors = {
-            'background': config.COLOR_CELLULAR,
-            'border': config.COLOR_ACCENT,
-            'title': config.COLOR_MENU_HEADER,
-            'title_text': (255, 255, 255)
-        }
-        cellular_content = draw_panel(screen, cellular_rect, "Cellular", fonts, cellular_panel_colors)
-        
-        # WiFi panel (bottom)
-        wifi_rect = pygame.Rect(rect.left + 10, content_y + panel_height + 20, panel_width, panel_height)
-        wifi_panel_colors = {
-            'background': config.COLOR_WIFI,
-            'border': config.COLOR_ACCENT,
-            'title': config.COLOR_MENU_HEADER,
-            'title_text': (255, 255, 255)
-        }
-        wifi_content = draw_panel(screen, wifi_rect, "WiFi", fonts, wifi_panel_colors)
-    
-    # Add Cellular content
-    status_text = "5s"
-    provider_text = "Verizon Wire"
-    
-    status_surface = fonts['small'].render(status_text, True, (255, 255, 255))
-    status_pos = (cellular_content.right - status_surface.get_width() - 10, cellular_content.top + 10)
-    screen.blit(status_surface, status_pos)
-    
-    provider_surface = fonts['small'].render(provider_text, True, config.COLOR_NETWORK)
-    provider_pos = (cellular_content.left + 10, cellular_content.top + 10)
-    screen.blit(provider_surface, provider_pos)
-    
-    # Add WiFi content
-    status_text = "Online"
-    network_text = "2.4GHz # OWNER-PC_Network  19"
-    
-    status_surface = fonts['small'].render(status_text, True, config.COLOR_WIFI_ONLINE)
-    status_pos = (wifi_content.left + 10, wifi_content.top + 10)
-    screen.blit(status_surface, status_pos)
-    
-    if small_space:
-        # Shorter network text for small panels
-        network_text = "2.4GHz # OWNER-PC"
-    
-    network_surface = fonts['small'].render(network_text, True, config.COLOR_NETWORK)
-    network_pos = (wifi_content.left + 10, wifi_content.top + 35)
-    screen.blit(network_surface, network_pos)
-
-def _draw_system_info_content(screen, rect, app_state, fonts, config):
-    """
-    Draw the system information content, including EM Spectrum (WiFi/Cellular).
+    Draw the system information content.
     """
     # Draw header
     header_height = 30
     header_rect = pygame.Rect(rect.left, rect.top, rect.width, header_height)
-    pygame.draw.rect(screen, config.COLOR_BACKGROUND, header_rect)  # Black header
+    pygame.draw.rect(screen, config.COLOR_BACKGROUND, header_rect)
     
     # Draw "System Info" in the header
     font = fonts['small']
@@ -246,8 +145,7 @@ def _draw_system_info_content(screen, rect, app_state, fonts, config):
     # Determine if we're in a small space
     small_space = rect.height < 400
     
-    # EM Spectrum info (WiFi/Cellular)
-    # Top portion for network information
+    # Network information section (top)
     network_height = content_height // 3 if small_space else content_height // 2
     network_rect = pygame.Rect(
         rect.left + 10, 

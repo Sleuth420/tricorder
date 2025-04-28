@@ -22,12 +22,12 @@ COLOR_SELECTED_BG = (40, 40, 40)   # Dark gray background for selected items
 COLOR_SELECTED_TEXT = (0, 255, 70) # Bright green for selected text
 
 # -- Sidebar Colors --
-COLOR_SIDEBAR_EM = (110, 82, 40)      # EM Spectrum (brown/orange)
 COLOR_SIDEBAR_TEMP = (230, 160, 50)   # Temperature (yellow/gold)
 COLOR_SIDEBAR_HUMID = (50, 100, 150)  # Humidity (blue)
 COLOR_SIDEBAR_PRESS = (130, 80, 150)  # Pressure (purple)
 COLOR_SIDEBAR_ORIENT = (50, 100, 100) # Orientation (teal)
 COLOR_SIDEBAR_ACCEL = (50, 100, 100)  # Acceleration (teal)
+COLOR_SIDEBAR_ALL = (150, 100, 50)    # All Sensors (orange)
 COLOR_SIDEBAR_SYSTEM = (80, 80, 120)  # System Info (slate blue)
 
 # -- Content Colors --

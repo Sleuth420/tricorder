@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 STATE_MENU = "MENU"           # Main menu
 STATE_DASHBOARD = "DASHBOARD" # Dashboard/auto-cycling view
 STATE_SENSOR_VIEW = "SENSOR"  # Individual sensor view
+STATE_SYSTEM_INFO = "SYSTEM"  # System info view
 
 class AppState:
     """Manages the state of the application and navigation."""
@@ -27,24 +28,17 @@ class AppState:
         # Menu state
         self.menu_index = 0
         self.menu_items = [
-            {"name": "Dashboard", "state": STATE_DASHBOARD, "sensor": None},
             {"name": "Temperature", "state": STATE_SENSOR_VIEW, "sensor": "TEMPERATURE"},
             {"name": "Humidity", "state": STATE_SENSOR_VIEW, "sensor": "HUMIDITY"},
             {"name": "Pressure", "state": STATE_SENSOR_VIEW, "sensor": "PRESSURE"},
             {"name": "Orientation", "state": STATE_SENSOR_VIEW, "sensor": "ORIENTATION"},
             {"name": "Acceleration", "state": STATE_SENSOR_VIEW, "sensor": "ACCELERATION"},
-            {"name": "Clock", "state": STATE_SENSOR_VIEW, "sensor": "CLOCK"},
-            {"name": "System Info", "state": STATE_MENU, "submenu": [
-                {"name": "CPU Usage", "state": STATE_SENSOR_VIEW, "sensor": "CPU_USAGE"},
-                {"name": "Memory Usage", "state": STATE_SENSOR_VIEW, "sensor": "MEMORY_USAGE"},
-                {"name": "Disk Usage", "state": STATE_SENSOR_VIEW, "sensor": "DISK_USAGE"},
-                {"name": "Back", "state": STATE_MENU, "sensor": None, "back": True}
-            ]}
+            {"name": "System Info", "state": STATE_SYSTEM_INFO, "sensor": None}
         ]
         
-        # Track menu hierarchy
+        # Track menu hierarchy - no more submenu structure
         self.current_menu = self.menu_items
-        self.menu_stack = []  # Stack to track menu hierarchy
+        self.menu_stack = []  # Stack to track menu hierarchy, but we won't use it for now
         
         # Sensor view state
         self.current_sensor = None
@@ -75,6 +69,8 @@ class AppState:
             state_changed = self._handle_dashboard_input(action)
         elif self.current_state == STATE_SENSOR_VIEW:
             state_changed = self._handle_sensor_input(action)
+        elif self.current_state == STATE_SYSTEM_INFO:
+            state_changed = self._handle_system_info_input(action)
             
         if state_changed:
             logger.debug(f"State changed: {self.previous_state} -> {self.current_state}")
@@ -97,24 +93,6 @@ class AppState:
             # Select current menu item
             item = self.current_menu[self.menu_index]
             
-            # Check if this is a "Back" item
-            if item.get("back", False):
-                # Go back to parent menu if we have one
-                if self.menu_stack:
-                    self.current_menu = self.menu_stack.pop()
-                    self.menu_index = 0  # Reset to top of parent menu
-                    logger.debug("Menu navigation: Back to parent menu")
-                return True
-                
-            # Check if this item has a submenu
-            if "submenu" in item:
-                # Push current menu to stack and navigate to submenu
-                self.menu_stack.append(self.current_menu)
-                self.current_menu = item["submenu"]
-                self.menu_index = 0  # Start at first item in submenu
-                logger.debug(f"Menu navigation: Enter submenu {item['name']}")
-                return True
-                
             # If not a submenu, transition to the appropriate state
             self.previous_state = self.current_state
             self.current_state = item["state"]
@@ -128,6 +106,8 @@ class AppState:
                 self.auto_cycle = True
                 self.cycle_index = 0
                 logger.debug("Transition to dashboard view")
+            elif self.current_state == STATE_SYSTEM_INFO:
+                logger.debug("Transition to system info view")
                 
             return True
         
@@ -158,41 +138,34 @@ class AppState:
             logger.debug(f"Sensor view: {'Frozen' if self.is_frozen else 'Unfrozen'}")
             return True
         elif action == "NEXT":
-            # Cycle to next sensor in list
-            # Check if we are in a submenu context first (optional, depends on how deep we want cycling)
-            sensors = self.config.SENSOR_MODES
-            try:
-                curr_idx = sensors.index(self.current_sensor)
-                self.current_sensor = sensors[(curr_idx + 1) % len(sensors)]
-                self.is_frozen = False  # Unfreeze when changing
-                logger.debug(f"Sensor view: Next -> {self.current_sensor}")
-                return True
-            except ValueError:
-                logger.warning(f"Current sensor {self.current_sensor} not in SENSOR_MODES list for cycling.")
-                return False
+            # Return to menu, we're not cycling through sensors now
+            self.previous_state = self.current_state
+            self.current_state = STATE_MENU
+            logger.debug("Sensor view: Return to menu")
+            return True
         elif action == "PREV":
-            # If we entered this sensor view from a menu, PREV acts as BACK
-            if self.previous_state == STATE_MENU:
-                # Restore the previous state (which should be the menu)
-                self.current_state = self.previous_state
-                # self.previous_state = STATE_SENSOR_VIEW # Update previous state for clarity
-                self.current_sensor = None # Clear the specific sensor context
-                self.is_frozen = False # Ensure unfrozen when returning to menu
-                logger.debug("Sensor view: Back to menu")
-                return True
-            else:
-                # Otherwise (e.g., if we somehow got here from dashboard), cycle to previous sensor
-                sensors = self.config.SENSOR_MODES
-                try:
-                    curr_idx = sensors.index(self.current_sensor)
-                    self.current_sensor = sensors[(curr_idx - 1) % len(sensors)]
-                    self.is_frozen = False  # Unfreeze when changing
-                    logger.debug(f"Sensor view: Prev -> {self.current_sensor}")
-                    return True
-                except ValueError:
-                    logger.warning(f"Current sensor {self.current_sensor} not in SENSOR_MODES list for cycling.")
-                    return False # No change if sensor not found
+            # Return to menu
+            self.previous_state = self.current_state
+            self.current_state = STATE_MENU
+            logger.debug("Sensor view: Return to menu")
+            return True
 
+        return False
+        
+    def _handle_system_info_input(self, action):
+        """Handle input in system info view state."""
+        if action == "SELECT":
+            # Toggle freeze state for system info
+            self.is_frozen = not self.is_frozen
+            logger.debug(f"System info: {'Frozen' if self.is_frozen else 'Unfrozen'}")
+            return True
+        elif action == "NEXT" or action == "PREV":
+            # Return to menu
+            self.previous_state = self.current_state
+            self.current_state = STATE_MENU
+            logger.debug("System info: Return to menu")
+            return True
+        
         return False
     
     def get_current_menu_items(self):

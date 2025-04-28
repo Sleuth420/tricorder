@@ -17,9 +17,24 @@ COLOR_ALERT = (255, 0, 0)         # Red Alert (for errors?)
 COLOR_FROZEN = (100, 150, 255)    # Light Blue for Frozen Indicator
 COLOR_GRAPH_BORDER = (50, 50, 50)  # Dark gray for graph borders
 COLOR_GRAPH_GRID = (30, 30, 30)    # Even darker gray for graph grid lines
-COLOR_MENU_HEADER = (80, 0, 100)   # Purple header for menus (retro feel)
+COLOR_MENU_HEADER = (130, 80, 150)   # Purple header for menus (from image)
 COLOR_SELECTED_BG = (40, 40, 40)   # Dark gray background for selected items
 COLOR_SELECTED_TEXT = (0, 255, 70) # Bright green for selected text
+
+# -- Sidebar Colors --
+COLOR_SIDEBAR_EM = (110, 82, 40)      # EM Spectrum (brown/orange)
+COLOR_SIDEBAR_TEMP = (230, 160, 50)   # Temperature (yellow/gold)
+COLOR_SIDEBAR_HUMID = (50, 100, 150)  # Humidity (blue)
+COLOR_SIDEBAR_PRESS = (130, 80, 150)  # Pressure (purple)
+COLOR_SIDEBAR_ORIENT = (50, 100, 100) # Orientation (teal)
+COLOR_SIDEBAR_ACCEL = (50, 100, 100)  # Acceleration (teal)
+COLOR_SIDEBAR_SYSTEM = (80, 80, 120)  # System Info (slate blue)
+
+# -- Content Colors --
+COLOR_CELLULAR = (130, 80, 150)      # Cellular (purple)
+COLOR_WIFI = (130, 80, 150)          # WiFi (purple)
+COLOR_WIFI_ONLINE = (0, 255, 0)      # WiFi online status (green)
+COLOR_NETWORK = (255, 0, 0)          # Network name (red)
 
 # -- Fonts --
 # (Store font files in a 'fonts' subfolder or use system fonts)
@@ -31,7 +46,10 @@ FONT_SIZE_SMALL = 16
 
 # -- Sensor Modes --
 # List of sensor modes the user can cycle through
-SENSOR_MODES = ["TEMPERATURE", "HUMIDITY", "PRESSURE", "ORIENTATION", "ACCELERATION", "CLOCK", "CPU_USAGE", "MEMORY_USAGE", "DISK_USAGE"]
+SENSOR_MODES = [
+    "TEMPERATURE", "HUMIDITY", "PRESSURE", "ORIENTATION", "ACCELERATION", 
+    "CLOCK", "CPU_USAGE", "MEMORY_USAGE", "DISK_USAGE"
+]
 
 # -- Sensor Range Configuration --
 # Default value ranges for graphing (min, max)

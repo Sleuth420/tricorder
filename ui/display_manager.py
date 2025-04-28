@@ -3,7 +3,7 @@
 
 import pygame
 import logging
-from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO
+from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS
 from ui.menu import draw_menu_screen
 from ui.all_sensors_view import draw_all_sensors_view
 from ui.sensor_view import draw_sensor_view
@@ -86,6 +86,9 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config)
     elif app_state.current_state == STATE_SYSTEM_INFO:
         # System info state shows system info full screen
+        draw_menu_screen(screen, app_state, fonts, config)
+    elif app_state.current_state == STATE_SETTINGS:
+        # Settings state shows settings full screen
         draw_menu_screen(screen, app_state, fonts, config)
     else:
         logger.error(f"Unknown application state: {app_state.current_state}")

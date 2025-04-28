@@ -11,13 +11,14 @@ logger = logging.getLogger(__name__)
 
 # Define menu categories with config color references
 MENU_CATEGORIES = [
+    {"name": "System Info", "color_key": "COLOR_SIDEBAR_SYSTEM"},
     {"name": "Temperature", "color_key": "COLOR_SIDEBAR_TEMP"},
     {"name": "Humidity", "color_key": "COLOR_SIDEBAR_HUMID"},
     {"name": "Pressure", "color_key": "COLOR_SIDEBAR_PRESS"},
     {"name": "Orientation", "color_key": "COLOR_SIDEBAR_ORIENT"},
     {"name": "Acceleration", "color_key": "COLOR_SIDEBAR_ACCEL"},
     {"name": "All Sensors", "color_key": "COLOR_SIDEBAR_ALL"},
-    {"name": "System Info", "color_key": "COLOR_SIDEBAR_SYSTEM"}
+    {"name": "Settings", "color_key": "COLOR_SIDEBAR_SETTINGS"}
 ]
 
 def draw_menu_screen(screen, app_state, fonts, config):
@@ -60,7 +61,7 @@ def draw_menu_screen(screen, app_state, fonts, config):
         # Draw footer
         render_footer(
             screen,
-            "< PREV | SELECT | NEXT >",
+            "< PREV = A | SELECT = Enter | NEXT = D >",
             fonts,
             config.COLOR_FOREGROUND,
             screen_width,
@@ -74,6 +75,19 @@ def draw_menu_screen(screen, app_state, fonts, config):
         render_footer(
             screen,
             "< MENU | REFRESH | MENU >",
+            fonts,
+            config.COLOR_FOREGROUND,
+            screen_width,
+            screen_height
+        )
+    elif app_state.current_state == "SETTINGS":
+        # Settings view shows settings options
+        _draw_settings(screen, pygame.Rect(0, 0, screen_width, screen_height), fonts, config)
+        
+        # Draw footer
+        render_footer(
+            screen,
+            "< MENU | APPLY | MENU >",
             fonts,
             config.COLOR_FOREGROUND,
             screen_width,
@@ -275,3 +289,63 @@ def _draw_system_info(screen, rect, fonts, config):
         
         disk_surface = font_to_use.render(disk_text, True, config.COLOR_FOREGROUND)
         screen.blit(disk_surface, (sys_rect.left + 10, y_offset)) 
+
+def _draw_settings(screen, rect, fonts, config):
+    """
+    Draw the settings screen content.
+    """
+    # Draw header
+    header_height = 30
+    header_rect = pygame.Rect(rect.left, rect.top, rect.width, header_height)
+    pygame.draw.rect(screen, config.COLOR_BACKGROUND, header_rect)
+    
+    # Draw header text
+    font = fonts['small']
+    header_text = font.render("Settings", True, config.COLOR_FOREGROUND)
+    screen.blit(header_text, (rect.left + 20, header_rect.centery - header_text.get_height() // 2))
+    
+    # Calculate content area
+    content_y = rect.top + header_height + 20
+    content_height = rect.height - header_height - 40
+    
+    # Settings panel
+    settings_rect = pygame.Rect(
+        rect.left + 20, 
+        content_y, 
+        rect.width - 40, 
+        content_height
+    )
+    
+    # Draw settings background
+    pygame.draw.rect(screen, config.COLOR_BACKGROUND, settings_rect)
+    pygame.draw.rect(screen, config.COLOR_ACCENT, settings_rect, 1)  # Border
+    
+    # Determine font size based on available space
+    font_to_use = fonts['medium']
+    line_height = font_to_use.get_height() + 20
+    
+    # Draw settings options
+    y_offset = settings_rect.top + 20
+    
+    # Fullscreen setting
+    fullscreen_text = f"Fullscreen: {'On' if config.FULLSCREEN else 'Off'}"
+    fullscreen_surface = font_to_use.render(fullscreen_text, True, config.COLOR_FOREGROUND)
+    screen.blit(fullscreen_surface, (settings_rect.left + 20, y_offset))
+    y_offset += line_height
+    
+    # Auto-cycle interval setting
+    cycle_text = f"Auto-cycle Interval: {config.AUTO_CYCLE_INTERVAL} seconds"
+    cycle_surface = font_to_use.render(cycle_text, True, config.COLOR_FOREGROUND)
+    screen.blit(cycle_surface, (settings_rect.left + 20, y_offset))
+    y_offset += line_height
+    
+    # FPS setting
+    fps_text = f"Framerate: {config.FPS} FPS"
+    fps_surface = font_to_use.render(fps_text, True, config.COLOR_FOREGROUND)
+    screen.blit(fps_surface, (settings_rect.left + 20, y_offset))
+    y_offset += line_height
+    
+    # Graph history setting
+    history_text = f"Graph History: {config.GRAPH_HISTORY_SIZE} seconds"
+    history_surface = font_to_use.render(history_text, True, config.COLOR_FOREGROUND)
+    screen.blit(history_surface, (settings_rect.left + 20, y_offset)) 

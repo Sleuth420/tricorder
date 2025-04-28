@@ -29,6 +29,7 @@ COLOR_SIDEBAR_ORIENT = (50, 100, 100) # Orientation (teal)
 COLOR_SIDEBAR_ACCEL = (50, 100, 100)  # Acceleration (teal)
 COLOR_SIDEBAR_ALL = (150, 100, 50)    # All Sensors (orange)
 COLOR_SIDEBAR_SYSTEM = (80, 80, 120)  # System Info (slate blue)
+COLOR_SIDEBAR_SETTINGS = (100, 100, 100)  # Settings (gray)
 
 # -- Content Colors --
 COLOR_CELLULAR = (130, 80, 150)      # Cellular (purple)
@@ -56,11 +57,11 @@ SENSOR_MODES = [
 # These help to make graphs more useful by setting consistent scales
 # Set to None to auto-scale based on observed values
 SENSOR_RANGES = {
-    "TEMPERATURE": (10, 40),      # Celsius: typical room temp range
+    "TEMPERATURE": (0, 100),      # Celsius: typical room temp range
     "HUMIDITY": (0, 100),         # Percent: full range of humidity
     "PRESSURE": (950, 1050),      # hPa/millibars: typical atmospheric pressure
     "ORIENTATION": (None, None),  # Auto-scale for orientation values
-    "ACCELERATION": (-2, 2),      # G-force range: typical for handheld movement
+    "ACCELERATION": (-4, 4),      # G-force range: typical for handheld movement
     "CPU_USAGE": (0, 100),        # Percentage range
     "MEMORY_USAGE": (0, 100),     # Percentage range
     "DISK_USAGE": (0, 100),       # Percentage range
@@ -72,7 +73,7 @@ GRAPH_LINE_WIDTH = 2     # Width of the graph line in pixels
 GRAPH_POINT_SIZE = 3     # Size of the data points in pixels
 
 # -- Dashboard Settings --
-AUTO_CYCLE_INTERVAL = 15  # Seconds between auto-cycling in dashboard mode
+AUTO_CYCLE_INTERVAL = 5  # Seconds between auto-cycling in dashboard mode
 
 # -- Input Mapping (Keyboard for now) --
 # Using 'A' for Previous/Left and 'D' for Next/Right

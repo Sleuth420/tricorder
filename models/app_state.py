@@ -10,6 +10,7 @@ STATE_MENU = "MENU"           # Main menu
 STATE_DASHBOARD = "DASHBOARD" # Dashboard/auto-cycling view
 STATE_SENSOR_VIEW = "SENSOR"  # Individual sensor view
 STATE_SYSTEM_INFO = "SYSTEM"  # System info view
+STATE_SETTINGS = "SETTINGS"   # Settings view
 
 class AppState:
     """Manages the state of the application and navigation."""
@@ -28,13 +29,14 @@ class AppState:
         # Menu state
         self.menu_index = 0
         self.menu_items = [
+            {"name": "System Info", "state": STATE_SYSTEM_INFO, "sensor": None},
             {"name": "Temperature", "state": STATE_SENSOR_VIEW, "sensor": "TEMPERATURE"},
             {"name": "Humidity", "state": STATE_SENSOR_VIEW, "sensor": "HUMIDITY"},
             {"name": "Pressure", "state": STATE_SENSOR_VIEW, "sensor": "PRESSURE"},
             {"name": "Orientation", "state": STATE_SENSOR_VIEW, "sensor": "ORIENTATION"},
             {"name": "Acceleration", "state": STATE_SENSOR_VIEW, "sensor": "ACCELERATION"},
             {"name": "All Sensors", "state": STATE_DASHBOARD, "sensor": None},
-            {"name": "System Info", "state": STATE_SYSTEM_INFO, "sensor": None}
+            {"name": "Settings", "state": STATE_SETTINGS, "sensor": None}
         ]
         
         # Track menu hierarchy - no more submenu structure
@@ -72,6 +74,8 @@ class AppState:
             state_changed = self._handle_sensor_input(action)
         elif self.current_state == STATE_SYSTEM_INFO:
             state_changed = self._handle_system_info_input(action)
+        elif self.current_state == STATE_SETTINGS:
+            state_changed = self._handle_settings_input(action)
             
         if state_changed:
             logger.debug(f"State changed: {self.previous_state} -> {self.current_state}")
@@ -165,6 +169,23 @@ class AppState:
             self.previous_state = self.current_state
             self.current_state = STATE_MENU
             logger.debug("System info: Return to menu")
+            return True
+        
+        return False
+    
+    def _handle_settings_input(self, action):
+        """Handle input in settings view state."""
+        if action == "SELECT":
+            # Toggle setting or apply setting change
+            # For now, just toggle freeze state for consistency
+            self.is_frozen = not self.is_frozen
+            logger.debug(f"Settings: {'Frozen' if self.is_frozen else 'Unfrozen'}")
+            return True
+        elif action == "NEXT" or action == "PREV":
+            # Return to menu
+            self.previous_state = self.current_state
+            self.current_state = STATE_MENU
+            logger.debug("Settings: Return to menu")
             return True
         
         return False

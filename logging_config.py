@@ -82,7 +82,7 @@ def set_log_level(level):
     for handler in root_logger.handlers:
         handler.setLevel(level)
     
-    logging.info(f"Log level changed to: {logging.getLevelName(level)}")
+    logging.warning(f"Log level changed to: {logging.getLevelName(level)}")
 
 # --- Optional: Log cleanup (can be added if TimedRotatingFileHandler isn't sufficient) ---
 # Although TimedRotatingFileHandler manages backups, you could add

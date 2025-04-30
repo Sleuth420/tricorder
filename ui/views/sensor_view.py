@@ -1,10 +1,12 @@
 # --- ui/sensor_view.py ---
-# Handles rendering of individual sensor views
+# Handles rendering of individual sensor views OR the auto-cycling dashboard view
 
 import pygame
 import logging
 from ui.components.text_display import render_title, render_value, render_note, render_footer
 from ui.components.graph import draw_graph
+# Import app state constants
+from models.app_state import STATE_SENSOR_VIEW, STATE_DASHBOARD
 
 logger = logging.getLogger(__name__)
 
@@ -69,8 +71,9 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
         history_data = sensor_history.get_history(current_sensor)
         
         # Calculate graph dimensions
-        graph_margin = 30  # Pixels from edge
-        graph_height = screen_height - value_rect.bottom - graph_margin*2 - config.FONT_SIZE_SMALL*3
+        graph_margin = 15  # Pixels from edge (reduced from 30)
+        # Adjusted height calculation for more graph space
+        graph_height = screen_height - value_rect.bottom - graph_margin*2 - config.FONT_SIZE_SMALL*2 
         graph_width = screen_width - graph_margin*2
         
         graph_rect = pygame.Rect(
@@ -119,10 +122,16 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
         )
     
     # Draw navigation help at the bottom
-    hint_text = "< PREV | FREEZE | NEXT >"
-    if app_state.is_frozen:
-        hint_text = "< PREV | UNFREEZE | NEXT >"
-        
+    key_prev_name = pygame.key.name(config.KEY_PREV).upper()
+    key_next_name = pygame.key.name(config.KEY_NEXT).upper()
+    key_select_name = pygame.key.name(config.KEY_SELECT).upper()
+
+    hint_text = ""
+    action_text = "Freeze" if not app_state.is_frozen else "Unfreeze"
+
+    # Back is now long press A, D does nothing here
+    hint_text = f"< Hold {key_prev_name}=Menu | {key_select_name}={action_text} | {key_next_name}= - >"
+
     render_footer(
         screen,
         hint_text,

@@ -4,8 +4,8 @@ import pygame # Add pygame import for key constants
 # Stores configuration constants for the tricorder application
 
 # -- Display Settings --
-SCREEN_WIDTH = 800      # Default width (if not fullscreen)
-SCREEN_HEIGHT = 600     # Default height (if not fullscreen)
+SCREEN_WIDTH = 320      # Default width (if not fullscreen)
+SCREEN_HEIGHT = 240     # Default height (if not fullscreen)
 FULLSCREEN = False      # Run in windowed mode?
 FPS = 15                # Frames per second/update rate
 
@@ -41,9 +41,9 @@ COLOR_NETWORK = (255, 0, 0)          # Network name (red)
 # (Store font files in a 'fonts' subfolder or use system fonts)
 # FONT_PRIMARY_PATH = "fonts/YourRetroFont.ttf" # Example path
 FONT_PRIMARY_PATH = None  # Set to None to use Pygame default font
-FONT_SIZE_LARGE = 48
-FONT_SIZE_MEDIUM = 24
-FONT_SIZE_SMALL = 16
+FONT_SIZE_LARGE = 24
+FONT_SIZE_MEDIUM = 14
+FONT_SIZE_SMALL = 10
 
 # -- Sensor Modes --
 # List of sensor modes the user can cycle through
@@ -68,9 +68,9 @@ SENSOR_RANGES = {
 }
 
 # -- Graph Settings --
-GRAPH_HISTORY_SIZE = 60  # Number of data points to keep (= seconds at 1 reading/sec)
-GRAPH_LINE_WIDTH = 2     # Width of the graph line in pixels
-GRAPH_POINT_SIZE = 3     # Size of the data points in pixels
+GRAPH_HISTORY_SIZE = 30  # Number of data points to keep (= seconds at 1 reading/sec)
+GRAPH_LINE_WIDTH = 1     # Width of the graph line in pixels
+GRAPH_POINT_SIZE = 2     # Size of the data points in pixels
 
 # -- Dashboard Settings --
 AUTO_CYCLE_INTERVAL = 5  # Seconds between auto-cycling in dashboard mode
@@ -87,3 +87,9 @@ KEY_SELECT = pygame.K_RETURN # Use Pygame constant
 # PIN_PREV = 2
 # PIN_NEXT = 3
 # PIN_SELECT = 4
+
+# -- Secret Menu --
+SECRET_HOLD_DURATION = 5.0 # Seconds to hold keys for secret menu
+
+# -- Input --
+INPUT_LONG_PRESS_DURATION = 0.75 # Seconds to qualify as a long press for Back action

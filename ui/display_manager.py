@@ -3,10 +3,12 @@
 
 import pygame
 import logging
-from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS
+from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE
 from ui.menu import draw_menu_screen
-from ui.all_sensors_view import draw_all_sensors_view
-from ui.sensor_view import draw_sensor_view
+from ui.views.sensor_view import draw_sensor_view
+from ui.views.system_info_view import draw_system_info_view
+from ui.views.settings_view import draw_settings_view
+from ui.views.secret_games_view import draw_secret_games_view
 
 logger = logging.getLogger(__name__)
 
@@ -80,16 +82,32 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         # Menu state shows sidebar with system info in main content
         draw_menu_screen(screen, app_state, fonts, config)
     elif app_state.current_state == STATE_DASHBOARD:
-        draw_all_sensors_view(screen, app_state, sensor_values, sensor_history, fonts, config)
+        # Use the merged sensor view for the dashboard
+        draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config)
     elif app_state.current_state == STATE_SENSOR_VIEW:
         # For all sensors, use the standard sensor_view
         draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config)
     elif app_state.current_state == STATE_SYSTEM_INFO:
-        # System info state shows system info full screen
-        draw_menu_screen(screen, app_state, fonts, config)
+        # System info state shows system info full screen using the new view
+        draw_system_info_view(screen, app_state, sensor_values, fonts, config)
     elif app_state.current_state == STATE_SETTINGS:
-        # Settings state shows settings full screen
-        draw_menu_screen(screen, app_state, fonts, config)
+        # Settings state shows settings full screen using the new view
+        draw_settings_view(screen, app_state, fonts, config)
+    elif app_state.current_state == STATE_SECRET_GAMES:
+        # Draw the secret games menu
+        draw_secret_games_view(screen, app_state, fonts, config)
+    elif app_state.current_state == STATE_PONG_ACTIVE:
+        # Draw the active Pong game
+        if app_state.active_pong_game:
+            # Clear background before drawing game
+            screen.fill(config.COLOR_BACKGROUND)
+            app_state.active_pong_game.draw(screen, fonts, config)
+        else:
+            logger.error("In PONG_ACTIVE state but no active_pong_game instance found!")
+            # Draw fallback screen (optional)
+            screen.fill(config.COLOR_BACKGROUND)
+            error_text = fonts['medium'].render("Error: Pong game not loaded", True, config.COLOR_ALERT)
+            screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
     else:
         logger.error(f"Unknown application state: {app_state.current_state}")
         # Draw fallback screen

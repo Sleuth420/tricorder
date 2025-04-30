@@ -5,37 +5,57 @@ A Star Trek inspired tricorder simulation using a Raspberry Pi, Sense HAT, and a
 ## Features
 
 * Menu-based navigation system
-* Dashboard with auto-cycling through sensors
+* Dashboard with auto-cycling through sensors (integrated into Sensor View)
 * Individual sensor views with real-time graphs
 * System monitoring (CPU, Memory, Disk usage)
 * Environmental monitoring (Temperature, Humidity, Pressure)
 * Motion sensing (Orientation, Acceleration)
-* Easy navigation with only 3 buttons
+* Clock display
+* Configurable controls (supports 3-button operation: Up/Back, Down, Select/Action)
+* Secret Games Menu (Pong implemented)
 
 ## Project Structure
 
 ```
 tricorder/
-├── main.py                 # Entry point, application orchestration
-├── config.py               # Configuration and constants
+├── main.py                 # Entry point, main application loop
+├── config.py               # Configuration constants (colors, keys, settings)
 ├── logging_config.py       # Logging setup
-├── data/                   # Data acquisition layer
-│   ├── sensors.py          # Raw sensor data acquisition
-│   └── system_info.py      # System monitoring (CPU, memory, disk)
-├── models/                 # Application state and data models
-│   ├── app_state.py        # Manages application state and navigation
-│   └── reading_history.py  # Stores and manages sensor history
-├── ui/                     # User interface layer
-│   ├── display_manager.py  # Coordinates which view to show
-│   ├── menu.py             # Menu rendering and navigation
-│   ├── dashboard.py        # Multi-sensor view
-│   ├── sensor_view.py      # Individual sensor view
-│   └── components/         # Reusable UI elements
-│       ├── graph.py        # Graph rendering component
-│       ├── text_display.py # Text rendering helpers 
-│       └── ui_elements.py  # Buttons, borders, etc.
-└── input/                  # Input handling
-    └── input_handler.py    # Input processing
+├── requirements.txt        # Python dependencies
+├── data/
+│   ├── __init__.py
+│   ├── sensors.py          # Raw Sense HAT sensor reading functions
+│   ├── system_info.py      # Raw system metric reading functions
+│   └── data_updater.py     # Centralized data fetching and formatting
+├── games/
+│   ├── __init__.py
+│   └── pong.py             # Pong game logic
+├── images/
+│   └── spork.png           # Game preview images
+├── input/
+│   ├── __init__.py
+│   └── input_handler.py    # Processes Pygame events into detailed input results
+├── logs/
+│   └── tricorder.log       # Log file output
+├── models/
+│   ├── __init__.py
+│   ├── app_state.py        # Manages application state, navigation, menu structures
+│   └── reading_history.py  # Stores time-series data for graphs
+└── ui/
+    ├── __init__.py
+    ├── display_manager.py  # Initializes display, routes state to view functions
+    ├── menu.py             # Draws the main menu screen layout (sidebar + content)
+    ├── components/
+    │   ├── __init__.py
+    │   ├── graph.py        # Reusable graph drawing component
+    │   ├── text_display.py # Reusable text rendering components
+    │   └── ui_elements.py  # Reusable UI elements (panels, menu items)
+    └── views/
+        ├── __init__.py
+        ├── sensor_view.py      # Draws view for single sensor OR dashboard
+        ├── settings_view.py    # Draws the settings screen
+        ├── system_info_view.py # Draws the system info screen
+        └── secret_games_view.py # Draws the secret games menu screen
 ```
 
 ## Dependencies
@@ -51,7 +71,7 @@ The complete list of dependencies is in `requirements.txt`.
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/tricorder.git
+   git clone https://github.com/Sleuth420/tricorder.git
    cd tricorder
    ```
 
@@ -73,9 +93,15 @@ python main.py
 ```
 
 ### Controls
-* Press `A` (or Left Arrow) to navigate to previous item or sensor
-* Press `D` (or Right Arrow) to navigate to next item or sensor
-* Press `Enter` to select menu items or freeze/unfreeze sensor readings
+* Keyboard (Development/Testing):
+    * `A`: Navigate Up (Menus) / Move Paddle Up (Pong) / Hold for Back (Views/Games)
+    * `D`: Navigate Down (Menus) / Move Paddle Down (Pong)
+    * `Enter`: Select (Menus) / Freeze/Unfreeze (Views) / Launch Game (Secret Menu)
+    * `ESC`: Quit Application
+* 3-Button Mapping (Intended Hardware):
+    * Button 1 (`A`): Short Press = Up (Menus); Long Press = Back (Views/Games)
+    * Button 2 (`D`): Short Press = Down (Menus)
+    * Button 3 (`Enter`): Short Press = Select/Action
 
 ## To Do
 

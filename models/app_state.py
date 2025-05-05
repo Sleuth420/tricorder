@@ -42,13 +42,13 @@ class AppState:
         self.menu_index = 0
         # Add color_key corresponding to config entries for sidebar
         self.menu_items = [
-            {"name": "System Info", "state": STATE_SYSTEM_INFO, "sensor": None, "color_key": "COLOR_SIDEBAR_SYSTEM"},
-            {"name": "Temperature", "state": STATE_SENSOR_VIEW, "sensor": "TEMPERATURE", "color_key": "COLOR_SIDEBAR_TEMP"},
-            {"name": "Humidity", "state": STATE_SENSOR_VIEW, "sensor": "HUMIDITY", "color_key": "COLOR_SIDEBAR_HUMID"},
-            {"name": "Pressure", "state": STATE_SENSOR_VIEW, "sensor": "PRESSURE", "color_key": "COLOR_SIDEBAR_PRESS"},
-            {"name": "Orientation", "state": STATE_SENSOR_VIEW, "sensor": "ORIENTATION", "color_key": "COLOR_SIDEBAR_ORIENT"},
-            {"name": "Acceleration", "state": STATE_SENSOR_VIEW, "sensor": "ACCELERATION", "color_key": "COLOR_SIDEBAR_ACCEL"},
-            {"name": "All Sensors", "state": STATE_DASHBOARD, "sensor": None, "color_key": "COLOR_SIDEBAR_ALL"},
+            {"name": "Systems", "state": STATE_SYSTEM_INFO, "sensor": None, "color_key": "COLOR_SIDEBAR_SYSTEM"},
+            {"name": "Env: Temp", "state": STATE_SENSOR_VIEW, "sensor": "TEMPERATURE", "color_key": "COLOR_SIDEBAR_TEMP"},
+            {"name": "Env: Humid", "state": STATE_SENSOR_VIEW, "sensor": "HUMIDITY", "color_key": "COLOR_SIDEBAR_HUMID"},
+            {"name": "Atmos", "state": STATE_SENSOR_VIEW, "sensor": "PRESSURE", "color_key": "COLOR_SIDEBAR_PRESS"},
+            {"name": "Attitude", "state": STATE_SENSOR_VIEW, "sensor": "ORIENTATION", "color_key": "COLOR_SIDEBAR_ORIENT"},
+            {"name": "Inertia", "state": STATE_SENSOR_VIEW, "sensor": "ACCELERATION", "color_key": "COLOR_SIDEBAR_ACCEL"},
+            {"name": "Sweep", "state": STATE_DASHBOARD, "sensor": None, "color_key": "COLOR_SIDEBAR_ALL"},
             {"name": "Settings", "state": STATE_SETTINGS, "sensor": None, "color_key": "COLOR_SIDEBAR_SETTINGS"}
         ]
         
@@ -141,21 +141,16 @@ class AppState:
                     self.secret_combo_start_time = time.time()
                     combo_potentially_active = True # Prevent standard action processing this cycle
 
-                # Process standard actions ONLY if the combo isn't potentially active
-                # AND the key pressed is NOT the PREV key (short press handled on KeyUp)
-                # REMOVED standard action processing on keydown
-                # elif not combo_potentially_active and action and key != self.config.KEY_PREV:
-                #     state_changed_by_action = self._process_action(action) or state_changed_by_action
-
                 # --- Direct Pong Input Handling on KeyDown --- #
                 if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game:
-                    if key == self.config.KEY_PREV or key == self.config.KEY_NEXT:
-                        # Pass the key code directly to Pong's input handler
-                        self.active_pong_game.handle_input(key)
-                        # Input is handled by the game, no app state change needed here
-                    # Could handle SELECT for Pong pause/restart here if desired
-                    # elif key == self.config.KEY_SELECT:
-                    #    self.active_pong_game.toggle_pause() # Example
+                    # Only allow paddle movement if game is not paused
+                    if not self.active_pong_game.paused and (key == self.config.KEY_PREV or key == self.config.KEY_NEXT):
+                        # Pass the key code directly to Pong's input handler (which is now update)
+                        # self.active_pong_game.handle_input(key)
+                        # Movement is handled by checking keys_held in PongGame.update
+                        pass
+                    # SELECT key press does nothing on KeyDown in Pong
+                    # A/D presses while paused do nothing on KeyDown
 
             elif event_type == 'KEYUP':
                 # Flag to check if combo was active *before* this keyup potentially resets it
@@ -180,24 +175,48 @@ class AppState:
                         start_time_before_reset = self.key_prev_press_start_time
                         self.key_prev_press_start_time = None # Reset timer regardless
                         logger.debug("KEY_PREV released, timer reset.")
-                        # Check duration and state (only for menu-like states)
-                        if self.current_state in [STATE_MENU, STATE_SECRET_GAMES] and press_duration < self.config.INPUT_LONG_PRESS_DURATION:
+                        # Handle Pong Pause Continue (A)
+                        if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game and self.active_pong_game.paused:
+                            logger.info("PREV key released in paused Pong. Unpausing.")
+                            self.active_pong_game.toggle_pause()
+                            state_changed_by_action = True # Indicate potential state interaction
+                        # Check duration and state for normal PREV action
+                        elif self.current_state in [STATE_MENU, STATE_SECRET_GAMES] and press_duration < self.config.INPUT_LONG_PRESS_DURATION:
                             logger.debug(f"Short press KEY_PREV in {self.current_state} state: processing PREV action on KeyUp.")
                             state_changed_by_action = self._process_action("PREV") or state_changed_by_action
                         # Long press action handled in update()
-                        # Pong input handled on KeyDown
+                        
 
                     # Handle KEY_NEXT short press release (for MENU/Secret Down action)
-                    elif key == self.config.KEY_NEXT and self.current_state in [STATE_MENU, STATE_SECRET_GAMES]:
-                         # Pong input handled on KeyDown
-                         logger.debug(f"Short press KEY_NEXT in {self.current_state} state: processing NEXT action on KeyUp.")
-                         state_changed_by_action = self._process_action("NEXT") or state_changed_by_action
+                    elif key == self.config.KEY_NEXT:
+                         # Handle Pong Pause Quit (D)
+                         if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game and self.active_pong_game.paused:
+                             logger.info("NEXT key released in paused Pong. Quitting game.")
+                             # Quit Pong and return to previous state
+                             if self.previous_state:
+                                 self.current_state = self.previous_state
+                             else:
+                                 self.current_state = STATE_MENU # Fallback
+                             self.previous_state = STATE_PONG_ACTIVE
+                             self.active_pong_game = None # Cleanup game instance
+                             state_changed_by_action = True
+                             logger.debug(f"State changed via NEXT (Quit) in paused Pong: -> {self.current_state}")
+                         # Handle normal NEXT action
+                         elif self.current_state in [STATE_MENU, STATE_SECRET_GAMES]:
+                             logger.debug(f"Short press KEY_NEXT in {self.current_state} state: processing NEXT action on KeyUp.")
+                             state_changed_by_action = self._process_action("NEXT") or state_changed_by_action
 
                     # Handle KEY_SELECT short press release (for Select/Action)
-                    # SELECT in Pong is handled on keydown
-                    elif key == self.config.KEY_SELECT and self.current_state != STATE_PONG_ACTIVE:
-                         logger.debug("Short press KEY_SELECT: processing SELECT action on KeyUp.")
-                         state_changed_by_action = self._process_action("SELECT") or state_changed_by_action
+                    elif key == self.config.KEY_SELECT:
+                         # Handle Pong Pause Toggle (Enter)
+                         if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game:
+                             logger.info("SELECT key released in Pong. Toggling pause.")
+                             self.active_pong_game.toggle_pause()
+                             state_changed_by_action = True # Indicate potential state interaction
+                         # Handle normal SELECT action
+                         else: 
+                             logger.debug("Short press KEY_SELECT: processing SELECT action on KeyUp.")
+                             state_changed_by_action = self._process_action("SELECT") or state_changed_by_action
 
         return state_changed_by_action
 

@@ -51,6 +51,25 @@ def main():
         sys.exit(1)
     logger.info("Display initialized successfully.")
 
+    # --- Splash Screen --- 
+    try:
+        logo_splash = pygame.image.load("images/logo.png").convert_alpha()
+        logo_rect = logo_splash.get_rect(center=screen.get_rect().center)
+        
+        screen.fill(config.COLOR_BACKGROUND)
+        screen.blit(logo_splash, logo_rect)
+        pygame.display.flip()
+        
+        logger.info("Displaying splash screen...")
+        pygame.time.wait(3000) # Wait for 3 seconds (3000 milliseconds)
+        logger.info("Splash screen finished.")
+        
+    except pygame.error as e:
+        logger.warning(f"Could not load or display splash screen logo: {e}")
+    except Exception as e:
+        logger.error(f"Error during splash screen: {e}", exc_info=True)
+    # --- End Splash Screen ---
+
     # Initialize Sensors
     sensors_active = sensors.init_sensors()
     if not sensors_active:

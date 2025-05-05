@@ -80,7 +80,7 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
     # Draw the appropriate view based on app state
     if app_state.current_state == STATE_MENU:
         # Menu state shows sidebar with system info in main content
-        draw_menu_screen(screen, app_state, fonts, config)
+        draw_menu_screen(screen, app_state, fonts, config, sensor_values)
     elif app_state.current_state == STATE_DASHBOARD:
         # Use the merged sensor view for the dashboard
         draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config)

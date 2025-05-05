@@ -45,6 +45,7 @@ class PongGame:
         self.score = 0
         self.game_over = False
         self.winner_message = ""
+        self.paused = False # Add paused state
 
         logger.info(f"Pong game initialized with area {width}x{height}")
 
@@ -82,9 +83,14 @@ class PongGame:
         # elif key_code == self.config.KEY_NEXT: # Check against configured key for DOWN
         #    ...
 
+    def toggle_pause(self):
+        """Toggles the paused state of the game."""
+        self.paused = not self.paused
+        logger.info(f"Pong game {'paused' if self.paused else 'resumed'}.")
+
     def update(self, keys_held):
         """Updates the game state (ball movement, collisions, paddle movement)."""
-        if self.game_over:
+        if self.game_over or self.paused: # Check for pause state here
             return
 
         # --- Paddle Movement based on keys_held --- #
@@ -171,8 +177,25 @@ class PongGame:
         score_pos = (self.width - score_surf.get_width() - 10, 10)
         screen.blit(score_surf, score_pos)
 
+        # Draw PAUSED message and controls if paused (and not game over)
+        if self.paused and not self.game_over:
+            medium_font = fonts.get('medium', self.font)
+            paused_surf = medium_font.render("PAUSED", True, config.COLOR_ALERT)
+            paused_rect = paused_surf.get_rect(center=(self.width // 2, self.height // 2 - 20))
+            screen.blit(paused_surf, paused_rect)
+
+            # Add pause menu hints
+            key_prev_name = pygame.key.name(config.KEY_PREV).upper()
+            key_next_name = pygame.key.name(config.KEY_NEXT).upper()
+            key_select_name = pygame.key.name(config.KEY_SELECT).upper()
+            hint = f"({key_prev_name}=Continue | {key_next_name}=Quit | {key_select_name}=Unpause)"
+            small_font = fonts.get('small', self.font)
+            hint_surf = small_font.render(hint, True, config.COLOR_FOREGROUND)
+            hint_rect = hint_surf.get_rect(center=(self.width // 2, paused_rect.bottom + 15))
+            screen.blit(hint_surf, hint_rect)
+
         # Draw Game Over / Winner message
-        if self.game_over:
+        elif self.game_over: # Use elif to avoid drawing over pause message
             large_font = fonts.get('large', self.font)
             msg_surf = large_font.render(self.winner_message, True, config.COLOR_ALERT)
             msg_rect = msg_surf.get_rect(center=(self.width // 2, self.height // 2))

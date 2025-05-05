@@ -89,4 +89,56 @@ def get_disk_usage():
         return disk.percent, used_gb, total_gb
     except Exception as e:
         logger.error(f"Error getting disk usage: {e}")
-        return None, None, None 
+        return None, None, None
+
+def get_wifi_info():
+    """Get WiFi status and SSID."""
+    if not PSUTIL_AVAILABLE:
+        logger.debug("psutil not available for WiFi monitoring")
+        return "N/A", "N/A"
+
+    try:
+        stats = psutil.net_if_stats()
+        addrs = psutil.net_if_addrs()
+        for interface, stat in stats.items():
+            # Look for a wireless interface that is up and likely has an IP
+            # This is heuristic, might need adjustment based on OS/hardware
+            if stat.isup and interface in addrs:
+                # Rough check for wireless keywords, might need refinement
+                if any(keyword in interface.lower() for keyword in ['wlan', 'wi-fi', 'wireless']):
+                    # Try to get SSID - platform specific, might need external commands
+                    # For now, return 'Connected' if interface is up
+                    # A more robust solution would use platform-specific tools
+                    ssid = "Connected" # Placeholder until SSID fetching is added
+                    status = "Online" if stat.isup else "Offline"
+                    logger.debug(f"WiFi found: {interface}, Status: {status}, SSID: {ssid}")
+                    return status, ssid
+
+        logger.debug("No active WiFi interface found.")
+        return "Offline", "N/A"
+    except Exception as e:
+        logger.error(f"Error getting WiFi info: {e}", exc_info=True)
+        return "Error", "N/A"
+
+def get_cellular_info():
+    """Get Cellular status and provider (Basic Check)."""
+    if not PSUTIL_AVAILABLE:
+        logger.debug("psutil not available for Cellular monitoring")
+        return "N/A", "N/A"
+
+    try:
+        # This is a very basic check. Real cellular info often needs specific modem libs/AT commands.
+        stats = psutil.net_if_stats()
+        for interface, stat in stats.items():
+            # Look for common cellular interface names
+            if stat.isup and any(keyword in interface.lower() for keyword in ['ppp', 'wwan', 'mobile', 'lte']):
+                status = "Online" # Assuming up means online
+                provider = "Unknown" # psutil doesn't provide provider info
+                logger.debug(f"Cellular interface found: {interface}, Status: {status}")
+                return status, provider
+
+        logger.debug("No active Cellular interface found.")
+        return "Offline", "N/A"
+    except Exception as e:
+        logger.error(f"Error getting Cellular info: {e}", exc_info=True)
+        return "Error", "N/A" 

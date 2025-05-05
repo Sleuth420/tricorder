@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 # REMOVED MENU_CATEGORIES - now driven by app_state.menu_items
 
-def draw_menu_screen(screen, app_state, fonts, config):
+def draw_menu_screen(screen, app_state, fonts, config, sensor_values):
     """
     Draw the menu screen with sidebar and main content area (System Info).
     Structured into distinct rectangular parts: Corner (TEMP RED), Header, Sidebar Items.
@@ -86,7 +86,7 @@ def draw_menu_screen(screen, app_state, fonts, config):
             # Draw selection indicator if this item is selected
             if i == selected_index:
                 # Draw a white border indicator
-                border_width = 3
+                border_width = 1
                 selection_rect = pygame.Rect(
                     item_rect.left + border_width // 2,
                     item_rect.top + border_width // 2,
@@ -104,7 +104,7 @@ def draw_menu_screen(screen, app_state, fonts, config):
     )
     # Use the dedicated system info view function, passing the adjusted content rect
     # Tell it NOT to draw its own footer, as we will draw the correct MENU footer
-    draw_system_info_view(screen, app_state, {}, fonts, config, main_content_rect, draw_footer=False)
+    draw_system_info_view(screen, app_state, sensor_values, fonts, config, main_content_rect, draw_footer=False)
 
     # --- Part 5: Draw Footer --- (For the overall menu screen)
     key_prev_name = pygame.key.name(config.KEY_PREV).upper()

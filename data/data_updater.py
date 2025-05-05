@@ -125,4 +125,16 @@ def update_all_data(sensor_values, reading_history, config):
         sensor_values["DISK_USAGE"] = ("N/A", "%", "psutil N/A")
         reading_history.add_reading("DISK_USAGE", None)
 
+    # --- Network Information --- #
+
+    # WiFi Info
+    wifi_status, wifi_ssid = system_info.get_wifi_info()
+    sensor_values["WIFI_STATUS"] = (wifi_status, "", "") # Status only for now
+    sensor_values["WIFI_SSID"] = (wifi_ssid, "", "")
+
+    # Cellular Info
+    cell_status, cell_provider = system_info.get_cellular_info()
+    sensor_values["CELL_STATUS"] = (cell_status, "", "")
+    sensor_values["CELL_PROVIDER"] = (cell_provider, "", "")
+
     logger.debug("Data update complete.") 

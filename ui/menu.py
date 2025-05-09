@@ -102,9 +102,85 @@ def draw_menu_screen(screen, app_state, fonts, config, sensor_values):
         screen_width - sidebar_width,
         screen_height - header_height # Adjust height
     )
-    # Use the dedicated system info view function, passing the adjusted content rect
-    # Tell it NOT to draw its own footer, as we will draw the correct MENU footer
-    draw_system_info_view(screen, app_state, sensor_values, fonts, config, main_content_rect, draw_footer=False)
+    # Clear main content area (it used to be cleared by draw_system_info_view)
+    pygame.draw.rect(screen, config.COLOR_BACKGROUND, main_content_rect)
+
+    # Load Logo
+    logo_surface = None
+    try:
+        logo_surface = pygame.image.load("images/logo.png").convert_alpha()
+    except pygame.error as e:
+        logger.warning(f"Could not load logo.png for menu: {e}")
+
+    if logo_surface:
+        # Scale logo to fit nicely in the main content area, e.g., 50% of width or height
+        content_width = main_content_rect.width
+        content_height = main_content_rect.height
+        
+        logo_orig_width, logo_orig_height = logo_surface.get_size()
+        
+        # Define a max size for the logo, e.g., 60% of content width
+        # and ensure it's not too tall, e.g., 50% of content height minus some padding for WiFi
+        max_logo_width = int(content_width * 0.6)
+        max_logo_height = int(content_height * 0.5) # Reserve space for WiFi text
+
+        scaled_width = logo_orig_width
+        scaled_height = logo_orig_height
+
+        if logo_orig_width > max_logo_width:
+            scale_ratio = max_logo_width / logo_orig_width
+            scaled_width = max_logo_width
+            scaled_height = int(logo_orig_height * scale_ratio)
+
+        if scaled_height > max_logo_height:
+            scale_ratio = max_logo_height / scaled_height
+            scaled_height = max_logo_height
+            scaled_width = int(scaled_width * scale_ratio)
+        
+        if scaled_width != logo_orig_width or scaled_height != logo_orig_height:
+            try:
+                logo_surface = pygame.transform.smoothscale(logo_surface, (scaled_width, scaled_height))
+            except pygame.error as e:
+                logger.warning(f"Could not scale logo: {e}")
+                logo_surface = None # Don't draw if scaling failed badly
+
+    logo_display_y = main_content_rect.top + (main_content_rect.height // 3) - (scaled_height // 2 if logo_surface else 0)
+
+
+    if logo_surface:
+        logo_rect = logo_surface.get_rect(centerx=main_content_rect.centerx, y=logo_display_y)
+        screen.blit(logo_surface, logo_rect)
+        wifi_text_y_start = logo_rect.bottom + 20 # Position WiFi info below logo
+    else:
+        # If logo fails to load/scale, position WiFi info more centrally
+        wifi_text_y_start = main_content_rect.centery - fonts['medium'].get_height() 
+
+
+    # Display Wi-Fi Information
+    wifi_status_text = "WiFi: N/A"
+    wifi_ssid_text = "SSID: N/A"
+    wifi_status_color = config.COLOR_ALERT # Default to alert color
+
+    wifi_status_val = sensor_values.get("WIFI_STATUS", ("N/A", "", ""))[0]
+    wifi_ssid_val = sensor_values.get("WIFI_SSID", ("N/A", "", ""))[0]
+
+    if wifi_status_val and wifi_status_val != "N/A":
+        wifi_status_text = f"Status: {wifi_status_val}"
+        if wifi_status_val.lower() == "online":
+            wifi_status_color = config.COLOR_WIFI_ONLINE
+    
+    if wifi_ssid_val and wifi_ssid_val != "N/A":
+        wifi_ssid_text = f"SSID: {wifi_ssid_val}"
+
+    font_medium = fonts['medium']
+    status_surface = font_medium.render(wifi_status_text, True, wifi_status_color)
+    ssid_surface = font_medium.render(wifi_ssid_text, True, config.COLOR_FOREGROUND)
+
+    status_rect = status_surface.get_rect(centerx=main_content_rect.centerx, y=wifi_text_y_start)
+    ssid_rect = ssid_surface.get_rect(centerx=main_content_rect.centerx, y=status_rect.bottom + 5)
+    
+    screen.blit(status_surface, status_rect)
+    screen.blit(ssid_surface, ssid_rect)
 
     # --- Part 5: Draw Footer --- (For the overall menu screen)
     key_prev_name = pygame.key.name(config.KEY_PREV).upper()

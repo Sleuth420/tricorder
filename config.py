@@ -6,7 +6,7 @@ import pygame # Add pygame import for key constants
 # -- Display Settings --
 SCREEN_WIDTH = 320      # Default width (if not fullscreen)
 SCREEN_HEIGHT = 240     # Default height (if not fullscreen)
-FULLSCREEN = False      # Run in windowed mode?
+FULLSCREEN = True      # Run in windowed mode?
 FPS = 15                # Frames per second/update rate
 
 # -- Colors (RGB Tuples) --
@@ -54,10 +54,10 @@ COLOR_NETWORK = (255, 0, 0)          # Network name (red)
 # -- Fonts --
 # (Store font files in a 'fonts' subfolder or use system fonts)
 # FONT_PRIMARY_PATH = "fonts/YourRetroFont.ttf" # Example path
-FONT_PRIMARY_PATH = None  # Set to None to use Pygame default font
-FONT_SIZE_LARGE = 24
-FONT_SIZE_MEDIUM = 14
-FONT_SIZE_SMALL = 10
+FONT_PRIMARY_PATH = "fonts/Minecraftia-Regular.ttf"  # Set to None to use Pygame default font
+FONT_SIZE_LARGE = 30
+FONT_SIZE_MEDIUM = 20
+FONT_SIZE_SMALL = 16
 
 # -- Sensor Modes --
 # List of sensor modes the user can cycle through

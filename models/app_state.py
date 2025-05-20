@@ -6,10 +6,14 @@ import time # Import time for last_reading_time initialization
 import pygame # Import pygame for key codes
 # Import PongGame
 from games.pong import PongGame
+# Import MenuItem dataclass
+from .menu_item import MenuItem # Assuming menu_item.py is in the same directory (models)
+# Import config for sensor mode constants and action name constants
+import config as app_config # Use an alias to avoid conflict with self.config
 
 logger = logging.getLogger(__name__)
 
-# Application states
+# Application states (remains as string literals, used internally and by display_manager)
 STATE_MENU = "MENU"           # Main menu
 STATE_DASHBOARD = "DASHBOARD" # Dashboard/auto-cycling view
 STATE_SENSOR_VIEW = "SENSOR"  # Individual sensor view
@@ -21,14 +25,14 @@ STATE_PONG_ACTIVE = "PONG_ACTIVE" # New state for Pong game
 class AppState:
     """Manages the state of the application and navigation."""
     
-    def __init__(self, config):
+    def __init__(self, config_module): # config_module is the actual config.py module
         """
         Initialize the application state.
         
         Args:
-            config: The configuration module
+            config_module: The configuration module (config.py)
         """
-        self.config = config
+        self.config = config_module # Store the passed config module
         self.current_state = STATE_MENU
         self.previous_state = None
         self.last_reading_time = 0.0 # Initialize last reading time
@@ -40,24 +44,15 @@ class AppState:
 
         # Menu state
         self.menu_index = 0
-        # Add color_key corresponding to config entries for sidebar
-        self.menu_items = [
-            {"name": "Systems", "state": STATE_SYSTEM_INFO, "sensor": None, "color_key": "COLOR_SIDEBAR_SYSTEM"},
-            {"name": "Env: Temp", "state": STATE_SENSOR_VIEW, "sensor": "TEMPERATURE", "color_key": "COLOR_SIDEBAR_TEMP"},
-            {"name": "Env: Humid", "state": STATE_SENSOR_VIEW, "sensor": "HUMIDITY", "color_key": "COLOR_SIDEBAR_HUMID"},
-            {"name": "Atmos", "state": STATE_SENSOR_VIEW, "sensor": "PRESSURE", "color_key": "COLOR_SIDEBAR_PRESS"},
-            {"name": "Attitude", "state": STATE_SENSOR_VIEW, "sensor": "ORIENTATION", "color_key": "COLOR_SIDEBAR_ORIENT"},
-            {"name": "Inertia", "state": STATE_SENSOR_VIEW, "sensor": "ACCELERATION", "color_key": "COLOR_SIDEBAR_ACCEL"},
-            {"name": "Sweep", "state": STATE_DASHBOARD, "sensor": None, "color_key": "COLOR_SIDEBAR_ALL"},
-            {"name": "Settings", "state": STATE_SETTINGS, "sensor": None, "color_key": "COLOR_SIDEBAR_SETTINGS"}
-        ]
+        # Main menu items - To be dynamically generated
+        self.menu_items = self._generate_main_menu_items()
         
         # Track menu hierarchy - no more submenu structure
-        self.current_menu = self.menu_items
+        self.current_menu = self.menu_items # This will now hold MenuItem objects
         self.menu_stack = []  # Stack to track menu hierarchy, but we won't use it for now
         
         # Sensor view state
-        self.current_sensor = None
+        self.current_sensor = None # This will store the sensor_type constant like app_config.SENSOR_TEMPERATURE
         self.is_frozen = False
         self.auto_cycle = True
         self.last_cycle_time = 0
@@ -66,24 +61,61 @@ class AppState:
         # Secret Games Menu state
         self.secret_menu_index = 0
         self.secret_menu_items = [
-            # Use pong action and image
-            {"name": "Pong", "image": "images/spork.png", "action": "LAUNCH_PONG"},
-            {"name": "Tetris", "image": "images/spork.png", "action": "LAUNCH_TETRIS"},
-            {"name": "Quit", "image": None, "action": "RETURN_TO_MENU"}
+            MenuItem(name="Pong", action_name=app_config.ACTION_LAUNCH_PONG, image_path="images/spork.png"),
+            MenuItem(name="Tetris", action_name=app_config.ACTION_LAUNCH_TETRIS, image_path="images/spork.png"),
+            MenuItem(name="Quit", action_name=app_config.ACTION_RETURN_TO_MENU, image_path=None)
         ]
-        # Active game instance
         self.active_pong_game = None
 
         # Find the index for the "Settings" menu item for combo check
         self.settings_menu_index = -1
         for i, item in enumerate(self.menu_items):
-            if item["name"] == "Settings":
+            if item.name == "Settings": # Assuming "Settings" is still the name from SENSOR_DISPLAY_PROPERTIES
                 self.settings_menu_index = i
                 break
         if self.settings_menu_index == -1:
-            logger.warning("Could not find 'Settings' in menu_items for secret combo.")
+            logger.warning("Could not find 'Settings' in dynamically generated menu_items for secret combo.")
         else:
-            logger.info(f"Found Settings menu item at index: {self.settings_menu_index}") # Log found index
+            logger.info(f"Found Settings menu item at index: {self.settings_menu_index}")
+
+    def _generate_main_menu_items(self):
+        """Dynamically generates main menu items from config.SENSOR_DISPLAY_PROPERTIES."""
+        items = []
+        # Define system sensor keys that are covered by the "Systems" menu item (STATE_SYSTEM_INFO)
+        # and should not get their own individual top-level menu items.
+        system_sensor_keys = {
+            self.config.SENSOR_CLOCK,
+            self.config.SENSOR_CPU_USAGE,
+            self.config.SENSOR_MEMORY_USAGE,
+            self.config.SENSOR_DISK_USAGE
+        }
+
+        # Add the "Systems" item first.
+        items.append(MenuItem(name="Systems", target_state=STATE_SYSTEM_INFO, color_key="SIDEBAR_SYSTEM"))
+
+        # Add environmental sensors next
+        for sensor_key in self.config.SENSOR_MODES: # Iterate through defined sensor modes
+            if sensor_key in system_sensor_keys: # Skip system-specific sensors for individual menu items
+                continue
+
+            props = self.config.SENSOR_DISPLAY_PROPERTIES.get(sensor_key)
+            if props:
+                # Default target state for individual sensor menu items is SENSOR_VIEW
+                target_st = STATE_SENSOR_VIEW
+                item_data = {"sensor_type": sensor_key}
+
+                items.append(MenuItem(
+                    name=props["display_name"],
+                    target_state=target_st,
+                    data=item_data,
+                    color_key=props.get("color_key")
+                ))
+                
+        # Add other non-sensor items last
+        items.append(MenuItem(name="Sweep", target_state=STATE_DASHBOARD, color_key="SIDEBAR_ALL"))
+        items.append(MenuItem(name="Settings", target_state=STATE_SETTINGS, color_key="SIDEBAR_SETTINGS"))
+
+        return items
         
     def _check_secret_combo_conditions(self):
         """Check if conditions are met to START the secret combo timer."""
@@ -91,7 +123,6 @@ class AppState:
         state_ok = self.current_state == STATE_MENU
         index_ok = self.menu_index == self.settings_menu_index
         keys_ok = required_keys.issubset(self.keys_held)
-        # Detailed log for checking conditions
         logger.debug(f"Combo check: state='{self.current_state}'({state_ok}), index={self.menu_index}({index_ok}), settings_idx={self.settings_menu_index}, keys={self.keys_held}({keys_ok})")
         return state_ok and index_ok and keys_ok
 
@@ -104,176 +135,120 @@ class AppState:
         return True # State changed
 
     def handle_input(self, input_results):
-        """
-        Handle user input based on current state and detailed input events.
-
-        Args:
-            input_results (list): List of input event dictionaries from process_input.
-
-        Returns:
-            bool: True if a standard action caused a state change, False otherwise.
-                  Does not indicate state changes from secret combo activation.
-        """
         state_changed_by_action = False
         combo_potentially_active = bool(self.secret_combo_start_time)
 
         for result in input_results:
             event_type = result['type']
-            key = result.get('key') # Get key if available
-            action = result.get('action') # Get action if available
+            key = result.get('key') 
+            action_name = result.get('action') # This is INPUT_ACTION_PREV etc.
 
-            if event_type == 'QUIT': # Handle QUIT directly if needed
-                # Or let main handle it based on the list
-                pass
+            if event_type == 'QUIT':
+                pass # Main loop handles this via running = False
 
             elif event_type == 'KEYDOWN':
                 self.keys_held.add(key)
-                logger.debug(f"KEYDOWN: key={key}. keys_held={self.keys_held}") # Log keydown and held set
+                logger.debug(f"KEYDOWN: key={key}. keys_held={self.keys_held}")
 
-                # Start KEY_PREV timer if pressed
                 if key == self.config.KEY_PREV and self.key_prev_press_start_time is None:
                     self.key_prev_press_start_time = time.time()
                     logger.debug("KEY_PREV press timer started.")
 
-                # Check if we should start the secret combo timer
                 if not self.secret_combo_start_time and self._check_secret_combo_conditions():
                     logger.info("SECRET COMBO TIMER STARTED")
                     self.secret_combo_start_time = time.time()
-                    combo_potentially_active = True # Prevent standard action processing this cycle
-
-                # --- Direct Pong Input Handling on KeyDown --- #
-                if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game:
-                    # Only allow paddle movement if game is not paused
-                    if not self.active_pong_game.paused and (key == self.config.KEY_PREV or key == self.config.KEY_NEXT):
-                        # Pass the key code directly to Pong's input handler (which is now update)
-                        # self.active_pong_game.handle_input(key)
-                        # Movement is handled by checking keys_held in PongGame.update
-                        pass
-                    # SELECT key press does nothing on KeyDown in Pong
-                    # A/D presses while paused do nothing on KeyDown
+                    combo_potentially_active = True 
+                # No direct PONG input handling here on KeyDown - PongGame.update uses keys_held
 
             elif event_type == 'KEYUP':
-                # Flag to check if combo was active *before* this keyup potentially resets it
                 combo_was_active = bool(self.secret_combo_start_time)
-
                 if key in self.keys_held:
                     self.keys_held.remove(key)
                 logger.debug(f"KEYUP: key={key}. keys_held={self.keys_held}")
 
-                # Reset combo timer FIRST if a combo key is released
                 if self.secret_combo_start_time and (key == self.config.KEY_PREV or key == self.config.KEY_NEXT):
                     logger.info("SECRET COMBO TIMER RESET (Key Up)")
                     self.secret_combo_start_time = None
-                    combo_potentially_active = False # Update local flag for this cycle
-
-                # --- Process standard actions only on KeyUp --- #
-                # --- and only if the combo wasn't just active --- #
-                if not combo_was_active:
-                    # Handle KEY_PREV short press release (for MENU/Secret Up action)
+                    combo_potentially_active = False
+                
+                if not combo_was_active: # Only process standard actions if combo wasn't just active/reset
                     if key == self.config.KEY_PREV and self.key_prev_press_start_time is not None:
                         press_duration = time.time() - self.key_prev_press_start_time
-                        start_time_before_reset = self.key_prev_press_start_time
-                        self.key_prev_press_start_time = None # Reset timer regardless
+                        self.key_prev_press_start_time = None 
                         logger.debug("KEY_PREV released, timer reset.")
-                        # Handle Pong Pause Continue (A)
-                        if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game and self.active_pong_game.paused:
+                        if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game and self.active_pong_game.paused and action_name == app_config.INPUT_ACTION_PREV:
                             logger.info("PREV key released in paused Pong. Unpausing.")
                             self.active_pong_game.toggle_pause()
-                            state_changed_by_action = True # Indicate potential state interaction
-                        # Check duration and state for normal PREV action
-                        elif self.current_state in [STATE_MENU, STATE_SECRET_GAMES] and press_duration < self.config.INPUT_LONG_PRESS_DURATION:
-                            logger.debug(f"Short press KEY_PREV in {self.current_state} state: processing PREV action on KeyUp.")
-                            state_changed_by_action = self._process_action("PREV") or state_changed_by_action
-                        # Long press action handled in update()
+                            state_changed_by_action = True
+                        elif self.current_state in [STATE_MENU, STATE_SECRET_GAMES] and press_duration < self.config.INPUT_LONG_PRESS_DURATION and action_name == app_config.INPUT_ACTION_PREV:
+                            logger.debug(f"Short press PREV in {self.current_state} state: processing PREV action on KeyUp.")
+                            state_changed_by_action = self._process_action(app_config.INPUT_ACTION_PREV) or state_changed_by_action
                         
-
-                    # Handle KEY_NEXT short press release (for MENU/Secret Down action)
-                    elif key == self.config.KEY_NEXT:
-                         # Handle Pong Pause Quit (D)
+                    elif key == self.config.KEY_NEXT and action_name == app_config.INPUT_ACTION_NEXT:
                          if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game and self.active_pong_game.paused:
                              logger.info("NEXT key released in paused Pong. Quitting game.")
-                             # Quit Pong and return to previous state
                              if self.previous_state:
                                  self.current_state = self.previous_state
                              else:
-                                 self.current_state = STATE_MENU # Fallback
+                                 self.current_state = STATE_MENU 
                              self.previous_state = STATE_PONG_ACTIVE
-                             self.active_pong_game = None # Cleanup game instance
+                             self.active_pong_game = None 
                              state_changed_by_action = True
                              logger.debug(f"State changed via NEXT (Quit) in paused Pong: -> {self.current_state}")
-                         # Handle normal NEXT action
                          elif self.current_state in [STATE_MENU, STATE_SECRET_GAMES]:
-                             logger.debug(f"Short press KEY_NEXT in {self.current_state} state: processing NEXT action on KeyUp.")
-                             state_changed_by_action = self._process_action("NEXT") or state_changed_by_action
+                             logger.debug(f"Short press NEXT in {self.current_state} state: processing NEXT action on KeyUp.")
+                             state_changed_by_action = self._process_action(app_config.INPUT_ACTION_NEXT) or state_changed_by_action
 
-                    # Handle KEY_SELECT short press release (for Select/Action)
-                    elif key == self.config.KEY_SELECT:
-                         # Handle Pong Pause Toggle (Enter)
+                    elif key == self.config.KEY_SELECT and action_name == app_config.INPUT_ACTION_SELECT:
                          if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game:
                              logger.info("SELECT key released in Pong. Toggling pause.")
                              self.active_pong_game.toggle_pause()
-                             state_changed_by_action = True # Indicate potential state interaction
-                         # Handle normal SELECT action
+                             state_changed_by_action = True 
                          else: 
-                             logger.debug("Short press KEY_SELECT: processing SELECT action on KeyUp.")
-                             state_changed_by_action = self._process_action("SELECT") or state_changed_by_action
+                             logger.debug("Short press SELECT: processing SELECT action on KeyUp.")
+                             state_changed_by_action = self._process_action(app_config.INPUT_ACTION_SELECT) or state_changed_by_action
+                    
+                    elif action_name == app_config.INPUT_ACTION_BACK: # Handle JOY_LEFT mapped to BACK
+                        # Allow back from most states except main menu and active (unpaused) pong
+                        if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_SECRET_GAMES]:
+                            logger.info(f"BACK action triggered by key {key} in state {self.current_state}. Returning to menu.")
+                            state_changed_by_action = self._return_to_menu() or state_changed_by_action
+                        elif self.current_state == STATE_SECRET_GAMES:
+                             # In secret games menu, BACK action might be identical to selecting "Quit" menu item.
+                             # Or, we can make it a dedicated back. For now, let it be handled by its own menu items.
+                             logger.debug(f"BACK action triggered in {self.current_state}, typically handled by menu item.")
+                             pass # Let specific menu logic handle it if needed or do nothing.
+                        # In PONG_ACTIVE, back is handled by KEY_NEXT when paused, or not at all if active.
+                        # In MENU, there's nowhere to go "back" to via this action.
 
         return state_changed_by_action
 
     def update(self):
-        """
-        Performs time-based updates, like checking the secret combo timer.
-        Should be called once per frame.
-
-        Returns:
-            bool: True if the state changed (e.g., secret menu activated), False otherwise.
-        """
         state_changed = False
-        # Check secret combo timer
         if self.secret_combo_start_time:
             current_time = time.time()
             duration = current_time - self.secret_combo_start_time
             required_duration = self.config.SECRET_HOLD_DURATION
-            # Log timer check
-            logger.debug(f"Checking combo timer: now={current_time:.2f}, start={self.secret_combo_start_time:.2f}, duration={duration:.2f}, required={required_duration}")
+            logger.debug(f"Checking combo timer: duration={duration:.2f}, required={required_duration}")
             if duration >= required_duration:
                 state_changed = self._activate_secret_menu()
-                # Return early if secret menu activated to avoid long press back trigger simultaneously
                 if state_changed:
                     return state_changed
 
-        # Check KEY_PREV long press timer for Back action
         if self.key_prev_press_start_time is not None:
             hold_duration = time.time() - self.key_prev_press_start_time
-            # Only trigger back if NOT in the pong game
-            if hold_duration >= self.config.INPUT_LONG_PRESS_DURATION and self.current_state != STATE_PONG_ACTIVE:
-                # If in a game state (like Tetris later?), return to secret menu (placeholder logic)
-                # if self.current_state in [STATE_TETRIS_ACTIVE]: # Example for future games
-                #    # ... return to secret menu ...
-
-                # If in a regular view (not menu), return to main menu
-                if self.current_state not in [STATE_MENU, STATE_SECRET_GAMES]: # Avoid going back from menus via long press
+            if hold_duration >= self.config.INPUT_LONG_PRESS_DURATION:
+                if self.current_state != STATE_PONG_ACTIVE and self.current_state not in [STATE_MENU, STATE_SECRET_GAMES]: 
                     logger.info(f"Long press KEY_PREV detected in state {self.current_state}. Returning to menu.")
                     state_changed = self._return_to_menu()
                 else:
-                    # If long pressed in menu/secret menu, just reset timer, don't go back
                     logger.debug(f"Long press KEY_PREV in {self.current_state} state - ignored for back action.")
-                # Reset timer ONLY if action was taken or explicitly ignored
-                self.key_prev_press_start_time = None
-            elif hold_duration >= self.config.INPUT_LONG_PRESS_DURATION and self.current_state == STATE_PONG_ACTIVE:
-                # If long pressed during pong, just reset the timer, do nothing else
-                logger.debug("Long press KEY_PREV during Pong game - ignored for back action.")
-                self.key_prev_press_start_time = None
-
-        # Add other time-based updates here if needed
-
+                self.key_prev_press_start_time = None 
         return state_changed
 
     def _process_action(self, action):
-        """Processes standard actions based on the current state."""
         state_changed = False
-
-        # Handle based on current state
+        # Use action constants for comparison
         if self.current_state == STATE_MENU:
             state_changed = self._handle_menu_input(action)
         elif self.current_state == STATE_DASHBOARD:
@@ -286,173 +261,130 @@ class AppState:
             state_changed = self._handle_settings_input(action)
         elif self.current_state == STATE_SECRET_GAMES:
             state_changed = self._handle_secret_games_input(action)
-        elif self.current_state == STATE_PONG_ACTIVE:
-            # Pong input is handled on KeyDown directly, not via _process_action
-            # state_changed = self._handle_pong_input(action) # Remove this line
-            pass # Handled in handle_input
-
-        if state_changed:
-            logger.debug(f"State changed via action '{action}': {self.previous_state} -> {self.current_state}")
-
         return state_changed
 
     def _return_to_menu(self):
-        """Helper method to transition back to the main menu state."""
         self.previous_state = self.current_state
         self.current_state = STATE_MENU
         logger.debug(f"{self.previous_state}: Return to menu")
         return True
     
     def _handle_menu_input(self, action):
-        """Handle input in menu state."""
-        if action == "NEXT":
-            # Go to next menu item
-            self.menu_index = (self.menu_index + 1) % len(self.current_menu)
-            logger.debug(f"Menu navigation: NEXT -> {self.current_menu[self.menu_index]['name']}")
-            return True
-        elif action == "PREV":
-            # Go to previous menu item
-            self.menu_index = (self.menu_index - 1) % len(self.current_menu)
-            logger.debug(f"Menu navigation: PREV -> {self.current_menu[self.menu_index]['name']}")
-            return True
-        elif action == "SELECT":
-            # Select current menu item
-            item = self.current_menu[self.menu_index]
-            
-            # If not a submenu, transition to the appropriate state
-            self.previous_state = self.current_state
-            self.current_state = item["state"]
-            
-            # If transitioning to a sensor view, set the current sensor
-            if self.current_state == STATE_SENSOR_VIEW:
-                self.current_sensor = item["sensor"]
-                self.is_frozen = False  # Reset frozen state
-                logger.debug(f"Transition to sensor view: {self.current_sensor}")
-            elif self.current_state == STATE_DASHBOARD:
-                self.auto_cycle = True
-                self.cycle_index = 0
-                logger.debug("Transition to dashboard view")
-            elif self.current_state == STATE_SYSTEM_INFO:
-                logger.debug("Transition to system info view")
-            elif self.current_state == STATE_SETTINGS: # Added handling for settings transition
-                logger.debug("Transition to settings view")
-                
-            return True
-        
-        return False
+        if not self.menu_items: return False
+        num_items = len(self.menu_items)
+        if action == app_config.INPUT_ACTION_NEXT:
+            self.menu_index = (self.menu_index + 1) % num_items
+            logger.debug(f"Menu NEXT: index={self.menu_index}, item='{self.menu_items[self.menu_index].name}'")
+        elif action == app_config.INPUT_ACTION_PREV:
+            self.menu_index = (self.menu_index - 1 + num_items) % num_items
+            logger.debug(f"Menu PREV: index={self.menu_index}, item='{self.menu_items[self.menu_index].name}'")
+        elif action == app_config.INPUT_ACTION_SELECT:
+            selected_item = self.menu_items[self.menu_index]
+            logger.info(f"Menu SELECT: item='{selected_item.name}'")
+            if selected_item.target_state:
+                self.previous_state = self.current_state
+                self.current_state = selected_item.target_state
+                if selected_item.target_state == STATE_SENSOR_VIEW and selected_item.data and "sensor_type" in selected_item.data:
+                    self.current_sensor = selected_item.data["sensor_type"] # sensor_type is a constant
+                    logger.info(f"Transitioning to SENSOR_VIEW for sensor: {self.current_sensor}")
+                else:
+                    self.current_sensor = None 
+                return True 
+        return False 
     
-    def _handle_dashboard_input(self, action):
-        """Handle input in dashboard state."""
-        if action == "SELECT":
-            # Toggle freeze state
-            self.is_frozen = not self.is_frozen
-            self.auto_cycle = not self.is_frozen
-            logger.debug(f"Dashboard: {'Frozen' if self.is_frozen else 'Unfrozen'}")
-            return True
+    def _handle_common_select_action(self, view_name):
+        """Common handler for SELECT action that toggles freeze."""
+        self.is_frozen = not self.is_frozen
+        logger.debug(f"{view_name}: {'Frozen' if self.is_frozen else 'Unfrozen'} by SELECT action.")
+        return True # Indicates a UI update might be needed due to freeze status change
 
+    def _handle_dashboard_input(self, action):
+        if action == app_config.INPUT_ACTION_SELECT:
+            self.auto_cycle = not self.auto_cycle # Toggle auto_cycle as well for dashboard
+            return self._handle_common_select_action("Dashboard")
         return False
     
     def _handle_sensor_input(self, action):
-        """Handle input in sensor view state."""
-        if action == "SELECT":
-            # Toggle freeze state
-            self.is_frozen = not self.is_frozen
-            logger.debug(f"Sensor view: {'Frozen' if self.is_frozen else 'Unfrozen'}")
-            return True
-
+        if action == app_config.INPUT_ACTION_SELECT:
+            return self._handle_common_select_action("Sensor View")
         return False
         
     def _handle_system_info_input(self, action):
-        """Handle input in system info view state."""
-        if action == "SELECT":
-            # Toggle freeze state
-            self.is_frozen = not self.is_frozen
-            logger.debug(f"System info: {'Frozen' if self.is_frozen else 'Unfrozen'}")
-            return True
-
+        if action == app_config.INPUT_ACTION_SELECT:
+            return self._handle_common_select_action("System Info")
         return False
     
     def _handle_settings_input(self, action):
-        """Handle input in settings view state."""
-        if action == "SELECT":
-            # Toggle setting or apply setting change
-            logger.debug(f"Settings: SELECT pressed (currently toggles freeze)")
-            self.is_frozen = not self.is_frozen # Keep freeze toggle for now
-            return True
-
+        if action == app_config.INPUT_ACTION_SELECT:
+            # Placeholder for actual settings change logic
+            # For now, it also toggles freeze like other views.
+            logger.debug(f"Settings: SELECT pressed. Future: modify settings.")
+            return self._handle_common_select_action("Settings")
         return False
     
     def _handle_secret_games_input(self, action):
-        """Handle input in secret games menu state."""
-        if action == "SELECT":
-            # SELECT does nothing for now
-            # Placeholder for launching the selected game
-            selected_game = self.secret_menu_items[self.secret_menu_index]
-            selected_action = selected_game.get('action')
-            logger.info(f"Secret Games: SELECT activated on '{selected_game['name']}'. Action: {selected_action}")
-
-            if selected_action == "RETURN_TO_MENU":
-                 return self._return_to_menu()
-            elif selected_action == "LAUNCH_PONG":
+        if not self.secret_menu_items: return False
+        num_items = len(self.secret_menu_items)
+        if action == app_config.INPUT_ACTION_NEXT:
+            self.secret_menu_index = (self.secret_menu_index + 1) % num_items
+            logger.debug(f"Secret Menu NEXT: index={self.secret_menu_index}, item='{self.secret_menu_items[self.secret_menu_index].name}'")
+        elif action == app_config.INPUT_ACTION_PREV:
+            self.secret_menu_index = (self.secret_menu_index - 1 + num_items) % num_items
+            logger.debug(f"Secret Menu PREV: index={self.secret_menu_index}, item='{self.secret_menu_items[self.secret_menu_index].name}'")
+        elif action == app_config.INPUT_ACTION_SELECT:
+            selected_item = self.secret_menu_items[self.secret_menu_index]
+            logger.info(f"Secret Menu SELECT: item='{selected_item.name}' with action='{selected_item.action_name}'")
+            
+            if selected_item.action_name == app_config.ACTION_LAUNCH_PONG:
                 logger.info("Launching Pong...")
                 self.previous_state = self.current_state
                 self.current_state = STATE_PONG_ACTIVE
-                # Pass screen dimensions from config
                 self.active_pong_game = PongGame(self.config.SCREEN_WIDTH, self.config.SCREEN_HEIGHT, self.config)
-                return True # State changed
-            elif selected_action == "LAUNCH_TETRIS":
-                 logger.warning("Tetris launch not implemented yet.")
-                 return False # No state change yet
-
-            return True # Consider action handled, even if placeholder for other games
-        elif action == "PREV": # Up
-            self.secret_menu_index = (self.secret_menu_index - 1) % len(self.secret_menu_items)
-            logger.debug(f"Secret Games Menu navigation: PREV -> {self.secret_menu_items[self.secret_menu_index]['name']}")
-            return True
-        elif action == "NEXT": # Down
-            self.secret_menu_index = (self.secret_menu_index + 1) % len(self.secret_menu_items)
-            logger.debug(f"Secret Games Menu navigation: NEXT -> {self.secret_menu_items[self.secret_menu_index]['name']}")
-            return True
-
-        # Long press A handled by update() method
-        return False
+                return True 
+            elif selected_item.action_name == app_config.ACTION_LAUNCH_TETRIS:
+                logger.warning("Tetris launch selected, but not yet implemented.")
+                pass 
+            elif selected_item.action_name == app_config.ACTION_RETURN_TO_MENU:
+                logger.info("Returning to main menu from secret menu.")
+                if self.previous_state and self.previous_state != STATE_SECRET_GAMES:
+                    self.current_state = self.previous_state 
+                else:
+                    self.current_state = STATE_MENU 
+                self.previous_state = STATE_SECRET_GAMES 
+                self.secret_combo_start_time = None 
+                return True 
+        return False 
     
     def get_current_menu_items(self):
-        """Get the list of currently visible menu items."""
-        return self.current_menu
-    
+        if self.current_state == STATE_MENU:
+            return self.menu_items
+        elif self.current_state == STATE_SECRET_GAMES:
+            return self.secret_menu_items
+        return [] 
+
     def get_current_menu_index(self):
-        """Get the index of the currently selected menu item."""
-        return self.menu_index
+        if self.current_state == STATE_MENU:
+            return self.menu_index
+        elif self.current_state == STATE_SECRET_GAMES:
+            return self.secret_menu_index
+        return 0 
     
     def auto_cycle_dashboard(self, current_time):
-        """
-        Check if it's time to cycle to the next sensor in dashboard mode.
-        
-        Args:
-            current_time (float): The current time in seconds
-            
-        Returns:
-            bool: True if the cycle was performed, False otherwise
-        """
-        if (self.current_state != STATE_DASHBOARD or 
-            self.is_frozen or 
-            not self.auto_cycle):
+        if (self.current_state != STATE_DASHBOARD or self.is_frozen or not self.auto_cycle):
             return False
             
-        # Check if enough time has passed to cycle
         if current_time - self.last_cycle_time >= self.config.AUTO_CYCLE_INTERVAL:
-            # Cycle to next sensor
-            # Get sensors suitable for dashboard cycling (exclude system info etc.)
-            dashboard_sensors = [item["sensor"] for item in self.menu_items if item["sensor"] and item["state"] == STATE_SENSOR_VIEW]
+            dashboard_sensors = [ 
+                key for key in self.config.SENSOR_MODES 
+                if self.config.SENSOR_DISPLAY_PROPERTIES.get(key, {}).get("graph_type") != "NONE" and key != app_config.SENSOR_CLOCK
+            ]
             if not dashboard_sensors:
-                logger.warning("No sensors defined for dashboard cycling.")
+                logger.warning("No sensors defined for dashboard cycling based on SENSOR_DISPLAY_PROPERTIES.")
                 return False
 
             self.cycle_index = (self.cycle_index + 1) % len(dashboard_sensors)
-            self.current_sensor = dashboard_sensors[self.cycle_index]
+            self.current_sensor = dashboard_sensors[self.cycle_index] # current_sensor is a constant
             self.last_cycle_time = current_time
             logger.debug(f"Auto-cycling to {self.current_sensor}")
             return True
-            
         return False 

@@ -58,7 +58,7 @@ def init_display():
         pygame.quit()
         return None, None, None
 
-def update_display(screen, app_state, sensor_values, sensor_history, fonts, config):
+def update_display(screen, app_state, sensor_values, sensor_history, fonts, config_module):
     """
     Updates the display based on the current application state.
     
@@ -68,7 +68,7 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         sensor_values (dict): Dictionary of current sensor values
         sensor_history (ReadingHistory): Sensor reading history
         fonts (dict): Dictionary of loaded fonts
-        config (module): Configuration module
+        config_module (module): Configuration module (config.py)
         
     Returns:
         None
@@ -80,39 +80,39 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
     # Draw the appropriate view based on app state
     if app_state.current_state == STATE_MENU:
         # Menu state shows sidebar with system info in main content
-        draw_menu_screen(screen, app_state, fonts, config, sensor_values)
+        draw_menu_screen(screen, app_state, fonts, config_module, sensor_values)
     elif app_state.current_state == STATE_DASHBOARD:
         # Use the merged sensor view for the dashboard
-        draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config)
+        draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config_module)
     elif app_state.current_state == STATE_SENSOR_VIEW:
         # For all sensors, use the standard sensor_view
-        draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config)
+        draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config_module)
     elif app_state.current_state == STATE_SYSTEM_INFO:
         # System info state shows system info full screen using the new view
-        draw_system_info_view(screen, app_state, sensor_values, fonts, config)
+        draw_system_info_view(screen, app_state, sensor_values, fonts, config_module)
     elif app_state.current_state == STATE_SETTINGS:
         # Settings state shows settings full screen using the new view
-        draw_settings_view(screen, app_state, fonts, config)
+        draw_settings_view(screen, app_state, fonts, config_module)
     elif app_state.current_state == STATE_SECRET_GAMES:
         # Draw the secret games menu
-        draw_secret_games_view(screen, app_state, fonts, config)
+        draw_secret_games_view(screen, app_state, fonts, config_module)
     elif app_state.current_state == STATE_PONG_ACTIVE:
         # Draw the active Pong game
         if app_state.active_pong_game:
             # Clear background before drawing game
-            screen.fill(config.COLOR_BACKGROUND)
-            app_state.active_pong_game.draw(screen, fonts, config)
+            screen.fill(config_module.Theme.BACKGROUND)
+            app_state.active_pong_game.draw(screen, fonts, config_module)
         else:
             logger.error("In PONG_ACTIVE state but no active_pong_game instance found!")
             # Draw fallback screen (optional)
-            screen.fill(config.COLOR_BACKGROUND)
-            error_text = fonts['medium'].render("Error: Pong game not loaded", True, config.COLOR_ALERT)
+            screen.fill(config_module.Theme.BACKGROUND)
+            error_text = fonts['medium'].render("Error: Pong game not loaded", True, config_module.Theme.ALERT)
             screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
     else:
         logger.error(f"Unknown application state: {app_state.current_state}")
         # Draw fallback screen
-        screen.fill(config.COLOR_BACKGROUND)
-        error_text = fonts['medium'].render("Error: Unknown state", True, config.COLOR_ALERT)
+        screen.fill(config_module.Theme.BACKGROUND)
+        error_text = fonts['medium'].render("Error: Unknown state", True, config_module.Theme.ALERT)
         screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
         
     # Update the display

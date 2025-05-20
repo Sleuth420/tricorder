@@ -13,7 +13,7 @@ import config
 import logging_config
 
 # Import application components from the new modular structure
-from models.app_state import AppState, STATE_MENU # Ensure STATE_MENU is imported
+from models.app_state import AppState, STATE_MENU, STATE_PONG_ACTIVE
 from models.reading_history import ReadingHistory
 from data import sensors
 from data import system_info
@@ -21,8 +21,6 @@ from data import system_info
 from data.data_updater import update_all_data
 from ui.display_manager import init_display, update_display
 from input.input_handler import process_input
-# Import state constants needed here
-from models.app_state import STATE_PONG_ACTIVE
 
 # Get a logger for this module
 logger = logging.getLogger(__name__)
@@ -31,7 +29,7 @@ def display_critical_error_on_screen(screen, fonts, config_module, messages):
     """Helper function to display critical error messages if possible."""
     if screen and fonts and config_module and pygame.get_init() and pygame.display.get_active():
         try:
-            screen.fill(config_module.COLOR_BACKGROUND)
+            screen.fill(config_module.Theme.BACKGROUND)
             error_font_size = config_module.FONT_SIZE_MEDIUM
             try:
                 # Try to use a pre-loaded font if available, otherwise default system font
@@ -43,7 +41,7 @@ def display_critical_error_on_screen(screen, fonts, config_module, messages):
             center_x = screen.get_width() // 2
 
             for i, msg_text in enumerate(messages):
-                msg_sf = error_font.render(msg_text, True, config_module.COLOR_ALERT)
+                msg_sf = error_font.render(msg_text, True, config_module.Theme.ALERT)
                 msg_pos = (center_x - msg_sf.get_width() // 2, current_y)
                 screen.blit(msg_sf, msg_pos)
                 current_y += msg_sf.get_height() + 5
@@ -83,13 +81,13 @@ def main():
     try:
         # Non-critical Initializations (splash, sensors)
         try:
-            logo_splash = pygame.image.load("images/logo.png").convert_alpha()
+            logo_splash = pygame.image.load(config.SPLASH_LOGO_PATH).convert_alpha()
             logo_rect = logo_splash.get_rect(center=screen.get_rect().center)
-            screen.fill(config.COLOR_BACKGROUND)
+            screen.fill(config.Theme.BACKGROUND)
             screen.blit(logo_splash, logo_rect)
             pygame.display.flip()
             logger.info("Displaying splash screen...")
-            pygame.time.wait(3000)
+            pygame.time.wait(config.SPLASH_DURATION_MS)
             logger.info("Splash screen finished.")
         except Exception as e_splash:
             logger.warning(f"Could not load or display splash screen logo: {e_splash}", exc_info=True)

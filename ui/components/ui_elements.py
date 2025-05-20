@@ -1,154 +1,76 @@
 # --- ui/components/ui_elements.py ---
-# Reusable UI elements like buttons, borders, etc.
+# Provides reusable UI drawing functions
 
 import pygame
 import logging
 
 logger = logging.getLogger(__name__)
 
-def draw_panel(screen, rect, title, fonts, colors, border_width=1):
+def draw_panel(screen, rect, title, fonts, colors):
     """
-    Draw a panel with a title bar.
-    
+    Draws a bordered panel with a title bar.
+
     Args:
-        screen (pygame.Surface): The surface to draw on
-        rect (pygame.Rect): The rectangle for the panel
-        title (str): The title for the panel
-        fonts (dict): Dictionary of loaded fonts
-        colors (dict): Dictionary with 'background', 'border', and 'title' colors
-        border_width (int): Width of the panel border
-        
+        screen (pygame.Surface): The surface to draw on.
+        rect (pygame.Rect): The rectangle defining the panel's bounds.
+        title (str): The title text for the panel.
+        fonts (dict): Dictionary of loaded Pygame fonts (expects 'small' or 'medium').
+        colors (dict): Dictionary of color information for the panel.
+                       Expected keys: 'background', 'border', 'title', 'title_text'
+                       Example: {
+                           'background': config.Theme.CONTENT_CELLULAR_INFO_BG,
+                           'border': config.Theme.ACCENT,
+                           'title': config.Theme.PANEL_HEADER_BG, # For title bar background
+                           'title_text': config.Theme.PANEL_TITLE_TEXT # For title text
+                       }
+
     Returns:
-        pygame.Rect: The content rectangle (inside the panel, below the title)
+        pygame.Rect: The rectangle representing the content area of the panel (below the title bar).
     """
-    # Draw the panel background
-    pygame.draw.rect(screen, colors['background'], rect)
-    
-    # Draw the border
-    pygame.draw.rect(screen, colors['border'], rect, border_width)
-    
-    # Draw the title bar background
-    title_height = fonts['small'].get_height() + 4
-    title_rect = pygame.Rect(rect.left, rect.top, rect.width, title_height)
-    pygame.draw.rect(screen, colors['title'], title_rect)
-    
+    panel_bg_color = colors.get('background', (30, 30, 30)) # Default fallback
+    border_color = colors.get('border', (100, 100, 100))
+    title_bar_color = colors.get('title', (50, 50, 50))
+    title_text_color = colors.get('title_text', (255, 255, 255))
+    font_to_use = fonts.get('small', fonts.get('medium')) # Prefer small, fallback to medium
+
+    # Draw main panel background
+    pygame.draw.rect(screen, panel_bg_color, rect)
+    # Draw border around the main panel
+    pygame.draw.rect(screen, border_color, rect, 2) 
+
+    # Title bar dimensions
+    title_bar_height = font_to_use.get_height() + 8 # Padding for title text
+    title_bar_rect = pygame.Rect(rect.left, rect.top, rect.width, title_bar_height)
+
+    # Draw title bar background
+    pygame.draw.rect(screen, title_bar_color, title_bar_rect)
+    # Draw border for the title bar (can be same as panel or different)
+    pygame.draw.rect(screen, border_color, title_bar_rect, 2)
+
     # Draw title text
-    font = fonts['small']
-    try:
-        title_surface = font.render(title, True, colors['title_text'])
-        title_pos = (rect.left + 10, rect.top + (title_height - font.get_height()) // 2)
-        screen.blit(title_surface, title_pos)
-    except Exception as e:
-        logger.error(f"Error rendering panel title '{title}': {e}", exc_info=True)
-    
-    # Return the content area rectangle
-    content_rect = pygame.Rect(
-        rect.left + border_width,
-        rect.top + title_height + border_width,
-        rect.width - 2 * border_width,
-        rect.height - title_height - 2 * border_width
+    title_surface = font_to_use.render(title.upper(), True, title_text_color)
+    title_pos = (
+        title_bar_rect.left + (title_bar_rect.width - title_surface.get_width()) // 2, # Centered Horizontally
+        title_bar_rect.top + (title_bar_height - title_surface.get_height()) // 2  # Centered Vertically
     )
-    
+    screen.blit(title_surface, title_pos)
+
+    # Define content area (below title bar)
+    content_rect = pygame.Rect(
+        rect.left, 
+        rect.top + title_bar_height, 
+        rect.width, 
+        rect.height - title_bar_height
+    )
     return content_rect
 
-def draw_menu_item(screen, rect, text, fonts, colors, is_selected=False):
-    """
-    Draw a menu item.
-    
-    Args:
-        screen (pygame.Surface): The surface to draw on
-        rect (pygame.Rect): The rectangle for the menu item
-        text (str): The text for the menu item
-        fonts (dict): Dictionary of loaded fonts
-        colors (dict): Dictionary with 'background', 'text', 'selected_bg', and 'selected_text' colors
-        is_selected (bool): Whether this item is currently selected
-        
-    Returns:
-        pygame.Rect: The rectangle of the rendered item
-    """
-    # Determine colors based on selection state
-    if is_selected:
-        background_color = colors['selected_bg']
-        text_color = colors['selected_text']
-    else:
-        background_color = colors['background']
-        text_color = colors['text']
-        
-    # Draw the background
-    pygame.draw.rect(screen, background_color, rect)
-    
-    # Draw a subtle border
-    pygame.draw.rect(screen, colors['border'], rect, 1)
-    
-    # Draw the text
-    font = fonts['medium']
-    try:
-        text_surface = font.render(text, True, text_color)
-        # Position text centered vertically, left-aligned with padding
-        text_pos = (rect.left + 20, rect.centery - text_surface.get_height() // 2)
-        screen.blit(text_surface, text_pos)
-    except Exception as e:
-        logger.error(f"Error rendering menu item '{text}': {e}", exc_info=True)
-        
-    # If selected, draw a selection indicator
-    if is_selected:
-        # Triangle indicator on the left
-        indicator_points = [
-            (rect.left + 8, rect.centery - 4),
-            (rect.left + 12, rect.centery),
-            (rect.left + 8, rect.centery + 4)
-        ]
-        pygame.draw.polygon(screen, colors['selected_text'], indicator_points)
-        
-    return rect
+# -- Removed draw_menu_item and draw_menu functions --
+# These were likely part of an older menu system and are no longer used.
+# The current menu is drawn by ui/menu.py::draw_menu_screen
+# and ui/views/secret_games_view.py::_draw_secret_sidebar
 
-def draw_menu(screen, rect, items, selected_index, fonts, colors, title="MENU"):
-    """
-    Draw a complete menu with multiple items.
-    
-    Args:
-        screen (pygame.Surface): The surface to draw on
-        rect (pygame.Rect): The rectangle for the menu
-        items (list): List of menu item text strings
-        selected_index (int): Index of the currently selected item
-        fonts (dict): Dictionary of loaded fonts
-        colors (dict): Dictionary of color values
-        title (str): Title for the menu panel
-        
-    Returns:
-        list: List of rectangles for each menu item
-    """
-    # Draw the panel
-    panel_colors = {
-        'background': colors['background'],
-        'border': colors['accent'],
-        'title': colors['menu_header'],
-        'title_text': colors['foreground']
-    }
-    content_rect = draw_panel(screen, rect, title, fonts, panel_colors)
-    
-    # Calculate item height and total menu height
-    item_height = min(40, content_rect.height // max(len(items), 1))
-    
-    # Draw each menu item
-    item_rects = []
-    for i, item_text in enumerate(items):
-        item_rect = pygame.Rect(
-            content_rect.left + 2,
-            content_rect.top + (i * item_height),
-            content_rect.width - 4,
-            item_height
-        )
-        
-        item_colors = {
-            'background': colors['background'],
-            'text': colors['foreground'],
-            'selected_bg': colors['selected_bg'],
-            'selected_text': colors['selected_text'],
-            'border': colors['border']
-        }
-        
-        draw_menu_item(screen, item_rect, item_text, fonts, item_colors, i == selected_index)
-        item_rects.append(item_rect)
-        
-    return item_rects 
+# def draw_menu_item(screen, item_text, rect, is_selected, fonts, colors):
+#     ...
+
+# def draw_menu(screen, menu_items, selected_index, rect, fonts, colors):
+#     ... 

@@ -40,18 +40,21 @@ def draw_menu_screen(screen, app_state, fonts, config_module, sensor_values):
     menu_items = app_state.get_current_menu_items()
     selected_index = app_state.get_current_menu_index()
 
-    # --- Part 1: Draw Corner Rectangle ---
+    # --- Part 1: Draw Corner Rectangle (Distinct block, Orange) ---
     corner_rect = pygame.Rect(0, 0, sidebar_width, header_height)
+    # Apply rounding only to the top-left corner
     pygame.draw.rect(screen, corner_color, corner_rect, border_top_left_radius=curve_radius)
-    pygame.draw.rect(screen, config_module.Theme.BORDER_GENERAL, corner_rect, width=border_width_val, border_top_left_radius=curve_radius)
+    # Draw border outline (should respect rounding)
+    pygame.draw.rect(screen, config_module.COLOR_BORDER, corner_rect, width=config_module.Theme.BORDER_WIDTH, border_top_left_radius=curve_radius)
 
-    # --- Part 2: Draw Header Bar ---
+    # --- Part 2: Draw Header Bar (Starts AFTER sidebar width, Orange) ---
     header_rect = pygame.Rect(sidebar_width, 0, screen_width - sidebar_width, header_height)
     pygame.draw.rect(screen, header_color, header_rect)
-    pygame.draw.rect(screen, config_module.Theme.BORDER_GENERAL, header_rect, width=border_width_val)
+    # Draw border outline
+    pygame.draw.rect(screen, config_module.COLOR_BORDER, header_rect, width=config_module.Theme.BORDER_WIDTH)
 
-    # --- Part 3: Draw Sidebar Items ---
-    sidebar_content_y_start = header_height
+    # --- Part 3: Draw Sidebar Items (Starts BELOW header height) ---
+    sidebar_content_y_start = header_height # Items start below the header/corner
     sidebar_content_height = screen_height - header_height
     sidebar_items_area = pygame.Rect(0, sidebar_content_y_start, sidebar_width, sidebar_content_height)
 
@@ -71,18 +74,20 @@ def draw_menu_screen(screen, app_state, fonts, config_module, sensor_values):
                 item_bg_color = getattr(config_module.Theme, item.color_key) if item.color_key else config_module.Theme.ACCENT
             except AttributeError:
                 logger.warning(f"Theme color attribute '{item.color_key}' not found for menu item '{item.name}'. Using default accent.")
-                item_bg_color = config_module.Theme.ACCENT # Fallback color
+                item_bg_color = config_module.COLOR_ACCENT # Fallback color
             
             pygame.draw.rect(screen, item_bg_color, item_rect)
-            pygame.draw.rect(screen, config_module.Theme.BORDER_GENERAL, item_rect, width=border_width_val)
+            # Draw border outline for item
+            pygame.draw.rect(screen, config_module.COLOR_BORDER, item_rect, width=config_module.Theme.BORDER_WIDTH)
 
-            font_to_use = fonts['medium'] 
+            # Draw the category name
+            font = fonts['small']
             if item.name == "SECRET GAMES": # TODO: make this more robust. Use item.name
                 # Special handling for "SECRET GAMES"
                 title_text = CLASSIFIED_TEXT
             else:
                 title_text = item.name # Use item.name
-            text_surface = font_to_use.render(title_text, True, config_module.Theme.WHITE) 
+            text_surface = font.render(title_text, True, config_module.Theme.WHITE) 
             text_pos = (item_rect.left + 10, item_rect.centery - text_surface.get_height() // 2)
             screen.blit(text_surface, text_pos)
 

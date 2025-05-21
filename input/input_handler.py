@@ -6,18 +6,18 @@ import pygame
 import logging
 import config as app_config # For key mappings and action name constants
 
-# Attempt to import sense_hat specific items for joystick
+# Initialize logger first
+logger = logging.getLogger(__name__)
+
+# Import sense_hat constants first
 try:
     from sense_hat import ACTION_PRESSED, ACTION_RELEASED, ACTION_HELD
-    from data.sensors import sense # Import the global sense object
+    logger.info("Sense HAT constants imported successfully")
 except ImportError:
-    logger.warning("Sense HAT library or sense object not available. Joystick input disabled.")
-    sense = None
+    logger.warning("Sense HAT library not available. Joystick input disabled.")
     ACTION_PRESSED = "pressed" # Define fallbacks if import fails
     ACTION_RELEASED = "released"
     ACTION_HELD = "held"
-
-logger = logging.getLogger(__name__)
 
 # Define a mapping from Pygame keys to action names
 # This remains the primary map for keyboard, joystick events are processed separately
@@ -37,6 +37,34 @@ SENSE_HAT_DIRECTION_TO_KEY = {
     "middle": app_config.JOY_PRESS,
 }
 
+# Initialize sense as None by default at module level
+sense = None
+
+def init_joystick():
+    """Initialize the Sense HAT joystick if available by using the already initialized sensor object."""
+    global sense # This is input_handler.sense
+    try:
+        # Import the sense object that should have been initialized by main.py
+        from data.sensors import sense as system_sense_hat_object
+        if system_sense_hat_object is not None:
+            sense = system_sense_hat_object # Use the already initialized object
+            # The joystick events are cleared in data.sensors.init_sensors(),
+            # so no need to clear them again here usually.
+            logger.info("Sense HAT joystick support successfully referenced.")
+            return True
+        else:
+            logger.warning("Sense HAT object from data.sensors is None. Joystick not available.")
+            sense = None
+            return False
+    except ImportError:
+        logger.error("Could not import sense object from data.sensors. Joystick cannot be initialized.", exc_info=True)
+        sense = None
+        return False
+    except Exception as e:
+        logger.error(f"Error during joystick initialization by reference: {e}", exc_info=True)
+        sense = None
+        return False
+
 def process_input(events, config_module): # config_module is the actual config.py passed in
     """
     Process Pygame events and generate a list of abstract input results.
@@ -51,6 +79,7 @@ def process_input(events, config_module): # config_module is the actual config.p
                        {'type': 'KEYUP', 'key': K_d, 'action': 'NEXT'}
                        {'type': 'QUIT'}
     """
+    global sense  # Declare global at start of function
     results = [] # Store processed input events/actions
 
     # Process Pygame keyboard events first
@@ -79,37 +108,94 @@ def process_input(events, config_module): # config_module is the actual config.p
     if sense:
         try:
             joystick_events = sense.stick.get_events()
-            for event in joystick_events:
-                # We are primarily interested in "pressed" and "released" events
-                # "held" might be useful later, but for now, let's keep it simple
-                # and consistent with keyboard KEYDOWN/KEYUP.
-                
-                key = SENSE_HAT_DIRECTION_TO_KEY.get(event.direction)
-                if not key: # Unknown direction
-                    logger.warning(f"Unknown joystick direction: {event.direction}")
-                    continue
-
-                action = config_module.KEY_ACTION_MAP.get(key) # Get mapped action from config.py
-
-                if event.action == ACTION_PRESSED:
-                    results.append({
-                        'type': 'KEYDOWN', # Treat joystick press like KEYDOWN
-                        'key': key,
-                        'action': action
-                    })
-                    logger.debug(f"Joystick KEYDOWN: key={key} (from {event.direction}), action={action}")
-                elif event.action == ACTION_RELEASED:
-                    results.append({
-                        'type': 'KEYUP', # Treat joystick release like KEYUP
-                        'key': key,
-                        'action': action
-                    })
-                    logger.debug(f"Joystick KEYUP: key={key} (from {event.direction}), action={action}")
-                # Optionally handle ACTION_HELD if needed in the future
-                # elif event.action == ACTION_HELD:
-                #     logger.debug(f"Joystick HELD: key={key} (from {event.direction}), action={action}")
+            if joystick_events:
+                logger.info(f"Found {len(joystick_events)} joystick events")
+                for event in joystick_events:
+                    logger.info(f"Joystick event: direction='{event.direction}', action='{event.action}', timestamp={event.timestamp}")
+                    
+                    # Process joystick events directly
+                    if event.action == ACTION_PRESSED:
+                        if event.direction == "up":
+                            results.append({
+                                'type': 'JOYSTICK',
+                                'direction': 'up',
+                                'action': config_module.INPUT_ACTION_PREV
+                            })
+                        elif event.direction == "down":
+                            results.append({
+                                'type': 'JOYSTICK',
+                                'direction': 'down',
+                                'action': config_module.INPUT_ACTION_NEXT
+                            })
+                        elif event.direction == "middle":
+                            # For middle press, we send a specific event type that app_state can use
+                            # to start a timer for long-press detection.
+                            results.append({
+                                'type': 'JOYSTICK_MIDDLE_PRESS', # Distinct type
+                                'direction': 'middle',
+                                # No immediate action here, app_state will decide based on duration
+                            })
+                        elif event.direction == "left":
+                            results.append({
+                                'type': 'JOYSTICK',
+                                'direction': 'left',
+                                'action': config_module.INPUT_ACTION_BACK
+                            })
+                        elif event.direction == "right":
+                            results.append({
+                                'type': 'JOYSTICK',
+                                'direction': 'right',
+                                'action': config_module.INPUT_ACTION_NEXT
+                            })
+                    elif event.action == ACTION_RELEASED:
+                        if event.direction == "up":
+                            results.append({
+                                'type': 'JOYSTICK_RELEASE',
+                                'direction': 'up',
+                                'action': config_module.INPUT_ACTION_PREV
+                            })
+                        elif event.direction == "down":
+                            results.append({
+                                'type': 'JOYSTICK_RELEASE',
+                                'direction': 'down',
+                                'action': config_module.INPUT_ACTION_NEXT
+                            })
+                        elif event.direction == "middle":
+                            # Signal middle button release
+                            results.append({
+                                'type': 'JOYSTICK_MIDDLE_RELEASE',
+                                'direction': 'middle'
+                                # Action determined by app_state based on press duration
+                            })
+                        elif event.direction == "left":
+                            results.append({
+                                'type': 'JOYSTICK_RELEASE',
+                                'direction': 'left',
+                                'action': config_module.INPUT_ACTION_BACK
+                            })
+                        elif event.direction == "right":
+                            results.append({
+                                'type': 'JOYSTICK_RELEASE',
+                                'direction': 'right',
+                                'action': config_module.INPUT_ACTION_NEXT
+                            })
+                    elif event.action == ACTION_HELD: # Handle joystick held state for continuous movement
+                        if event.direction == "up":
+                            results.append({
+                                'type': 'JOYSTICK_UP_HELD',
+                                'direction': 'up' # Action is implied by type
+                            })
+                        elif event.direction == "down":
+                            results.append({
+                                'type': 'JOYSTICK_DOWN_HELD',
+                                'direction': 'down' # Action is implied by type
+                            })
+                        # Add other directions for HELD if needed later (e.g. for other games)
+            else:
+                logger.debug("No joystick events found")
         except Exception as e:
             logger.error(f"Error reading Sense HAT joystick: {e}", exc_info=True)
-            # Potentially set sense to None here if it's a persistent error, or handle more gracefully.
+            sense = None
+            logger.warning("Sense HAT joystick disabled due to error")
 
     return results 

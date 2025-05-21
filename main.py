@@ -20,7 +20,7 @@ from data import system_info
 # Import the new data updater function
 from data.data_updater import update_all_data
 from ui.display_manager import init_display, update_display
-from input.input_handler import process_input
+from input.input_handler import process_input, init_joystick
 
 # Get a logger for this module
 logger = logging.getLogger(__name__)
@@ -82,6 +82,12 @@ def main():
         # Non-critical Initializations (splash, sensors)
         try:
             logo_splash = pygame.image.load(config.SPLASH_LOGO_PATH).convert_alpha()
+            # Scale the logo to be 80% of screen width while maintaining aspect ratio
+            screen_width = screen.get_width()
+            target_width = int(screen_width * 0.8)
+            aspect_ratio = logo_splash.get_height() / logo_splash.get_width()
+            target_height = int(target_width * aspect_ratio)
+            logo_splash = pygame.transform.smoothscale(logo_splash, (target_width, target_height))
             logo_rect = logo_splash.get_rect(center=screen.get_rect().center)
             screen.fill(config.Theme.BACKGROUND)
             screen.blit(logo_splash, logo_rect)
@@ -98,6 +104,11 @@ def main():
                 logger.warning("Could not initialize Sense HAT. Sensor readings will show errors.")
             else:
                 logger.info("Sensors initialized successfully.")
+                # Initialize joystick after sensors are initialized
+                if init_joystick():
+                    logger.info("Joystick initialized successfully")
+                else:
+                    logger.warning("Could not initialize joystick")
         except Exception as e_sensors:
             logger.error(f"Error initializing sensors: {e_sensors}", exc_info=True)
             sensors_active = False # Assume sensors are not active if init fails

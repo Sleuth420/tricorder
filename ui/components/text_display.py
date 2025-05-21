@@ -122,7 +122,7 @@ def render_note(screen, note, fonts, color, position):
         position
     )
 
-def render_footer(screen, text, fonts, color, width, height):
+def render_footer(screen, text, fonts, color, width, height, sidebar_width=0):
     """
     Render footer text at the bottom of the screen.
     
@@ -133,6 +133,7 @@ def render_footer(screen, text, fonts, color, width, height):
         color (tuple): RGB color tuple
         width (int): Screen width for centering
         height (int): Screen height for positioning
+        sidebar_width (int): Width of the sidebar, if any
     
     Returns:
         pygame.Rect: The rectangle of the rendered text
@@ -142,10 +143,13 @@ def render_footer(screen, text, fonts, color, width, height):
     # Position near the bottom of the screen
     footer_y = height - (font.get_height() * 1.5)
     
+    # Calculate center position relative to main content area
+    main_content_center = sidebar_width + (width - sidebar_width) // 2
+    
     return render_text(
         screen, 
         text, 
         font,
         color, 
-        (width // 2, footer_y)
+        (main_content_center, footer_y)
     ) 

@@ -66,6 +66,7 @@ class AppState:
             MenuItem(name="Quit", action_name=app_config.ACTION_RETURN_TO_MENU, image_path=None)
         ]
         self.active_pong_game = None
+        self.joystick_middle_press_start_time = None # For joystick long press detection
 
         # Find the index for the "Settings" menu item for combo check
         self.settings_menu_index = -1
@@ -140,11 +141,15 @@ class AppState:
 
         for result in input_results:
             event_type = result['type']
-            key = result.get('key') 
-            action_name = result.get('action') # This is INPUT_ACTION_PREV etc.
+            key = result.get('key')
+            action_name = result.get('action')
 
-            if event_type == 'QUIT':
-                pass # Main loop handles this via running = False
+            if event_type == self.config.INPUT_ACTION_QUIT: # Pygame quit
+                # This is usually handled by main loop checking `running`
+                # but if input_handler sends it, we can acknowledge.
+                logger.info(f"'{self.config.INPUT_ACTION_QUIT}' action type received by app_state.")
+                # Potentially set a flag or directly influence main loop if needed.
+                pass
 
             elif event_type == 'KEYDOWN':
                 self.keys_held.add(key)
@@ -155,10 +160,85 @@ class AppState:
                     logger.debug("KEY_PREV press timer started.")
 
                 if not self.secret_combo_start_time and self._check_secret_combo_conditions():
-                    logger.info("SECRET COMBO TIMER STARTED")
+                    logger.info("KEYBOARD SECRET COMBO TIMER STARTED")
                     self.secret_combo_start_time = time.time()
-                    combo_potentially_active = True 
-                # No direct PONG input handling here on KeyDown - PongGame.update uses keys_held
+                    combo_potentially_active = True
+            
+            elif event_type == 'JOYSTICK':
+                if action_name:
+                    logger.debug(f"JOYSTICK event: action_name='{action_name}' in state {self.current_state}")
+                    if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game:
+                        # Handle input for PONG game state
+                        if not self.active_pong_game.paused:  # Game is active and not paused
+                            if action_name == app_config.INPUT_ACTION_PREV:  # Joystick Up Press for paddle
+                                logger.debug("Pong (Active): Joystick UP PRESS, moving paddle.")
+                                self.active_pong_game.move_paddle_up()
+                            elif action_name == app_config.INPUT_ACTION_NEXT:  # Joystick Down Press for paddle
+                                logger.debug("Pong (Active): Joystick DOWN PRESS, moving paddle.")
+                                self.active_pong_game.move_paddle_down()
+                            elif action_name == app_config.INPUT_ACTION_SELECT: # Joystick Middle to PAUSE game
+                                logger.info("Joystick SELECT in active Pong. Pausing game.")
+                                self.active_pong_game.toggle_pause()
+                                state_changed_by_action = True
+
+                        elif self.active_pong_game.paused: # Game is PAUSED, handle pause menu
+                            if action_name == app_config.INPUT_ACTION_PREV: # Joystick Up for pause menu navigation
+                                logger.debug("Pong (Paused): Joystick UP, navigating pause menu.")
+                                self.active_pong_game.navigate_pause_menu_up()
+                            elif action_name == app_config.INPUT_ACTION_NEXT: # Joystick Down for pause menu navigation
+                                logger.debug("Pong (Paused): Joystick DOWN, navigating pause menu.")
+                                self.active_pong_game.navigate_pause_menu_down()
+                            elif action_name == app_config.INPUT_ACTION_SELECT: # Joystick Middle to select pause menu option
+                                logger.debug("Pong (Paused): Joystick SELECT, selecting pause menu option.")
+                                menu_action_result = self.active_pong_game.select_pause_menu_option()
+                                if menu_action_result == "RESUME_GAME":
+                                    logger.info("Pong: Resuming game from pause menu (joystick).")
+                                    state_changed_by_action = True 
+                                elif menu_action_result == "QUIT_TO_MENU":
+                                    logger.info("Pong: Quitting to menu from pause menu (joystick).")
+                                    if self.previous_state and self.previous_state != STATE_PONG_ACTIVE :
+                                        self.current_state = self.previous_state
+                                    else: 
+                                        self.current_state = STATE_MENU
+                                    self.previous_state = STATE_PONG_ACTIVE 
+                                    self.active_pong_game = None 
+                                    state_changed_by_action = True
+                    else: # Not in Pong game state, or pong game not active - process general joystick actions
+                        logger.debug(f"Joystick action '{action_name}' being routed to _process_action for state {self.current_state}")
+                        state_changed_by_action = self._process_action(action_name) or state_changed_by_action
+
+            elif event_type == 'JOYSTICK_UP_HELD':
+                if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game and not self.active_pong_game.paused:
+                    logger.debug("Pong: Joystick UP_HELD detected, moving paddle.")
+                    self.active_pong_game.move_paddle_up()
+            
+            elif event_type == 'JOYSTICK_DOWN_HELD':
+                if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game and not self.active_pong_game.paused:
+                    logger.debug("Pong: Joystick DOWN_HELD detected, moving paddle.")
+                    self.active_pong_game.move_paddle_down()
+
+            elif event_type == 'JOYSTICK_MIDDLE_PRESS':
+                logger.debug(f"Joystick middle PRESS detected in state {self.current_state}. Starting press timer.")
+                self.joystick_middle_press_start_time = time.time()
+            
+            elif event_type == 'JOYSTICK_MIDDLE_RELEASE':
+                if self.joystick_middle_press_start_time is not None:
+                    press_duration = time.time() - self.joystick_middle_press_start_time
+                    logger.debug(f"Joystick middle RELEASE detected. Press duration: {press_duration:.2f}s")
+                    
+                    current_state_before_select = self.current_state
+                    timer_was_running = self.joystick_middle_press_start_time 
+                    self.joystick_middle_press_start_time = None 
+
+                    if current_state_before_select == STATE_MENU and timer_was_running and press_duration >= self.config.SECRET_HOLD_DURATION:
+                        logger.debug("Joystick middle long press for secret menu handled by update(). No SELECT action from release here.")
+                    elif current_state_before_select != STATE_SECRET_GAMES: 
+                        logger.debug("Joystick middle short press detected. Processing as INPUT_ACTION_SELECT.")
+                        state_changed_by_action = self._process_action(app_config.INPUT_ACTION_SELECT) or state_changed_by_action
+                    else:
+                        logger.debug("Joystick middle released, but state is SECRET_GAMES or was not a short press. No SELECT action.")
+                else:
+                    logger.debug("Joystick middle RELEASE detected without a corresponding press start time.")
 
             elif event_type == 'KEYUP':
                 combo_was_active = bool(self.secret_combo_start_time)
@@ -167,87 +247,147 @@ class AppState:
                 logger.debug(f"KEYUP: key={key}. keys_held={self.keys_held}")
 
                 if self.secret_combo_start_time and (key == self.config.KEY_PREV or key == self.config.KEY_NEXT):
-                    logger.info("SECRET COMBO TIMER RESET (Key Up)")
+                    logger.info("KEYBOARD SECRET COMBO TIMER RESET (Key Up)")
                     self.secret_combo_start_time = None
                     combo_potentially_active = False
                 
-                if not combo_was_active: # Only process standard actions if combo wasn't just active/reset
+                if not combo_was_active:
                     if key == self.config.KEY_PREV and self.key_prev_press_start_time is not None:
                         press_duration = time.time() - self.key_prev_press_start_time
                         self.key_prev_press_start_time = None 
                         logger.debug("KEY_PREV released, timer reset.")
+                        # keyboard PREV in paused Pong: navigate pause menu UP
                         if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game and self.active_pong_game.paused and action_name == app_config.INPUT_ACTION_PREV:
-                            logger.info("PREV key released in paused Pong. Unpausing.")
-                            self.active_pong_game.toggle_pause()
-                            state_changed_by_action = True
+                            logger.info("Keyboard PREV in paused Pong. Navigating pause menu up.")
+                            self.active_pong_game.navigate_pause_menu_up()
+                            # state_changed_by_action = True # UI update handled by Pong's draw method
                         elif self.current_state in [STATE_MENU, STATE_SECRET_GAMES] and press_duration < self.config.INPUT_LONG_PRESS_DURATION and action_name == app_config.INPUT_ACTION_PREV:
                             logger.debug(f"Short press PREV in {self.current_state} state: processing PREV action on KeyUp.")
                             state_changed_by_action = self._process_action(app_config.INPUT_ACTION_PREV) or state_changed_by_action
                         
                     elif key == self.config.KEY_NEXT and action_name == app_config.INPUT_ACTION_NEXT:
-                         if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game and self.active_pong_game.paused:
-                             logger.info("NEXT key released in paused Pong. Quitting game.")
-                             if self.previous_state:
-                                 self.current_state = self.previous_state
-                             else:
-                                 self.current_state = STATE_MENU 
-                             self.previous_state = STATE_PONG_ACTIVE
-                             self.active_pong_game = None 
-                             state_changed_by_action = True
-                             logger.debug(f"State changed via NEXT (Quit) in paused Pong: -> {self.current_state}")
+                         # keyboard NEXT in paused Pong: navigate pause menu DOWN
+                         if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game and self.active_pong_game.paused and action_name == app_config.INPUT_ACTION_NEXT:
+                             logger.info("Keyboard NEXT in paused Pong. Navigating pause menu down.")
+                             self.active_pong_game.navigate_pause_menu_down()
+                             # state_changed_by_action = True
                          elif self.current_state in [STATE_MENU, STATE_SECRET_GAMES]:
                              logger.debug(f"Short press NEXT in {self.current_state} state: processing NEXT action on KeyUp.")
                              state_changed_by_action = self._process_action(app_config.INPUT_ACTION_NEXT) or state_changed_by_action
 
                     elif key == self.config.KEY_SELECT and action_name == app_config.INPUT_ACTION_SELECT:
-                         if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game:
-                             logger.info("SELECT key released in Pong. Toggling pause.")
+                         # keyboard SELECT in paused Pong: select pause menu item
+                         if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game and self.active_pong_game.paused:
+                             logger.info("Keyboard SELECT in paused Pong. Selecting pause menu option.")
+                             menu_action = self.active_pong_game.select_pause_menu_option()
+                             if menu_action == "RESUME_GAME":
+                                 logger.info("Pong: Resuming game from pause menu (keyboard).")
+                                 state_changed_by_action = True
+                             elif menu_action == "QUIT_TO_MENU":
+                                 logger.info("Pong: Quitting to menu from pause menu (keyboard).")
+                                 if self.previous_state and self.previous_state != STATE_PONG_ACTIVE:
+                                     self.current_state = self.previous_state
+                                 else:
+                                     self.current_state = STATE_MENU
+                                 self.previous_state = STATE_PONG_ACTIVE
+                                 self.active_pong_game = None
+                                 state_changed_by_action = True
+                         # keyboard SELECT in active (unpaused) Pong: PAUSE the game
+                         elif self.current_state == STATE_PONG_ACTIVE and self.active_pong_game and not self.active_pong_game.paused:
+                             logger.info("SELECT key released in active Pong. Pausing game.")
                              self.active_pong_game.toggle_pause()
                              state_changed_by_action = True 
                          else: 
-                             logger.debug("Short press SELECT: processing SELECT action on KeyUp.")
+                             logger.debug("Short press SELECT (keyboard): processing SELECT action on KeyUp for non-Pong state.")
                              state_changed_by_action = self._process_action(app_config.INPUT_ACTION_SELECT) or state_changed_by_action
                     
-                    elif action_name == app_config.INPUT_ACTION_BACK: # Handle JOY_LEFT mapped to BACK
-                        # Allow back from most states except main menu and active (unpaused) pong
-                        if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_SECRET_GAMES]:
+                    elif action_name == app_config.INPUT_ACTION_BACK: 
+                        if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_SECRET_GAMES] or \
+                           (self.current_state == STATE_SECRET_GAMES): # Allow back from secret games menu
                             logger.info(f"BACK action triggered by key {key} in state {self.current_state}. Returning to menu.")
                             state_changed_by_action = self._return_to_menu() or state_changed_by_action
-                        elif self.current_state == STATE_SECRET_GAMES:
-                             # In secret games menu, BACK action might be identical to selecting "Quit" menu item.
-                             # Or, we can make it a dedicated back. For now, let it be handled by its own menu items.
-                             logger.debug(f"BACK action triggered in {self.current_state}, typically handled by menu item.")
-                             pass # Let specific menu logic handle it if needed or do nothing.
-                        # In PONG_ACTIVE, back is handled by KEY_NEXT when paused, or not at all if active.
-                        # In MENU, there's nowhere to go "back" to via this action.
+                        else:
+                            logger.debug(f"BACK action by key {key} in state {self.current_state} not processed by generic rule.")
+
 
         return state_changed_by_action
 
     def update(self):
         state_changed = False
+        # Keyboard secret combo check
         if self.secret_combo_start_time:
             current_time = time.time()
             duration = current_time - self.secret_combo_start_time
             required_duration = self.config.SECRET_HOLD_DURATION
-            logger.debug(f"Checking combo timer: duration={duration:.2f}, required={required_duration}")
             if duration >= required_duration:
+                if self._check_secret_combo_conditions(): 
+                    logger.info("Keyboard secret combo detected! Activating secret games menu.")
+                    state_changed = self._activate_secret_menu()
+                    if state_changed:
+                        self.secret_combo_start_time = None 
+                        return state_changed 
+                else:
+                    self.secret_combo_start_time = None 
+        
+        # Joystick middle long press check for secret menu
+        if self.joystick_middle_press_start_time is not None and self.current_state == STATE_MENU:
+            current_time = time.time()
+            duration = current_time - self.joystick_middle_press_start_time
+            required_duration = self.config.SECRET_HOLD_DURATION 
+            if duration >= required_duration:
+                logger.info("Joystick middle long press detected in MENU! Activating secret games menu.")
                 state_changed = self._activate_secret_menu()
                 if state_changed:
+                    self.joystick_middle_press_start_time = None 
                     return state_changed
+        
+        # Handle continuous paddle movement for Pong from keyboard keys_held
+        if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game and not self.active_pong_game.paused:
+            if self.config.KEY_PREV in self.keys_held:
+                self.active_pong_game.move_paddle_up()
+            if self.config.KEY_NEXT in self.keys_held:
+                self.active_pong_game.move_paddle_down()
 
+        # Long press KEY_PREV for back to menu (non-Pong states)
         if self.key_prev_press_start_time is not None:
             hold_duration = time.time() - self.key_prev_press_start_time
             if hold_duration >= self.config.INPUT_LONG_PRESS_DURATION:
-                if self.current_state != STATE_PONG_ACTIVE and self.current_state not in [STATE_MENU, STATE_SECRET_GAMES]: 
+                if self.current_state not in [STATE_PONG_ACTIVE, STATE_MENU, STATE_SECRET_GAMES]: 
                     logger.info(f"Long press KEY_PREV detected in state {self.current_state}. Returning to menu.")
                     state_changed = self._return_to_menu()
-                else:
-                    logger.debug(f"Long press KEY_PREV in {self.current_state} state - ignored for back action.")
+                # Reset timer regardless of action to prevent re-triggering or interference
                 self.key_prev_press_start_time = None 
+                if state_changed: return state_changed # Return if this action changed state
+
+        # Auto cycle dashboard (if applicable)
+        # Note: This was originally in main loop, but makes more sense here if app_state manages time-based transitions.
+        # However, keeping it in main.py is also fine if it simplifies things there.
+        # For now, assuming main.py handles auto_cycle_dashboard.
+        # If you want app_state to handle it:
+        # current_time = time.time()
+        # if self.auto_cycle_dashboard(current_time): # auto_cycle_dashboard would return True if cycled
+        #    state_changed = True # Or a more specific flag if needed for display updates
+
         return state_changed
 
     def _process_action(self, action):
         state_changed = False
+        
+        # Handle BACK action universally if applicable
+        if action == app_config.INPUT_ACTION_BACK:
+            # Conditions under which BACK should take to the main menu:
+            # Not already in MENU, and not in PONG_ACTIVE (unless paused, but back from pong is handled by NEXT when paused)
+            # SECRET_GAMES menu should also allow back to MENU.
+            if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE]:
+                logger.info(f"BACK action processed in state {self.current_state}. Returning to menu.")
+                return self._return_to_menu() # state_changed is handled by _return_to_menu
+            elif self.current_state == STATE_SECRET_GAMES: # Explicitly handle back from secret games to main menu
+                logger.info(f"BACK action processed in SECRET_GAMES. Returning to main menu.")
+                return self._return_to_menu()
+            else:
+                logger.debug(f"BACK action received in state {self.current_state}, but no generic back action defined here (e.g., already in menu or unpaused game).")
+                return False # No state change from this generic handler
+
         # Use action constants for comparison
         if self.current_state == STATE_MENU:
             state_changed = self._handle_menu_input(action)
@@ -275,9 +415,11 @@ class AppState:
         if action == app_config.INPUT_ACTION_NEXT:
             self.menu_index = (self.menu_index + 1) % num_items
             logger.debug(f"Menu NEXT: index={self.menu_index}, item='{self.menu_items[self.menu_index].name}'")
+            return True # Indicate UI update needed
         elif action == app_config.INPUT_ACTION_PREV:
             self.menu_index = (self.menu_index - 1 + num_items) % num_items
             logger.debug(f"Menu PREV: index={self.menu_index}, item='{self.menu_items[self.menu_index].name}'")
+            return True # Indicate UI update needed
         elif action == app_config.INPUT_ACTION_SELECT:
             selected_item = self.menu_items[self.menu_index]
             logger.info(f"Menu SELECT: item='{selected_item.name}'")
@@ -328,9 +470,11 @@ class AppState:
         if action == app_config.INPUT_ACTION_NEXT:
             self.secret_menu_index = (self.secret_menu_index + 1) % num_items
             logger.debug(f"Secret Menu NEXT: index={self.secret_menu_index}, item='{self.secret_menu_items[self.secret_menu_index].name}'")
+            return True # Indicate UI update needed
         elif action == app_config.INPUT_ACTION_PREV:
             self.secret_menu_index = (self.secret_menu_index - 1 + num_items) % num_items
             logger.debug(f"Secret Menu PREV: index={self.secret_menu_index}, item='{self.secret_menu_items[self.secret_menu_index].name}'")
+            return True # Indicate UI update needed
         elif action == app_config.INPUT_ACTION_SELECT:
             selected_item = self.secret_menu_items[self.secret_menu_index]
             logger.info(f"Secret Menu SELECT: item='{selected_item.name}' with action='{selected_item.action_name}'")

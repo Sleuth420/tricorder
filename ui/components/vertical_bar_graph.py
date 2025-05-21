@@ -23,7 +23,7 @@ class VerticalBarGraph:
         Args:
             screen (pygame.Surface): The surface to draw on.
             rect (pygame.Rect): The bounding rectangle for the graph.
-            title (str): The title label displayed below the graph.
+            title (str): The title label (not used anymore, kept for compatibility).
             units (str): The units label (e.g., 'C', 'K3').
             min_val (float): The minimum value of the scale.
             max_val (float): The maximum value of the scale.
@@ -36,7 +36,6 @@ class VerticalBarGraph:
         """
         self.screen = screen
         self.rect = rect
-        self.title = title
         self.units = units
         self.min_val = min_val
         self.max_val = max_val
@@ -44,39 +43,36 @@ class VerticalBarGraph:
         self.critical_low = critical_low if critical_low is not None else min_val
         self.critical_high = critical_high if critical_high is not None else max_val
         self.num_ticks = num_ticks
-        self.fonts = fonts # Store the passed fonts dictionary
-        self.config = config_module # Store the passed config module for theme access
+        self.fonts = fonts
+        self.config = config_module
 
         if max_val <= min_val:
             raise ValueError("max_val must be greater than min_val")
         self.value_range = max_val - min_val
 
-        # Use fonts from the passed dictionary
-        # Fallback to default font if specific size not found (or handle in main font loading)
         self.font_small = self.fonts.get('small', pygame.font.Font(None, self.config.FONT_SIZE_SMALL))
         self.font_medium = self.fonts.get('medium', pygame.font.Font(None, self.config.FONT_SIZE_MEDIUM))
 
-        # Pre-calculate positions and sizes
         self._calculate_layout()
 
     def _calculate_layout(self):
         """Calculates positions for drawing elements."""
-        title_height = self.font_medium.get_height() + 5
+        # Use full rect height for scale since we don't need title space anymore
         self.scale_rect = pygame.Rect(
             self.rect.left,
             self.rect.top,
             self.rect.width,
-            self.rect.height - title_height
+            self.rect.height
         )
         self.scale_line_x = self.scale_rect.centerx
-        self.scale_top_y = self.scale_rect.top + 10 # Padding
-        self.scale_bottom_y = self.scale_rect.bottom - 10 # Padding
+        self.scale_top_y = self.scale_rect.top + 10  # Padding
+        self.scale_bottom_y = self.scale_rect.bottom - 10  # Padding
         self.scale_height = self.scale_bottom_y - self.scale_top_y
-        self.title_pos = (self.rect.centerx, self.scale_rect.bottom + 5)
-        self.tick_length = 8
-        self.label_offset_x = 15
-        self.pointer_width = 15
-        self.pointer_height = 10
+        self.tick_length = 10  # Increased for better visibility
+        self.label_offset_x = 20  # Increased for better spacing
+        self.pointer_width = 25  # Increased for better visibility
+        self.pointer_height = 15  # Increased for better visibility
+        self.zone_width = 8  # Width of the color zones on each side of the scale line
 
     def _value_to_y(self, value):
         """Converts a data value to a Y coordinate on the scale."""
@@ -104,11 +100,42 @@ class VerticalBarGraph:
         Args:
             current_value (float): The value to display on the graph.
         """
-        base_scale_color = self.config.Palette.DARK_GREY # Use Theme
+        # Draw the main scale line
+        base_scale_color = self.config.Palette.DARK_GREY
         pygame.draw.line(self.screen, base_scale_color,
                          (self.scale_line_x, self.scale_top_y),
-                         (self.scale_line_x, self.scale_bottom_y), 2)
+                         (self.scale_line_x, self.scale_bottom_y), 3)
 
+        # Draw color zones as thin lines on each side of the scale
+        zone_height = self.scale_height
+        
+        # Draw critical low zone
+        if self.critical_low > self.min_val:
+            low_zone_height = int((self.critical_low - self.min_val) / self.value_range * zone_height)
+            low_zone_y = self.scale_bottom_y - low_zone_height
+            pygame.draw.line(self.screen, self.config.Theme.ALERT,
+                           (self.scale_line_x - self.zone_width, low_zone_y),
+                           (self.scale_line_x + self.zone_width, low_zone_y), 2)
+        
+        # Draw normal range zone
+        normal_low_y = self._value_to_y(self.normal_range[1])
+        normal_high_y = self._value_to_y(self.normal_range[0])
+        pygame.draw.line(self.screen, self.config.Theme.FOREGROUND,
+                        (self.scale_line_x - self.zone_width, normal_low_y),
+                        (self.scale_line_x + self.zone_width, normal_low_y), 2)
+        pygame.draw.line(self.screen, self.config.Theme.FOREGROUND,
+                        (self.scale_line_x - self.zone_width, normal_high_y),
+                        (self.scale_line_x + self.zone_width, normal_high_y), 2)
+        
+        # Draw critical high zone
+        if self.critical_high < self.max_val:
+            high_zone_height = int((self.max_val - self.critical_high) / self.value_range * zone_height)
+            high_zone_y = self.scale_top_y + high_zone_height
+            pygame.draw.line(self.screen, self.config.Theme.ALERT,
+                           (self.scale_line_x - self.zone_width, high_zone_y),
+                           (self.scale_line_x + self.zone_width, high_zone_y), 2)
+
+        # Draw ticks and labels
         for i in range(self.num_ticks):
             proportion = i / (self.num_ticks - 1)
             y = self.scale_bottom_y - int(proportion * self.scale_height)
@@ -117,36 +144,38 @@ class VerticalBarGraph:
             pygame.draw.line(self.screen, tick_color,
                              (self.scale_line_x - self.tick_length // 2, y),
                              (self.scale_line_x + self.tick_length // 2, y), 3)
+            
+            # Draw value label
             label_text = f"{tick_value:.0f}"
-            label_surface = self.font_small.render(label_text, True, self.config.Theme.WHITE) # Use Theme
+            label_surface = self.font_small.render(label_text, True, self.config.Theme.WHITE)
             label_rect = label_surface.get_rect(centery=y, right=self.scale_line_x - self.label_offset_x)
             self.screen.blit(label_surface, label_rect)
+            
+            # Draw units only for min and max values
             if i == 0 or i == self.num_ticks - 1:
-                units_surface = self.font_small.render(self.units, True, self.config.Theme.WHITE) # Use Theme
+                units_surface = self.font_small.render(self.units, True, self.config.Theme.WHITE)
                 units_rect = units_surface.get_rect(centery=y, left=self.scale_line_x + self.label_offset_x)
                 self.screen.blit(units_surface, units_rect)
 
-        title_surface = self.font_medium.render(self.title.upper(), True, self.config.Theme.ACCENT) # Use Theme
-        title_rect = title_surface.get_rect(centerx=self.rect.centerx, bottom=self.rect.bottom - 5)
-        self.screen.blit(title_surface, title_rect)
-
-        pointer_y = self._value_to_y(current_value if current_value is not None else self.min_val)
-        pointer_color = self._get_zone_color(current_value)
-        pointer_base_x = self.scale_line_x + self.tick_length // 2 + 2
-        points = [
-            (pointer_base_x, pointer_y),
-            (pointer_base_x + self.pointer_width, pointer_y - self.pointer_height // 2),
-            (pointer_base_x + self.pointer_width, pointer_y + self.pointer_height // 2)
-        ]
-        pygame.draw.polygon(self.screen, self.config.Theme.WHITE, points) # Use Theme
-
+        # Draw current value pointer
         if current_value is not None:
-             pygame.draw.line(self.screen, pointer_color,
-                              (self.scale_line_x - self.tick_length // 2, pointer_y),
-                              (self.scale_line_x + self.tick_length // 2, pointer_y),
-                              3)
-        else:
-             pass
+            pointer_y = self._value_to_y(current_value)
+            pointer_color = self._get_zone_color(current_value)
+            
+            # Draw horizontal line at current value
+            pygame.draw.line(self.screen, pointer_color,
+                             (self.scale_line_x - self.tick_length // 2, pointer_y),
+                             (self.scale_line_x + self.tick_length // 2, pointer_y),
+                             3)
+            
+            # Draw pointer triangle
+            pointer_base_x = self.scale_line_x + self.tick_length // 2 + 2
+            points = [
+                (pointer_base_x, pointer_y),
+                (pointer_base_x + self.pointer_width, pointer_y - self.pointer_height // 2),
+                (pointer_base_x + self.pointer_width, pointer_y + self.pointer_height // 2)
+            ]
+            pygame.draw.polygon(self.screen, self.config.Theme.WHITE, points)
 
         # Debug: Draw bounding box
         # pygame.draw.rect(self.screen, (0, 0, 255), self.rect, 1)

@@ -46,6 +46,8 @@ class PongGame:
         self.game_over = False
         self.winner_message = ""
         self.paused = False # Add paused state
+        self.pause_menu_options = ["Resume", "Quit to Menu"]
+        self.pause_menu_selected_index = 0
 
         logger.info(f"Pong game initialized with area {width}x{height}")
 
@@ -83,27 +85,54 @@ class PongGame:
         # elif key_code == self.config.KEY_NEXT: # Check against configured key for DOWN
         #    ...
 
+    def move_paddle_up(self):
+        """Moves the player paddle up."""
+        if not self.game_over and not self.paused:
+            self.paddle_y -= PADDLE_SPEED
+            if self.paddle_y < 0:
+                self.paddle_y = 0
+
+    def move_paddle_down(self):
+        """Moves the player paddle down."""
+        if not self.game_over and not self.paused:
+            self.paddle_y += PADDLE_SPEED
+            if self.paddle_y > self.height - PADDLE_HEIGHT:
+                self.paddle_y = self.height - PADDLE_HEIGHT
+
     def toggle_pause(self):
         """Toggles the paused state of the game."""
         self.paused = not self.paused
+        if self.paused:
+            self.pause_menu_selected_index = 0 
         logger.info(f"Pong game {'paused' if self.paused else 'resumed'}.")
+
+    def navigate_pause_menu_up(self):
+        if self.paused and self.pause_menu_options:
+            self.pause_menu_selected_index = (self.pause_menu_selected_index - 1 + len(self.pause_menu_options)) % len(self.pause_menu_options)
+            logger.debug(f"Pong pause menu UP to index {self.pause_menu_selected_index}: '{self.pause_menu_options[self.pause_menu_selected_index]}'")
+
+    def navigate_pause_menu_down(self):
+        if self.paused and self.pause_menu_options:
+            self.pause_menu_selected_index = (self.pause_menu_selected_index + 1) % len(self.pause_menu_options)
+            logger.debug(f"Pong pause menu DOWN to index {self.pause_menu_selected_index}: '{self.pause_menu_options[self.pause_menu_selected_index]}'")
+
+    def select_pause_menu_option(self):
+        if self.paused and self.pause_menu_options and self.pause_menu_selected_index < len(self.pause_menu_options):
+            selected_action_text = self.pause_menu_options[self.pause_menu_selected_index]
+            logger.info(f"Pong pause menu SELECTED: {selected_action_text}")
+            if selected_action_text == "Resume":
+                self.toggle_pause() 
+                return "RESUME_GAME"
+            elif selected_action_text == "Quit to Menu":
+                return "QUIT_TO_MENU"
+        return None
 
     def update(self, keys_held):
         """Updates the game state (ball movement, collisions, paddle movement)."""
         if self.game_over or self.paused: # Check for pause state here
             return
 
-        # --- Paddle Movement based on keys_held --- #
-        if self.config.KEY_PREV in keys_held:
-            self.paddle_y -= PADDLE_SPEED
-            if self.paddle_y < 0:
-                self.paddle_y = 0
-            # logger.debug(f"Pong paddle moving Up to {self.paddle_y}") # Too spammy
-        elif self.config.KEY_NEXT in keys_held:
-            self.paddle_y += PADDLE_SPEED
-            if self.paddle_y > self.height - PADDLE_HEIGHT:
-                self.paddle_y = self.height - PADDLE_HEIGHT
-            # logger.debug(f"Pong paddle moving Down to {self.paddle_y}") # Too spammy
+        # Paddle movement is now handled by explicit move_paddle_up/down() calls from app_state
 
         # --- Ball Movement --- #
         self.ball_x += self.ball_vel_x
@@ -180,19 +209,23 @@ class PongGame:
         # Draw PAUSED message and controls if paused (and not game over)
         if self.paused and not self.game_over:
             medium_font = fonts.get('medium', self.font)
-            paused_surf = medium_font.render("PAUSED", True, config.COLOR_ALERT)
-            paused_rect = paused_surf.get_rect(center=(self.width // 2, self.height // 2 - 20))
-            screen.blit(paused_surf, paused_rect)
-
-            # Add pause menu hints
-            key_prev_name = pygame.key.name(config.KEY_PREV).upper()
-            key_next_name = pygame.key.name(config.KEY_NEXT).upper()
-            key_select_name = pygame.key.name(config.KEY_SELECT).upper()
-            hint = f"({key_prev_name}=Continue | {key_next_name}=Quit | {key_select_name}=Unpause)"
             small_font = fonts.get('small', self.font)
-            hint_surf = small_font.render(hint, True, config.COLOR_FOREGROUND)
-            hint_rect = hint_surf.get_rect(center=(self.width // 2, paused_rect.bottom + 15))
-            screen.blit(hint_surf, hint_rect)
+            
+            overlay_alpha = 180
+            overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, overlay_alpha))
+            screen.blit(overlay, (0, 0))
+
+            paused_title_surf = medium_font.render("PAUSED", True, config.COLOR_ALERT)
+            paused_title_rect = paused_title_surf.get_rect(center=(self.width // 2, self.height // 3))
+            screen.blit(paused_title_surf, paused_title_rect)
+
+            menu_item_y_start = paused_title_rect.bottom + 40
+            for i, option_text in enumerate(self.pause_menu_options):
+                color = config.COLOR_ACCENT if i == self.pause_menu_selected_index else config.COLOR_FOREGROUND
+                option_surf = small_font.render(option_text, True, color)
+                option_rect = option_surf.get_rect(center=(self.width // 2, menu_item_y_start + i * (small_font.get_height() + 15)))
+                screen.blit(option_surf, option_rect)
 
         # Draw Game Over / Winner message
         elif self.game_over: # Use elif to avoid drawing over pause message

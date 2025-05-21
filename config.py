@@ -7,7 +7,7 @@ import pygame # Add pygame import for key constants
 SCREEN_WIDTH = 320      # Default width (if not fullscreen)
 SCREEN_HEIGHT = 240     # Default height (if not fullscreen)
 FULLSCREEN = True      # Run in windowed mode?
-FPS = 15                # Frames per second/update rate
+FPS = 30                # Frames per second/update rate
 
 # -- Sensor Mode Constants --
 SENSOR_TEMPERATURE = "TEMPERATURE"
@@ -138,7 +138,7 @@ COLOR_NETWORK = Theme.CONTENT_NETWORK_NAME_TEXT     # Mapped to new theme name
 # -- Fonts --
 # (Store font files in a 'fonts' subfolder or use system fonts)
 # FONT_PRIMARY_PATH = "fonts/YourRetroFont.ttf" # Example path
-FONT_PRIMARY_PATH = "fonts/Minecraftia-Regular.ttf"  # Set to None to use Pygame default font
+FONT_PRIMARY_PATH = "fonts/Minecraftia-Regular.ttf" 
 FONT_SIZE_LARGE = 30
 FONT_SIZE_MEDIUM = 20
 FONT_SIZE_SMALL = 16
@@ -336,12 +336,12 @@ KEY_ACTION_MAP = {
     KEY_PREV: INPUT_ACTION_PREV,
     KEY_NEXT: INPUT_ACTION_NEXT,
     KEY_SELECT: INPUT_ACTION_SELECT,
-    # Joystick mappings
-    JOY_UP: INPUT_ACTION_PREV,
-    JOY_DOWN: INPUT_ACTION_NEXT,
-    JOY_PRESS: INPUT_ACTION_SELECT,
-    JOY_LEFT: INPUT_ACTION_BACK,
-    # JOY_RIGHT can be handled directly in AppState if its action is context-dependent
+    # Joystick mappings - updated for intuitive navigation
+    JOY_UP: INPUT_ACTION_PREV,     # UP = Previous (more intuitive)
+    JOY_DOWN: INPUT_ACTION_NEXT,   # DOWN = Next (more intuitive)
+    JOY_LEFT: INPUT_ACTION_BACK,   # LEFT = Back (unchanged)
+    JOY_RIGHT: INPUT_ACTION_NEXT,  # RIGHT = Next (alternative)
+    JOY_PRESS: INPUT_ACTION_SELECT # Press = Select (unchanged)
 }
 
 # Input related timing

@@ -14,7 +14,7 @@ import config as app_config # Use an alias
 
 logger = logging.getLogger(__name__)
 
-def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config_module): # Renamed config to config_module
+def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config_module):
     """
     Draw the individual sensor view screen.
     
@@ -31,58 +31,56 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
     screen_width = screen.get_width()
     screen_height = screen.get_height()
     
-    current_sensor_key = app_state.current_sensor # This is now a constant like SENSOR_TEMPERATURE
+    current_sensor_key = app_state.current_sensor
     if not current_sensor_key:
         logger.error("No sensor selected for sensor view, defaulting.")
         current_sensor_key = config_module.SENSOR_MODES[0] if config_module.SENSOR_MODES else "UNKNOWN_SENSOR_KEY"
         
     # Get display properties for the current sensor
-    display_props = config_module.SENSOR_DISPLAY_PROPERTIES.get(current_sensor_key, {}) # Use config_module
-    display_name = display_props.get("display_name", current_sensor_key) # Fallback to key if no display name
+    display_props = config_module.SENSOR_DISPLAY_PROPERTIES.get(current_sensor_key, {})
+    display_name = display_props.get("display_name", current_sensor_key)
 
     # Get the values for the current sensor using the new structure
     current_sensor_data = sensor_values.get(current_sensor_key, {})
     text_val = current_sensor_data.get("text", "N/A")
     unit = current_sensor_data.get("unit", "")
     note = current_sensor_data.get("note", "")
-    numeric_val = current_sensor_data.get("value") # This is the raw numeric value
+    numeric_val = current_sensor_data.get("value")
     
-    title_rect = render_title(
-        screen, 
-        display_name, 
-        fonts, 
-        config_module.Theme.ACCENT, 
-        config_module.FONT_SIZE_MEDIUM * 1.5,  # Y position
-        screen_width,
-        app_state.is_frozen,
-        config_module.Theme.FROZEN_INDICATOR
-    )
+    # Draw sensor name in top left
+    title_font = fonts['medium']
+    title_surface = title_font.render(display_name, True, config_module.Theme.ACCENT)
+    title_rect = title_surface.get_rect(topleft=(10, 10))
+    screen.blit(title_surface, title_rect)
     
-    value_y_pos = title_rect.bottom + config_module.FONT_SIZE_MEDIUM
-    value_rect = render_value(
-        screen,
-        text_val, # Use the pre-formatted text value
-        unit,
-        fonts,
-        config_module.Theme.FOREGROUND,
-        (screen_width // 2, value_y_pos)
-    )
+    # Draw current value to the right of the title
+    value_font = fonts['large']
+    value_text = f"{text_val} {unit}".strip()
+    value_surface = value_font.render(value_text, True, config_module.Theme.FOREGROUND)
+    value_rect = value_surface.get_rect(midleft=(title_rect.right + 20, title_rect.centery))
+    screen.blit(value_surface, value_rect)
+    
+    # Draw frozen indicator if needed
+    if app_state.is_frozen:
+        frozen_font = fonts['small']
+        frozen_surface = frozen_font.render("[FROZEN]", True, config_module.Theme.FROZEN_INDICATOR)
+        frozen_rect = frozen_surface.get_rect(midleft=(value_rect.right + 20, value_rect.centery))
+        screen.blit(frozen_surface, frozen_rect)
     
     graph_type = display_props.get("graph_type", "NONE")
 
     if graph_type == "LINE":
         history_data = sensor_history.get_history(current_sensor_key)
         graph_margin = 15 
-        graph_height = screen_height - value_rect.bottom - graph_margin*2 - config_module.FONT_SIZE_SMALL*2 
+        graph_height = screen_height - title_rect.bottom - graph_margin*2 - config_module.FONT_SIZE_SMALL*2 
         graph_width = screen_width - graph_margin*2
         graph_rect = pygame.Rect(
             graph_margin, 
-            value_rect.bottom + graph_margin,
+            title_rect.bottom + graph_margin,
             graph_width,
             graph_height
         )
-        # Get range_override from display_props for the line graph
-        range_override = display_props.get("range_override", (None, None)) # Default to (None, None) if not found
+        range_override = display_props.get("range_override", (None, None))
         min_val_cfg, max_val_cfg = range_override if range_override is not None else (None, None)
 
         try:
@@ -90,12 +88,12 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
                 screen, history_data, graph_rect, 
                 config_module.Theme.FOREGROUND, 
                 min_val_cfg, max_val_cfg, 
-                current_sensor_key, # Pass key for logging
-                config_module # Pass full config for its internal color/param access
+                current_sensor_key,
+                config_module
             )
             time_font = fonts.get('small', fonts['medium'])
             time_text = f"Time ({config_module.GRAPH_HISTORY_SIZE} seconds →)"
-            time_surf = time_font.render(time_text, True, config_module.Theme.GRAPH_GRID) # Use a theme color
+            time_surf = time_font.render(time_text, True, config_module.Theme.GRAPH_GRID)
             time_rect = time_surf.get_rect(center=(screen_width // 2, graph_rect.bottom + config_module.FONT_SIZE_SMALL))
             screen.blit(time_surf, time_rect)
         except Exception as e:
@@ -104,60 +102,59 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
     elif graph_type == "VERTICAL_BAR":
         vbar_config = display_props.get("vertical_graph_config")
         if vbar_config:
-            graph_width = 60 
-            graph_height = screen_height - value_rect.bottom - config_module.FONT_SIZE_SMALL*4 
-            graph_margin_top = 15
+            # Calculate graph dimensions to maximize available space
+            graph_width = 80  # Increased width for better visibility
+            graph_height = screen_height - title_rect.bottom - config_module.FONT_SIZE_SMALL*3  # More vertical space
+            graph_margin_top = 20
             graph_x = (screen_width - graph_width) // 2
-            graph_y = value_rect.bottom + graph_margin_top
+            graph_y = title_rect.bottom + graph_margin_top
             graph_rect = pygame.Rect(graph_x, graph_y, graph_width, graph_height)
+            
             try:
                 vertical_graph = VerticalBarGraph(
                     screen=screen, rect=graph_rect,
-                    title=display_name, # Use display_name for VBar title
-                    units=display_props.get("units", unit), 
+                    title="",  # Remove title since we show it at top
+                    units=display_props.get("units", unit),
                     min_val=vbar_config["min_val"],
                     max_val=vbar_config["max_val"],
                     normal_range=vbar_config["normal_range"],
-                    fonts=fonts, # Pass the fonts dictionary
-                    config_module=config_module, # Pass the config module
+                    fonts=fonts,
+                    config_module=config_module,
                     critical_low=vbar_config.get("critical_low"),
                     critical_high=vbar_config.get("critical_high"),
                     num_ticks=vbar_config.get("num_ticks", 11)
                 )
-                # numeric_val is already the correct type from sensor_values, or None
-                vertical_graph.draw(numeric_val) 
+                vertical_graph.draw(numeric_val)
             except KeyError as e:
-                 logger.error(f"Missing key in VERTICAL_GRAPH_CONFIG for {current_sensor_key} (via SENSOR_DISPLAY_PROPERTIES): {e}", exc_info=True)
+                 logger.error(f"Missing key in VERTICAL_GRAPH_CONFIG for {current_sensor_key}: {e}", exc_info=True)
             except Exception as e:
                  logger.error(f"Error creating/drawing VerticalBarGraph for {current_sensor_key}: {e}", exc_info=True)
         else:
             logger.warning(f"Graph type for {current_sensor_key} is VERTICAL_BAR but no vertical_graph_config found.")
-            # Fallback display (same as graph_type NONE)
             fallback_font = fonts.get('medium', pygame.font.Font(None, config_module.FONT_SIZE_MEDIUM))
             fallback_text = "Graph N/A"
             fallback_surf = fallback_font.render(fallback_text, True, config_module.Theme.ACCENT)
-            fallback_rect = fallback_surf.get_rect(center=(screen_width // 2, value_rect.bottom + 80)) 
+            fallback_rect = fallback_surf.get_rect(center=(screen_width // 2, title_rect.bottom + 80))
             screen.blit(fallback_surf, fallback_rect)
 
-    elif graph_type == "NONE" or current_sensor_key == config_module.SENSOR_CLOCK: # Use config_module
+    elif graph_type == "NONE" or current_sensor_key == config_module.SENSOR_CLOCK:
         logger.debug(f"No graph to display for sensor: {current_sensor_key}")
-        # Optionally display a message or leave blank
         fallback_font = fonts.get('medium', pygame.font.Font(None, config_module.FONT_SIZE_MEDIUM))
         fallback_text = "Graph N/A" if graph_type == "NONE" else ""
         if fallback_text:
             fallback_surf = fallback_font.render(fallback_text, True, config_module.Theme.ACCENT)
-            fallback_rect = fallback_surf.get_rect(center=(screen_width // 2, value_rect.bottom + 80))
+            fallback_rect = fallback_surf.get_rect(center=(screen_width // 2, title_rect.bottom + 80))
             screen.blit(fallback_surf, fallback_rect)
     else:
         logger.warning(f"Unknown graph_type '{graph_type}' or no graph configured for sensor: {current_sensor_key}")
         fallback_font = fonts.get('medium', pygame.font.Font(None, config_module.FONT_SIZE_MEDIUM))
         fallback_text = "Graph N/A"
         fallback_surf = fallback_font.render(fallback_text, True, config_module.Theme.ACCENT)
-        fallback_rect = fallback_surf.get_rect(center=(screen_width // 2, value_rect.bottom + 80))
+        fallback_rect = fallback_surf.get_rect(center=(screen_width // 2, title_rect.bottom + 80))
         screen.blit(fallback_surf, fallback_rect)
 
     if note:
-        note_y_pos = screen_height - config_module.FONT_SIZE_SMALL*3 - 10 
+        note_y_pos = screen_height - config_module.FONT_SIZE_SMALL*3 - 10
         render_note(
             screen, note, fonts,
             config_module.Theme.ACCENT,

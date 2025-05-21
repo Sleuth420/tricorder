@@ -27,7 +27,17 @@ def init_sensors():
         try:
             sense = SenseHat()
             sense.low_light = True  # Optional: Dim the 8x8 matrix if distracting
-            logger.info("Sense HAT initialized successfully.")
+            
+            # Joystick direction callbacks have been REMOVED.
+            # We will rely solely on sense.stick.get_events() in input_handler.py
+            # to capture all joystick activity.
+            
+            # Clear any pending joystick events from the queue before starting.
+            # This ensures we only process events that occur after this initialization.
+            if sense and hasattr(sense, 'stick'): # Ensure sense and stick are valid
+                sense.stick.get_events() 
+            
+            logger.info("Sense HAT initialized successfully. Joystick events will be read via get_events().")
             return True
         except Exception as e:
             logger.error(f"Error initializing Sense HAT: {e}", exc_info=True)
@@ -106,4 +116,4 @@ def cleanup_sensors():
             sense.clear()  # Clear the 8x8 LED matrix
             logger.info("Sense HAT cleared.")
         except Exception as e:
-            logger.error(f"Error clearing Sense HAT: {e}", exc_info=True) 
+            logger.error(f"Error clearing Sense HAT: {e}", exc_info=True)

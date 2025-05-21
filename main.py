@@ -72,8 +72,13 @@ def main():
         sys.exit(1) # Exit if display fails - app is unusable
     logger.info("Display initialized successfully.")
 
+    # Get actual screen dimensions after display initialization
+    actual_screen_width = screen.get_width()
+    actual_screen_height = screen.get_height()
+    logger.info(f"Actual screen dimensions: {actual_screen_width}x{actual_screen_height}")
+
     # Initialize Models (generally should not fail catastrophically)
-    app_state = AppState(config)
+    app_state = AppState(config, actual_screen_width, actual_screen_height)
     reading_history = ReadingHistory(config.SENSOR_MODES, config.GRAPH_HISTORY_SIZE)
     logger.info("Application state and reading history initialized.")
 

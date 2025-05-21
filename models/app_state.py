@@ -25,14 +25,18 @@ STATE_PONG_ACTIVE = "PONG_ACTIVE" # New state for Pong game
 class AppState:
     """Manages the state of the application and navigation."""
     
-    def __init__(self, config_module): # config_module is the actual config.py module
+    def __init__(self, config_module, screen_width, screen_height): # config_module is the actual config.py module
         """
         Initialize the application state.
         
         Args:
             config_module: The configuration module (config.py)
+            screen_width (int): The actual width of the screen.
+            screen_height (int): The actual height of the screen.
         """
         self.config = config_module # Store the passed config module
+        self.actual_screen_width = screen_width
+        self.actual_screen_height = screen_height
         self.current_state = STATE_MENU
         self.previous_state = None
         self.last_reading_time = 0.0 # Initialize last reading time
@@ -518,8 +522,9 @@ class AppState:
                 logger.info("Launching Pong...")
                 self.previous_state = self.current_state
                 self.current_state = STATE_PONG_ACTIVE
-                self.active_pong_game = PongGame(self.config.SCREEN_WIDTH, self.config.SCREEN_HEIGHT, self.config)
-                return True 
+                # Use actual screen dimensions for PongGame
+                self.active_pong_game = PongGame(self.actual_screen_width, self.actual_screen_height, self.config)
+                return True
             elif selected_item.action_name == app_config.ACTION_LAUNCH_TETRIS:
                 logger.warning("Tetris launch selected, but not yet implemented.")
                 pass 

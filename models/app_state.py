@@ -65,8 +65,8 @@ class AppState:
         # Secret Games Menu state
         self.secret_menu_index = 0
         self.secret_menu_items = [
-            MenuItem(name="Pong", action_name=app_config.ACTION_LAUNCH_PONG, image_path="images/spork.png"),
-            MenuItem(name="Tetris", action_name=app_config.ACTION_LAUNCH_TETRIS, image_path="images/spork.png"),
+            MenuItem(name="Pong", action_name=app_config.ACTION_LAUNCH_PONG, image_path="assets/images/spork.png"),
+            MenuItem(name="Tetris", action_name=app_config.ACTION_LAUNCH_TETRIS, image_path="assets/images/spork.png"),
             MenuItem(name="Quit", action_name=app_config.ACTION_RETURN_TO_MENU, image_path=None)
         ]
         self.active_pong_game = None

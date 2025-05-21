@@ -359,7 +359,7 @@ INPUT_LONG_PRESS_DURATION = 2.0 # Seconds to qualify as a long press for Back ac
 SECRET_HOLD_DURATION = 5.0 # Seconds to hold keys for secret menu (Adjusted to a more common value)
 
 # -- Splash Screen --
-SPLASH_LOGO_PATH = "images/logo.png"
+SPLASH_LOGO_PATH = "assets/images/logo.png"
 SPLASH_DURATION_MS = 3000
 
 # -- Action Name Constants (for MenuItem.action_name) --

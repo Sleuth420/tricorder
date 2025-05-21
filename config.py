@@ -7,7 +7,7 @@ import pygame # Add pygame import for key constants
 SCREEN_WIDTH = 320      # Default width (if not fullscreen)
 SCREEN_HEIGHT = 240     # Default height (if not fullscreen)
 FULLSCREEN = True      # Run in windowed mode?
-FPS = 30                # Frames per second/update rate
+FPS = 15                # Frames per second/update rate
 
 # -- Sensor Mode Constants --
 SENSOR_TEMPERATURE = "TEMPERATURE"
@@ -48,6 +48,15 @@ class Palette:
     VIOLET = (238, 130, 238)
     LIGHT_BLUE_INFO = (173, 216, 230) # For info panel text like cellular provider
     DARK_SLATE_BLUE = (72, 61, 139) # Example for secret menu items
+    # Header specific colors
+    HARVEST_GOLD = (219, 174, 109)
+    ATOMIC_TANGERINE = (255, 156, 99)
+    VIKING_BLUE = (93, 192, 211)
+    COPPER_ROSE = (156, 107, 110)
+    LONDON_HUE = (185, 169, 196)
+    EAST_SIDE_PURPLE = (178, 141, 211)
+    CALIFORNIA_ORANGE = (254, 143, 1)
+
 
 # Theme applying palette colors semantically
 class Theme:
@@ -71,20 +80,20 @@ class Theme:
     # Assuming general menu text might use FOREGROUND or WHITE, define if specific.
 
     # Header/Corner/Border specific colors
-    HEADER_CORNER_FILL = Palette.RED_ALERT # Color for the filled corner shape
+    HEADER_CORNER_FILL = Palette.ATOMIC_TANGERINE # Color for the filled corner shape
     BORDER_GENERAL = Palette.BLACK          # General border color for UI elements
     BORDER_WIDTH = 1 # General border width for UI elements
-    CORNER_CURVE_RADIUS = 10 # For rounded corners
+    CORNER_CURVE_RADIUS = 15 # For rounded corners
 
     # Sidebar specific colors (can be a sub-class or dict if it grows more complex)
-    SIDEBAR_SYSTEM = Palette.RED_ALERT
-    SIDEBAR_TEMP = Palette.ORANGE
-    SIDEBAR_HUMID = Palette.YELLOW
-    SIDEBAR_PRESS = Palette.GREEN
-    SIDEBAR_ORIENT = Palette.BLUE
-    SIDEBAR_ACCEL = Palette.INDIGO
-    SIDEBAR_ALL = Palette.VIOLET # For "All Sensors" view or similar
-    SIDEBAR_SETTINGS = Palette.PINK
+    SIDEBAR_SYSTEM = Palette.ATOMIC_TANGERINE
+    SIDEBAR_TEMP = Palette.HARVEST_GOLD
+    SIDEBAR_HUMID = Palette.VIKING_BLUE
+    SIDEBAR_PRESS = Palette.COPPER_ROSE
+    SIDEBAR_ORIENT = Palette.EAST_SIDE_PURPLE
+    SIDEBAR_ACCEL = Palette.LONDON_HUE
+    SIDEBAR_ALL = Palette.HARVEST_GOLD # For "All Sensors" view or similar
+    SIDEBAR_SETTINGS = Palette.ATOMIC_TANGERINE
 
     # Content-specific colors (e.g., for network info, specific data displays)
     CONTENT_CELLULAR_INFO_BG = Palette.PURPLE_MENU_HEADER # Re-using purple, consider specific name if diverges

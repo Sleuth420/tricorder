@@ -81,13 +81,13 @@ def draw_menu_screen(screen, app_state, fonts, config_module, sensor_values):
             pygame.draw.rect(screen, config_module.COLOR_BORDER, item_rect, width=config_module.Theme.BORDER_WIDTH)
 
             # Draw the category name
-            font = fonts['small']
+            font = fonts['medium']
             if item.name == "SECRET GAMES": # TODO: make this more robust. Use item.name
                 # Special handling for "SECRET GAMES"
                 title_text = CLASSIFIED_TEXT
             else:
                 title_text = item.name # Use item.name
-            text_surface = font.render(title_text, True, config_module.Theme.WHITE) 
+            text_surface = font.render(title_text, True, config_module.Palette.BLACK) 
             text_pos = (item_rect.left + 10, item_rect.centery - text_surface.get_height() // 2)
             screen.blit(text_surface, text_pos)
 
@@ -99,7 +99,7 @@ def draw_menu_screen(screen, app_state, fonts, config_module, sensor_values):
                     item_rect.width - selection_border_width,
                     item_rect.height - selection_border_width
                 )
-                pygame.draw.rect(screen, config_module.Theme.WHITE, selection_rect, selection_border_width)
+                pygame.draw.rect(screen, config_module.Palette.BLACK, selection_rect, selection_border_width)
 
     # --- Part 4: Draw Main Content Area ---
     main_content_rect = pygame.Rect(

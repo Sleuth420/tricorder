@@ -503,7 +503,7 @@ class AppState:
         """Handles input for the settings view."""
         # Placeholder for settings input handling
         logger.debug(f"Settings input: {action}")
-        if action == self.config.ACTION_BACK:
+        if action == self.config.INPUT_ACTION_BACK:
             self._return_to_menu()
             return True
         return False
@@ -512,7 +512,7 @@ class AppState:
         """Handles input for the schematics view."""
         # Placeholder for schematics input handling
         logger.debug(f"Schematics input: {action}")
-        if action == self.config.ACTION_BACK:
+        if action == self.config.INPUT_ACTION_BACK:
             self._return_to_menu()
             return True
         return False

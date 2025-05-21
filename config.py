@@ -94,6 +94,7 @@ class Theme:
     SIDEBAR_ACCEL = Palette.LONDON_HUE
     SIDEBAR_ALL = Palette.HARVEST_GOLD # For "All Sensors" view or similar
     SIDEBAR_SETTINGS = Palette.ATOMIC_TANGERINE
+    SIDEBAR_SCHEMATICS = Palette.INDIGO # New color for Schematics menu item
 
     # Content-specific colors (e.g., for network info, specific data displays)
     CONTENT_CELLULAR_INFO_BG = Palette.PURPLE_MENU_HEADER # Re-using purple, consider specific name if diverges

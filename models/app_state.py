@@ -118,6 +118,7 @@ class AppState:
                 
         # Add other non-sensor items last
         items.append(MenuItem(name="Sweep", target_state=STATE_DASHBOARD, color_key="SIDEBAR_ALL"))
+        items.append(MenuItem(name="Schematics", target_state=STATE_SETTINGS, color_key="SIDEBAR_SCHEMATICS"))
         items.append(MenuItem(name="Settings", target_state=STATE_SETTINGS, color_key="SIDEBAR_SETTINGS"))
 
         return items

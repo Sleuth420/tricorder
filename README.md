@@ -62,11 +62,10 @@ tricorder/
 ## Dependencies
 
 * Python 3
-* Pygame (`pip install pygame`)
-* Sense Hat library (`sudo apt install sense-hat`)
-* psutil for system monitoring (`pip install psutil`)
-
-The complete list of dependencies is in `requirements.txt`.
+* Pygame
+* Sense Hat library
+* psutil for system monitoring
+* Other dependencies listed in `requirements.txt`
 
 ## Installation
 
@@ -76,20 +75,46 @@ The complete list of dependencies is in `requirements.txt`.
    cd tricorder
    ```
 
-2. Install dependencies:
+2. Install system-level Sense HAT package:
    ```bash
+   sudo apt update
+   sudo apt install sense-hat
+   ```
+
+3. Set up Python virtual environment with system site packages (to allow Sense HAT access):
+   ```bash
+   # Create virtual environment with system site packages
+   python3 -m venv venv --system-site-packages
+   
+   # Activate virtual environment
+   source venv/bin/activate
+   
+   # Install Python dependencies
    pip install -r requirements.txt
    ```
 
-3. On Raspberry Pi, install the Sense HAT library:
+4. Enable I2C interface (required for Sense HAT):
    ```bash
-   sudo apt install sense-hat
+   sudo raspi-config
    ```
+   Then navigate to:
+   - Interface Options
+   - I2C
+   - Enable I2C
+   - Select "Yes" to reboot when prompted
+
+5. After reboot, verify Sense HAT is detected:
+   ```bash
+   sudo i2cdetect -y 1
+   ```
+   You should see the Sense HAT's I2C address (typically 0x46) in the output.
 
 ## Usage
 
 Run the application:
 ```bash
+# Make sure virtual environment is activated
+source venv/bin/activate
 python main.py
 ```
 

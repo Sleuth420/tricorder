@@ -21,6 +21,7 @@ STATE_SYSTEM_INFO = "SYSTEM"  # System info view
 STATE_SETTINGS = "SETTINGS"   # Settings view
 STATE_SECRET_GAMES = "SECRET_GAMES" # New state for secret menu
 STATE_PONG_ACTIVE = "PONG_ACTIVE" # New state for Pong game
+STATE_SCHEMATICS = "SCHEMATICS" # New state for Schematics viewer
 
 class AppState:
     """Manages the state of the application and navigation."""
@@ -118,7 +119,7 @@ class AppState:
                 
         # Add other non-sensor items last
         items.append(MenuItem(name="Sweep", target_state=STATE_DASHBOARD, color_key="SIDEBAR_ALL"))
-        items.append(MenuItem(name="Schematics", target_state=STATE_SETTINGS, color_key="SIDEBAR_SCHEMATICS"))
+        items.append(MenuItem(name="Schematics", target_state=STATE_SCHEMATICS, color_key="SIDEBAR_SCHEMATICS"))
         items.append(MenuItem(name="Settings", target_state=STATE_SETTINGS, color_key="SIDEBAR_SETTINGS"))
 
         return items
@@ -439,6 +440,8 @@ class AppState:
             state_changed = self._handle_system_info_input(action)
         elif self.current_state == STATE_SETTINGS:
             state_changed = self._handle_settings_input(action)
+        elif self.current_state == STATE_SCHEMATICS:
+            state_changed = self._handle_schematics_input(action)
         elif self.current_state == STATE_SECRET_GAMES:
             state_changed = self._handle_secret_games_input(action)
         return state_changed
@@ -497,13 +500,23 @@ class AppState:
         return False
     
     def _handle_settings_input(self, action):
-        if action == app_config.INPUT_ACTION_SELECT:
-            # Placeholder for actual settings change logic
-            # For now, it also toggles freeze like other views.
-            logger.debug(f"Settings: SELECT pressed. Future: modify settings.")
-            return self._handle_common_select_action("Settings")
+        """Handles input for the settings view."""
+        # Placeholder for settings input handling
+        logger.debug(f"Settings input: {action}")
+        if action == self.config.ACTION_BACK:
+            self._return_to_menu()
+            return True
         return False
-    
+
+    def _handle_schematics_input(self, action):
+        """Handles input for the schematics view."""
+        # Placeholder for schematics input handling
+        logger.debug(f"Schematics input: {action}")
+        if action == self.config.ACTION_BACK:
+            self._return_to_menu()
+            return True
+        return False
+
     def _handle_secret_games_input(self, action):
         if not self.secret_menu_items: return False
         num_items = len(self.secret_menu_items)

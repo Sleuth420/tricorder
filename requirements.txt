@@ -12,3 +12,8 @@ psutil==5.9.6       # For system monitoring (CPU, memory, disk)
 
 # Optional utilities that might be useful
 matplotlib==3.8.0   # For advanced graphing capabilities (if needed)
+PyOpenGL
+PyOpenGL-accelerate
+pygltflib
+PyGLM
+Pillow

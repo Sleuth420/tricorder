@@ -3,12 +3,20 @@
 
 import pygame
 import logging
-from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE
+from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_SCHEMATICS
 from ui.menu import draw_menu_screen
 from ui.views.sensor_view import draw_sensor_view
 from ui.views.system_info_view import draw_system_info_view
 from ui.views.settings_view import draw_settings_view
 from ui.views.secret_games_view import draw_secret_games_view
+from ui.views.tricorder_schematics import draw_schematics_view
+
+# Temporary placeholder function until schematics_view.py is created
+# def draw_schematics_view(screen, app_state, fonts, config_module):
+#     logger.info("Placeholder for draw_schematics_view called.")
+#     screen.fill(config_module.Theme.BACKGROUND)
+#     text_surface = fonts['large'].render("Schematics View (WIP)", True, config_module.Theme.TEXT_ACCENT)
+#     screen.blit(text_surface, (50, 50))
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +101,9 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
     elif app_state.current_state == STATE_SETTINGS:
         # Settings state shows settings full screen using the new view
         draw_settings_view(screen, app_state, fonts, config_module)
+    elif app_state.current_state == STATE_SCHEMATICS:
+        # Schematics state will show the 3D model viewer
+        draw_schematics_view(screen, app_state, fonts, config_module)
     elif app_state.current_state == STATE_SECRET_GAMES:
         # Draw the secret games menu
         draw_secret_games_view(screen, app_state, fonts, config_module)

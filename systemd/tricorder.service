@@ -9,8 +9,9 @@ Environment="DISPLAY=:0"
 # If DISPLAY=:0 alone is not enough, we might also need:
 # Environment="XAUTHORITY=/home/dev/.Xauthority"
 WorkingDirectory=/home/dev/Desktop/tricorder
+# Use system Python which has Sense HAT support
 ExecStart=/usr/bin/python3 /home/dev/Desktop/tricorder/main.py
 Restart=always
 
 [Install]
-WantedBy=graphical.target 
+WantedBy=graphical.target

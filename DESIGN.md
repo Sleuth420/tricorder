@@ -92,9 +92,15 @@ The application is structured into separate modules for better organization, mai
 - **`main.py`**:
   - *Responsibility:* Main application entry point. Initializes other modules (display, sensors). Contains the main application loop. Manages application state (current mode, frozen status). Orchestrates input handling, data retrieval, and screen updates. Handles application startup and cleanup.
   - *Justification:* Centralizes control flow and state management.
-- **`config.py`**:
-  - *Responsibility:* Stores all configuration constants (screen dimensions, colors, font settings, sensor mode list, input key mappings, planned GPIO pin numbers). Does not contain executable logic beyond definitions.
-  - *Justification:* Separates configuration from logic, making it easy to tweak settings without modifying core code. Avoids "magic numbers" scattered throughout the codebase.
+- **`config/` (Modular Configuration System)**:
+  - *Responsibility:* Stores all configuration constants organized into logical modules:
+    - `__init__.py`: Main config module that imports and exposes all sub-configurations
+    - `colors.py`: Color palettes and themes (Palette, Theme classes)
+    - `display.py`: Display and graphics settings (screen dimensions, FPS, graph settings)
+    - `ui.py`: UI layout constants (fonts, arrow indicators, layout dimensions)
+    - `input.py`: Input mappings and controls (key mappings, GPIO pins, action constants)
+    - `sensors.py`: Sensor configurations and display properties
+  - *Justification:* Separates configuration from logic and organizes settings by category, making it easy to find and modify specific types of settings. Maintains backward compatibility through the main `__init__.py` module.
 - **`sensors.py`**:
   - *Responsibility:* Initializes the Sense HAT. Provides functions to read and format data for specific sensor modes requested by `main.py`. Handles potential errors during sensor communication. Includes sensor cleanup logic.
   - *Justification:* Encapsulates all direct interaction with the Sense HAT hardware/library, isolating sensor-specific code.
@@ -109,7 +115,14 @@ The application is structured into separate modules for better organization, mai
 
 tricorder/
 ├── main.py # Main application logic, event loop
-├── config.py # Configuration settings (pins, colors, fonts, modes)
+├── config/ # Modular configuration system
+│   ├── __init__.py # Main config module (imports all sub-configs)
+│   ├── colors.py # Color palettes and themes
+│   ├── display.py # Display and graphics settings
+│   ├── ui.py # UI layout, fonts, and arrow indicators
+│   ├── input.py # Input mappings and controls
+│   └── sensors.py # Sensor configurations and display properties
+├── config_old.py # DEPRECATED - old monolithic config (with warnings)
 ├── sensors.py # Functions to interact with the Sense HAT
 ├── display.py # Functions to draw the UI using Pygame
 ├── input_handler.py # Functions to handle input (keyboard now, GPIO later)
@@ -134,8 +147,8 @@ The screen is divided into logical sections:
 
 Aims for a simple, retro "computer terminal" aesthetic.
 
-- **Colors:** Limited palette (Black background, Green foreground, Amber/Gold accent) defined in `config.py`. A distinct color indicates the frozen state.
-- **Fonts:** Monospaced or simple pixelated font preferred (currently uses Pygame default, configurable via `config.py`). Multiple sizes for hierarchy (Large for value, Medium for title, Small for hints).
+- **Colors:** Limited palette (Black background, Green foreground, Amber/Gold accent) defined in `config/colors.py`. A distinct color indicates the frozen state.
+- **Fonts:** Monospaced or simple pixelated font preferred (currently uses Pygame default, configurable via `config/ui.py`). Multiple sizes for hierarchy (Large for value, Medium for title, Small for hints).
 
 ### 6.3. Interaction Flow / State Diagram Description (Textual)
 

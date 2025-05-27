@@ -15,7 +15,7 @@ def draw_ship_menu_view(screen, app_state, fonts, config_module):
         screen (pygame.Surface): The surface to draw on
         app_state (AppState): The current application state
         fonts (dict): Dictionary of loaded fonts
-        config_module (module): Configuration module (config.py)
+        config_module (module): Configuration module (config package)
     """
     screen.fill(config_module.Theme.BACKGROUND)
     

@@ -19,7 +19,14 @@ A Star Trek inspired tricorder simulation using a Raspberry Pi, Sense HAT, and a
 ```
 tricorder/
 ├── main.py                 # Entry point, main application loop
-├── config.py               # Configuration constants (colors, keys, settings)
+├── config/                 # Modular configuration system
+│   ├── __init__.py         # Main config module (imports all sub-configs)
+│   ├── colors.py           # Color palettes and themes
+│   ├── display.py          # Display and graphics settings
+│   ├── ui.py               # UI layout, fonts, and arrow indicators
+│   ├── input.py            # Input mappings and controls
+│   └── sensors.py          # Sensor configurations and display properties
+├── config_old.py           # DEPRECATED - old monolithic config (with warnings)
 ├── logging_config.py       # Logging setup
 ├── requirements.txt        # Python dependencies
 ├── data/

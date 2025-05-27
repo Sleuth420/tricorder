@@ -18,7 +18,7 @@ def draw_system_info_view(screen, app_state, sensor_values, fonts, config_module
         app_state (AppState): The current application state (for frozen status)
         sensor_values (dict): Dictionary containing formatted system values (new structure)
         fonts (dict): Dictionary of loaded fonts
-        config_module (module): Configuration module (config.py)
+        config_module (module): Configuration module (config package)
         target_rect (pygame.Rect, optional): The rectangle to draw within. Defaults to the full screen.
         draw_footer (bool): Whether to draw the footer. Defaults to True.
     """

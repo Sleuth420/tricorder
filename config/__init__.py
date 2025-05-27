@@ -1,0 +1,54 @@
+# --- config/__init__.py ---
+# Main configuration module that imports and exposes all configuration settings
+
+# Import all configuration modules
+from .colors import *
+from .display import *
+from .ui import *
+from .input import *
+from .sensors import *
+
+# Re-export everything for backward compatibility
+# This allows existing code to continue using "import config" and "config.SETTING_NAME"
+
+# Note: If there are any naming conflicts between modules, they will be resolved
+# by the order of imports above (later imports override earlier ones)
+
+__all__ = [
+    # From colors.py
+    'Palette', 'Theme',
+    'COLOR_BACKGROUND', 'COLOR_FOREGROUND', 'COLOR_WHITE', 'COLOR_ACCENT',
+    'COLOR_ALERT', 'COLOR_FROZEN', 'COLOR_GRAPH_BORDER', 'COLOR_GRAPH_GRID',
+    'COLOR_DARK_GREY', 'COLOR_WARNING', 'COLOR_MENU_HEADER', 'COLOR_SELECTED_BG',
+    'COLOR_SELECTED_TEXT', 'COLOR_HEADER_CORNER', 'COLOR_BORDER',
+    'COLOR_SIDEBAR_SYSTEM', 'COLOR_SIDEBAR_TEMP', 'COLOR_SIDEBAR_HUMID',
+    'COLOR_SIDEBAR_PRESS', 'COLOR_SIDEBAR_ORIENT', 'COLOR_SIDEBAR_ACCEL',
+    'COLOR_SIDEBAR_ALL', 'COLOR_SIDEBAR_SETTINGS', 'COLOR_CELLULAR',
+    'COLOR_WIFI', 'COLOR_WIFI_ONLINE', 'COLOR_NETWORK',
+    
+    # From display.py
+    'SCREEN_WIDTH', 'SCREEN_HEIGHT', 'FULLSCREEN', 'FPS',
+    'GRAPH_HISTORY_SIZE', 'GRAPH_LINE_WIDTH', 'GRAPH_POINT_SIZE',
+    'SPLASH_LOGO_PATH', 'SPLASH_DURATION_MS',
+    
+    # From ui.py
+    'FONT_PRIMARY_PATH', 'FONT_SIZE_LARGE', 'FONT_SIZE_MEDIUM', 'FONT_SIZE_SMALL',
+    'MAX_SIDEBAR_WIDTH', 'HEADER_HEIGHT', 'CLASSIFIED_TEXT', 'GRAPH_NOT_AVAILABLE_TEXT',
+    'ARROW_INDICATOR_WIDTH', 'ARROW_INDICATOR_SIZE', 'ARROW_USE_ITEM_COLOR',
+    'AUTO_CYCLE_INTERVAL',
+    
+    # From input.py
+    'KEY_PREV', 'KEY_NEXT', 'KEY_SELECT',
+    'JOY_UP', 'JOY_DOWN', 'JOY_LEFT', 'JOY_RIGHT', 'JOY_PRESS',
+    'INPUT_ACTION_PREV', 'INPUT_ACTION_NEXT', 'INPUT_ACTION_SELECT',
+    'INPUT_ACTION_QUIT', 'INPUT_ACTION_BACK', 'INPUT_ACTION_FREEZE',
+    'KEY_ACTION_MAP', 'INPUT_LONG_PRESS_DURATION', 'SECRET_HOLD_DURATION',
+    'ACTION_LAUNCH_PONG', 'ACTION_LAUNCH_TETRIS', 'ACTION_RETURN_TO_MENU',
+    
+    # From sensors.py
+    'SENSOR_TEMPERATURE', 'SENSOR_HUMIDITY', 'SENSOR_PRESSURE',
+    'SENSOR_ORIENTATION', 'SENSOR_ACCELERATION', 'SENSOR_CLOCK',
+    'SENSOR_CPU_USAGE', 'SENSOR_MEMORY_USAGE', 'SENSOR_DISK_USAGE',
+    'INFO_WIFI_STATUS', 'INFO_WIFI_SSID', 'INFO_CELL_STATUS', 'INFO_CELL_PROVIDER',
+    'SENSOR_MODES', 'SENSOR_DISPLAY_PROPERTIES',
+] 

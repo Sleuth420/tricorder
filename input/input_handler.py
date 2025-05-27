@@ -25,7 +25,7 @@ KEY_ACTION_MAP = {
     app_config.KEY_PREV: app_config.INPUT_ACTION_PREV,
     app_config.KEY_NEXT: app_config.INPUT_ACTION_NEXT,
     app_config.KEY_SELECT: app_config.INPUT_ACTION_SELECT,
-    # Joystick actions are now mapped in config.py as well, but we'll use a more direct approach here for clarity
+    # Joystick actions are now mapped in config/input.py as well, but we'll use a more direct approach here for clarity
 }
 
 # Mapping from Sense HAT joystick event directions to our "key" constants
@@ -65,13 +65,13 @@ def init_joystick():
         sense = None
         return False
 
-def process_input(events, config_module): # config_module is the actual config.py passed in
+def process_input(events, config_module): # config_module is the actual config package passed in
     """
     Process Pygame events and generate a list of abstract input results.
 
     Args:
         events (list): List of Pygame events.
-        config_module (module): The configuration module (config.py).
+        config_module (module): The configuration module (config package).
 
     Returns:
         list: A list of dictionaries, each representing an input event or action.

@@ -1,4 +1,24 @@
 import pygame # Add pygame import for key constants
+import warnings
+import logging
+
+# ===== DEPRECATION WARNING =====
+# This file (config_old.py) is DEPRECATED and should NOT be used!
+# The configuration has been moved to a modular structure in the config/ directory.
+# Please use "import config" instead, which now imports from config/__init__.py
+# 
+# If you see this warning, it means some code is still importing this old file.
+# Please update the import to use the new modular config structure.
+# ===============================
+
+warnings.warn(
+    "config_old.py is deprecated! Use the new modular config structure in config/ directory instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
+logger = logging.getLogger(__name__)
+logger.warning("DEPRECATED: config_old.py is being used! Please update imports to use the new config module.")
 
 # --- config.py ---
 # Stores configuration constants for the tricorder application
@@ -377,6 +397,11 @@ INPUT_ACTION_QUIT = "QUIT"
 MAX_SIDEBAR_WIDTH = 150
 CLASSIFIED_TEXT = "CLASSIFIED"
 GRAPH_NOT_AVAILABLE_TEXT = "Graph N/A"
+
+# -- Arrow Indicator Configuration --
+ARROW_INDICATOR_WIDTH = 20        # Width of the arrow indicator area
+ARROW_INDICATOR_SIZE = 20         # Size of the arrow triangle (increased from 12)
+ARROW_USE_ITEM_COLOR = True       # Whether to use menu item color or red alert color
 
 # -- GPIO Pins (Placeholder for later) --
 # (BCM Pin number for physical buttons when added)

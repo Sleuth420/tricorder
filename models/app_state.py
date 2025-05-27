@@ -26,12 +26,12 @@ STATE_SCHEMATICS = "SCHEMATICS" # New state for Schematics viewer
 class AppState:
     """Manages the state of the application and navigation."""
     
-    def __init__(self, config_module, screen_width, screen_height): # config_module is the actual config.py module
+    def __init__(self, config_module, screen_width, screen_height): # config_module is the actual config package module
         """
         Initialize the application state.
         
         Args:
-            config_module: The configuration module (config.py)
+            config_module: The configuration module (config package)
             screen_width (int): The actual width of the screen.
             screen_height (int): The actual height of the screen.
         """

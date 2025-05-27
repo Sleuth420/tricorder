@@ -24,7 +24,7 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
         sensor_values (dict): Dictionary of current sensor data (new structure with dict per sensor)
         sensor_history (ReadingHistory): The history of sensor readings
         fonts (dict): Dictionary of loaded fonts
-        config_module (module): Configuration module (config.py)
+        config_module (module): Configuration module (config package)
     """
     screen.fill(config_module.Theme.BACKGROUND)
     

@@ -77,7 +77,7 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         sensor_values (dict): Dictionary of current sensor values
         sensor_history (ReadingHistory): Sensor reading history
         fonts (dict): Dictionary of loaded fonts
-        config_module (module): Configuration module (config.py)
+        config_module (module): Configuration module (config package)
         
     Returns:
         None

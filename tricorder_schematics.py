@@ -7,7 +7,7 @@ import pygltflib
 import numpy as np
 import logging
 
-# Assuming your existing config.py and sensors.py are accessible
+# Assuming your existing config package and sensors.py are accessible
 from config import SCREEN_WIDTH, SCREEN_HEIGHT # Use the defined 320x240
 from data.sensors import get_orientation # Or a more advanced filtered orientation
 

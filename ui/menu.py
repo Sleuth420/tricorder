@@ -16,12 +16,12 @@ from config import CLASSIFIED_TEXT
 
 logger = logging.getLogger(__name__)
 
-# Arrow indicator configuration
-_arrow_config = {
-    'width': 20,        # Width of the arrow indicator area
-    'arrow_size': 12,   # Size of the arrow triangle
-    'use_item_color': True  # Whether to use menu item color or red
-}
+# Arrow indicator configuration - now moved to config/ui.py
+# _arrow_config = {
+#     'width': 20,        # Width of the arrow indicator area
+#     'arrow_size': 12,   # Size of the arrow triangle
+#     'use_item_color': True  # Whether to use menu item color or red
+# }
 
 def _draw_arrow_indicator(screen, arrow_area_rect, selected_item_rect, item_color, config_module):
     """
@@ -42,13 +42,13 @@ def _draw_arrow_indicator(screen, arrow_area_rect, selected_item_rect, item_colo
     arrow_center_x = arrow_area_rect.centerx
     
     # Choose arrow color
-    if _arrow_config['use_item_color']:
+    if config_module.ARROW_USE_ITEM_COLOR:
         arrow_color = item_color
     else:
         arrow_color = config_module.Palette.RED_ALERT  # Red as requested
     
     # Create arrow triangle pointing left
-    arrow_size = _arrow_config['arrow_size']
+    arrow_size = config_module.ARROW_INDICATOR_SIZE
     arrow_points = [
         (arrow_center_x - arrow_size // 2, arrow_center_y),  # Left point (tip)
         (arrow_center_x + arrow_size // 2, arrow_center_y - arrow_size // 2),  # Top right
@@ -78,7 +78,7 @@ def draw_menu_screen(screen, app_state, fonts, config_module, sensor_values):
 
     # Layout calculations with arrow indicator area
     base_sidebar_width = min(screen_width // 4, 150)
-    arrow_indicator_width = _arrow_config['width']
+    arrow_indicator_width = config_module.ARROW_INDICATOR_WIDTH
     
     header_height = config_module.HEADER_HEIGHT
     header_color = config_module.Theme.HEADER_CORNER_FILL 

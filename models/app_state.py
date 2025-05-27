@@ -243,7 +243,7 @@ class AppState:
                     self.active_pong_game.move_paddle_down()
 
             elif event_type == 'JOYSTICK_MIDDLE_PRESS':
-                logger.debug(f"Joystick middle PRESS detected in state {self.current_state}. Starting press timer.")
+                logger.info(f"Joystick middle PRESS detected in state {self.current_state}. Starting press timer.")
                 self.joystick_middle_press_start_time = time.time()
             
             elif event_type == 'JOYSTICK_MIDDLE_RELEASE':
@@ -258,8 +258,15 @@ class AppState:
                     if current_state_before_select == STATE_MENU and timer_was_running and press_duration >= self.config.SECRET_HOLD_DURATION:
                         logger.debug("Joystick middle long press for secret menu handled by update(). No SELECT action from release here.")
                     elif current_state_before_select != STATE_SECRET_GAMES: 
-                        logger.debug("Joystick middle short press detected. Processing as INPUT_ACTION_SELECT.")
-                        state_changed_by_action = self._process_action(app_config.INPUT_ACTION_SELECT) or state_changed_by_action
+                        logger.info(f"Joystick middle short press detected. Processing as INPUT_ACTION_SELECT in state {current_state_before_select}")
+                        logger.info(f"Before SELECT action: state={self.current_state}, is_frozen={self.is_frozen}")
+                        
+                        # Check if we already changed state in this input cycle
+                        if state_changed_by_action:
+                            logger.info("State already changed in this input cycle. Skipping SELECT action to prevent double processing.")
+                        else:
+                            state_changed_by_action = self._process_action(app_config.INPUT_ACTION_SELECT) or state_changed_by_action
+                            logger.info(f"After SELECT action: state={self.current_state}, is_frozen={self.is_frozen}, state_changed={state_changed_by_action}")
                     else:
                         logger.debug("Joystick middle released, but state is SECRET_GAMES or was not a short press. No SELECT action.")
                 else:
@@ -471,7 +478,19 @@ class AppState:
                 self.current_state = selected_item.target_state
                 if selected_item.target_state == STATE_SENSOR_VIEW and selected_item.data and "sensor_type" in selected_item.data:
                     self.current_sensor = selected_item.data["sensor_type"] # sensor_type is a constant
+                    # Reset freeze state when entering a new sensor view
+                    self.is_frozen = False
+                    # Clear any pending joystick press timer to prevent stale events
+                    self.joystick_middle_press_start_time = None
                     logger.info(f"Transitioning to SENSOR_VIEW for sensor: {self.current_sensor}")
+                    logger.info("Reset freeze state to False for new sensor view")
+                elif selected_item.target_state == STATE_DASHBOARD:
+                    # Reset freeze state when entering dashboard
+                    self.is_frozen = False
+                    self.auto_cycle = True
+                    # Clear any pending joystick press timer to prevent stale events
+                    self.joystick_middle_press_start_time = None
+                    logger.info("Reset freeze state to False for dashboard")
                 else:
                     self.current_sensor = None 
                 return True 
@@ -480,7 +499,7 @@ class AppState:
     def _handle_common_select_action(self, view_name):
         """Common handler for SELECT action that toggles freeze."""
         self.is_frozen = not self.is_frozen
-        logger.debug(f"{view_name}: {'Frozen' if self.is_frozen else 'Unfrozen'} by SELECT action.")
+        logger.info(f"{view_name}: {'Frozen' if self.is_frozen else 'Unfrozen'} by SELECT action.")
         return True # Indicates a UI update might be needed due to freeze status change
 
     def _handle_dashboard_input(self, action):
@@ -491,7 +510,10 @@ class AppState:
     
     def _handle_sensor_input(self, action):
         if action == app_config.INPUT_ACTION_SELECT:
-            return self._handle_common_select_action("Sensor View")
+            logger.info(f"Sensor view received SELECT action. Current freeze state: {self.is_frozen}")
+            result = self._handle_common_select_action("Sensor View")
+            logger.info(f"After SELECT action, freeze state: {self.is_frozen}")
+            return result
         return False
         
     def _handle_system_info_input(self, action):

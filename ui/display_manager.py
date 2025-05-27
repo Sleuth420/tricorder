@@ -35,9 +35,10 @@ def init_display():
         import config  # Import here to avoid circular imports
         
         if config.FULLSCREEN:
-            screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+            # MODIFIED LINE: Explicitly request config.SCREEN_WIDTH and config.SCREEN_HEIGHT
+            screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.FULLSCREEN)
             pygame.mouse.set_visible(False)
-            logger.info("Display set to fullscreen mode.")
+            logger.info(f"Display set to fullscreen mode, requesting {config.SCREEN_WIDTH}x{config.SCREEN_HEIGHT}.") # Updated log
         else:
             screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
             logger.info(f"Display set to windowed mode ({config.SCREEN_WIDTH}x{config.SCREEN_HEIGHT}).")
@@ -127,4 +128,4 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
         
     # Update the display
-    pygame.display.flip() 
+    pygame.display.flip()

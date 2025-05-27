@@ -21,7 +21,7 @@ def setup_logging(log_level=logging.INFO):
     """
     # Create log directory if it doesn't exist
     if not os.path.exists(LOG_DIRECTORY):
-        os.makedirs(LOG_DIRECTORY)
+        os.makedirs(LOG_DIRECTORY, exist_ok=True)
     
     log_file_path = os.path.join(LOG_DIRECTORY, LOG_FILENAME)
     

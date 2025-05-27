@@ -1,0 +1,302 @@
+2025-05-27 10:24:06,261 - INFO - root - Logging initialized: sending logs to both console and file.
+2025-05-27 10:24:06,262 - INFO - root - Log file location: /home/dev/Desktop/tricorder/logs/tricorder.log
+2025-05-27 10:24:06,262 - INFO - __main__ - Starting tricorder Application...
+2025-05-27 10:24:06,264 - INFO - __main__ - Platform: Linux-6.12.21-v8+-aarch64-with-glibc2.36
+2025-05-27 10:24:06,265 - INFO - __main__ - Python version: 3.11.2
+2025-05-27 10:24:06,265 - INFO - __main__ - Display size: 320x240, Fullscreen: True
+2025-05-27 10:24:06,265 - INFO - __main__ - Available sensor modes: TEMPERATURE, HUMIDITY, PRESSURE, ORIENTATION, ACCELERATION, CLOCK, CPU_USAGE, MEMORY_USAGE, DISK_USAGE
+2025-05-27 10:24:07,134 - INFO - ui.display_manager - Display set to fullscreen mode.
+2025-05-27 10:24:07,149 - INFO - ui.display_manager - Custom font 'fonts/Minecraftia-Regular.ttf' loaded successfully.
+2025-05-27 10:24:07,149 - INFO - ui.display_manager - Pygame display and clock initialized.
+2025-05-27 10:24:07,150 - INFO - __main__ - Display initialized successfully.
+2025-05-27 10:24:07,150 - INFO - __main__ - Actual screen dimensions: 720x480
+2025-05-27 10:24:07,150 - INFO - models.app_state - Found Settings menu item at index: 8
+2025-05-27 10:24:07,150 - INFO - __main__ - Application state and reading history initialized.
+2025-05-27 10:24:07,165 - INFO - __main__ - Displaying splash screen...
+2025-05-27 10:24:10,165 - INFO - __main__ - Splash screen finished.
+2025-05-27 10:24:10,245 - INFO - data.sensors - Sense HAT initialized successfully. Joystick events will be read via get_events().
+2025-05-27 10:24:10,245 - INFO - __main__ - Sensors initialized successfully.
+2025-05-27 10:24:10,245 - INFO - input.input_handler - Sense HAT joystick support successfully referenced.
+2025-05-27 10:24:10,245 - INFO - __main__ - Joystick initialized successfully
+2025-05-27 10:24:10,246 - INFO - __main__ - Entering main event loop...
+2025-05-27 10:29:51,572 - INFO - root - Logging initialized: sending logs to both console and file.
+2025-05-27 10:29:51,573 - INFO - root - Log file location: /home/dev/Desktop/tricorder/logs/tricorder.log
+2025-05-27 10:29:51,573 - INFO - __main__ - Starting tricorder Application...
+2025-05-27 10:29:51,575 - INFO - __main__ - Platform: Linux-6.12.21-v8+-aarch64-with-glibc2.36
+2025-05-27 10:29:51,576 - INFO - __main__ - Python version: 3.11.2
+2025-05-27 10:29:51,576 - INFO - __main__ - Display size: 320x240, Fullscreen: True
+2025-05-27 10:29:51,576 - INFO - __main__ - Available sensor modes: TEMPERATURE, HUMIDITY, PRESSURE, ORIENTATION, ACCELERATION, CLOCK, CPU_USAGE, MEMORY_USAGE, DISK_USAGE
+2025-05-27 10:29:52,449 - INFO - ui.display_manager - Display set to fullscreen mode.
+2025-05-27 10:29:52,463 - INFO - ui.display_manager - Custom font 'fonts/Minecraftia-Regular.ttf' loaded successfully.
+2025-05-27 10:29:52,463 - INFO - ui.display_manager - Pygame display and clock initialized.
+2025-05-27 10:29:52,463 - INFO - __main__ - Display initialized successfully.
+2025-05-27 10:29:52,464 - INFO - __main__ - Actual screen dimensions: 720x480
+2025-05-27 10:29:52,464 - INFO - models.app_state - Found Settings menu item at index: 8
+2025-05-27 10:29:52,464 - INFO - __main__ - Application state and reading history initialized.
+2025-05-27 10:29:52,479 - INFO - __main__ - Displaying splash screen...
+2025-05-27 10:29:55,480 - INFO - __main__ - Splash screen finished.
+2025-05-27 10:29:55,561 - INFO - data.sensors - Sense HAT initialized successfully. Joystick events will be read via get_events().
+2025-05-27 10:29:55,561 - INFO - __main__ - Sensors initialized successfully.
+2025-05-27 10:29:55,562 - INFO - input.input_handler - Sense HAT joystick support successfully referenced.
+2025-05-27 10:29:55,562 - INFO - __main__ - Joystick initialized successfully
+2025-05-27 10:29:55,562 - INFO - __main__ - Entering main event loop...
+2025-05-27 10:46:51,434 - INFO - root - Logging initialized: sending logs to both console and file.
+2025-05-27 10:46:51,435 - INFO - root - Log file location: /home/dev/Desktop/tricorder/logs/tricorder.log
+2025-05-27 10:46:51,436 - INFO - __main__ - Starting tricorder Application...
+2025-05-27 10:46:51,438 - INFO - __main__ - Platform: Linux-6.12.21-v8+-aarch64-with-glibc2.36
+2025-05-27 10:46:51,438 - INFO - __main__ - Python version: 3.11.2
+2025-05-27 10:46:51,439 - INFO - __main__ - Display size: 320x240, Fullscreen: True
+2025-05-27 10:46:51,439 - INFO - __main__ - Available sensor modes: TEMPERATURE, HUMIDITY, PRESSURE, ORIENTATION, ACCELERATION, CLOCK, CPU_USAGE, MEMORY_USAGE, DISK_USAGE
+2025-05-27 10:46:52,300 - INFO - ui.display_manager - Display set to fullscreen mode.
+2025-05-27 10:46:52,314 - INFO - ui.display_manager - Custom font 'fonts/Minecraftia-Regular.ttf' loaded successfully.
+2025-05-27 10:46:52,314 - INFO - ui.display_manager - Pygame display and clock initialized.
+2025-05-27 10:46:52,314 - INFO - __main__ - Display initialized successfully.
+2025-05-27 10:46:52,314 - INFO - __main__ - Actual screen dimensions: 320x240
+2025-05-27 10:46:52,315 - INFO - models.app_state - Found Settings menu item at index: 8
+2025-05-27 10:46:52,315 - INFO - __main__ - Application state and reading history initialized.
+2025-05-27 10:46:52,322 - INFO - __main__ - Displaying splash screen...
+2025-05-27 10:46:55,323 - INFO - __main__ - Splash screen finished.
+2025-05-27 10:46:55,401 - INFO - data.sensors - Sense HAT initialized successfully. Joystick events will be read via get_events().
+2025-05-27 10:46:55,402 - INFO - __main__ - Sensors initialized successfully.
+2025-05-27 10:46:55,402 - INFO - input.input_handler - Sense HAT joystick support successfully referenced.
+2025-05-27 10:46:55,402 - INFO - __main__ - Joystick initialized successfully
+2025-05-27 10:46:55,402 - INFO - __main__ - Entering main event loop...
+2025-05-27 10:50:25,506 - INFO - root - Logging initialized: sending logs to both console and file.
+2025-05-27 10:50:25,506 - INFO - root - Log file location: /home/dev/Desktop/tricorder/logs/tricorder.log
+2025-05-27 10:50:25,507 - INFO - __main__ - Starting tricorder Application...
+2025-05-27 10:50:25,509 - INFO - __main__ - Platform: Linux-6.12.21-v8+-aarch64-with-glibc2.36
+2025-05-27 10:50:25,509 - INFO - __main__ - Python version: 3.11.2
+2025-05-27 10:50:25,510 - INFO - __main__ - Display size: 320x240, Fullscreen: True
+2025-05-27 10:50:25,510 - INFO - __main__ - Available sensor modes: TEMPERATURE, HUMIDITY, PRESSURE, ORIENTATION, ACCELERATION, CLOCK, CPU_USAGE, MEMORY_USAGE, DISK_USAGE
+2025-05-27 10:50:26,348 - INFO - ui.display_manager - Display set to fullscreen mode.
+2025-05-27 10:50:26,362 - INFO - ui.display_manager - Custom font 'fonts/Minecraftia-Regular.ttf' loaded successfully.
+2025-05-27 10:50:26,362 - INFO - ui.display_manager - Pygame display and clock initialized.
+2025-05-27 10:50:26,362 - INFO - __main__ - Display initialized successfully.
+2025-05-27 10:50:26,363 - INFO - __main__ - Actual screen dimensions: 320x240
+2025-05-27 10:50:26,363 - INFO - models.app_state - Found Settings menu item at index: 8
+2025-05-27 10:50:26,363 - INFO - __main__ - Application state and reading history initialized.
+2025-05-27 10:50:26,370 - INFO - __main__ - Displaying splash screen...
+2025-05-27 10:50:29,371 - INFO - __main__ - Splash screen finished.
+2025-05-27 10:50:29,449 - INFO - data.sensors - Sense HAT initialized successfully. Joystick events will be read via get_events().
+2025-05-27 10:50:29,450 - INFO - __main__ - Sensors initialized successfully.
+2025-05-27 10:50:29,450 - INFO - input.input_handler - Sense HAT joystick support successfully referenced.
+2025-05-27 10:50:29,450 - INFO - __main__ - Joystick initialized successfully
+2025-05-27 10:50:29,450 - INFO - __main__ - Entering main event loop...
+2025-05-27 10:52:37,625 - INFO - root - Logging initialized: sending logs to both console and file.
+2025-05-27 10:52:37,626 - INFO - root - Log file location: /home/dev/Desktop/tricorder/logs/tricorder.log
+2025-05-27 10:52:37,626 - INFO - __main__ - Starting tricorder Application...
+2025-05-27 10:52:37,628 - INFO - __main__ - Platform: Linux-6.12.21-v8+-aarch64-with-glibc2.36
+2025-05-27 10:52:37,629 - INFO - __main__ - Python version: 3.11.2
+2025-05-27 10:52:37,629 - INFO - __main__ - Display size: 320x240, Fullscreen: True
+2025-05-27 10:52:37,629 - INFO - __main__ - Available sensor modes: TEMPERATURE, HUMIDITY, PRESSURE, ORIENTATION, ACCELERATION, CLOCK, CPU_USAGE, MEMORY_USAGE, DISK_USAGE
+2025-05-27 10:52:38,490 - INFO - ui.display_manager - Display set to fullscreen mode.
+2025-05-27 10:52:38,505 - INFO - ui.display_manager - Custom font 'fonts/Minecraftia-Regular.ttf' loaded successfully.
+2025-05-27 10:52:38,505 - INFO - ui.display_manager - Pygame display and clock initialized.
+2025-05-27 10:52:38,505 - INFO - __main__ - Display initialized successfully.
+2025-05-27 10:52:38,505 - INFO - __main__ - Actual screen dimensions: 320x240
+2025-05-27 10:52:38,506 - INFO - models.app_state - Found Settings menu item at index: 8
+2025-05-27 10:52:38,506 - INFO - __main__ - Application state and reading history initialized.
+2025-05-27 10:52:38,513 - INFO - __main__ - Displaying splash screen...
+2025-05-27 10:52:41,514 - INFO - __main__ - Splash screen finished.
+2025-05-27 10:52:41,595 - INFO - data.sensors - Sense HAT initialized successfully. Joystick events will be read via get_events().
+2025-05-27 10:52:41,596 - INFO - __main__ - Sensors initialized successfully.
+2025-05-27 10:52:41,596 - INFO - input.input_handler - Sense HAT joystick support successfully referenced.
+2025-05-27 10:52:41,596 - INFO - __main__ - Joystick initialized successfully
+2025-05-27 10:52:41,596 - INFO - __main__ - Entering main event loop...
+2025-05-27 11:11:53,354 - INFO - root - Logging initialized: sending logs to both console and file.
+2025-05-27 11:11:53,354 - INFO - root - Log file location: /home/dev/Desktop/tricorder/logs/tricorder.log
+2025-05-27 11:11:53,355 - INFO - __main__ - Starting tricorder Application...
+2025-05-27 11:11:53,357 - INFO - __main__ - Platform: Linux-6.12.21-v8+-aarch64-with-glibc2.36
+2025-05-27 11:11:53,357 - INFO - __main__ - Python version: 3.11.2
+2025-05-27 11:11:53,358 - INFO - __main__ - Display size: 320x240, Fullscreen: True
+2025-05-27 11:11:53,358 - INFO - __main__ - Available sensor modes: TEMPERATURE, HUMIDITY, PRESSURE, ORIENTATION, ACCELERATION, CLOCK, CPU_USAGE, MEMORY_USAGE, DISK_USAGE
+2025-05-27 11:11:54,195 - INFO - ui.display_manager - Display set to fullscreen mode, requesting 320x240.
+2025-05-27 11:11:54,207 - INFO - ui.display_manager - Custom font 'fonts/Minecraftia-Regular.ttf' loaded successfully.
+2025-05-27 11:11:54,208 - INFO - ui.display_manager - Pygame display and clock initialized.
+2025-05-27 11:11:54,208 - INFO - __main__ - Display initialized successfully.
+2025-05-27 11:11:54,208 - INFO - __main__ - Actual screen dimensions: 320x240
+2025-05-27 11:11:54,208 - INFO - models.app_state - Found Settings menu item at index: 8
+2025-05-27 11:11:54,208 - INFO - __main__ - Application state and reading history initialized.
+2025-05-27 11:11:54,215 - INFO - __main__ - Displaying splash screen...
+2025-05-27 11:11:57,216 - INFO - __main__ - Splash screen finished.
+2025-05-27 11:11:57,289 - INFO - data.sensors - Sense HAT initialized successfully. Joystick events will be read via get_events().
+2025-05-27 11:11:57,290 - INFO - __main__ - Sensors initialized successfully.
+2025-05-27 11:11:57,290 - INFO - input.input_handler - Sense HAT joystick support successfully referenced.
+2025-05-27 11:11:57,290 - INFO - __main__ - Joystick initialized successfully
+2025-05-27 11:11:57,290 - INFO - __main__ - Entering main event loop...
+2025-05-27 11:20:03,608 - INFO - root - Logging initialized: sending logs to both console and file.
+2025-05-27 11:20:03,609 - INFO - root - Log file location: /home/dev/Desktop/tricorder/logs/tricorder.log
+2025-05-27 11:20:03,609 - INFO - __main__ - Starting tricorder Application...
+2025-05-27 11:20:03,612 - INFO - __main__ - Platform: Linux-6.12.21-v8+-aarch64-with-glibc2.36
+2025-05-27 11:20:03,612 - INFO - __main__ - Python version: 3.11.2
+2025-05-27 11:20:03,612 - INFO - __main__ - Display size: 320x240, Fullscreen: True
+2025-05-27 11:20:03,612 - INFO - __main__ - Available sensor modes: TEMPERATURE, HUMIDITY, PRESSURE, ORIENTATION, ACCELERATION, CLOCK, CPU_USAGE, MEMORY_USAGE, DISK_USAGE
+2025-05-27 11:20:04,631 - INFO - ui.display_manager - Display set to fullscreen mode, requesting 320x240.
+2025-05-27 11:20:04,645 - INFO - ui.display_manager - Custom font 'fonts/Minecraftia-Regular.ttf' loaded successfully.
+2025-05-27 11:20:04,645 - INFO - ui.display_manager - Pygame display and clock initialized.
+2025-05-27 11:20:04,645 - INFO - __main__ - Display initialized successfully.
+2025-05-27 11:20:04,645 - INFO - __main__ - Actual screen dimensions: 320x240
+2025-05-27 11:20:04,646 - INFO - models.app_state - Found Settings menu item at index: 8
+2025-05-27 11:20:04,646 - INFO - __main__ - Application state and reading history initialized.
+2025-05-27 11:20:04,653 - INFO - __main__ - Displaying splash screen...
+2025-05-27 11:20:07,653 - INFO - __main__ - Splash screen finished.
+2025-05-27 11:20:07,730 - INFO - data.sensors - Sense HAT initialized successfully. Joystick events will be read via get_events().
+2025-05-27 11:20:07,730 - INFO - __main__ - Sensors initialized successfully.
+2025-05-27 11:20:07,731 - INFO - input.input_handler - Sense HAT joystick support successfully referenced.
+2025-05-27 11:20:07,731 - INFO - __main__ - Joystick initialized successfully
+2025-05-27 11:20:07,731 - INFO - __main__ - Entering main event loop...
+2025-05-27 11:25:24,510 - INFO - root - Logging initialized: sending logs to both console and file.
+2025-05-27 11:25:24,511 - INFO - root - Log file location: /home/dev/Desktop/tricorder/logs/tricorder.log
+2025-05-27 11:25:24,511 - INFO - __main__ - Starting tricorder Application...
+2025-05-27 11:25:24,513 - INFO - __main__ - Platform: Linux-6.12.21-v8+-aarch64-with-glibc2.36
+2025-05-27 11:25:24,514 - INFO - __main__ - Python version: 3.11.2
+2025-05-27 11:25:24,514 - INFO - __main__ - Display size: 320x240, Fullscreen: True
+2025-05-27 11:25:24,514 - INFO - __main__ - Available sensor modes: TEMPERATURE, HUMIDITY, PRESSURE, ORIENTATION, ACCELERATION, CLOCK, CPU_USAGE, MEMORY_USAGE, DISK_USAGE
+2025-05-27 11:25:25,402 - INFO - ui.display_manager - Display set to fullscreen mode, requesting 320x240.
+2025-05-27 11:25:25,417 - INFO - ui.display_manager - Custom font 'fonts/Minecraftia-Regular.ttf' loaded successfully.
+2025-05-27 11:25:25,417 - INFO - ui.display_manager - Pygame display and clock initialized.
+2025-05-27 11:25:25,417 - INFO - __main__ - Display initialized successfully.
+2025-05-27 11:25:25,417 - INFO - __main__ - Actual screen dimensions: 320x240
+2025-05-27 11:25:25,418 - INFO - models.app_state - Found Settings menu item at index: 8
+2025-05-27 11:25:25,418 - INFO - __main__ - Application state and reading history initialized.
+2025-05-27 11:25:25,426 - INFO - __main__ - Displaying splash screen...
+2025-05-27 11:25:28,427 - INFO - __main__ - Splash screen finished.
+2025-05-27 11:25:28,503 - INFO - data.sensors - Sense HAT initialized successfully. Joystick events will be read via get_events().
+2025-05-27 11:25:28,503 - INFO - __main__ - Sensors initialized successfully.
+2025-05-27 11:25:28,504 - INFO - input.input_handler - Sense HAT joystick support successfully referenced.
+2025-05-27 11:25:28,504 - INFO - __main__ - Joystick initialized successfully
+2025-05-27 11:25:28,504 - INFO - __main__ - Entering main event loop...
+2025-05-27 11:30:15,851 - INFO - root - Logging initialized: sending logs to both console and file.
+2025-05-27 11:30:15,852 - INFO - root - Log file location: /home/dev/Desktop/tricorder/logs/tricorder.log
+2025-05-27 11:30:15,852 - INFO - __main__ - Starting tricorder Application...
+2025-05-27 11:30:15,855 - INFO - __main__ - Platform: Linux-6.12.21-v8+-aarch64-with-glibc2.36
+2025-05-27 11:30:15,855 - INFO - __main__ - Python version: 3.11.2
+2025-05-27 11:30:15,856 - INFO - __main__ - Display size: 320x240, Fullscreen: True
+2025-05-27 11:30:15,856 - INFO - __main__ - Available sensor modes: TEMPERATURE, HUMIDITY, PRESSURE, ORIENTATION, ACCELERATION, CLOCK, CPU_USAGE, MEMORY_USAGE, DISK_USAGE
+2025-05-27 11:30:16,685 - INFO - ui.display_manager - Display set to fullscreen mode, requesting 320x240.
+2025-05-27 11:30:16,701 - INFO - ui.display_manager - Custom font 'fonts/Minecraftia-Regular.ttf' loaded successfully.
+2025-05-27 11:30:16,701 - INFO - ui.display_manager - Pygame display and clock initialized.
+2025-05-27 11:30:16,701 - INFO - __main__ - Display initialized successfully.
+2025-05-27 11:30:16,701 - INFO - __main__ - Actual screen dimensions: 320x240
+2025-05-27 11:30:16,702 - INFO - models.app_state - Found Settings menu item at index: 8
+2025-05-27 11:30:16,702 - INFO - __main__ - Application state and reading history initialized.
+2025-05-27 11:30:16,712 - INFO - __main__ - Displaying splash screen...
+2025-05-27 11:30:19,713 - INFO - __main__ - Splash screen finished.
+2025-05-27 11:30:19,792 - INFO - data.sensors - Sense HAT initialized successfully. Joystick events will be read via get_events().
+2025-05-27 11:30:19,792 - INFO - __main__ - Sensors initialized successfully.
+2025-05-27 11:30:19,792 - INFO - input.input_handler - Sense HAT joystick support successfully referenced.
+2025-05-27 11:30:19,792 - INFO - __main__ - Joystick initialized successfully
+2025-05-27 11:30:19,792 - INFO - __main__ - Entering main event loop...
+2025-05-27 11:50:38,375 - INFO - root - Logging initialized: sending logs to both console and file.
+2025-05-27 11:50:38,388 - INFO - root - Log file location: /home/dev/Desktop/tricorder/logs/tricorder.log
+2025-05-27 11:50:38,388 - INFO - __main__ - Starting tricorder Application...
+2025-05-27 11:50:38,391 - INFO - __main__ - Platform: Linux-6.12.21-v8+-aarch64-with-glibc2.36
+2025-05-27 11:50:38,391 - INFO - __main__ - Python version: 3.11.2
+2025-05-27 11:50:38,391 - INFO - __main__ - Display size: 320x240, Fullscreen: True
+2025-05-27 11:50:38,391 - INFO - __main__ - Available sensor modes: TEMPERATURE, HUMIDITY, PRESSURE, ORIENTATION, ACCELERATION, CLOCK, CPU_USAGE, MEMORY_USAGE, DISK_USAGE
+2025-05-27 11:50:39,867 - INFO - ui.display_manager - Display set to fullscreen mode, requesting 320x240.
+2025-05-27 11:50:39,893 - INFO - ui.display_manager - Custom font 'fonts/Minecraftia-Regular.ttf' loaded successfully.
+2025-05-27 11:50:39,894 - INFO - ui.display_manager - Pygame display and clock initialized.
+2025-05-27 11:50:39,894 - INFO - __main__ - Display initialized successfully.
+2025-05-27 11:50:39,894 - INFO - __main__ - Actual screen dimensions: 720x480
+2025-05-27 11:50:39,895 - INFO - models.app_state - Found Settings menu item at index: 8
+2025-05-27 11:50:39,895 - INFO - __main__ - Application state and reading history initialized.
+2025-05-27 11:50:39,916 - INFO - __main__ - Displaying splash screen...
+2025-05-27 11:50:42,917 - INFO - __main__ - Splash screen finished.
+2025-05-27 11:50:43,038 - INFO - data.sensors - Sense HAT initialized successfully. Joystick events will be read via get_events().
+2025-05-27 11:50:43,038 - INFO - __main__ - Sensors initialized successfully.
+2025-05-27 11:50:43,038 - INFO - input.input_handler - Sense HAT joystick support successfully referenced.
+2025-05-27 11:50:43,038 - INFO - __main__ - Joystick initialized successfully
+2025-05-27 11:50:43,039 - INFO - __main__ - Entering main event loop...
+2025-05-27 12:11:51,735 - INFO - __main__ - pygame.QUIT event received. Exiting loop.
+2025-05-27 12:11:51,735 - INFO - __main__ - Exiting main loop.
+2025-05-27 12:11:51,735 - INFO - __main__ - Performing application cleanup...
+2025-05-27 12:12:08,285 - INFO - root - Logging initialized: sending logs to both console and file.
+2025-05-27 12:12:08,287 - INFO - root - Log file location: /home/dev/Desktop/tricorder/logs/tricorder.log
+2025-05-27 12:12:08,288 - INFO - __main__ - Starting tricorder Application...
+2025-05-27 12:12:08,291 - INFO - __main__ - Platform: Linux-6.12.21-v8+-aarch64-with-glibc2.36
+2025-05-27 12:12:08,291 - INFO - __main__ - Python version: 3.11.2
+2025-05-27 12:12:08,292 - INFO - __main__ - Display size: 320x240, Fullscreen: True
+2025-05-27 12:12:08,292 - INFO - __main__ - Available sensor modes: TEMPERATURE, HUMIDITY, PRESSURE, ORIENTATION, ACCELERATION, CLOCK, CPU_USAGE, MEMORY_USAGE, DISK_USAGE
+2025-05-27 12:12:09,713 - INFO - ui.display_manager - Display set to fullscreen mode, requesting 320x240.
+2025-05-27 12:12:09,736 - INFO - ui.display_manager - Custom font 'fonts/Minecraftia-Regular.ttf' loaded successfully.
+2025-05-27 12:12:09,737 - INFO - ui.display_manager - Pygame display and clock initialized.
+2025-05-27 12:12:09,737 - INFO - __main__ - Display initialized successfully.
+2025-05-27 12:12:09,737 - INFO - __main__ - Actual screen dimensions: 720x480
+2025-05-27 12:12:09,737 - INFO - models.app_state - Found Settings menu item at index: 8
+2025-05-27 12:12:09,738 - INFO - __main__ - Application state and reading history initialized.
+2025-05-27 12:12:09,759 - INFO - __main__ - Displaying splash screen...
+2025-05-27 12:12:12,759 - INFO - __main__ - Splash screen finished.
+2025-05-27 12:12:12,890 - INFO - data.sensors - Sense HAT initialized successfully. Joystick events will be read via get_events().
+2025-05-27 12:12:12,890 - INFO - __main__ - Sensors initialized successfully.
+2025-05-27 12:12:12,890 - INFO - input.input_handler - Sense HAT joystick support successfully referenced.
+2025-05-27 12:12:12,891 - INFO - __main__ - Joystick initialized successfully
+2025-05-27 12:12:12,891 - INFO - __main__ - Entering main event loop...
+2025-05-27 12:34:05,160 - INFO - root - Logging initialized: sending logs to both console and file.
+2025-05-27 12:34:05,161 - INFO - root - Log file location: /home/dev/Desktop/tricorder/logs/tricorder.log
+2025-05-27 12:34:05,162 - INFO - __main__ - Starting tricorder Application...
+2025-05-27 12:34:05,164 - INFO - __main__ - Platform: Linux-6.12.21-v8+-aarch64-with-glibc2.36
+2025-05-27 12:34:05,165 - INFO - __main__ - Python version: 3.11.2
+2025-05-27 12:34:05,165 - INFO - __main__ - Display size: 320x240, Fullscreen: True
+2025-05-27 12:34:05,165 - INFO - __main__ - Available sensor modes: TEMPERATURE, HUMIDITY, PRESSURE, ORIENTATION, ACCELERATION, CLOCK, CPU_USAGE, MEMORY_USAGE, DISK_USAGE
+2025-05-27 12:34:06,551 - INFO - ui.display_manager - Display set to fullscreen mode, requesting 320x240.
+2025-05-27 12:34:06,566 - INFO - ui.display_manager - Custom font 'fonts/Minecraftia-Regular.ttf' loaded successfully.
+2025-05-27 12:34:06,566 - INFO - ui.display_manager - Pygame display and clock initialized.
+2025-05-27 12:34:06,566 - INFO - __main__ - Display initialized successfully.
+2025-05-27 12:34:06,567 - INFO - __main__ - Actual screen dimensions: 320x240
+2025-05-27 12:34:06,567 - INFO - models.app_state - Found Settings menu item at index: 8
+2025-05-27 12:34:06,567 - INFO - __main__ - Application state and reading history initialized.
+2025-05-27 12:34:06,578 - INFO - __main__ - Displaying splash screen...
+2025-05-27 12:34:09,578 - INFO - __main__ - Splash screen finished.
+2025-05-27 12:34:09,661 - INFO - data.sensors - Sense HAT initialized successfully. Joystick events will be read via get_events().
+2025-05-27 12:34:09,661 - INFO - __main__ - Sensors initialized successfully.
+2025-05-27 12:34:09,662 - INFO - input.input_handler - Sense HAT joystick support successfully referenced.
+2025-05-27 12:34:09,662 - INFO - __main__ - Joystick initialized successfully
+2025-05-27 12:34:09,662 - INFO - __main__ - Entering main event loop...
+2025-05-27 12:39:15,688 - INFO - __main__ - pygame.QUIT event received. Exiting loop.
+2025-05-27 12:39:15,689 - INFO - __main__ - Exiting main loop.
+2025-05-27 12:39:15,689 - INFO - __main__ - Performing application cleanup...
+2025-05-27 12:39:15,914 - INFO - __main__ - Pygame quit called.
+2025-05-27 12:39:15,915 - INFO - __main__ - Tricorder Application Closed. Exit code: 0
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       2025-05-27 12:56:32,262 - INFO - root - Logging initialized: sending logs to both console and file.
+2025-05-27 12:56:32,263 - INFO - root - Log file location: /home/dev/Desktop/tricorder/logs/tricorder.log
+2025-05-27 12:56:32,264 - INFO - __main__ - Starting tricorder Application...
+2025-05-27 12:56:32,266 - INFO - __main__ - Platform: Linux-6.12.21-v8+-aarch64-with-glibc2.36
+2025-05-27 12:56:32,266 - INFO - __main__ - Python version: 3.11.2
+2025-05-27 12:56:32,267 - INFO - __main__ - Display size: 320x240, Fullscreen: True
+2025-05-27 12:56:32,267 - INFO - __main__ - Available sensor modes: TEMPERATURE, HUMIDITY, PRESSURE, ORIENTATION, ACCELERATION, CLOCK, CPU_USAGE, MEMORY_USAGE, DISK_USAGE
+2025-05-27 12:56:33,592 - INFO - ui.display_manager - Display set to fullscreen mode, requesting 320x240.
+2025-05-27 12:56:33,610 - INFO - ui.display_manager - Custom font 'fonts/Minecraftia-Regular.ttf' loaded successfully.
+2025-05-27 12:56:33,610 - INFO - ui.display_manager - Pygame display and clock initialized.
+2025-05-27 12:56:33,610 - INFO - __main__ - Display initialized successfully.
+2025-05-27 12:56:33,611 - INFO - __main__ - Actual screen dimensions: 720x480
+2025-05-27 12:56:33,611 - INFO - models.app_state - Found Settings menu item at index: 8
+2025-05-27 12:56:33,611 - INFO - __main__ - Application state and reading history initialized.
+2025-05-27 12:56:33,630 - INFO - __main__ - Displaying splash screen...
+2025-05-27 12:56:36,631 - INFO - __main__ - Splash screen finished.
+2025-05-27 12:56:36,705 - INFO - data.sensors - Sense HAT initialized successfully. Joystick events will be read via get_events().
+2025-05-27 12:56:36,705 - INFO - __main__ - Sensors initialized successfully.
+2025-05-27 12:56:36,706 - INFO - input.input_handler - Sense HAT joystick support successfully referenced.
+2025-05-27 12:56:36,706 - INFO - __main__ - Joystick initialized successfully
+2025-05-27 12:56:36,706 - INFO - __main__ - Entering main event loop...
+2025-05-28 08:41:58,546 - INFO - root - Logging initialized: sending logs to both console and file.
+2025-05-28 08:41:58,546 - INFO - root - Log file location: /home/dev/Desktop/tricorder/logs/tricorder.log
+2025-05-28 08:41:58,547 - INFO - __main__ - Starting tricorder Application...
+2025-05-28 08:41:58,549 - INFO - __main__ - Platform: Linux-6.12.21-v8+-aarch64-with-glibc2.36
+2025-05-28 08:41:58,549 - INFO - __main__ - Python version: 3.11.2
+2025-05-28 08:41:58,550 - INFO - __main__ - Display size: 320x240, Fullscreen: True
+2025-05-28 08:41:58,550 - INFO - __main__ - Available sensor modes: TEMPERATURE, HUMIDITY, PRESSURE, ORIENTATION, ACCELERATION, CLOCK, CPU_USAGE, MEMORY_USAGE, DISK_USAGE
+2025-05-28 08:41:59,841 - INFO - ui.display_manager - Display set to fullscreen mode, requesting 320x240.
+2025-05-28 08:41:59,857 - INFO - ui.display_manager - Custom font 'fonts/Minecraftia-Regular.ttf' loaded successfully.
+2025-05-28 08:41:59,858 - INFO - ui.display_manager - Pygame display and clock initialized.
+2025-05-28 08:41:59,859 - INFO - __main__ - Display initialized successfully.
+2025-05-28 08:41:59,859 - INFO - __main__ - Actual screen dimensions: 720x480
+2025-05-28 08:41:59,860 - INFO - models.app_state - Found Settings menu item at index: 8
+2025-05-28 08:41:59,861 - INFO - __main__ - Application state and reading history initialized.
+2025-05-28 08:41:59,889 - INFO - __main__ - Displaying splash screen...
+2025-05-28 08:42:02,890 - INFO - __main__ - Splash screen finished.
+2025-05-28 08:42:02,966 - INFO - data.sensors - Sense HAT initialized successfully. Joystick events will be read via get_events().
+2025-05-28 08:42:02,966 - INFO - __main__ - Sensors initialized successfully.
+2025-05-28 08:42:02,966 - INFO - input.input_handler - Sense HAT joystick support successfully referenced.
+2025-05-28 08:42:02,967 - INFO - __main__ - Joystick initialized successfully
+2025-05-28 08:42:02,967 - INFO - __main__ - Entering main event loop...

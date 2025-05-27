@@ -3,6 +3,7 @@
 
 import pygame
 import logging
+import time
 # from ui.components.ui_elements import draw_panel # Likely unused, will confirm and remove if so
 from ui.components.text_display import render_footer
 # from ui.views.system_info_view import draw_system_info_view # Unused in this file
@@ -15,11 +16,56 @@ from config import CLASSIFIED_TEXT
 
 logger = logging.getLogger(__name__)
 
+# Arrow indicator configuration
+_arrow_config = {
+    'width': 20,        # Width of the arrow indicator area
+    'arrow_size': 12,   # Size of the arrow triangle
+    'use_item_color': True  # Whether to use menu item color or red
+}
+
+def _draw_arrow_indicator(screen, arrow_area_rect, selected_item_rect, item_color, config_module):
+    """
+    Draw a simple arrow indicator pointing left toward the selected menu item.
+    
+    Args:
+        screen (pygame.Surface): The surface to draw on
+        arrow_area_rect (pygame.Rect): Rectangle of the arrow indicator area
+        selected_item_rect (pygame.Rect): Rectangle of the selected menu item
+        item_color (tuple): RGB color of the selected menu item
+        config_module (module): Configuration module for colors
+    """
+    # Clear the arrow area
+    pygame.draw.rect(screen, config_module.Theme.BACKGROUND, arrow_area_rect)
+    
+    # Calculate arrow position (centered vertically with selected item)
+    arrow_center_y = selected_item_rect.centery
+    arrow_center_x = arrow_area_rect.centerx
+    
+    # Choose arrow color
+    if _arrow_config['use_item_color']:
+        arrow_color = item_color
+    else:
+        arrow_color = config_module.Palette.RED_ALERT  # Red as requested
+    
+    # Create arrow triangle pointing left
+    arrow_size = _arrow_config['arrow_size']
+    arrow_points = [
+        (arrow_center_x - arrow_size // 2, arrow_center_y),  # Left point (tip)
+        (arrow_center_x + arrow_size // 2, arrow_center_y - arrow_size // 2),  # Top right
+        (arrow_center_x + arrow_size // 2, arrow_center_y + arrow_size // 2)   # Bottom right
+    ]
+    
+    # Draw the arrow
+    pygame.draw.polygon(screen, arrow_color, arrow_points)
+    
+    # Optional: Add a subtle border to the arrow
+    pygame.draw.polygon(screen, config_module.Palette.BLACK, arrow_points, 1)
+
 # REMOVED MENU_CATEGORIES - now driven by app_state.menu_items
 
 def draw_menu_screen(screen, app_state, fonts, config_module, sensor_values):
     """
-    Draw the menu screen with sidebar and main content area.
+    Draw the menu screen with sidebar, arrow indicator, and main content area.
     """
     screen.fill(config_module.Theme.BACKGROUND) 
 
@@ -30,7 +76,10 @@ def draw_menu_screen(screen, app_state, fonts, config_module, sensor_values):
         logger.warning(f"draw_menu_screen called unexpectedly in state: {app_state.current_state}")
         return
 
-    sidebar_width = min(screen_width // 4, 150)
+    # Layout calculations with arrow indicator area
+    base_sidebar_width = min(screen_width // 4, 150)
+    arrow_indicator_width = _arrow_config['width']
+    
     header_height = config_module.HEADER_HEIGHT
     header_color = config_module.Theme.HEADER_CORNER_FILL 
     corner_color = config_module.Theme.HEADER_CORNER_FILL
@@ -41,14 +90,15 @@ def draw_menu_screen(screen, app_state, fonts, config_module, sensor_values):
     selected_index = app_state.get_current_menu_index()
 
     # --- Part 1: Draw Corner Rectangle (Distinct block, Orange) ---
-    corner_rect = pygame.Rect(0, 0, sidebar_width, header_height)
+    corner_rect = pygame.Rect(0, 0, base_sidebar_width, header_height)
     # Apply rounding only to the top-left corner
     pygame.draw.rect(screen, corner_color, corner_rect, border_top_left_radius=curve_radius)
     # Draw border outline (should respect rounding)
     pygame.draw.rect(screen, config_module.COLOR_BORDER, corner_rect, width=config_module.Theme.BORDER_WIDTH, border_top_left_radius=curve_radius)
 
-    # --- Part 2: Draw Header Bar (Starts AFTER sidebar width, Orange) ---
-    header_rect = pygame.Rect(sidebar_width, 0, screen_width - sidebar_width, header_height)
+    # --- Part 2: Draw Header Bar (Starts AFTER base sidebar width, Orange) ---
+    # Header should span from base_sidebar_width to screen_width (no gap for arrow area)
+    header_rect = pygame.Rect(base_sidebar_width, 0, screen_width - base_sidebar_width, header_height)
     pygame.draw.rect(screen, header_color, header_rect)
     # Draw border outline
     pygame.draw.rect(screen, config_module.COLOR_BORDER, header_rect, width=config_module.Theme.BORDER_WIDTH)
@@ -56,7 +106,10 @@ def draw_menu_screen(screen, app_state, fonts, config_module, sensor_values):
     # --- Part 3: Draw Sidebar Items (Starts BELOW header height) ---
     sidebar_content_y_start = header_height # Items start below the header/corner
     sidebar_content_height = screen_height - header_height
-    sidebar_items_area = pygame.Rect(0, sidebar_content_y_start, sidebar_width, sidebar_content_height)
+    sidebar_items_area = pygame.Rect(0, sidebar_content_y_start, base_sidebar_width, sidebar_content_height)
+
+    selected_item_rect = None
+    selected_item_color = config_module.Theme.ACCENT
 
     if menu_items:
         item_height = sidebar_content_height // len(menu_items)
@@ -91,21 +144,29 @@ def draw_menu_screen(screen, app_state, fonts, config_module, sensor_values):
             text_pos = (item_rect.left + 10, item_rect.centery - text_surface.get_height() // 2)
             screen.blit(text_surface, text_pos)
 
+            # Store selected item info for arrow indicator
             if i == selected_index:
-                selection_border_width = 3 # Make selection border thicker
-                selection_rect = pygame.Rect(
-                    item_rect.left + selection_border_width // 2,
-                    item_rect.top + selection_border_width // 2,
-                    item_rect.width - selection_border_width,
-                    item_rect.height - selection_border_width
-                )
-                pygame.draw.rect(screen, config_module.Palette.BLACK, selection_rect, selection_border_width)
+                selected_item_rect = item_rect
+                selected_item_color = item_bg_color
 
-    # --- Part 4: Draw Main Content Area ---
+    # --- Part 4: Draw Arrow Indicator Area (ONLY below header) ---
+    arrow_area_rect = pygame.Rect(
+        base_sidebar_width, 
+        sidebar_content_y_start,  # Start below header, same as sidebar items
+        arrow_indicator_width, 
+        sidebar_content_height    # Same height as sidebar content
+    )
+    
+    # Draw arrow indicator if we have a selected item
+    if selected_item_rect:
+        _draw_arrow_indicator(screen, arrow_area_rect, selected_item_rect, selected_item_color, config_module)
+
+    # --- Part 5: Draw Main Content Area ---
+    total_sidebar_width = base_sidebar_width + arrow_indicator_width
     main_content_rect = pygame.Rect(
-        sidebar_width,
+        total_sidebar_width,
         header_height,
-        screen_width - sidebar_width,
+        screen_width - total_sidebar_width,
         screen_height - header_height
     )
     pygame.draw.rect(screen, config_module.Theme.BACKGROUND, main_content_rect)
@@ -179,17 +240,18 @@ def draw_menu_screen(screen, app_state, fonts, config_module, sensor_values):
         title_rect = title_surface.get_rect(centerx=main_content_rect.centerx, centery=main_content_rect.top + 50)
         screen.blit(title_surface, title_rect)
 
-    # --- Part 5: Draw Footer ---
+    # --- Part 6: Draw Footer (centered on main content area only) ---
     key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
     key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
     key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
     hint_text = f"< {key_prev_name}=Up | {key_select_name}=Select | {key_next_name}=Down >"
 
-    render_footer(
-        screen, hint_text, fonts,
-        config_module.Theme.FOREGROUND,
-        screen_width, screen_height
-    )
+    # Create a custom footer rendering that centers on main content area
+    footer_font = fonts.get('small', fonts.get('medium'))
+    footer_surface = footer_font.render(hint_text, True, config_module.Theme.FOREGROUND)
+    footer_y = screen_height - footer_surface.get_height() - 5
+    footer_x = main_content_rect.centerx - footer_surface.get_width() // 2
+    screen.blit(footer_surface, (footer_x, footer_y))
 
 # REMOVED _draw_sidebar function - logic integrated above
 # def _draw_sidebar(screen, rect, menu_items, selected_index, fonts, config, header_height):

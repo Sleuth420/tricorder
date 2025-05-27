@@ -8,6 +8,10 @@ import logging
 import time
 import platform
 
+# Force SDL to use x11 video driver BEFORE pygame.init()
+import os
+os.environ["SDL_VIDEODRIVER"] = "x11"
+
 # Import configuration and logging modules
 import config
 import logging_config
@@ -35,7 +39,7 @@ def display_critical_error_on_screen(screen, fonts, config_module, messages):
                 # Try to use a pre-loaded font if available, otherwise default system font
                 error_font = fonts.get('medium', pygame.font.Font(None, error_font_size))
             except Exception: 
-                error_font = pygame.font.Font(None, 30) # Absolute fallback
+                error_font = pygame.font.Font(None, config_module.FONT_SIZE_LARGE) # Absolute fallback
 
             current_y = screen.get_height() // 4 # Start a bit higher
             center_x = screen.get_width() // 2

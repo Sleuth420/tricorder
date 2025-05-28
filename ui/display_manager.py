@@ -3,13 +3,14 @@
 
 import pygame
 import logging
-from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_SCHEMATICS
+from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_SCHEMATICS, STATE_SENSORS_MENU
 from ui.menu import draw_menu_screen
 from ui.views.sensor_view import draw_sensor_view
 from ui.views.system_info_view import draw_system_info_view
 from ui.views.settings_view import draw_settings_view
 from ui.views.secret_games_view import draw_secret_games_view
 from ui.views.tricorder_schematics import draw_schematics_view
+from ui.views.sensors_menu_view import draw_sensors_menu_view
 
 # Temporary placeholder function until schematics_view.py is created
 # def draw_schematics_view(screen, app_state, fonts, config_module):
@@ -120,6 +121,9 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
             screen.fill(config_module.Theme.BACKGROUND)
             error_text = fonts['medium'].render("Error: Pong game not loaded", True, config_module.Theme.ALERT)
             screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
+    elif app_state.current_state == STATE_SENSORS_MENU:
+        # Draw the sensors menu
+        draw_sensors_menu_view(screen, app_state, sensor_values, sensor_history, fonts, config_module)
     else:
         logger.error(f"Unknown application state: {app_state.current_state}")
         # Draw fallback screen

@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 # Application states (remains as string literals, used internally and by display_manager)
 STATE_MENU = "MENU"           # Main menu
+STATE_SENSORS_MENU = "SENSORS_MENU"  # Sensors submenu
 STATE_DASHBOARD = "DASHBOARD" # Dashboard/auto-cycling view
 STATE_SENSOR_VIEW = "SENSOR"  # Individual sensor view
 STATE_SYSTEM_INFO = "SYSTEM"  # System info view
@@ -52,9 +53,10 @@ class AppState:
         # Main menu items - To be dynamically generated
         self.menu_items = self._generate_main_menu_items()
         
-        # Track menu hierarchy - no more submenu structure
+        # Track menu hierarchy - support for submenu navigation
         self.current_menu = self.menu_items # This will now hold MenuItem objects
-        self.menu_stack = []  # Stack to track menu hierarchy, but we won't use it for now
+        self.menu_stack = []  # Stack to track menu hierarchy for back navigation
+        self.sensors_menu_items = self._generate_sensors_menu_items()  # Generate sensors submenu
         
         # Sensor view state
         self.current_sensor = None # This will store the sensor_type constant like app_config.SENSOR_TEMPERATURE
@@ -85,10 +87,26 @@ class AppState:
             logger.info(f"Found Settings menu item at index: {self.settings_menu_index}")
 
     def _generate_main_menu_items(self):
-        """Dynamically generates main menu items from config.SENSOR_DISPLAY_PROPERTIES."""
+        """Dynamically generates main menu items with the new structure."""
         items = []
-        # Define system sensor keys that are covered by the "Systems" menu item (STATE_SYSTEM_INFO)
-        # and should not get their own individual top-level menu items.
+        
+        # Add the "Systems" item first.
+        items.append(MenuItem(name="Systems", target_state=STATE_SYSTEM_INFO, color_key="SIDEBAR_SYSTEM"))
+
+        # Add the "Sensors" submenu item
+        items.append(MenuItem(name="Sensors", target_state=STATE_SENSORS_MENU, color_key="SIDEBAR_TEMP"))
+
+        # Add other non-sensor items
+        items.append(MenuItem(name="Sweep", target_state=STATE_DASHBOARD, color_key="SIDEBAR_ALL"))
+        items.append(MenuItem(name="Schematics", target_state=STATE_SCHEMATICS, color_key="SIDEBAR_SCHEMATICS"))
+        items.append(MenuItem(name="Settings", target_state=STATE_SETTINGS, color_key="SIDEBAR_SETTINGS"))
+
+        return items
+
+    def _generate_sensors_menu_items(self):
+        """Generates the sensors submenu items from config.SENSOR_DISPLAY_PROPERTIES."""
+        items = []
+        # Define system sensor keys that should not appear in the sensors submenu
         system_sensor_keys = {
             self.config.SENSOR_CLOCK,
             self.config.SENSOR_CPU_USAGE,
@@ -96,12 +114,9 @@ class AppState:
             self.config.SENSOR_DISK_USAGE
         }
 
-        # Add the "Systems" item first.
-        items.append(MenuItem(name="Systems", target_state=STATE_SYSTEM_INFO, color_key="SIDEBAR_SYSTEM"))
-
-        # Add environmental sensors next
+        # Add environmental sensors to the submenu
         for sensor_key in self.config.SENSOR_MODES: # Iterate through defined sensor modes
-            if sensor_key in system_sensor_keys: # Skip system-specific sensors for individual menu items
+            if sensor_key in system_sensor_keys: # Skip system-specific sensors
                 continue
 
             props = self.config.SENSOR_DISPLAY_PROPERTIES.get(sensor_key)
@@ -117,11 +132,6 @@ class AppState:
                     color_key=props.get("color_key")
                 ))
                 
-        # Add other non-sensor items last
-        items.append(MenuItem(name="Sweep", target_state=STATE_DASHBOARD, color_key="SIDEBAR_ALL"))
-        items.append(MenuItem(name="Schematics", target_state=STATE_SCHEMATICS, color_key="SIDEBAR_SCHEMATICS"))
-        items.append(MenuItem(name="Settings", target_state=STATE_SETTINGS, color_key="SIDEBAR_SETTINGS"))
-
         return items
         
     def _check_secret_combo_conditions(self):
@@ -357,7 +367,6 @@ class AppState:
                         else:
                             logger.debug(f"BACK action by key {key} in state {self.current_state} not processed by generic rule.")
 
-
         return state_changed_by_action
 
     def update(self):
@@ -426,19 +435,20 @@ class AppState:
             # Conditions under which BACK should take to the main menu:
             # Not already in MENU, and not in PONG_ACTIVE (unless paused, but back from pong is handled by NEXT when paused)
             # SECRET_GAMES menu should also allow back to MENU.
-            if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE]:
+            # SENSORS_MENU should be handled by its specific handler to properly manage menu stack
+            if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_SENSORS_MENU]:
                 logger.info(f"BACK action processed in state {self.current_state}. Returning to menu.")
                 return self._return_to_menu() # state_changed is handled by _return_to_menu
             elif self.current_state == STATE_SECRET_GAMES: # Explicitly handle back from secret games to main menu
                 logger.info(f"BACK action processed in SECRET_GAMES. Returning to main menu.")
                 return self._return_to_menu()
-            else:
-                logger.debug(f"BACK action received in state {self.current_state}, but no generic back action defined here (e.g., already in menu or unpaused game).")
-                return False # No state change from this generic handler
+            # For STATE_SENSORS_MENU, let it fall through to the specific handler below
 
         # Use action constants for comparison
         if self.current_state == STATE_MENU:
             state_changed = self._handle_menu_input(action)
+        elif self.current_state == STATE_SENSORS_MENU:
+            state_changed = self._handle_sensors_menu_input(action)
         elif self.current_state == STATE_DASHBOARD:
             state_changed = self._handle_dashboard_input(action)
         elif self.current_state == STATE_SENSOR_VIEW:
@@ -460,42 +470,99 @@ class AppState:
         return True
     
     def _handle_menu_input(self, action):
-        if not self.menu_items: return False
-        num_items = len(self.menu_items)
+        if not self.current_menu: return False
+        num_items = len(self.current_menu)
         if action == app_config.INPUT_ACTION_NEXT:
             self.menu_index = (self.menu_index + 1) % num_items
-            logger.debug(f"Menu NEXT: index={self.menu_index}, item='{self.menu_items[self.menu_index].name}'")
+            logger.debug(f"Menu NEXT: index={self.menu_index}, item='{self.current_menu[self.menu_index].name}'")
             return True # Indicate UI update needed
         elif action == app_config.INPUT_ACTION_PREV:
             self.menu_index = (self.menu_index - 1 + num_items) % num_items
-            logger.debug(f"Menu PREV: index={self.menu_index}, item='{self.menu_items[self.menu_index].name}'")
+            logger.debug(f"Menu PREV: index={self.menu_index}, item='{self.current_menu[self.menu_index].name}'")
             return True # Indicate UI update needed
         elif action == app_config.INPUT_ACTION_SELECT:
-            selected_item = self.menu_items[self.menu_index]
+            selected_item = self.current_menu[self.menu_index]
             logger.info(f"Menu SELECT: item='{selected_item.name}'")
             if selected_item.target_state:
+                if selected_item.target_state == STATE_SENSORS_MENU:
+                    # Navigate to sensors submenu
+                    self.menu_stack.append((self.current_menu, self.menu_index))
+                    self.current_menu = self.sensors_menu_items
+                    self.menu_index = 0
+                    self.previous_state = self.current_state
+                    self.current_state = STATE_SENSORS_MENU
+                    logger.info("Navigated to sensors submenu")
+                    return True
+                else:
+                    # Regular state transition
+                    self.previous_state = self.current_state
+                    self.current_state = selected_item.target_state
+                    if selected_item.target_state == STATE_SENSOR_VIEW and selected_item.data and "sensor_type" in selected_item.data:
+                        self.current_sensor = selected_item.data["sensor_type"] # sensor_type is a constant
+                        # Reset freeze state when entering a new sensor view
+                        self.is_frozen = False
+                        # Clear any pending joystick press timer to prevent stale events
+                        self.joystick_middle_press_start_time = None
+                        logger.info(f"Transitioning to SENSOR_VIEW for sensor: {self.current_sensor}")
+                        logger.info("Reset freeze state to False for new sensor view")
+                    elif selected_item.target_state == STATE_DASHBOARD:
+                        # Reset freeze state when entering dashboard
+                        self.is_frozen = False
+                        self.auto_cycle = True
+                        # Clear any pending joystick press timer to prevent stale events
+                        self.joystick_middle_press_start_time = None
+                        logger.info("Reset freeze state to False for dashboard")
+                    else:
+                        self.current_sensor = None 
+                    return True 
+        elif action == app_config.INPUT_ACTION_BACK:
+            # Handle back navigation from submenu
+            if self.menu_stack:
+                previous_menu, previous_index = self.menu_stack.pop()
+                self.current_menu = previous_menu
+                self.menu_index = previous_index
+                self.current_state = STATE_MENU
+                logger.info("Navigated back from submenu to main menu")
+                return True
+        return False
+
+    def _handle_sensors_menu_input(self, action):
+        """Handle input for the sensors submenu."""
+        if not self.sensors_menu_items: return False
+        num_items = len(self.sensors_menu_items)
+        if action == app_config.INPUT_ACTION_NEXT:
+            self.menu_index = (self.menu_index + 1) % num_items
+            logger.debug(f"Sensors Menu NEXT: index={self.menu_index}, item='{self.sensors_menu_items[self.menu_index].name}'")
+            return True # Indicate UI update needed
+        elif action == app_config.INPUT_ACTION_PREV:
+            self.menu_index = (self.menu_index - 1 + num_items) % num_items
+            logger.debug(f"Sensors Menu PREV: index={self.menu_index}, item='{self.sensors_menu_items[self.menu_index].name}'")
+            return True # Indicate UI update needed
+        elif action == app_config.INPUT_ACTION_SELECT:
+            selected_item = self.sensors_menu_items[self.menu_index]
+            logger.info(f"Sensors Menu SELECT: item='{selected_item.name}'")
+            if selected_item.target_state == STATE_SENSOR_VIEW and selected_item.data and "sensor_type" in selected_item.data:
+                self.current_sensor = selected_item.data["sensor_type"] # sensor_type is a constant
+                # Reset freeze state when entering a new sensor view
+                self.is_frozen = False
+                # Clear any pending joystick press timer to prevent stale events
+                self.joystick_middle_press_start_time = None
                 self.previous_state = self.current_state
                 self.current_state = selected_item.target_state
-                if selected_item.target_state == STATE_SENSOR_VIEW and selected_item.data and "sensor_type" in selected_item.data:
-                    self.current_sensor = selected_item.data["sensor_type"] # sensor_type is a constant
-                    # Reset freeze state when entering a new sensor view
-                    self.is_frozen = False
-                    # Clear any pending joystick press timer to prevent stale events
-                    self.joystick_middle_press_start_time = None
-                    logger.info(f"Transitioning to SENSOR_VIEW for sensor: {self.current_sensor}")
-                    logger.info("Reset freeze state to False for new sensor view")
-                elif selected_item.target_state == STATE_DASHBOARD:
-                    # Reset freeze state when entering dashboard
-                    self.is_frozen = False
-                    self.auto_cycle = True
-                    # Clear any pending joystick press timer to prevent stale events
-                    self.joystick_middle_press_start_time = None
-                    logger.info("Reset freeze state to False for dashboard")
-                else:
-                    self.current_sensor = None 
-                return True 
-        return False 
-    
+                logger.info(f"Transitioning to SENSOR_VIEW for sensor: {self.current_sensor}")
+                logger.info("Reset freeze state to False for new sensor view")
+                return True
+        elif action == app_config.INPUT_ACTION_BACK:
+            # Navigate back to main menu
+            if self.menu_stack:
+                previous_menu, previous_index = self.menu_stack.pop()
+                self.current_menu = previous_menu
+                self.menu_index = previous_index
+                self.current_state = STATE_MENU
+                logger.info("Navigated back from sensors submenu to main menu")
+                return True
+        return False
+
     def _handle_common_select_action(self, view_name):
         """Common handler for SELECT action that toggles freeze."""
         self.is_frozen = not self.is_frozen
@@ -581,17 +648,19 @@ class AppState:
     
     def get_current_menu_items(self):
         if self.current_state == STATE_MENU:
-            return self.menu_items
+            return self.current_menu
+        elif self.current_state == STATE_SENSORS_MENU:
+            return self.sensors_menu_items
         elif self.current_state == STATE_SECRET_GAMES:
             return self.secret_menu_items
         return [] 
 
     def get_current_menu_index(self):
-        if self.current_state == STATE_MENU:
+        if self.current_state in [STATE_MENU, STATE_SENSORS_MENU]:
             return self.menu_index
         elif self.current_state == STATE_SECRET_GAMES:
             return self.secret_menu_index
-        return 0 
+        return 0
     
     def auto_cycle_dashboard(self, current_time):
         if (self.current_state != STATE_DASHBOARD or self.is_frozen or not self.auto_cycle):

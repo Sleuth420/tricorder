@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional, Callable, Any
+from typing import Optional, Callable, Any, List
 
 # Application states - It's often better to have these constants defined in a central place,
 # but for the MenuItem to reference them, they might be passed in or defined here/imported.
@@ -22,7 +22,7 @@ class MenuItem:
     image_path: Optional[str] = None  # Path to an image/icon for the menu item
     
     # Sub-menu (optional)
-    # sub_menu_items: list["MenuItem"] = field(default_factory=list) # For nested menus
+    sub_menu_items: List["MenuItem"] = field(default_factory=list) # For nested menus
 
     def __post_init__(self):
         # Ensure that either target_state or action_name is provided, but not both usually.
@@ -31,6 +31,6 @@ class MenuItem:
             # This could be a warning or an error depending on design
             # print(f"Warning: MenuItem '{self.name}' has both target_state and action_name.")
             pass # Allow both for now, AppState logic will decide precedence
-        elif not self.target_state and not self.action_name:
+        elif not self.target_state and not self.action_name and not self.sub_menu_items:
             # print(f"Warning: MenuItem '{self.name}' has neither target_state nor action_name.")
             pass # Item might be a non-interactive label or a parent for a sub_menu 

@@ -1,4 +1,24 @@
 # --- models package initialization ---
 """
 The models package contains modules for state management and data storage.
-""" 
+"""
+
+# Export the main AppState
+from .app_state import AppState
+
+# Export the component managers for direct access if needed
+from .state_manager import StateManager
+from .input_manager import InputManager
+from .menu_manager import MenuManager
+from .game_manager import GameManager
+
+# Export other existing models
+from .reading_history import ReadingHistory
+from .menu_item import MenuItem
+
+# Export state constants for convenience
+from .app_state_old import (
+    STATE_MENU, STATE_SENSORS_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW,
+    STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE,
+    STATE_SCHEMATICS
+) 

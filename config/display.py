@@ -1,10 +1,19 @@
 # --- config/display.py ---
 # Display and graphics settings for the tricorder application
 
+import platform
+
 # -- Display Settings --
-SCREEN_WIDTH = 320      # Default width (if not fullscreen)
-SCREEN_HEIGHT = 240     # Default height (if not fullscreen)
-FULLSCREEN = True      # Run in windowed mode?
+# Use larger window on Windows for development, Pi size for deployment
+if platform.system() == "Windows":
+    SCREEN_WIDTH = 800      # Larger for development
+    SCREEN_HEIGHT = 600     # Larger for development
+    FULLSCREEN = False      # Windowed mode for development
+else:
+    SCREEN_WIDTH = 320      # Pi size
+    SCREEN_HEIGHT = 240     # Pi size
+    FULLSCREEN = True       # Fullscreen on Pi
+
 FPS = 15                # Frames per second/update rate
 
 # -- Graph Settings (Mainly for Line Graphs) --

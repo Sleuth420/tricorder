@@ -13,6 +13,7 @@ A Star Trek inspired tricorder simulation using a Raspberry Pi, Sense HAT, and a
 * Clock display
 * Configurable controls (supports 3-button operation: Up/Back, Down, Select/Action)
 * Secret Games Menu (Pong implemented)
+* Cross-platform development support (Windows with mock sensor data)
 
 ## Project Structure
 
@@ -47,7 +48,13 @@ tricorder/
 │   └── tricorder.log       # Log file output
 ├── models/
 │   ├── __init__.py
-│   ├── app_state.py        # Manages application state, navigation, menu structures
+│   ├── app_state.py        # Main application state coordinator
+│   ├── app_state_old.py    # DEPRECATED - old monolithic state manager (with warnings)
+│   ├── state_manager.py    # Manages state transitions
+│   ├── input_manager.py    # Handles input processing and combos
+│   ├── menu_manager.py     # Manages menu navigation and generation
+│   ├── game_manager.py     # Manages game lifecycle
+│   ├── menu_item.py        # Menu item data structure
 │   └── reading_history.py  # Stores time-series data for graphs
 └── ui/
     ├── __init__.py
@@ -66,15 +73,34 @@ tricorder/
         └── secret_games_view.py # Draws the secret games menu screen
 ```
 
+## Architecture
+
+The application follows a modular architecture with clear separation of concerns:
+
+### Component Managers (models/)
+- **AppState**: Main coordinator that orchestrates between component managers
+- **StateManager**: Handles state transitions and navigation flow
+- **InputManager**: Processes input events, manages key combinations and timing
+- **MenuManager**: Generates and manages menu structures and navigation
+- **GameManager**: Manages game lifecycle (launching, updating, closing games)
+
+### Benefits of Refactored Architecture
+- **Single Responsibility Principle**: Each manager handles one specific concern
+- **Improved Testability**: Components can be tested independently
+- **Better Maintainability**: Changes to input handling don't affect menu logic, etc.
+- **Cleaner Code**: Smaller, focused classes instead of one monolithic state manager
+
 ## Dependencies
 
 * Python 3
 * Pygame
-* Sense Hat library
+* Sense Hat library (Raspberry Pi only)
 * psutil for system monitoring
 * Other dependencies listed in `requirements.txt`
 
 ## Installation
+
+### Raspberry Pi Setup
 
 1. Clone this repository:
    ```bash
@@ -116,12 +142,59 @@ tricorder/
    ```
    You should see the Sense HAT's I2C address (typically 0x46) in the output.
 
+### Windows Development Setup
+
+For development and testing on Windows without a Raspberry Pi:
+
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/Sleuth420/tricorder.git
+   cd tricorder
+   ```
+
+2. Create and activate a Python virtual environment:
+   ```bash
+   # Create virtual environment
+   python -m venv venv_windows
+   
+   # Activate virtual environment (Windows)
+   venv_windows\Scripts\activate
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Run the application:
+   ```bash
+   python main.py
+   ```
+
+**Windows Development Features:**
+- Automatically detects Windows platform and uses mock sensor data
+- Runs in windowed mode (800x600) instead of fullscreen
+- Simulates realistic sensor readings:
+  - Temperature: ~22°C with natural variations
+  - Humidity: ~45% with fluctuations
+  - Pressure: ~1013 hPa with atmospheric changes
+  - Orientation: Slow drift simulation
+  - Acceleration: Gravity simulation with minor variations
+- No Sense HAT hardware required
+
 ## Usage
 
-Run the application:
+### Raspberry Pi
 ```bash
 # Make sure virtual environment is activated
 source venv/bin/activate
+python main.py
+```
+
+### Windows Development
+```bash
+# Make sure virtual environment is activated
+venv_windows\Scripts\activate
 python main.py
 ```
 
@@ -144,32 +217,102 @@ python main.py
 4. Add splash screen
 5. Add data logging capabilities
 
-## Setting up Autorun on Raspberry Pi (systemd)
+## Setting up Autorun on Raspberry Pi (Wayfire)
 
-This project includes a systemd service file to enable the Tricorder application to start automatically when your Raspberry Pi boots into the graphical desktop.
+The Tricorder application can be configured to start automatically when your Raspberry Pi boots into the desktop environment using Wayfire's autostart configuration.
 
 **Prerequisites:**
 
-*   The Tricorder project files should be present on your Raspberry Pi (e.g., in `/home/your_username/Desktop/tricorder`).
-*   You are running a Raspberry Pi OS version that uses systemd (most modern versions do).
+*   The Tricorder project files should be present on your Raspberry Pi (e.g., in `/home/your_username/tricorder`).
+*   You are running Raspberry Pi OS with Wayfire compositor (default in recent versions).
 *   Your Raspberry Pi is configured to boot to the desktop environment.
 
 **Steps:**
 
-1.  **Navigate to the project directory:**
-    Open a terminal on your Raspberry Pi and navigate to the Tricorder project directory.
+1.  **Navigate to the Wayfire configuration directory:**
     ```bash
-    cd /path/to/your/tricorder
-    ```
-    For example, if your username is `dev` and the project is on your Desktop:
-    ```bash
-    cd /home/dev/Desktop/tricorder
+    mkdir -p ~/.config/wayfire
     ```
 
-2.  **Verify and Customize the Service File (if needed):**
-    The service file is located at `systemd/tricorder.service` within the project. It is pre-configured for a user named `dev` and a project path of `/home/dev/Desktop/tricorder`.
+2.  **Create or edit the Wayfire configuration file:**
+    ```bash
+    nano ~/.config/wayfire/wayfire.ini
+    ```
 
-    *   **Open the service file:**
-        ```bash
-        nano systemd/tricorder.service
-        ```
+3.  **Add the autostart configuration:**
+    Add the following section to the file (replace `/home/dev/tricorder` with your actual project path):
+    ```ini
+    [autostart]
+    tricorder = cd /home/dev/tricorder && source venv/bin/activate && python main.py
+    ```
+
+4.  **Save and exit the editor** (Ctrl+X, then Y, then Enter in nano).
+
+5.  **Reboot your Raspberry Pi:**
+    ```bash
+    sudo reboot
+    ```
+
+The Tricorder application will now start automatically when the desktop loads.
+
+**To disable autostart:**
+Edit the wayfire.ini file and remove or comment out the tricorder line:
+```ini
+[autostart]
+# tricorder = cd /home/dev/tricorder && source venv/bin/activate && python main.py
+```
+
+**Alternative: Manual startup script**
+You can also create a desktop shortcut or startup script:
+
+1. Create a startup script:
+   ```bash
+   nano ~/start_tricorder.sh
+   ```
+
+2. Add the following content:
+   ```bash
+   #!/bin/bash
+   cd /home/dev/tricorder
+   source venv/bin/activate
+   python main.py
+   ```
+
+3. Make it executable:
+   ```bash
+   chmod +x ~/start_tricorder.sh
+   ```
+
+4. Add to Wayfire autostart:
+   ```ini
+   [autostart]
+   tricorder = /home/dev/start_tricorder.sh
+   ```
+
+## Development Workflow
+
+### Cross-Platform Development
+1. **Windows Development**: Make changes and test using mock sensor data
+2. **Raspberry Pi Deployment**: Transfer files and test with real hardware
+3. **Version Control**: Use git to sync changes between platforms
+
+### File Transfer to Raspberry Pi
+- Use FileZilla, SCP, or git to transfer files
+- Ensure virtual environment is activated before running
+- Test with real Sense HAT hardware for final validation
+
+## Troubleshooting
+
+### Windows Development
+- **"x11 not available" error**: This is automatically handled by platform detection
+- **Mock sensor warnings**: These are normal in development mode and indicate mock data is being used
+- **Window size issues**: Windows uses 800x600 windowed mode vs Pi's 320x240 fullscreen
+
+### Raspberry Pi
+- **Sense HAT not detected**: Check I2C is enabled and Sense HAT is properly connected
+- **Permission errors**: Ensure virtual environment has system site packages access
+- **Display issues**: Verify display configuration and resolution settings
+
+### General
+- **Import errors**: Ensure virtual environment is activated and dependencies are installed
+- **Performance issues**: Check system resources and close unnecessary applications

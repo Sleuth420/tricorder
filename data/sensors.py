@@ -3,6 +3,10 @@
 
 import logging
 import datetime
+import platform
+import random
+import time
+import math
 
 # Get a logger for this module
 logger = logging.getLogger(__name__)
@@ -17,12 +21,74 @@ except ImportError:
 # Global sense object
 sense = None
 
+# Windows development mode detection
+IS_WINDOWS_DEV = platform.system() == "Windows"
+
+# Mock data class definition
+class MockSensorData:
+    def __init__(self):
+        self.base_temp = 22.0
+        self.base_humidity = 45.0
+        self.base_pressure = 1013.25
+        self.orientation = {'pitch': 0.0, 'roll': 0.0, 'yaw': 0.0}
+        self.acceleration = {'x': 0.0, 'y': 0.0, 'z': 1.0}
+        self.start_time = time.time()
+        
+    def get_temperature(self):
+        # Simulate daily temperature variation
+        elapsed = time.time() - self.start_time
+        daily_cycle = 2.0 * math.sin(elapsed / 10.0)  # 10 second cycle for demo
+        noise = random.uniform(-0.5, 0.5)
+        return self.base_temp + daily_cycle + noise
+        
+    def get_humidity(self):
+        # Simulate humidity changes
+        elapsed = time.time() - self.start_time
+        variation = 5.0 * math.sin(elapsed / 15.0)  # Different cycle
+        noise = random.uniform(-2.0, 2.0)
+        return max(20.0, min(80.0, self.base_humidity + variation + noise))
+        
+    def get_pressure(self):
+        # Simulate atmospheric pressure changes
+        elapsed = time.time() - self.start_time
+        variation = 3.0 * math.sin(elapsed / 20.0)
+        noise = random.uniform(-1.0, 1.0)
+        return self.base_pressure + variation + noise
+        
+    def get_orientation(self):
+        # Simulate slow orientation drift
+        elapsed = time.time() - self.start_time
+        return {
+            'pitch': (10.0 * math.sin(elapsed / 8.0)) % 360,
+            'roll': (15.0 * math.cos(elapsed / 12.0)) % 360,
+            'yaw': (elapsed * 2.0) % 360  # Slow rotation
+        }
+        
+    def get_acceleration(self):
+        # Simulate small vibrations around gravity
+        return {
+            'x': random.uniform(-0.1, 0.1),
+            'y': random.uniform(-0.1, 0.1),
+            'z': 1.0 + random.uniform(-0.05, 0.05)
+        }
+
+# Initialize mock data for Windows development
+mock_data = None
+if IS_WINDOWS_DEV:
+    mock_data = MockSensorData()
+    logger.info("Windows development mode: Mock sensor data initialized")
+    logger.info(f"IS_WINDOWS_DEV: {IS_WINDOWS_DEV}, mock_data: {mock_data}")
+else:
+    logger.info(f"Not Windows dev mode. IS_WINDOWS_DEV: {IS_WINDOWS_DEV}, platform: {platform.system()}")
+
 def init_sensors():
     """
     Initializes the Sense HAT object.
     Returns True if successful, False otherwise.
     """
     global sense
+    
+    # On Windows, we still try to initialize real SenseHat but provide mock data
     if SenseHat:
         try:
             sense = SenseHat()
@@ -45,11 +111,17 @@ def init_sensors():
             return False
     else:
         logger.warning("Sense HAT library not available. Cannot initialize sensors.")
+        if IS_WINDOWS_DEV:
+            logger.info("Windows development mode: Using mock sensor data")
+            logger.info(f"Mock data object: {mock_data}")
         return False
 
 def get_temperature():
     """Get the temperature reading from the Sense HAT."""
     if not sense:
+        # Return mock data on Windows for development
+        if IS_WINDOWS_DEV and mock_data:
+            return mock_data.get_temperature()
         logger.warning("Attempted to read temperature but Sense HAT is not available.")
         return None
         
@@ -62,6 +134,9 @@ def get_temperature():
 def get_humidity():
     """Get the humidity reading from the Sense HAT."""
     if not sense:
+        # Return mock data on Windows for development
+        if IS_WINDOWS_DEV and mock_data:
+            return mock_data.get_humidity()
         logger.warning("Attempted to read humidity but Sense HAT is not available.")
         return None
         
@@ -74,6 +149,9 @@ def get_humidity():
 def get_pressure():
     """Get the pressure reading from the Sense HAT."""
     if not sense:
+        # Return mock data on Windows for development
+        if IS_WINDOWS_DEV and mock_data:
+            return mock_data.get_pressure()
         logger.warning("Attempted to read pressure but Sense HAT is not available.")
         return None
         
@@ -86,6 +164,9 @@ def get_pressure():
 def get_orientation():
     """Get the orientation reading from the Sense HAT."""
     if not sense:
+        # Return mock data on Windows for development
+        if IS_WINDOWS_DEV and mock_data:
+            return mock_data.get_orientation()
         logger.warning("Attempted to read orientation but Sense HAT is not available.")
         return None
         
@@ -98,6 +179,9 @@ def get_orientation():
 def get_acceleration():
     """Get the acceleration reading from the Sense HAT."""
     if not sense:
+        # Return mock data on Windows for development
+        if IS_WINDOWS_DEV and mock_data:
+            return mock_data.get_acceleration()
         logger.warning("Attempted to read acceleration but Sense HAT is not available.")
         return None
         

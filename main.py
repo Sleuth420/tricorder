@@ -8,16 +8,18 @@ import logging
 import time
 import platform
 
-# Force SDL to use x11 video driver BEFORE pygame.init()
+# Force SDL to use x11 video driver BEFORE pygame.init() - but only on Linux
 import os
-os.environ["SDL_VIDEODRIVER"] = "x11"
+if platform.system() == "Linux":
+    os.environ["SDL_VIDEODRIVER"] = "x11"
 
 # Import configuration and logging modules
 import config
 import logging_config
 
 # Import application components from the new modular structure
-from models.app_state import AppState, STATE_MENU, STATE_PONG_ACTIVE
+from models.app_state import AppState
+from models.app_state_old import STATE_MENU, STATE_PONG_ACTIVE
 from models.reading_history import ReadingHistory
 from data import sensors
 from data import system_info
@@ -81,7 +83,7 @@ def main():
     actual_screen_height = screen.get_height()
     logger.info(f"Actual screen dimensions: {actual_screen_width}x{actual_screen_height}")
 
-    # Initialize Models (generally should not fail catastrophically)
+    # Initialize Models using the new modular architecture
     app_state = AppState(config, actual_screen_width, actual_screen_height)
     reading_history = ReadingHistory(config.SENSOR_MODES, config.GRAPH_HISTORY_SIZE)
     logger.info("Application state and reading history initialized.")
@@ -148,7 +150,7 @@ def main():
                 app_state.update()
 
                 if app_state.current_state == STATE_PONG_ACTIVE and app_state.active_pong_game:
-                    app_state.active_pong_game.update(app_state.keys_held)
+                    app_state.game_manager.update_pong(app_state.keys_held)
 
                 # 3. Read Sensor Data
                 if app_state.current_state != STATE_PONG_ACTIVE:
@@ -175,7 +177,7 @@ def main():
                 display_critical_error_on_screen(screen, fonts, config, error_messages)
                 
                 # Reset to a safe state (main menu) and continue running
-                app_state.current_state = STATE_MENU 
+                app_state.state_manager.transition_to(STATE_MENU)
                 logger.info("Reset state to MENU due to runtime error. Application continues.")
                 time.sleep(1) # Brief pause to ensure error message is seen if rapidly re-triggering
 

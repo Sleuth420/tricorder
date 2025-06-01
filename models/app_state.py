@@ -8,16 +8,9 @@ from .state_manager import StateManager
 from .input_manager import InputManager
 from .menu_manager import MenuManager
 from .game_manager import GameManager
+from .settings_manager import SettingsManager
+from .device_manager import DeviceManager
 import config as app_config
-import platform
-import sys
-import pygame
-import subprocess
-
-# Import for AUTO_CYCLE_INTERVAL_OPTIONS - consider moving this to config
-# from ui.views.settings.display_settings_view import AUTO_CYCLE_INTERVAL_OPTIONS
-from config import AUTO_CYCLE_INTERVAL_OPTIONS # Corrected import
-from ui.views.settings.device_settings_view import DEVICE_ACTION_ITEMS # New import
 
 # Application state constants
 STATE_MENU = "MENU"           # Main menu
@@ -42,13 +35,7 @@ STATE_CONFIRM_REBOOT = "CONFIRM_REBOOT"
 STATE_CONFIRM_SHUTDOWN = "CONFIRM_SHUTDOWN"
 STATE_CONFIRM_RESTART_APP = "CONFIRM_RESTART_APP"
 
-# Action Constants for Device Settings (can be moved to config.input later)
-ACTION_REBOOT_DEVICE = "REBOOT_DEVICE"
-ACTION_SHUTDOWN_DEVICE = "SHUTDOWN_DEVICE"
-ACTION_RESTART_APP = "RESTART_APP" # New action
 
-# Confirmation Options (New)
-CONFIRMATION_OPTIONS = ["Yes", "No"]
 
 logger = logging.getLogger(__name__)
 
@@ -78,47 +65,21 @@ class AppState:
         self.input_manager = InputManager(config_module)
         self.menu_manager = MenuManager(config_module)
         self.game_manager = GameManager(config_module, screen_width, screen_height)
+        self.settings_manager = SettingsManager(config_module)
+        self.device_manager = DeviceManager(config_module)
         
         # Set up cross-component dependencies
         self.input_manager.set_settings_menu_index(
             self.menu_manager.get_settings_main_menu_idx()
         )
         
-        # Sensor and view state
+        # Core sensor and view state
         self.current_sensor = None
         self.is_frozen = False
-        self.auto_cycle = True # Default for dashboard
+        self.auto_cycle = True
         self.last_cycle_time = 0
-        self.cycle_index = 0 # For dashboard cycling
+        self.cycle_index = 0
         self.last_reading_time = 0.0
-
-        # Index for display settings options
-        self.display_settings_option_index = 0
-        # Initialize with current config value if possible
-        try:
-            current_interval = self.config.AUTO_CYCLE_INTERVAL
-            if current_interval in AUTO_CYCLE_INTERVAL_OPTIONS:
-                self.display_settings_option_index = AUTO_CYCLE_INTERVAL_OPTIONS.index(current_interval)
-        except (ValueError, AttributeError):
-            logger.warning(f"Could not find current AUTO_CYCLE_INTERVAL {self.config.AUTO_CYCLE_INTERVAL} in options, defaulting index to 0.")
-            self.display_settings_option_index = 0
-        
-        # Index for device settings options (New)
-        self.device_settings_option_index = 0
-
-        # Index for confirmation options (0 for Yes/Confirm, 1 for No/Cancel)
-        self.confirmation_option_index = 0 
-        self.pending_device_action = None # Stores the action to confirm (e.g., ACTION_REBOOT_DEVICE)
-        
-        # Index for combo duration selection (New)
-        self.combo_duration_selection_index = 0
-        try:
-            current_duration = self.config.CURRENT_SECRET_COMBO_DURATION
-            if current_duration in self.config.SECRET_COMBO_DURATION_OPTIONS:
-                self.combo_duration_selection_index = self.config.SECRET_COMBO_DURATION_OPTIONS.index(current_duration)
-        except (ValueError, AttributeError):
-            logger.warning(f"Could not find current CURRENT_SECRET_COMBO_DURATION {self.config.CURRENT_SECRET_COMBO_DURATION} in options, defaulting index to 0.")
-            self.combo_duration_selection_index = 0
         
     @property
     def current_state(self):
@@ -149,6 +110,33 @@ class AppState:
     def secret_menu_index(self):
         """Get secret menu index (compatibility property)."""
         return self.menu_manager.secret_menu_index
+
+    # Settings Manager Properties for UI compatibility
+    @property
+    def display_settings_option_index(self):
+        """Get display settings option index."""
+        return self.settings_manager.display_settings_option_index
+    
+    @property
+    def combo_duration_selection_index(self):
+        """Get combo duration selection index."""
+        return self.settings_manager.combo_duration_selection_index
+
+    # Device Manager Properties for UI compatibility
+    @property
+    def device_settings_option_index(self):
+        """Get device settings option index."""
+        return self.device_manager.device_settings_option_index
+    
+    @property
+    def confirmation_option_index(self):
+        """Get confirmation option index."""
+        return self.device_manager.confirmation_option_index
+    
+    @property
+    def pending_device_action(self):
+        """Get pending device action."""
+        return self.device_manager.pending_device_action
 
     @property
     def menu_items(self):
@@ -479,197 +467,40 @@ class AppState:
         return self.state_manager.return_to_menu()
 
     def _handle_display_settings_input(self, action):
-        """Handle input for the Display Settings view (STATE_SETTINGS_DISPLAY)."""
-        state_changed = False
-        if action == app_config.INPUT_ACTION_NEXT:
-            self.display_settings_option_index = (self.display_settings_option_index + 1) % len(AUTO_CYCLE_INTERVAL_OPTIONS)
-            logger.debug(f"Display Settings NEXT: index={self.display_settings_option_index}, value={AUTO_CYCLE_INTERVAL_OPTIONS[self.display_settings_option_index]}s")
-            state_changed = True # UI needs to redraw to show new selection
-        elif action == app_config.INPUT_ACTION_PREV:
-            self.display_settings_option_index = (self.display_settings_option_index - 1 + len(AUTO_CYCLE_INTERVAL_OPTIONS)) % len(AUTO_CYCLE_INTERVAL_OPTIONS)
-            logger.debug(f"Display Settings PREV: index={self.display_settings_option_index}, value={AUTO_CYCLE_INTERVAL_OPTIONS[self.display_settings_option_index]}s")
-            state_changed = True # UI needs to redraw
-        elif action == app_config.INPUT_ACTION_SELECT:
-            state_changed = self._apply_display_settings()
-        # INPUT_ACTION_BACK is handled by _process_action to go back to STATE_SETTINGS
-        return state_changed
-
-    def _apply_display_settings(self):
-        """Apply the selected display settings (e.g., auto-cycle interval)."""
-        selected_option = AUTO_CYCLE_INTERVAL_OPTIONS[self.display_settings_option_index]
-        
-        if isinstance(selected_option, str) and selected_option == "<- Back to Main Menu":
-            logger.info("Display Settings: Action Go To Main Menu selected.")
-            self.menu_manager.reset_to_main_menu() # Use the new reset method
+        """Handle input for the Display Settings view - delegates to SettingsManager."""
+        result = self.settings_manager.handle_display_settings_input(action)
+        if result == "GO_TO_MAIN_MENU":
+            self.menu_manager.reset_to_main_menu()
             return self.state_manager.transition_to(STATE_MENU)
-        elif isinstance(selected_option, int):
-            # Directly modify the config object. For persistence, this would need to write to a file.
-            try:
-                self.config.AUTO_CYCLE_INTERVAL = selected_option
-                logger.info(f"Applied new Auto-Cycle Interval: {selected_option}s")
-                # Optionally, provide user feedback on screen (e.g., a temporary message)
-                # For now, the change will be reflected when the dashboard is next active.
-                return True # Indicates a change that might need UI update or confirmation
-            except Exception as e:
-                logger.error(f"Error applying display setting: {e}")
-                return False
-        else:
-            logger.warning(f"Unknown option type in display settings: {selected_option}")
-            return False
+        return result
 
     def _handle_device_settings_input(self, action):
-        """Handle input for the Device Settings view (STATE_SETTINGS_DEVICE)."""
-        state_changed = False
-        if action == app_config.INPUT_ACTION_NEXT:
-            self.device_settings_option_index = (self.device_settings_option_index + 1) % len(DEVICE_ACTION_ITEMS)
-            logger.debug(f"Device Settings NEXT: index={self.device_settings_option_index}, action='{DEVICE_ACTION_ITEMS[self.device_settings_option_index]['name']}'")
-            state_changed = True # UI needs to redraw
-        elif action == app_config.INPUT_ACTION_PREV:
-            self.device_settings_option_index = (self.device_settings_option_index - 1 + len(DEVICE_ACTION_ITEMS)) % len(DEVICE_ACTION_ITEMS)
-            logger.debug(f"Device Settings PREV: index={self.device_settings_option_index}, action='{DEVICE_ACTION_ITEMS[self.device_settings_option_index]['name']}'")
-            state_changed = True # UI needs to redraw
-        elif action == app_config.INPUT_ACTION_SELECT:
-            state_changed = self._trigger_device_action()
-        # INPUT_ACTION_BACK is handled by _process_action to go back to STATE_SETTINGS
-        return state_changed
+        """Handle input for the Device Settings view - delegates to DeviceManager."""
+        result = self.device_manager.handle_device_settings_input(action)
+        if isinstance(result, str):
+            if result == "GO_TO_MAIN_MENU":
+                self.menu_manager.reset_to_main_menu()
+                return self.state_manager.transition_to(STATE_MENU)
+            elif result == "SELECT_COMBO_DURATION":
+                return self.state_manager.transition_to(STATE_SELECT_COMBO_DURATION)
+            elif result == "CONFIRM_REBOOT":
+                return self.state_manager.transition_to(STATE_CONFIRM_REBOOT)
+            elif result == "CONFIRM_SHUTDOWN":
+                return self.state_manager.transition_to(STATE_CONFIRM_SHUTDOWN)
+            elif result == "CONFIRM_RESTART_APP":
+                return self.state_manager.transition_to(STATE_CONFIRM_RESTART_APP)
+        return result
 
-    def _trigger_device_action(self):
-        """Transitions to a confirmation state for the selected device action."""
-        if not (0 <= self.device_settings_option_index < len(DEVICE_ACTION_ITEMS)):
-            logger.error(f"Invalid device_settings_option_index: {self.device_settings_option_index}")
-            return False
 
-        selected_action_details = DEVICE_ACTION_ITEMS[self.device_settings_option_index]
-        action_type = selected_action_details["action"]
-        logger.info(f"Device action selected, transitioning to confirmation: {action_type}")
 
-        if action_type == ACTION_REBOOT_DEVICE:
-            self.pending_device_action = ACTION_REBOOT_DEVICE # Store what we are confirming
-            return self.state_manager.transition_to(STATE_CONFIRM_REBOOT)
-        elif action_type == ACTION_SHUTDOWN_DEVICE:
-            self.pending_device_action = ACTION_SHUTDOWN_DEVICE
-            return self.state_manager.transition_to(STATE_CONFIRM_SHUTDOWN)
-        elif action_type == ACTION_RESTART_APP:
-            self.pending_device_action = ACTION_RESTART_APP
-            return self.state_manager.transition_to(STATE_CONFIRM_RESTART_APP)
-        elif action_type == app_config.ACTION_SELECT_COMBO_DURATION: # New action type
-            logger.info("Device Settings: Action Select Combo Duration selected.")
-            # Initialize index based on current config value
-            try:
-                current_val = self.config.CURRENT_SECRET_COMBO_DURATION
-                if current_val in self.config.SECRET_COMBO_DURATION_OPTIONS:
-                    self.combo_duration_selection_index = self.config.SECRET_COMBO_DURATION_OPTIONS.index(current_val)
-                else:
-                    self.combo_duration_selection_index = 0 # Default if not found
-            except Exception as e:
-                logger.warning(f"Error setting combo_duration_selection_index: {e}")
-                self.combo_duration_selection_index = 0
-            return self.state_manager.transition_to(STATE_SELECT_COMBO_DURATION)
-        elif action_type == app_config.ACTION_GO_TO_MAIN_MENU:
-            logger.info("Device Settings: Action Go To Main Menu selected.")
-            self.menu_manager.reset_to_main_menu() # Use the new reset method
-            return self.state_manager.transition_to(STATE_MENU)
-        else:
-            logger.warning(f"Unknown device action type for confirmation: {action_type}")
-        return False
-
-    # --- Confirmation Screen Input Handling (New) ---
     def _handle_confirmation_input(self, action):
-        state_changed = False
-        if action == app_config.INPUT_ACTION_NEXT or action == app_config.INPUT_ACTION_PREV:
-            # Toggle between 0 (Yes) and 1 (No)
-            self.confirmation_option_index = 1 - self.confirmation_option_index 
-            logger.debug(f"Confirmation option toggled to: {CONFIRMATION_OPTIONS[self.confirmation_option_index]}")
-            state_changed = True # UI needs to redraw
-        elif action == app_config.INPUT_ACTION_SELECT: # Corresponds to "Yes" or "Confirm"
-            if self.confirmation_option_index == 0: # 0 is "Yes"
-                if hasattr(self, 'pending_device_action') and self.pending_device_action:
-                    self._execute_pending_device_action()
-                    state_changed = True 
-                else:
-                    logger.warning("Confirmation selected (Yes), but no pending_device_action found.")
-                    state_changed = self.state_manager.transition_to(STATE_SETTINGS_DEVICE) 
-            else: # 1 is "No"
-                logger.info(f"Device action cancelled (No selected) from {self.current_state}.")
-                self.pending_device_action = None
-                state_changed = self.state_manager.transition_to(STATE_SETTINGS_DEVICE)
-        elif action == app_config.INPUT_ACTION_BACK: # Corresponds to "No" or "Cancel"
-            logger.info(f"Device action cancelled (Back action) from {self.current_state}.")
-            self.pending_device_action = None
-            state_changed = self.state_manager.transition_to(STATE_SETTINGS_DEVICE)
-        return state_changed
+        """Handle confirmation input - delegates to DeviceManager."""
+        result = self.device_manager.handle_confirmation_input(action)
+        if result == "BACK_TO_DEVICE_SETTINGS":
+            return self.state_manager.transition_to(STATE_SETTINGS_DEVICE)
+        return result
 
-    def _execute_pending_device_action(self):
-        action_to_execute = getattr(self, 'pending_device_action', None)
-        if not action_to_execute:
-            logger.error("Attempted to execute pending device action, but none was set.")
-            return False # Indicate failure or no action taken
 
-        logger.info(f"Executing confirmed device action: {action_to_execute}")
-        self.pending_device_action = None # Clear after fetching
-
-        state_changed_to_settings = False
-
-        if action_to_execute == ACTION_REBOOT_DEVICE:
-            if platform.system() == "Linux":
-                logger.warning("Device reboot initiated (Linux).")
-                os.system("sudo reboot")
-                pygame.event.post(pygame.event.Event(pygame.QUIT)) # Quit app
-            elif platform.system() == "Windows":
-                logger.warning("Reboot action is disabled on Windows for safety in this application.")
-                # Transition back to device settings instead of rebooting Windows
-                # self.state_manager.transition_to(STATE_SETTINGS_DEVICE) # This would be immediate
-                # For now, let's post a quit to simulate the app closing as if it did reboot
-                # but without actually rebooting the OS.
-                # A better UX would be a message and return to settings.
-                # Forcing a quit to test the flow.
-                pygame.event.post(pygame.event.Event(pygame.QUIT))
-                return True # Indicate an action (quitting) was taken
-            return True # Indicate an action was processed
-
-        elif action_to_execute == ACTION_SHUTDOWN_DEVICE:
-            if platform.system() == "Linux":
-                logger.warning("Device shutdown initiated (Linux).")
-                os.system("sudo shutdown now")
-                pygame.event.post(pygame.event.Event(pygame.QUIT)) # Quit app
-            elif platform.system() == "Windows":
-                logger.warning("Shutdown action is disabled on Windows for safety in this application.")
-                # Similar to reboot, simulate app closing without actual OS shutdown.
-                pygame.event.post(pygame.event.Event(pygame.QUIT))
-                return True # Indicate an action (quitting) was taken
-            return True # Indicate an action was processed
-
-        elif action_to_execute == ACTION_RESTART_APP:
-            logger.warning("Application restart initiated.")
-            try:
-                pygame.quit() # Cleanly quit pygame first
-                
-                if platform.system() == "Windows":
-                    # On Windows, paths with spaces need careful handling for spawning new processes.
-                    # subprocess.Popen is generally more robust.
-                    # We also need to ensure the new process is detached and doesn't open a new console.
-                    import subprocess
-                    # sys.argv[0] is the script name (e.g., main.py)
-                    # sys.executable is the python interpreter
-                    cmd = [sys.executable] + sys.argv
-                    logger.info(f"Restarting (Windows) with: {cmd}")
-                    # Use DETACHED_PROCESS to avoid creating a new console window
-                    subprocess.Popen(cmd, creationflags=subprocess.DETACHED_PROCESS)
-                    sys.exit(0) # Current process should exit cleanly
-                else:
-                    # For Linux/macOS, os.execv is fine and replaces the current process.
-                    args = [sys.executable] + sys.argv 
-                    logger.info(f"Restarting (Linux/Unix) with: os.execv({sys.executable}, {args})")
-                    os.execv(sys.executable, args)
-            except Exception as e:
-                logger.error(f"Failed to restart application: {e}", exc_info=True)
-                sys.exit(1) # If restart fails, exit with an error
-            # For os.execv, this part is not reached. For Popen, current process exits above.
-            return True 
-
-        else:
-            logger.warning(f"Unknown pending device action to execute: {action_to_execute}")
-            return False
 
     def _handle_secret_games_input(self, action):
         """Handle input for the secret games menu."""
@@ -741,37 +572,10 @@ class AppState:
         """Get current menu index (now calls MenuManager)."""
         return self.menu_manager.get_current_menu_index(self.current_state)
 
-    # --- Combo Duration Selection Handling (New) ---
     def _handle_select_combo_duration_input(self, action):
-        """Handle input for the Select Combo Duration view (STATE_SELECT_COMBO_DURATION)."""
-        state_changed = False
-        options = self.config.SECRET_COMBO_DURATION_OPTIONS
-        if action == app_config.INPUT_ACTION_NEXT:
-            self.combo_duration_selection_index = (self.combo_duration_selection_index + 1) % len(options)
-            logger.debug(f"Combo Duration Select NEXT: index={self.combo_duration_selection_index}, value={options[self.combo_duration_selection_index]}s")
-            state_changed = True
-        elif action == app_config.INPUT_ACTION_PREV:
-            self.combo_duration_selection_index = (self.combo_duration_selection_index - 1 + len(options)) % len(options)
-            logger.debug(f"Combo Duration Select PREV: index={self.combo_duration_selection_index}, value={options[self.combo_duration_selection_index]}s")
-            state_changed = True
-        elif action == app_config.INPUT_ACTION_SELECT:
-            state_changed = self._apply_selected_combo_duration()
+        """Handle combo duration input - delegates to SettingsManager."""
+        result = self.settings_manager.handle_combo_duration_input(action)
+        if result and action == app_config.INPUT_ACTION_SELECT:
             # After applying, go back to device settings
-            if state_changed:
-                 self.state_manager.transition_to(STATE_SETTINGS_DEVICE)
-        # INPUT_ACTION_BACK from this state should go to STATE_SETTINGS_DEVICE
-        # This is handled in _process_action now for sub-settings states
-        return state_changed
-
-    def _apply_selected_combo_duration(self):
-        """Apply the selected secret combo duration."""
-        selected_duration = self.config.SECRET_COMBO_DURATION_OPTIONS[self.combo_duration_selection_index]
-        try:
-            self.config.CURRENT_SECRET_COMBO_DURATION = selected_duration
-            # Also update the InputManager's internal config reference if it holds a copy (it should use live config)
-            # self.input_manager.config.CURRENT_SECRET_COMBO_DURATION = selected_duration # Not strictly needed if input_manager uses live config
-            logger.info(f"Applied new Secret Combo Duration: {selected_duration}s")
-            return True
-        except Exception as e:
-            logger.error(f"Error applying combo duration setting: {e}")
-            return False 
+            return self.state_manager.transition_to(STATE_SETTINGS_DEVICE)
+        return result 

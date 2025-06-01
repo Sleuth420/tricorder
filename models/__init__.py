@@ -11,6 +11,8 @@ from .state_manager import StateManager
 from .input_manager import InputManager
 from .menu_manager import MenuManager
 from .game_manager import GameManager
+from .settings_manager import SettingsManager
+from .device_manager import DeviceManager
 
 # Export other existing models
 from .reading_history import ReadingHistory

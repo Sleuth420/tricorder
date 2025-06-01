@@ -3,7 +3,9 @@
 
 import logging
 from games.pong import PongGame
-from .app_state_old import STATE_PONG_ACTIVE, STATE_MENU
+# State constants - defined locally to avoid circular imports
+STATE_PONG_ACTIVE = "PONG_ACTIVE"
+STATE_MENU = "MENU"
 import config as app_config
 
 logger = logging.getLogger(__name__)

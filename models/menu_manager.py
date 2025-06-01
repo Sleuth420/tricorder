@@ -3,10 +3,15 @@
 
 import logging
 from .menu_item import MenuItem
-from .app_state_old import (
-    STATE_MENU, STATE_SENSORS_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW,
-    STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_SCHEMATICS
-)
+# State constants - defined locally to avoid circular imports
+STATE_MENU = "MENU"
+STATE_SENSORS_MENU = "SENSORS_MENU"
+STATE_DASHBOARD = "DASHBOARD"
+STATE_SENSOR_VIEW = "SENSOR"
+STATE_SYSTEM_INFO = "SYSTEM"
+STATE_SETTINGS = "SETTINGS"
+STATE_SECRET_GAMES = "SECRET_GAMES"
+STATE_SCHEMATICS = "SCHEMATICS"
 import config as app_config
 
 logger = logging.getLogger(__name__)
@@ -248,11 +253,32 @@ class MenuManager:
         return self._get_current_menu_items(current_state)
         
     def get_current_menu_index(self, current_state):
-        """Get the current menu index based on state."""
+        """
+        Get the current menu index for the given state.
+        
+        Args:
+            current_state (str): Current application state
+            
+        Returns:
+            int: Current menu index
+        """
         if current_state == STATE_SECRET_GAMES:
             return self.secret_menu_index
         else:
             return self.menu_index
+            
+    def set_current_menu_index(self, current_state, value):
+        """
+        Set the current menu index for the given state.
+        
+        Args:
+            current_state (str): Current application state
+            value (int): New menu index value
+        """
+        if current_state == STATE_SECRET_GAMES:
+            self.secret_menu_index = value
+        else:
+            self.menu_index = value
             
     def get_settings_menu_index(self):
         """Get the settings menu index for secret combo detection."""

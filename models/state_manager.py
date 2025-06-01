@@ -2,11 +2,17 @@
 # Manages application state transitions and coordination
 
 import logging
-from .app_state_old import (
-    STATE_MENU, STATE_SENSORS_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW,
-    STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE,
-    STATE_SCHEMATICS
-)
+
+# Import state constants - avoiding circular import by importing from the module that will define them
+STATE_MENU = "MENU"
+STATE_SENSORS_MENU = "SENSORS_MENU"
+STATE_DASHBOARD = "DASHBOARD"
+STATE_SENSOR_VIEW = "SENSOR"
+STATE_SYSTEM_INFO = "SYSTEM"
+STATE_SETTINGS = "SETTINGS"
+STATE_SECRET_GAMES = "SECRET_GAMES"
+STATE_PONG_ACTIVE = "PONG_ACTIVE"
+STATE_SCHEMATICS = "SCHEMATICS"
 
 logger = logging.getLogger(__name__)
 

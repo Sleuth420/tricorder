@@ -7,12 +7,18 @@ from .state_manager import StateManager
 from .input_manager import InputManager
 from .menu_manager import MenuManager
 from .game_manager import GameManager
-from .app_state_old import (
-    STATE_MENU, STATE_SENSORS_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW,
-    STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE,
-    STATE_SCHEMATICS
-)
 import config as app_config
+
+# Application state constants
+STATE_MENU = "MENU"           # Main menu
+STATE_SENSORS_MENU = "SENSORS_MENU"  # Sensors submenu
+STATE_DASHBOARD = "DASHBOARD" # Dashboard/auto-cycling view
+STATE_SENSOR_VIEW = "SENSOR"  # Individual sensor view
+STATE_SYSTEM_INFO = "SYSTEM"  # System info view
+STATE_SETTINGS = "SETTINGS"   # Settings view
+STATE_SECRET_GAMES = "SECRET_GAMES" # Secret menu
+STATE_PONG_ACTIVE = "PONG_ACTIVE" # Pong game
+STATE_SCHEMATICS = "SCHEMATICS" # Schematics viewer
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +81,35 @@ class AppState:
     def active_pong_game(self):
         """Get the active Pong game instance."""
         return self.game_manager.get_pong_game()
+
+    @property
+    def secret_menu_items(self):
+        """Get secret menu items (compatibility property)."""
+        return self.menu_manager.secret_menu_items
+        
+    @property
+    def secret_menu_index(self):
+        """Get secret menu index (compatibility property)."""
+        return self.menu_manager.secret_menu_index
+
+    @property
+    def menu_items(self):
+        """Get current menu items (compatibility property)."""
+        return self.menu_manager.get_current_menu_items(self.current_state)
+        
+    @property
+    def menu_index(self):
+        """Get current menu index (compatibility property)."""
+        return self.menu_manager.get_current_menu_index(self.current_state)
+        
+    @menu_index.setter
+    def menu_index(self, value):
+        """Set current menu index (compatibility property)."""
+        self.menu_manager.set_current_menu_index(self.current_state, value)
+
+    def set_state(self, new_state):
+        """Set the application state (compatibility method)."""
+        return self.state_manager.transition_to(new_state)
 
     def handle_input(self, input_results):
         """

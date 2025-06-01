@@ -18,8 +18,7 @@ import config
 import logging_config
 
 # Import application components from the new modular structure
-from models.app_state import AppState
-from models.app_state_old import STATE_MENU, STATE_PONG_ACTIVE
+from models.app_state import AppState, STATE_MENU, STATE_PONG_ACTIVE
 from models.reading_history import ReadingHistory
 from data import sensors
 from data import system_info

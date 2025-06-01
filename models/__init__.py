@@ -17,8 +17,18 @@ from .reading_history import ReadingHistory
 from .menu_item import MenuItem
 
 # Export state constants for convenience
-from .app_state_old import (
+from .app_state import (
     STATE_MENU, STATE_SENSORS_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW,
     STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE,
     STATE_SCHEMATICS
-) 
+)
+
+# Export public interface
+__all__ = [
+    'AppState',
+    'STATE_MENU', 'STATE_SENSORS_MENU', 'STATE_DASHBOARD', 'STATE_SENSOR_VIEW',
+    'STATE_SYSTEM_INFO', 'STATE_SETTINGS', 'STATE_SECRET_GAMES', 'STATE_PONG_ACTIVE',
+    'STATE_SCHEMATICS',
+    'MenuItem',
+    'ReadingHistory'
+] 

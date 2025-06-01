@@ -12,6 +12,13 @@ STATE_SYSTEM_INFO = "SYSTEM"
 STATE_SETTINGS = "SETTINGS"
 STATE_SECRET_GAMES = "SECRET_GAMES"
 STATE_SCHEMATICS = "SCHEMATICS"
+
+# Import new settings states
+STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
+STATE_SETTINGS_BLUETOOTH = "SETTINGS_BLUETOOTH"
+STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
+STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
+
 import config as app_config
 
 logger = logging.getLogger(__name__)
@@ -29,21 +36,23 @@ class MenuManager:
         self.config = config_module
         
         # Menu state
-        self.menu_index = 0
-        self.secret_menu_index = 0
+        self.menu_index = 0             # Index for the current menu on top of the stack
+        self.secret_menu_index = 0      # Dedicated index for the secret menu
         
         # Generate menu items
         self.main_menu_items = self._generate_main_menu_items()
         self.sensors_menu_items = self._generate_sensors_menu_items()
         self.secret_menu_items = self._generate_secret_menu_items()
+        self.settings_menu_items = self._generate_settings_menu_items() # New settings menu
         
         # Menu navigation stack for hierarchical menus
-        self.current_menu = self.main_menu_items
-        self.menu_stack = []
-        
-        # Find settings menu index for secret combo
-        self.settings_menu_index = self._find_settings_menu_index()
-        
+        # Each element is a tuple: (list_of_menu_items, current_index_in_that_list)
+        self.menu_stack = [] 
+        self.current_menu_definition = self.main_menu_items # Start with main menu
+
+        # Find settings menu index for secret combo (remains relevant for main menu)
+        self.settings_main_menu_idx = self._find_settings_main_menu_idx()
+
     def _generate_main_menu_items(self):
         """Dynamically generates main menu items."""
         items = []
@@ -130,156 +139,198 @@ class MenuManager:
             )
         ]
         
-    def _find_settings_menu_index(self):
-        """Find the index of the Settings menu item for secret combo detection."""
+    def _generate_settings_menu_items(self):
+        """Generates the settings category menu items."""
+        items = [
+            MenuItem(
+                name="WiFi Settings",
+                target_state=STATE_SETTINGS_WIFI,
+                color_key="SIDEBAR_SYSTEM" # Example color
+            ),
+            MenuItem(
+                name="Bluetooth Settings",
+                target_state=STATE_SETTINGS_BLUETOOTH,
+                color_key="SIDEBAR_SYSTEM" # Example color
+            ),
+            MenuItem(
+                name="Device Settings",
+                target_state=STATE_SETTINGS_DEVICE,
+                color_key="SIDEBAR_SYSTEM" # Example color
+            ),
+            MenuItem(
+                name="Display Settings", # For Auto-Cycle Interval
+                target_state=STATE_SETTINGS_DISPLAY,
+                color_key="SIDEBAR_SYSTEM" # Example color
+            ),
+            MenuItem(
+                name="<- Back", # New Back item
+                target_state=STATE_MENU, # Goes directly to main menu
+                color_key="SIDEBAR_SETTINGS" # Consistent color
+            )
+        ]
+        logger.debug(f"Generated settings menu items: {[item.name for item in items]}")
+        return items
+        
+    def _find_settings_main_menu_idx(self):
+        """Find the index of the Settings menu item in the main_menu_items for secret combo detection."""
         for i, item in enumerate(self.main_menu_items):
             if item.name == "Settings":
-                logger.info(f"Found Settings menu item at index: {i}")
+                logger.info(f"Found Settings menu item in main_menu_items at index: {i}")
                 return i
         
-        logger.warning("Could not find 'Settings' in main menu items for secret combo.")
+        logger.warning("Could not find 'Settings' in main_menu_items for secret combo.")
         return -1
         
     def navigate_next(self, current_state):
         """
-        Navigate to the next menu item.
-        
-        Args:
-            current_state (str): Current application state
-            
-        Returns:
-            bool: True if navigation occurred
+        Navigate to the next menu item in the currently active menu.
         """
-        menu_items = self._get_current_menu_items(current_state)
-        if not menu_items:
+        active_menu_items = self._get_menu_items_for_state(current_state)
+        if not active_menu_items:
             return False
             
         if current_state == STATE_SECRET_GAMES:
-            self.secret_menu_index = (self.secret_menu_index + 1) % len(menu_items)
-            logger.debug(f"Secret Menu NEXT: index={self.secret_menu_index}, "
-                        f"item='{menu_items[self.secret_menu_index].name}'")
-        else:
-            self.menu_index = (self.menu_index + 1) % len(menu_items)
-            logger.debug(f"Menu NEXT: index={self.menu_index}, "
-                        f"item='{menu_items[self.menu_index].name}'")
+            self.secret_menu_index = (self.secret_menu_index + 1) % len(active_menu_items)
+            logger.debug(f"Secret Menu NEXT: index={self.secret_menu_index}, item='{active_menu_items[self.secret_menu_index].name}'")
+        else: # Handles main menu, sensors menu, and now settings menu via menu_stack
+            self.menu_index = (self.menu_index + 1) % len(active_menu_items)
+            logger.debug(f"Menu NEXT ({current_state}): index={self.menu_index}, item='{active_menu_items[self.menu_index].name}'")
         return True
         
     def navigate_prev(self, current_state):
         """
-        Navigate to the previous menu item.
-        
-        Args:
-            current_state (str): Current application state
-            
-        Returns:
-            bool: True if navigation occurred
+        Navigate to the previous menu item in the currently active menu.
         """
-        menu_items = self._get_current_menu_items(current_state)
-        if not menu_items:
+        active_menu_items = self._get_menu_items_for_state(current_state)
+        if not active_menu_items:
             return False
             
         if current_state == STATE_SECRET_GAMES:
-            self.secret_menu_index = (self.secret_menu_index - 1 + len(menu_items)) % len(menu_items)
-            logger.debug(f"Secret Menu PREV: index={self.secret_menu_index}, "
-                        f"item='{menu_items[self.secret_menu_index].name}'")
-        else:
-            self.menu_index = (self.menu_index - 1 + len(menu_items)) % len(menu_items)
-            logger.debug(f"Menu PREV: index={self.menu_index}, "
-                        f"item='{menu_items[self.menu_index].name}'")
+            self.secret_menu_index = (self.secret_menu_index - 1 + len(active_menu_items)) % len(active_menu_items)
+            logger.debug(f"Secret Menu PREV: index={self.secret_menu_index}, item='{active_menu_items[self.secret_menu_index].name}'")
+        else: # Handles main menu, sensors menu, and now settings menu via menu_stack
+            self.menu_index = (self.menu_index - 1 + len(active_menu_items)) % len(active_menu_items)
+            logger.debug(f"Menu PREV ({current_state}): index={self.menu_index}, item='{active_menu_items[self.menu_index].name}'")
         return True
         
     def get_selected_item(self, current_state):
         """
-        Get the currently selected menu item.
-        
-        Args:
-            current_state (str): Current application state
-            
-        Returns:
-            MenuItem: The selected menu item, or None
+        Get the currently selected menu item from the active menu.
         """
-        menu_items = self._get_current_menu_items(current_state)
-        if not menu_items:
+        active_menu_items = self._get_menu_items_for_state(current_state)
+        if not active_menu_items:
             return None
             
-        if current_state == STATE_SECRET_GAMES:
-            return menu_items[self.secret_menu_index]
-        else:
-            return menu_items[self.menu_index]
+        idx_to_use = self.secret_menu_index if current_state == STATE_SECRET_GAMES else self.menu_index
+        
+        if 0 <= idx_to_use < len(active_menu_items):
+            return active_menu_items[idx_to_use]
+        logger.warning(f"Selected index {idx_to_use} out of bounds for {current_state} menu with {len(active_menu_items)} items.")
+        return None
             
-    def enter_submenu(self, submenu_items):
+    def enter_submenu(self, new_menu_items_list, parent_state_to_push_on_stack, new_submenu_state_name_for_logging):
         """
-        Enter a submenu.
+        Enter a submenu, pushing the current (parent) menu and index onto the stack.
         
         Args:
-            submenu_items (list): The submenu items to enter
+            new_menu_items_list (list): The MenuItem list for the submenu to enter.
+            parent_state_to_push_on_stack (str): The state name of the current menu (which is becoming the parent).
+            new_submenu_state_name_for_logging (str): The name of the state associated with the new submenu being entered.
+                                                     Used for logging/debugging.
             
         Returns:
-            bool: True if submenu was entered
+            bool: True if submenu was entered.
         """
-        self.menu_stack.append((self.current_menu, self.menu_index))
-        self.current_menu = submenu_items
-        self.menu_index = 0
-        logger.info("Entered submenu")
+        # Push the PARENT menu's definition, its current index, and its state name onto the stack
+        self.menu_stack.append((self.current_menu_definition, self.menu_index, parent_state_to_push_on_stack))
+        
+        # Now, set the MenuManager's current definition and index for the NEW submenu
+        self.current_menu_definition = new_menu_items_list
+        self.menu_index = 0 # Reset index for the new menu
+        
+        logger.info(f"Entered submenu for state: {new_submenu_state_name_for_logging}. Parent was {parent_state_to_push_on_stack}. Stack depth: {len(self.menu_stack)}")
         return True
         
     def exit_submenu(self):
         """
         Exit the current submenu and return to the parent menu.
+        The state transition itself is handled by AppState.
         
         Returns:
-            bool: True if submenu was exited
+            str: The state name of the menu we are returning to, or None if stack is empty.
         """
         if self.menu_stack:
-            previous_menu, previous_index = self.menu_stack.pop()
-            self.current_menu = previous_menu
+            previous_menu_def, previous_index, previous_state_name = self.menu_stack.pop()
+            self.current_menu_definition = previous_menu_def
             self.menu_index = previous_index
-            logger.info("Exited submenu")
-            return True
-        return False
+            logger.info(f"Exited submenu. Returning to menu for state: {previous_state_name}. Stack depth: {len(self.menu_stack)}")
+            return previous_state_name
+        logger.warning("Attempted to exit submenu, but menu stack is empty.")
+        return None # Should ideally return to main menu state or similar default
         
-    def _get_current_menu_items(self, current_state):
-        """Get the current menu items based on state."""
+    def _get_menu_items_for_state(self, current_state):
+        """Helper to get the list of MenuItems for the current state/menu."""
         if current_state == STATE_MENU:
-            return self.current_menu
+            # If menu_stack is empty, this is the main menu. Otherwise, it's a submenu navigated to from main.
+            return self.current_menu_definition # This will be main_menu_items if stack is empty
         elif current_state == STATE_SENSORS_MENU:
-            return self.sensors_menu_items
+            return self.sensors_menu_items # Sensors menu is directly managed
         elif current_state == STATE_SECRET_GAMES:
-            return self.secret_menu_items
-        return []
+            return self.secret_menu_items # Secret games menu is directly managed
+        elif current_state == STATE_SETTINGS: # This is the main settings category menu
+            return self.settings_menu_items
+        # For sub-settings states like STATE_SETTINGS_WIFI, they might have their own menus
+        # or they might be views without menus. If they have menus, this method needs expansion
+        # or the AppState needs to ensure MenuManager is correctly set up when transitioning.
+        # For now, sub-settings views are assumed not to be menus themselves handled by this part of MenuManager.
+        # The current_menu_definition on the stack handles current items for stacked menus.
         
-    def get_current_menu_items(self, current_state):
+        # Fallback for states that are currently on the menu_stack (submenus of main menu)
+        if self.menu_stack:
+             # The top of the stack's definition is what we are currently in theory.
+             # However, current_menu_definition should ALREADY point to the correct list.
+             pass
+
+        # If the state implies it's a menu managed by the stack, current_menu_definition should be correct.
+        # This logic primarily relies on AppState calling enter_submenu/exit_submenu correctly.
+        return self.current_menu_definition
+
+    def get_current_menu_items(self, current_state): # Public access, calls helper
         """Public method to get current menu items."""
-        return self._get_current_menu_items(current_state)
+        return self._get_menu_items_for_state(current_state)
         
     def get_current_menu_index(self, current_state):
         """
         Get the current menu index for the given state.
-        
-        Args:
-            current_state (str): Current application state
-            
-        Returns:
-            int: Current menu index
+        This now primarily returns self.menu_index for stack-managed menus
+        or specific indices for non-stacked menus like secret_menu.
         """
         if current_state == STATE_SECRET_GAMES:
             return self.secret_menu_index
-        else:
-            return self.menu_index
+        # For STATE_MENU, STATE_SENSORS_MENU, STATE_SETTINGS, and any submenus managed by the stack:
+        return self.menu_index 
             
     def set_current_menu_index(self, current_state, value):
         """
         Set the current menu index for the given state.
-        
-        Args:
-            current_state (str): Current application state
-            value (int): New menu index value
         """
         if current_state == STATE_SECRET_GAMES:
             self.secret_menu_index = value
-        else:
-            self.menu_index = value
-            
-    def get_settings_menu_index(self):
-        """Get the settings menu index for secret combo detection."""
-        return self.settings_menu_index 
+        else: # For main_menu, sensors_menu, settings_menu and stacked submenus
+            active_menu = self._get_menu_items_for_state(current_state)
+            if active_menu: # Ensure menu exists before trying to set index
+                 self.menu_index = value % len(active_menu) if len(active_menu) > 0 else 0
+            else:
+                self.menu_index = 0
+
+
+    def get_settings_main_menu_idx(self):
+        """Get the settings menu index for secret combo detection (from main menu)."""
+        return self.settings_main_menu_idx
+
+    def reset_to_main_menu(self):
+        """Resets the menu manager to the main menu state."""
+        self.menu_stack.clear()
+        self.current_menu_definition = self.main_menu_items
+        self.menu_index = 0 # Reset to the first item of the main menu
+        logger.info("MenuManager reset to main menu.") 

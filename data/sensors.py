@@ -182,7 +182,7 @@ def get_acceleration():
         # Return mock data on Windows for development
         if IS_WINDOWS_DEV and mock_data:
             return mock_data.get_acceleration()
-        logger.warning("Attempted to read acceleration but Sense HAT is not available.")
+        logger.warning("Attempted to read acceleration but Sense HAT is not available. If Running on Windows this is expected")
         return None
         
     try:

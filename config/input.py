@@ -54,6 +54,7 @@ SECRET_HOLD_DURATION = 5.0 # Seconds to hold keys for secret menu (Adjusted to a
 ACTION_LAUNCH_PONG = "LAUNCH_PONG"
 ACTION_LAUNCH_TETRIS = "LAUNCH_TETRIS" # Example for future
 ACTION_RETURN_TO_MENU = "RETURN_TO_MENU"
+ACTION_GO_TO_MAIN_MENU = "GO_TO_MAIN_MENU" # New action for direct to main menu
 
 # -- GPIO Pins (Placeholder for later) --
 # (BCM Pin number for physical buttons when added)

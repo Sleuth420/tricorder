@@ -3,14 +3,17 @@
 
 import pygame
 import logging
-from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_SCHEMATICS, STATE_SENSORS_MENU
+from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_SCHEMATICS, STATE_SENSORS_MENU, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_DEVICE, STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP
 from ui.menu import draw_menu_screen
 from ui.views.sensor_view import draw_sensor_view
 from ui.views.system_info_view import draw_system_info_view
-from ui.views.settings_view import draw_settings_view
+from ui.views.settings.settings_view import draw_settings_view
 from ui.views.secret_games_view import draw_secret_games_view
 from ui.views.tricorder_schematics import draw_schematics_view
 from ui.views.sensors_menu_view import draw_sensors_menu_view
+from ui.views.settings.display_settings_view import draw_display_settings_view
+from ui.views.settings.device_settings_view import draw_device_settings_view
+from ui.views.settings.confirmation_view import draw_confirmation_view
 
 # Temporary placeholder function until schematics_view.py is created
 # def draw_schematics_view(screen, app_state, fonts, config_module):
@@ -124,6 +127,16 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
     elif app_state.current_state == STATE_SENSORS_MENU:
         # Draw the sensors menu
         draw_sensors_menu_view(screen, app_state, sensor_values, sensor_history, fonts, config_module)
+    elif app_state.current_state == STATE_SETTINGS_DISPLAY:
+        draw_display_settings_view(screen, app_state, fonts, config_module)
+    elif app_state.current_state == STATE_SETTINGS_DEVICE:
+        draw_device_settings_view(screen, app_state, fonts, config_module)
+    elif app_state.current_state == STATE_CONFIRM_REBOOT:
+        draw_confirmation_view(screen, app_state, fonts, config_module, message="Reboot Device?")
+    elif app_state.current_state == STATE_CONFIRM_SHUTDOWN:
+        draw_confirmation_view(screen, app_state, fonts, config_module, message="Shutdown Device?")
+    elif app_state.current_state == STATE_CONFIRM_RESTART_APP:
+        draw_confirmation_view(screen, app_state, fonts, config_module, message="Restart Application?")
     else:
         logger.error(f"Unknown application state: {app_state.current_state}")
         # Draw fallback screen

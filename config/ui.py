@@ -20,4 +20,5 @@ ARROW_INDICATOR_SIZE = 20         # Size of the arrow triangle (increased from 1
 ARROW_USE_ITEM_COLOR = True       # Whether to use menu item color or red alert color
 
 # -- Dashboard Settings --
-AUTO_CYCLE_INTERVAL = 5  # Seconds between auto-cycling in dashboard mode 
+AUTO_CYCLE_INTERVAL = 5  # Seconds between auto-cycling in dashboard mode
+AUTO_CYCLE_INTERVAL_OPTIONS = [1, 5, 10, 15, 30, 60, "<- Back to Main Menu"] # Seconds, New, updated string option with simpler arrow 

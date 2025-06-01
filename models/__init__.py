@@ -13,6 +13,7 @@ from .menu_manager import MenuManager
 from .game_manager import GameManager
 from .settings_manager import SettingsManager
 from .device_manager import DeviceManager
+from .wifi_manager import WifiManager, WIFI_ACTION_TOGGLE, WIFI_ACTION_SCAN, WIFI_ACTION_CONNECT, WIFI_ACTION_VIEW_SAVED, WIFI_ACTION_BACK_TO_SETTINGS
 
 # Export other existing models
 from .reading_history import ReadingHistory
@@ -37,6 +38,13 @@ from .app_state import (
 # Export public interface
 __all__ = [
     'AppState',
+    'StateManager',
+    'InputManager',
+    'MenuManager',
+    'GameManager',
+    'SettingsManager',
+    'DeviceManager',
+    'WifiManager',
     'STATE_MENU', 'STATE_SENSORS_MENU', 'STATE_DASHBOARD', 'STATE_SENSOR_VIEW',
     'STATE_SYSTEM_INFO', 'STATE_SETTINGS', 'STATE_SECRET_GAMES', 'STATE_PONG_ACTIVE',
     'STATE_SCHEMATICS',
@@ -50,5 +58,11 @@ __all__ = [
     'STATE_CONFIRM_SHUTDOWN',
     'STATE_CONFIRM_RESTART_APP',
     'MenuItem',
-    'ReadingHistory'
+    'ReadingHistory',
+    # WifiManager actions
+    'WIFI_ACTION_TOGGLE',
+    'WIFI_ACTION_SCAN',
+    'WIFI_ACTION_CONNECT',
+    'WIFI_ACTION_VIEW_SAVED',
+    'WIFI_ACTION_BACK_TO_SETTINGS'
 ] 

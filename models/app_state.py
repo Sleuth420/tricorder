@@ -10,6 +10,7 @@ from .menu_manager import MenuManager
 from .game_manager import GameManager
 from .settings_manager import SettingsManager
 from .device_manager import DeviceManager
+from .wifi_manager import WifiManager, WIFI_ACTION_TOGGLE, WIFI_ACTION_BACK_TO_SETTINGS # Import WifiManager and relevant actions
 import config as app_config
 
 # Application state constants
@@ -67,6 +68,7 @@ class AppState:
         self.game_manager = GameManager(config_module, screen_width, screen_height)
         self.settings_manager = SettingsManager(config_module)
         self.device_manager = DeviceManager(config_module)
+        self.wifi_manager = WifiManager(config_module) # Instantiate WifiManager (no command func needed)
         
         # Set up cross-component dependencies
         self.input_manager.set_settings_menu_index(
@@ -155,6 +157,10 @@ class AppState:
 
     def set_state(self, new_state):
         """Set the application state (compatibility method)."""
+        # When entering WiFi settings, trigger a status check
+        if new_state == STATE_SETTINGS_WIFI and self.current_state != STATE_SETTINGS_WIFI:
+            if self.wifi_manager:
+                self.wifi_manager.update_wifi_status() # WifiManager handles its own status update
         return self.state_manager.transition_to(new_state)
 
     def handle_input(self, input_results):
@@ -365,9 +371,8 @@ class AppState:
             state_changed = self._handle_secret_games_input(action)
         elif current_st in [STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO]:
             state_changed = self._handle_view_input(action)
-        elif current_st in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH]: # Removed DEVICE from here
-            logger.debug(f"Input action '{action}' in state {current_st} - to be implemented by sub-view handler.")
-            pass
+        elif current_st == STATE_SETTINGS_WIFI: # Handler for WiFi settings
+            state_changed = self._handle_wifi_settings_input(action)
             
         return state_changed
     
@@ -491,16 +496,12 @@ class AppState:
                 return self.state_manager.transition_to(STATE_CONFIRM_RESTART_APP)
         return result
 
-
-
     def _handle_confirmation_input(self, action):
         """Handle confirmation input - delegates to DeviceManager."""
         result = self.device_manager.handle_confirmation_input(action)
         if result == "BACK_TO_DEVICE_SETTINGS":
             return self.state_manager.transition_to(STATE_SETTINGS_DEVICE)
         return result
-
-
 
     def _handle_secret_games_input(self, action):
         """Handle input for the secret games menu."""
@@ -578,4 +579,29 @@ class AppState:
         if result and action == app_config.INPUT_ACTION_SELECT:
             # After applying, go back to device settings
             return self.state_manager.transition_to(STATE_SETTINGS_DEVICE)
-        return result 
+        return result
+
+    def _handle_wifi_settings_input(self, action):
+        """Handle input for the WiFi Settings view - delegates to WifiManager."""
+        if not self.wifi_manager:
+            logger.error("WifiManager not initialized in AppState, cannot handle WiFi settings input.")
+            return self.state_manager.transition_to(STATE_SETTINGS) # Fallback
+
+        # Get the specific action requested from WifiManager based on user's menu navigation (Next, Prev, Select)
+        wifi_manager_action_result = self.wifi_manager.handle_input(action)
+
+        if isinstance(wifi_manager_action_result, str): # WifiManager returns an action string when SELECT is pressed
+            if wifi_manager_action_result == WIFI_ACTION_TOGGLE:
+                logger.info("AppState: WIFI_ACTION_TOGGLE received. Calling wifi_manager.toggle_wifi()")
+                self.wifi_manager.toggle_wifi() # WifiManager handles its own toggle and subsequent status update
+                # The UI will refresh based on WifiManager's updated status_str on the next frame
+                return True # Input was handled (action initiated)
+            elif wifi_manager_action_result == WIFI_ACTION_BACK_TO_SETTINGS:
+                return self.state_manager.transition_to(STATE_SETTINGS)
+            # Add other actions like SCAN, CONNECT later if they return specific strings
+            else:
+                logger.warning(f"Unknown action string from WifiManager: {wifi_manager_action_result}")
+                return False # Unrecognized action string
+        
+        # If wifi_manager_action_result is boolean, it means navigation occurred within wifi_manager (True) or not (False)
+        return wifi_manager_action_result 

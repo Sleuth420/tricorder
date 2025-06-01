@@ -285,6 +285,13 @@ class MenuManager:
         # For now, sub-settings views are assumed not to be menus themselves handled by this part of MenuManager.
         # The current_menu_definition on the stack handles current items for stacked menus.
         
+        # If current_state is STATE_SETTINGS_WIFI, it doesn't have its own menu list in MenuManager directly.
+        # Its items are handled by WifiManager. So, return an empty list or specific items if needed.
+        if current_state == STATE_SETTINGS_WIFI:
+            # This view is managed by WifiManager, not a menu list here.
+            # AppState will fetch options from WifiManager for the view.
+            return [] # Or None, depending on how AppState/DisplayManager handles it.
+
         # Fallback for states that are currently on the menu_stack (submenus of main menu)
         if self.menu_stack:
              # The top of the stack's definition is what we are currently in theory.
@@ -316,6 +323,11 @@ class MenuManager:
         """
         if current_state == STATE_SECRET_GAMES:
             self.secret_menu_index = value
+        elif current_state == STATE_SETTINGS_WIFI: # Added handling for STATE_SETTINGS_WIFI
+            # Wifi settings view uses its own index in WifiManager, not here.
+            # This might log a warning or do nothing, as AppState should delegate to WifiManager.
+            logger.debug(f"Attempted to set menu index for STATE_SETTINGS_WIFI in MenuManager. Should be handled by WifiManager.")
+            pass 
         else: # For main_menu, sensors_menu, settings_menu and stacked submenus
             active_menu = self._get_menu_items_for_state(current_state)
             if active_menu: # Ensure menu exists before trying to set index

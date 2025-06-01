@@ -157,7 +157,7 @@ class InputManager:
             
         current_time = time.time()
         duration = current_time - self.secret_combo_start_time
-        return duration >= self.config.SECRET_HOLD_DURATION
+        return duration >= self.config.CURRENT_SECRET_COMBO_DURATION
         
     def reset_secret_combo(self):
         """Reset the secret combo timer."""
@@ -196,7 +196,7 @@ class InputManager:
             
         current_time = time.time()
         duration = current_time - self.joystick_middle_press_start_time
-        return duration >= self.config.SECRET_HOLD_DURATION
+        return duration >= self.config.CURRENT_SECRET_COMBO_DURATION
         
     def reset_joystick_timer(self):
         """Reset the joystick press timer."""

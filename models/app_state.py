@@ -35,6 +35,7 @@ STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
 STATE_SETTINGS_BLUETOOTH = "SETTINGS_BLUETOOTH"
 STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
 STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
+STATE_SELECT_COMBO_DURATION = "SELECT_COMBO_DURATION" # New state for selecting combo duration
 
 # Confirmation States (New)
 STATE_CONFIRM_REBOOT = "CONFIRM_REBOOT"
@@ -108,6 +109,16 @@ class AppState:
         # Index for confirmation options (0 for Yes/Confirm, 1 for No/Cancel)
         self.confirmation_option_index = 0 
         self.pending_device_action = None # Stores the action to confirm (e.g., ACTION_REBOOT_DEVICE)
+        
+        # Index for combo duration selection (New)
+        self.combo_duration_selection_index = 0
+        try:
+            current_duration = self.config.CURRENT_SECRET_COMBO_DURATION
+            if current_duration in self.config.SECRET_COMBO_DURATION_OPTIONS:
+                self.combo_duration_selection_index = self.config.SECRET_COMBO_DURATION_OPTIONS.index(current_duration)
+        except (ValueError, AttributeError):
+            logger.warning(f"Could not find current CURRENT_SECRET_COMBO_DURATION {self.config.CURRENT_SECRET_COMBO_DURATION} in options, defaulting index to 0.")
+            self.combo_duration_selection_index = 0
         
     @property
     def current_state(self):
@@ -223,7 +234,7 @@ class AppState:
 
                 if (current_state_before_select == STATE_MENU and 
                     self.menu_manager.get_current_menu_index(STATE_MENU) == self.menu_manager.get_settings_main_menu_idx() and
-                    press_duration >= self.config.SECRET_HOLD_DURATION):
+                    press_duration >= self.config.CURRENT_SECRET_COMBO_DURATION):
                     logger.debug("Joystick long press for secret menu (on Settings item) handled by update()")
                 elif current_state_before_select != STATE_SECRET_GAMES: 
                     logger.info(f"Joystick short press: Processing SELECT in {current_state_before_select}")
@@ -305,18 +316,21 @@ class AppState:
             self.game_manager.handle_continuous_pong_input(self.keys_held)
             
         # Check KEY_PREV long press for back to menu / previous state
-        if (self.input_manager.check_long_press_duration()):
-            logger.info(f"KEY_PREV Long press detected in {self.current_state}.")
-            handled_by_back_action = self._process_action(app_config.INPUT_ACTION_BACK)
-            if not handled_by_back_action:
-                if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_SECRET_GAMES]:
-                    logger.info(f"Long press in view state {self.current_state}, returning to previous or menu.")
-                    state_changed = self.state_manager.return_to_previous()
-                    if not state_changed or not self.state_manager.previous_state:
-                         state_changed = self.state_manager.return_to_menu()
-            else:
-                state_changed = True
-            self.input_manager.reset_long_press_timer()
+        if self.input_manager.check_long_press_duration():
+            # If a secret combo is currently being timed (i.e., secret_combo_start_time is not None),
+            # prioritize that and don't trigger the independent 'Back' action from KEY_PREV.
+            if self.input_manager.secret_combo_start_time is None:
+                logger.info(f"KEY_PREV Long press detected in {self.current_state}.")
+                handled_by_back_action = self._process_action(app_config.INPUT_ACTION_BACK)
+                if not handled_by_back_action:
+                    if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_SECRET_GAMES]:
+                        logger.info(f"Long press in view state {self.current_state}, returning to previous or menu.")
+                        state_changed = self.state_manager.return_to_previous()
+                        if not state_changed or not self.state_manager.previous_state:
+                            state_changed = self.state_manager.return_to_menu()
+                else:
+                    state_changed = True
+                self.input_manager.reset_long_press_timer() # Reset only if processed or intended to be processed
 
         return state_changed
 
@@ -332,9 +346,12 @@ class AppState:
                 state_changed = self._handle_sensors_menu_back()
             elif current_st == STATE_SETTINGS:
                 state_changed = self._handle_settings_main_menu_back()
-            elif current_st in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY]:
-                logger.info(f"BACK from {current_st}, returning to STATE_SETTINGS")
-                state_changed = self.state_manager.transition_to(STATE_SETTINGS)
+            elif current_st in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SELECT_COMBO_DURATION]:
+                logger.info(f"BACK from {current_st}, returning to STATE_SETTINGS or specific parent")
+                if current_st == STATE_SELECT_COMBO_DURATION:
+                    state_changed = self.state_manager.transition_to(STATE_SETTINGS_DEVICE)
+                else:
+                    state_changed = self.state_manager.transition_to(STATE_SETTINGS)
             elif current_st not in [STATE_MENU, STATE_PONG_ACTIVE]:
                 logger.info(f"BACK from {current_st} (general view), returning to previous or menu")
                 state_changed = self.state_manager.return_to_previous()
@@ -352,6 +369,8 @@ class AppState:
             state_changed = self._handle_display_settings_input(action)
         elif current_st == STATE_SETTINGS_DEVICE:
             state_changed = self._handle_device_settings_input(action)
+        elif current_st == STATE_SELECT_COMBO_DURATION: # New state handler
+            state_changed = self._handle_select_combo_duration_input(action)
         elif current_st in [STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP]:
             state_changed = self._handle_confirmation_input(action)
         elif current_st == STATE_SECRET_GAMES:
@@ -533,6 +552,19 @@ class AppState:
         elif action_type == ACTION_RESTART_APP:
             self.pending_device_action = ACTION_RESTART_APP
             return self.state_manager.transition_to(STATE_CONFIRM_RESTART_APP)
+        elif action_type == app_config.ACTION_SELECT_COMBO_DURATION: # New action type
+            logger.info("Device Settings: Action Select Combo Duration selected.")
+            # Initialize index based on current config value
+            try:
+                current_val = self.config.CURRENT_SECRET_COMBO_DURATION
+                if current_val in self.config.SECRET_COMBO_DURATION_OPTIONS:
+                    self.combo_duration_selection_index = self.config.SECRET_COMBO_DURATION_OPTIONS.index(current_val)
+                else:
+                    self.combo_duration_selection_index = 0 # Default if not found
+            except Exception as e:
+                logger.warning(f"Error setting combo_duration_selection_index: {e}")
+                self.combo_duration_selection_index = 0
+            return self.state_manager.transition_to(STATE_SELECT_COMBO_DURATION)
         elif action_type == app_config.ACTION_GO_TO_MAIN_MENU:
             logger.info("Device Settings: Action Go To Main Menu selected.")
             self.menu_manager.reset_to_main_menu() # Use the new reset method
@@ -707,4 +739,39 @@ class AppState:
         
     def get_current_menu_index(self):
         """Get current menu index (now calls MenuManager)."""
-        return self.menu_manager.get_current_menu_index(self.current_state) 
+        return self.menu_manager.get_current_menu_index(self.current_state)
+
+    # --- Combo Duration Selection Handling (New) ---
+    def _handle_select_combo_duration_input(self, action):
+        """Handle input for the Select Combo Duration view (STATE_SELECT_COMBO_DURATION)."""
+        state_changed = False
+        options = self.config.SECRET_COMBO_DURATION_OPTIONS
+        if action == app_config.INPUT_ACTION_NEXT:
+            self.combo_duration_selection_index = (self.combo_duration_selection_index + 1) % len(options)
+            logger.debug(f"Combo Duration Select NEXT: index={self.combo_duration_selection_index}, value={options[self.combo_duration_selection_index]}s")
+            state_changed = True
+        elif action == app_config.INPUT_ACTION_PREV:
+            self.combo_duration_selection_index = (self.combo_duration_selection_index - 1 + len(options)) % len(options)
+            logger.debug(f"Combo Duration Select PREV: index={self.combo_duration_selection_index}, value={options[self.combo_duration_selection_index]}s")
+            state_changed = True
+        elif action == app_config.INPUT_ACTION_SELECT:
+            state_changed = self._apply_selected_combo_duration()
+            # After applying, go back to device settings
+            if state_changed:
+                 self.state_manager.transition_to(STATE_SETTINGS_DEVICE)
+        # INPUT_ACTION_BACK from this state should go to STATE_SETTINGS_DEVICE
+        # This is handled in _process_action now for sub-settings states
+        return state_changed
+
+    def _apply_selected_combo_duration(self):
+        """Apply the selected secret combo duration."""
+        selected_duration = self.config.SECRET_COMBO_DURATION_OPTIONS[self.combo_duration_selection_index]
+        try:
+            self.config.CURRENT_SECRET_COMBO_DURATION = selected_duration
+            # Also update the InputManager's internal config reference if it holds a copy (it should use live config)
+            # self.input_manager.config.CURRENT_SECRET_COMBO_DURATION = selected_duration # Not strictly needed if input_manager uses live config
+            logger.info(f"Applied new Secret Combo Duration: {selected_duration}s")
+            return True
+        except Exception as e:
+            logger.error(f"Error applying combo duration setting: {e}")
+            return False 

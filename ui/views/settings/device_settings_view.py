@@ -14,6 +14,7 @@ DEVICE_ACTION_ITEMS = [
     {"name": "Reboot Device", "action": "REBOOT_DEVICE"}, # Action name for AppState
     {"name": "Shutdown Device", "action": "SHUTDOWN_DEVICE"},
     {"name": "Restart Application", "action": "RESTART_APP"}, # New item
+    {"name": "Secret Combo Timer", "action": app_config.ACTION_SELECT_COMBO_DURATION}, # New item
     {"name": "<- Back to Main Menu", "action": app_config.ACTION_GO_TO_MAIN_MENU} # Updated item with simpler arrow
 ]
 

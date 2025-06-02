@@ -12,6 +12,7 @@ STATE_SYSTEM_INFO = "SYSTEM"
 STATE_SETTINGS = "SETTINGS"
 STATE_SECRET_GAMES = "SECRET_GAMES"
 STATE_SCHEMATICS = "SCHEMATICS"
+STATE_SHIP_MENU = "SHIP_MENU"
 
 # Import new settings states
 STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
@@ -79,7 +80,7 @@ class MenuManager:
         ))
         items.append(MenuItem(
             name="Schematics", 
-            target_state=STATE_SCHEMATICS, 
+            target_state=STATE_SHIP_MENU, 
             color_key="SIDEBAR_SCHEMATICS"
         ))
         items.append(MenuItem(
@@ -117,6 +118,29 @@ class MenuManager:
                     color_key=props.get("color_key")
                 ))
                 
+        return items
+
+    def _generate_ship_menu_items(self):
+        """Generates the ship selection menu items."""
+        items = [
+            MenuItem(
+                name="Enterprise NX-01", 
+                target_state=STATE_SCHEMATICS,
+                data={"ship_model": "enterprise_nx01", "ship_id": 1},
+                color_key="SIDEBAR_SCHEMATICS"
+            ),
+            MenuItem(
+                name="Test Cube", 
+                target_state=STATE_SCHEMATICS,
+                data={"ship_model": "test_cube", "ship_id": 2},
+                color_key="SIDEBAR_SCHEMATICS"
+            ),
+            MenuItem(
+                name="<- Back", 
+                target_state=STATE_MENU,
+                color_key="SIDEBAR_SETTINGS"
+            )
+        ]
         return items
         
     def _generate_secret_menu_items(self):
@@ -275,6 +299,8 @@ class MenuManager:
             return self.current_menu_definition # This will be main_menu_items if stack is empty
         elif current_state == STATE_SENSORS_MENU:
             return self.sensors_menu_items # Sensors menu is directly managed
+        elif current_state == STATE_SHIP_MENU:
+            return self._generate_ship_menu_items() # Ship selection menu
         elif current_state == STATE_SECRET_GAMES:
             return self.secret_menu_items # Secret games menu is directly managed
         elif current_state == STATE_SETTINGS: # This is the main settings category menu

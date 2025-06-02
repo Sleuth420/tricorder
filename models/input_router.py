@@ -16,6 +16,7 @@ STATE_SETTINGS = "SETTINGS"
 STATE_SECRET_GAMES = "SECRET_GAMES"
 STATE_PONG_ACTIVE = "PONG_ACTIVE"
 STATE_SCHEMATICS = "SCHEMATICS"
+STATE_SHIP_MENU = "SHIP_MENU"
 STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
 STATE_SETTINGS_BLUETOOTH = "SETTINGS_BLUETOOTH"
 STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
@@ -56,6 +57,8 @@ class InputRouter:
             return self._handle_menu_input(action)
         elif current_state == STATE_SENSORS_MENU:
             return self._handle_sensors_menu_input(action)
+        elif current_state == STATE_SHIP_MENU:
+            return self._handle_ship_menu_input(action)
         elif current_state == STATE_SETTINGS:
             return self._handle_settings_main_menu_input(action)
         elif current_state == STATE_SETTINGS_DISPLAY:
@@ -164,6 +167,44 @@ class InputRouter:
         if previous_menu_state_name:
             return self.app_state.state_manager.transition_to(previous_menu_state_name)
         return self.app_state.state_manager.return_to_menu()
+
+    def _handle_ship_menu_input(self, action):
+        """Handle input for the ship selection menu."""
+        if action in [app_config.INPUT_ACTION_NEXT, app_config.INPUT_ACTION_PREV]:
+            # Navigate the ship menu
+            if action == app_config.INPUT_ACTION_NEXT:
+                self.app_state.menu_manager.navigate_next(STATE_SHIP_MENU)
+            else:
+                self.app_state.menu_manager.navigate_prev(STATE_SHIP_MENU)
+            return True
+        elif action == app_config.INPUT_ACTION_SELECT:
+            return self._handle_ship_menu_select()
+        elif action == app_config.INPUT_ACTION_BACK:
+            return self._handle_ship_menu_back()
+        return False
+
+    def _handle_ship_menu_select(self):
+        """Handle selection in the ship menu."""
+        selected_item = self.app_state.menu_manager.get_selected_item(STATE_SHIP_MENU)
+        if selected_item:
+            if selected_item.target_state == STATE_MENU:
+                # Back option selected
+                logger.debug(f"Ship menu: Back option selected, transitioning to main menu")
+                self.app_state.state_manager.transition_to(STATE_MENU)
+            elif selected_item.target_state == STATE_SCHEMATICS:
+                # Ship selected, store the selected ship data and go to 3D viewer
+                logger.debug(f"Ship menu: Selected ship '{selected_item.name}' with data {selected_item.data}")
+                # Store selected ship info in app state for the 3D viewer
+                self.app_state.selected_ship_data = selected_item.data
+                self.app_state.state_manager.transition_to(STATE_SCHEMATICS)
+            return True
+        return False
+
+    def _handle_ship_menu_back(self):
+        """Handle back action in ship menu."""
+        logger.debug(f"Ship menu: BACK action, transitioning to main menu")
+        self.app_state.state_manager.transition_to(STATE_MENU)
+        return True
 
     def _handle_settings_main_menu_input(self, action):
         """Handle input for the main settings category menu."""

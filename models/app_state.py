@@ -25,6 +25,7 @@ STATE_SETTINGS = "SETTINGS"   # Main settings category menu
 STATE_SECRET_GAMES = "SECRET_GAMES" # Secret menu
 STATE_PONG_ACTIVE = "PONG_ACTIVE" # Pong game
 STATE_SCHEMATICS = "SCHEMATICS" # Schematics viewer
+STATE_SHIP_MENU = "SHIP_MENU" # Ship selection menu
 
 # New Settings Sub-View States
 STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
@@ -70,6 +71,9 @@ class AppState:
         # Initialize component managers
         self.state_manager = StateManager(config_module)
         self.input_manager = InputManager(config_module)
+        
+        # Ship selection data for 3D viewer
+        self.selected_ship_data = None
         self.menu_manager = MenuManager(config_module)
         self.game_manager = GameManager(config_module, screen_width, screen_height)
         self.settings_manager = SettingsManager(config_module)

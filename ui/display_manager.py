@@ -128,11 +128,9 @@ def _init_opengl_display(config):
 def _needs_opengl_mode(app_state):
     """Check if current state needs OpenGL mode."""
     if app_state.current_state == STATE_SCHEMATICS:
-        # Check if current ship model is OpenGL Test AND pause menu is not active
+        # Check if current ship model is OpenGL Test (pause menu doesn't matter - render in OpenGL)
         current_ship_info = app_state.ship_manager.get_current_ship_info()
-        if (current_ship_info and 
-            current_ship_info.get('model_key') == 'opengl_test' and
-            not app_state.schematics_pause_menu_active):
+        if current_ship_info and current_ship_info.get('model_key') == 'opengl_test':
             return True
     return False
 
@@ -265,10 +263,7 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
         
     # Update the display
-    if current_display_mode == "OPENGL":
-        pygame.display.flip()
-    else:
-        pygame.display.flip()
+    pygame.display.flip()
 
 def _render_opengl_schematics(screen, app_state, fonts, config_module):
     """Handle OpenGL rendering for schematics view with full UI controls."""

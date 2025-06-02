@@ -20,38 +20,31 @@ def draw_schematics_view(screen, app_state, fonts, config_module):
     Returns:
         None
     """
-    # Set up the ship model if we have ship selection data
+    # Ship model should already be set by input router, but verify it's correct
     if app_state.selected_ship_data and 'ship_model' in app_state.selected_ship_data:
         ship_model_key = app_state.selected_ship_data['ship_model']
         current_ship_info = app_state.ship_manager.get_current_ship_info()
         
-        # Only change ship if it's different from current
+        # Double-check that the ship model is set correctly (should already be done)
         if not current_ship_info or current_ship_info['model_key'] != ship_model_key:
-            success = app_state.ship_manager.set_ship_model(ship_model_key)
-            if success:
-                logger.info(f"3D Viewer: Loaded ship model '{ship_model_key}'")
-            else:
-                logger.warning(f"3D Viewer: Failed to load ship model '{ship_model_key}', using default")
+            logger.debug(f"3D Viewer: Ship model mismatch, correcting to '{ship_model_key}'")
+            app_state.ship_manager.set_ship_model(ship_model_key)
     
     # Check if we're using OpenGL mode
     current_ship_info = app_state.ship_manager.get_current_ship_info()
     is_opengl_mode = (current_ship_info and 
                      current_ship_info.get('model_key') == 'opengl_test')
     
-    # For OpenGL mode, we need to handle pause menu differently since we can't draw pygame UI on top
-    if is_opengl_mode and app_state.schematics_pause_menu_active:
-        # In OpenGL mode, draw pause menu using regular pygame (will switch display mode)
-        _draw_pause_menu(screen, app_state, fonts, config_module)
-        return
-    
     # Update rotation from sensors only if in auto mode
     if app_state.ship_manager.auto_rotation_mode:
         sensor_updated = app_state.ship_manager.update_rotation_from_sensors()
     
-    # Render the 3D ship
-    app_state.ship_manager.render_ship(screen, fonts, config_module)
+    # Render the 3D ship (includes pause menu for OpenGL mode)
+    app_state.ship_manager.render_ship(screen, fonts, config_module,
+                                      app_state.schematics_pause_menu_active,
+                                      app_state.schematics_pause_menu_index)
     
-    # Only draw UI elements if not in OpenGL mode (since we can't overlay pygame UI on OpenGL)
+    # Only draw UI elements if not in OpenGL mode (since OpenGL mode handles all UI internally)
     if not is_opengl_mode:
         # Draw pause menu if active
         if app_state.schematics_pause_menu_active:

@@ -68,34 +68,51 @@ class ShipManager:
     """Manages 3D ship models and rendering."""
     
     def __init__(self, config_module, screen_width, screen_height):
+        """Initialize the ship manager."""
         self.config = config_module
         self.screen_width = screen_width
         self.screen_height = screen_height
         
-        # 3D rendering
-        self.wireframe_renderer = Simple3DRenderer(screen_width, screen_height)
-        
-        # OpenGL renderer
-        self.opengl_renderer = None
-        
-        # Rotation state
+        # Current rotation values (in degrees)
         self.pitch = 0.0
         self.roll = 0.0
         self.yaw = 0.0
         
-        # Rotation control
-        self.auto_rotation_mode = True  # Start with sensor auto-rotation
-        self.manual_rotation_speed = 5.0  # Degrees per input
+        # Rotation mode (True = auto/sensor, False = manual)
+        self.auto_rotation_mode = True
+        self.manual_rotation_speed = 5.0  # Degrees per keypress
         
         # Available ship models
         self.ship_models = {
-            "test_cube": self._generate_test_cube(),
-            "opengl_test": self._generate_opengl_test(),
-            "stargate_x304": self._generate_stargate_placeholder()
+            'test_cube': self._generate_test_cube(),
+            'opengl_test': self._generate_opengl_test(),
+            'stargate_sg1_x304': self._generate_stargate_placeholder()
         }
         
-        # Current model
-        self.current_ship_model = "test_cube"
+        # Current active model
+        self.current_ship_model = 'test_cube'
+        
+        # Initialize renderers
+        self.wireframe_renderer = Simple3DRenderer(screen_width, screen_height)
+        self.opengl_renderer = None  # Created on demand
+        
+        # Sensor smoothing for noise reduction
+        self.smoothing_enabled = True
+        self.smoothing_factor = 0.15  # How much new reading affects result (0.1 = very smooth, 0.5 = responsive)
+        self.deadzone = 2.0  # Ignore changes smaller than this (degrees)
+        self.sensitivity = 0.8  # Overall sensitivity multiplier (0.5 = half sensitivity)
+        
+        # Smoothed sensor values (moving average)
+        self.smoothed_pitch = 0.0
+        self.smoothed_roll = 0.0
+        self.smoothed_yaw = 0.0
+        
+        # Previous raw readings for change detection
+        self.prev_raw_pitch = None
+        self.prev_raw_roll = None  
+        self.prev_raw_yaw = None
+        
+        logger.info(f"Ship manager initialized with sensor smoothing: factor={self.smoothing_factor}, deadzone={self.deadzone}°, sensitivity={self.sensitivity}")
     
     def _generate_test_cube(self):
         """Generate a simple wireframe cube for testing."""
@@ -147,7 +164,7 @@ class ShipManager:
             return False
     
     def update_rotation_from_sensors(self):
-        """Update rotation values from sensehat tilt sensors."""
+        """Update rotation values from sensehat tilt sensors with smoothing and filtering."""
         # Only update from sensors if in auto mode
         if not self.auto_rotation_mode:
             return False
@@ -155,15 +172,91 @@ class ShipManager:
         try:
             orientation = sensors.get_orientation()
             if orientation:
-                # Map sensehat orientation to our rotation values
-                # You may need to adjust these mappings based on how the sensehat is oriented
-                self.pitch = orientation.get('pitch', 0.0)
-                self.roll = orientation.get('roll', 0.0) 
-                self.yaw = orientation.get('yaw', 0.0)
+                # Get raw sensor readings
+                raw_pitch = orientation.get('pitch', 0.0)
+                raw_roll = orientation.get('roll', 0.0) 
+                raw_yaw = orientation.get('yaw', 0.0)
+                
+                # Apply smoothing filter if enabled
+                if self.smoothing_enabled:
+                    # Initialize smoothed values on first reading
+                    if self.prev_raw_pitch is None:
+                        self.smoothed_pitch = raw_pitch
+                        self.smoothed_roll = raw_roll
+                        self.smoothed_yaw = raw_yaw
+                        self.prev_raw_pitch = raw_pitch
+                        self.prev_raw_roll = raw_roll
+                        self.prev_raw_yaw = raw_yaw
+                        logger.debug("Initialized sensor smoothing with first readings")
+                    else:
+                        # Apply moving average filter (low-pass filter)
+                        self.smoothed_pitch = self._smooth_angle(self.smoothed_pitch, raw_pitch)
+                        self.smoothed_roll = self._smooth_angle(self.smoothed_roll, raw_roll)
+                        self.smoothed_yaw = self._smooth_angle(self.smoothed_yaw, raw_yaw)
+                    
+                    # Apply deadzone and sensitivity
+                    filtered_pitch = self._apply_deadzone_and_sensitivity(self.pitch, self.smoothed_pitch)
+                    filtered_roll = self._apply_deadzone_and_sensitivity(self.roll, self.smoothed_roll)
+                    filtered_yaw = self._apply_deadzone_and_sensitivity(self.yaw, self.smoothed_yaw)
+                    
+                    # Update rotation values
+                    self.pitch = filtered_pitch
+                    self.roll = filtered_roll
+                    self.yaw = filtered_yaw
+                else:
+                    # No smoothing - direct assignment
+                    self.pitch = raw_pitch * self.sensitivity
+                    self.roll = raw_roll * self.sensitivity
+                    self.yaw = raw_yaw * self.sensitivity
+                
+                # Store previous readings
+                self.prev_raw_pitch = raw_pitch
+                self.prev_raw_roll = raw_roll
+                self.prev_raw_yaw = raw_yaw
+                
                 return True
         except Exception as e:
             logger.debug(f"Could not read sensor orientation: {e}")
         return False
+    
+    def _smooth_angle(self, current_smooth, new_raw):
+        """Apply exponential moving average to an angle, handling 360-degree wraparound."""
+        # Handle angle wraparound (e.g., 359° to 1°)
+        diff = new_raw - current_smooth
+        if diff > 180:
+            diff -= 360
+        elif diff < -180:
+            diff += 360
+        
+        # Apply smoothing factor
+        smoothed = current_smooth + (diff * self.smoothing_factor)
+        
+        # Normalize to 0-360 range
+        return smoothed % 360
+    
+    def _apply_deadzone_and_sensitivity(self, current_value, target_value):
+        """Apply deadzone and sensitivity scaling to prevent jitter."""
+        # Calculate the change
+        change = target_value - current_value
+        
+        # Handle angle wraparound
+        if change > 180:
+            change -= 360
+        elif change < -180:
+            change += 360
+        
+        # Apply deadzone - ignore small changes
+        if abs(change) < self.deadzone:
+            return current_value
+        
+        # Apply sensitivity scaling to the change
+        scaled_change = change * self.sensitivity
+        
+        # Apply the scaled change
+        new_value = current_value + scaled_change
+        
+        # Normalize to 0-360 range
+        return new_value % 360
         
     def toggle_rotation_mode(self):
         """Toggle between auto (sensor) and manual rotation modes."""
@@ -188,7 +281,7 @@ class ShipManager:
         self.roll = self.roll % 360
         self.yaw = self.yaw % 360
     
-    def render_ship(self, screen, fonts, config_module):
+    def render_ship(self, screen, fonts, config_module, pause_menu_active=False, pause_menu_index=0):
         """Render the current ship model to the screen."""
         if self.current_ship_model not in self.ship_models:
             logger.error(f"Cannot render unknown ship model: {self.current_ship_model}")
@@ -198,7 +291,7 @@ class ShipManager:
         
         # Handle different model types
         if ship_model.get('type') == 'opengl':
-            self._render_opengl_model(screen, ship_model, fonts, config_module)
+            self._render_opengl_model(screen, ship_model, fonts, config_module, pause_menu_active, pause_menu_index)
         elif ship_model.get('type') == 'model_file':
             if ship_model.get('implemented', False):
                 self._render_model_file(screen, ship_model, fonts, config_module)
@@ -251,7 +344,7 @@ class ShipManager:
         
         self._draw_ship_info(screen, ship_model, fonts, config_module)
     
-    def _render_opengl_model(self, screen, ship_model, fonts, config_module):
+    def _render_opengl_model(self, screen, ship_model, fonts, config_module, pause_menu_active=False, pause_menu_index=0):
         """Render using actual OpenGL with GPU shaders directly to screen."""
         if not OPENGL_AVAILABLE:
             self._render_opengl_fallback(screen, ship_model, fonts, config_module)
@@ -265,8 +358,11 @@ class ShipManager:
                 )
                 logger.info("PyOpenGL renderer created")
             
-            # Render the cube
-            success = self.opengl_renderer.render(self.pitch, self.roll, self.yaw)
+            # Render the cube with text overlay and pause menu
+            success = self.opengl_renderer.render(
+                self.pitch, self.roll, self.yaw, fonts, ship_model,
+                pause_menu_active, pause_menu_index
+            )
             
             if not success:
                 # Fallback if OpenGL fails
@@ -274,8 +370,6 @@ class ShipManager:
         except Exception as e:
             logger.error(f"PyOpenGL rendering failed: {e}")
             self._render_opengl_fallback(screen, ship_model, fonts, config_module)
-    
-
     
     def _render_opengl_fallback(self, screen, ship_model, fonts, config_module):
         """Fallback rendering when OpenGL is not available."""
@@ -366,4 +460,28 @@ class ShipManager:
                 'edge_count': len(ship_model['edges']),
                 'description': ship_model.get('description', 'No description')
             }
-        return {"name": "Unknown", "description": "No ship model loaded", "model_key": None} 
+        return {"name": "Unknown", "description": "No ship model loaded", "model_key": None}
+    
+    def adjust_sensor_sensitivity(self, sensitivity=None, deadzone=None, smoothing_factor=None):
+        """Adjust sensor filtering parameters for fine-tuning responsiveness."""
+        if sensitivity is not None:
+            self.sensitivity = max(0.1, min(2.0, sensitivity))  # Clamp between 0.1 and 2.0
+            logger.info(f"Sensor sensitivity adjusted to: {self.sensitivity}")
+        
+        if deadzone is not None:
+            self.deadzone = max(0.0, min(10.0, deadzone))  # Clamp between 0 and 10 degrees
+            logger.info(f"Sensor deadzone adjusted to: {self.deadzone}°")
+        
+        if smoothing_factor is not None:
+            self.smoothing_factor = max(0.05, min(1.0, smoothing_factor))  # Clamp between 0.05 and 1.0
+            logger.info(f"Sensor smoothing factor adjusted to: {self.smoothing_factor}")
+    
+    def reset_sensor_smoothing(self):
+        """Reset sensor smoothing state (useful when switching modes)."""
+        self.prev_raw_pitch = None
+        self.prev_raw_roll = None
+        self.prev_raw_yaw = None
+        self.smoothed_pitch = 0.0
+        self.smoothed_roll = 0.0
+        self.smoothed_yaw = 0.0
+        logger.debug("Sensor smoothing state reset") 

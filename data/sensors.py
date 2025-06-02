@@ -56,12 +56,30 @@ class MockSensorData:
         return self.base_pressure + variation + noise
         
     def get_orientation(self):
-        # Simulate slow orientation drift
+        # Simulate more stable orientation with smaller variations (mimics real SenseHat noise)
         elapsed = time.time() - self.start_time
+        
+        # Base orientation with small noise (similar to a stable device)
+        base_pitch = 0.0  # Device lying flat
+        base_roll = 0.0   # Device lying flat
+        base_yaw = 0.0    # Facing north
+        
+        # Add small random noise (typical SenseHat jitter)
+        noise_scale = 1.5  # Degrees of noise
+        pitch_noise = random.uniform(-noise_scale, noise_scale)
+        roll_noise = random.uniform(-noise_scale, noise_scale)
+        yaw_noise = random.uniform(-noise_scale, noise_scale)
+        
+        # Add very slow drift for demonstration
+        drift_scale = 2.0  # Maximum drift from center
+        pitch_drift = drift_scale * math.sin(elapsed / 20.0)  # 20 second cycle
+        roll_drift = drift_scale * math.cos(elapsed / 25.0)   # 25 second cycle
+        yaw_drift = (elapsed * 0.5) % 360  # Very slow rotation
+        
         return {
-            'pitch': (10.0 * math.sin(elapsed / 8.0)) % 360,
-            'roll': (15.0 * math.cos(elapsed / 12.0)) % 360,
-            'yaw': (elapsed * 2.0) % 360  # Slow rotation
+            'pitch': (base_pitch + pitch_drift + pitch_noise) % 360,
+            'roll': (base_roll + roll_drift + roll_noise) % 360,
+            'yaw': (base_yaw + yaw_drift + yaw_noise) % 360
         }
         
     def get_acceleration(self):

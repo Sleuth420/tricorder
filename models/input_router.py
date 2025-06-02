@@ -210,6 +210,17 @@ class InputRouter:
                 logger.debug(f"Ship menu: Selected ship '{selected_item.name}' with data {selected_item.data}")
                 # Store selected ship info in app state for the 3D viewer
                 self.app_state.selected_ship_data = selected_item.data
+                
+                # IMPORTANT: Set the ship model IMMEDIATELY before state transition
+                # This ensures the display mode switch happens correctly on the first frame
+                if selected_item.data and 'ship_model' in selected_item.data:
+                    ship_model_key = selected_item.data['ship_model']
+                    success = self.app_state.ship_manager.set_ship_model(ship_model_key)
+                    if success:
+                        logger.info(f"Ship model pre-set to '{ship_model_key}' for smooth transition")
+                    else:
+                        logger.warning(f"Failed to pre-set ship model '{ship_model_key}'")
+                
                 self.app_state.state_manager.transition_to(STATE_SCHEMATICS)
             return True
         return False

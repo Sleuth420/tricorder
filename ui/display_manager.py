@@ -3,7 +3,7 @@
 
 import pygame
 import logging
-from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_SCHEMATICS, STATE_SENSORS_MENU, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_DEVICE, STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI
+from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_SCHEMATICS, STATE_SENSORS_MENU, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_DEVICE, STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY
 from ui.menu import draw_menu_screen
 from ui.views.sensor_view import draw_sensor_view
 from ui.views.system_info_view import draw_system_info_view
@@ -15,7 +15,8 @@ from ui.views.settings.display_settings_view import draw_display_settings_view
 from ui.views.settings.device_settings_view import draw_device_settings_view
 from ui.views.settings.confirmation_view import draw_confirmation_view
 from ui.views.settings.select_combo_duration_view import draw_select_combo_duration_view
-from ui.views.settings.wifi_settings_view import draw_wifi_settings_view
+from ui.views.settings.wifi_settings_view import draw_wifi_settings_view, draw_wifi_networks_view
+from ui.views.settings.wifi_password_entry_view import draw_wifi_password_entry_view
 
 # Temporary placeholder function until schematics_view.py is created
 # def draw_schematics_view(screen, app_state, fonts, config_module):
@@ -143,6 +144,13 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         draw_select_combo_duration_view(screen, app_state, fonts, config_module)
     elif app_state.current_state == STATE_SETTINGS_WIFI:
         draw_wifi_settings_view(screen, app_state, fonts, config_module)
+    elif app_state.current_state == STATE_SETTINGS_WIFI_NETWORKS:
+        draw_wifi_networks_view(screen, app_state, fonts, config_module)
+    elif app_state.current_state == STATE_WIFI_PASSWORD_ENTRY:
+        # Set fonts for password entry manager if not already set
+        if not app_state.password_entry_manager.character_selector.fonts:
+            app_state.password_entry_manager.character_selector.fonts = fonts
+        draw_wifi_password_entry_view(screen, app_state, fonts, config_module)
     else:
         logger.error(f"Unknown application state: {app_state.current_state}")
         # Draw fallback screen

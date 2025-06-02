@@ -10,7 +10,9 @@ from .menu_manager import MenuManager
 from .game_manager import GameManager
 from .settings_manager import SettingsManager
 from .device_manager import DeviceManager
-from .wifi_manager import WifiManager, WIFI_ACTION_TOGGLE, WIFI_ACTION_BACK_TO_SETTINGS # Import WifiManager and relevant actions
+from .wifi_manager import WifiManager, WIFI_ACTION_TOGGLE, WIFI_ACTION_BACK_TO_SETTINGS, WIFI_ACTION_BROWSE_NETWORKS, WIFI_ACTION_BACK_TO_WIFI, WIFI_ACTION_CONNECT_TO_NETWORK, WIFI_ACTION_ENTER_PASSWORD # Import WifiManager and relevant actions
+from .password_entry_manager import PasswordEntryManager
+from .input_router import InputRouter
 import config as app_config
 
 # Application state constants
@@ -30,6 +32,10 @@ STATE_SETTINGS_BLUETOOTH = "SETTINGS_BLUETOOTH"
 STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
 STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
 STATE_SELECT_COMBO_DURATION = "SELECT_COMBO_DURATION" # New state for selecting combo duration
+
+# WiFi Sub-States
+STATE_SETTINGS_WIFI_NETWORKS = "SETTINGS_WIFI_NETWORKS"  # Browse available networks
+STATE_WIFI_PASSWORD_ENTRY = "WIFI_PASSWORD_ENTRY"  # Enter password for WiFi connection
 
 # Confirmation States (New)
 STATE_CONFIRM_REBOOT = "CONFIRM_REBOOT"
@@ -69,6 +75,13 @@ class AppState:
         self.settings_manager = SettingsManager(config_module)
         self.device_manager = DeviceManager(config_module)
         self.wifi_manager = WifiManager(config_module) # Instantiate WifiManager (no command func needed)
+        # Password entry manager - initialized with screen dimensions
+        import pygame
+        screen_rect = pygame.Rect(0, 0, screen_width, screen_height)
+        self.password_entry_manager = PasswordEntryManager(config_module, screen_rect, None)  # Fonts will be set later
+        
+        # Initialize input router
+        self.input_router = InputRouter(self)
         
         # Set up cross-component dependencies
         self.input_manager.set_settings_menu_index(
@@ -206,8 +219,17 @@ class AppState:
                 if action_name:
                     if self.current_state == STATE_PONG_ACTIVE:
                         state_changed_by_action = self._handle_pong_joystick_input(action_name) or state_changed_by_action
+                    elif self.current_state == STATE_WIFI_PASSWORD_ENTRY:
+                        # Handle joystick navigation for password entry
+                        direction = result.get('direction')
+                        if direction in ['up', 'down', 'left', 'right']:
+                            direction_map = {'up': 'UP', 'down': 'DOWN', 'left': 'LEFT', 'right': 'RIGHT'}
+                            if self.password_entry_manager:
+                                self.password_entry_manager.handle_joystick_input(direction_map[direction])
+                        else:
+                            state_changed_by_action = self._route_action(action_name) or state_changed_by_action
                     else:
-                        state_changed_by_action = self._process_action(action_name) or state_changed_by_action
+                        state_changed_by_action = self._route_action(action_name) or state_changed_by_action
 
             elif event_type == 'JOYSTICK_UP_HELD':
                 if self.current_state == STATE_PONG_ACTIVE:
@@ -236,7 +258,7 @@ class AppState:
                     if state_changed_by_action:
                         logger.info("State already changed in this input cycle. Skipping SELECT action.")
                     else:
-                        state_changed_by_action = self._process_action(app_config.INPUT_ACTION_SELECT) or state_changed_by_action
+                        state_changed_by_action = self._route_action(app_config.INPUT_ACTION_SELECT) or state_changed_by_action
                 
         return state_changed_by_action
         
@@ -261,7 +283,7 @@ class AppState:
                 if not state_changed or not self.state_manager.previous_state:
                     state_changed = self.state_manager.return_to_menu()
         elif action_name:
-            state_changed = self._process_action(action_name)
+            state_changed = self._route_action(action_name)
                 
         return state_changed
         
@@ -282,6 +304,10 @@ class AppState:
             target_state = self.previous_state
         self.game_manager.close_current_game()
         return self.state_manager.transition_to(target_state)
+
+    def _route_action(self, action):
+        """Route an action to the appropriate handler using the input router."""
+        return self.input_router.route_action(action, self.current_state)
 
     def update(self):
         """Update application state and check for timed events."""
@@ -315,7 +341,7 @@ class AppState:
             # prioritize that and don't trigger the independent 'Back' action from KEY_PREV.
             if self.input_manager.secret_combo_start_time is None:
                 logger.info(f"KEY_PREV Long press detected in {self.current_state}.")
-                handled_by_back_action = self._process_action(app_config.INPUT_ACTION_BACK)
+                handled_by_back_action = self._route_action(app_config.INPUT_ACTION_BACK)
                 if not handled_by_back_action:
                     if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_SECRET_GAMES]:
                         logger.info(f"Long press in view state {self.current_state}, returning to previous or menu.")
@@ -327,217 +353,6 @@ class AppState:
                 self.input_manager.reset_long_press_timer() # Reset only if processed or intended to be processed
 
         return state_changed
-
-    def _process_action(self, action):
-        """Process input actions and route to appropriate handlers."""
-        current_st = self.current_state
-        state_changed = False
-
-        if action == app_config.INPUT_ACTION_BACK:
-            if current_st == STATE_SECRET_GAMES:
-                state_changed = self.state_manager.return_to_menu()
-            elif current_st == STATE_SENSORS_MENU:
-                state_changed = self._handle_sensors_menu_back()
-            elif current_st == STATE_SETTINGS:
-                state_changed = self._handle_settings_main_menu_back()
-            elif current_st in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SELECT_COMBO_DURATION]:
-                logger.info(f"BACK from {current_st}, returning to STATE_SETTINGS or specific parent")
-                if current_st == STATE_SELECT_COMBO_DURATION:
-                    state_changed = self.state_manager.transition_to(STATE_SETTINGS_DEVICE)
-                else:
-                    state_changed = self.state_manager.transition_to(STATE_SETTINGS)
-            elif current_st not in [STATE_MENU, STATE_PONG_ACTIVE]:
-                logger.info(f"BACK from {current_st} (general view), returning to previous or menu")
-                state_changed = self.state_manager.return_to_previous()
-                if not state_changed or not self.state_manager.previous_state:
-                    state_changed = self.state_manager.return_to_menu()
-            return state_changed
-                
-        if current_st == STATE_MENU:
-            state_changed = self._handle_menu_input(action)
-        elif current_st == STATE_SENSORS_MENU:
-            state_changed = self._handle_sensors_menu_input(action)
-        elif current_st == STATE_SETTINGS:
-            state_changed = self._handle_settings_main_menu_input(action)
-        elif current_st == STATE_SETTINGS_DISPLAY:
-            state_changed = self._handle_display_settings_input(action)
-        elif current_st == STATE_SETTINGS_DEVICE:
-            state_changed = self._handle_device_settings_input(action)
-        elif current_st == STATE_SELECT_COMBO_DURATION: # New state handler
-            state_changed = self._handle_select_combo_duration_input(action)
-        elif current_st in [STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP]:
-            state_changed = self._handle_confirmation_input(action)
-        elif current_st == STATE_SECRET_GAMES:
-            state_changed = self._handle_secret_games_input(action)
-        elif current_st in [STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO]:
-            state_changed = self._handle_view_input(action)
-        elif current_st == STATE_SETTINGS_WIFI: # Handler for WiFi settings
-            state_changed = self._handle_wifi_settings_input(action)
-            
-        return state_changed
-    
-    def _handle_menu_input(self, action):
-        """Handle input for the main menu."""
-        if action == app_config.INPUT_ACTION_NEXT:
-            return self.menu_manager.navigate_next(self.current_state)
-        elif action == app_config.INPUT_ACTION_PREV:
-            return self.menu_manager.navigate_prev(self.current_state)
-        elif action == app_config.INPUT_ACTION_SELECT:
-            return self._handle_menu_select()
-        elif action == app_config.INPUT_ACTION_BACK and self.menu_manager.menu_stack: 
-            previous_menu_state = self.menu_manager.exit_submenu()
-            if previous_menu_state:
-                return self.state_manager.transition_to(previous_menu_state)
-            return self.state_manager.return_to_menu()
-            
-        return False
-        
-    def _handle_menu_select(self):
-        """Handle main menu item selection."""
-        selected_item = self.menu_manager.get_selected_item(self.current_state)
-        if not selected_item: return False
-            
-        logger.info(f"Menu SELECT: item='{selected_item.name}', target='{selected_item.target_state}'")
-        
-        if selected_item.target_state == STATE_SENSORS_MENU:
-            self.menu_manager.enter_submenu(self.menu_manager.sensors_menu_items, STATE_MENU, STATE_SENSORS_MENU)
-            return self.state_manager.transition_to(STATE_SENSORS_MENU)
-        elif selected_item.target_state == STATE_SETTINGS:
-            self.menu_manager.enter_submenu(self.menu_manager.settings_menu_items, STATE_MENU, STATE_SETTINGS)
-            return self.state_manager.transition_to(STATE_SETTINGS)
-        elif selected_item.target_state:
-            if selected_item.target_state == STATE_SENSOR_VIEW and selected_item.data:
-                self.current_sensor = selected_item.data["sensor_type"]
-                self._reset_view_state()
-            elif selected_item.target_state == STATE_DASHBOARD:
-                self._reset_view_state()
-            return self.state_manager.transition_to(selected_item.target_state)
-        return False
-
-    def _handle_sensors_menu_input(self, action):
-        """Handle input for the sensors submenu."""
-        if action == app_config.INPUT_ACTION_NEXT:
-            return self.menu_manager.navigate_next(self.current_state)
-        elif action == app_config.INPUT_ACTION_PREV:
-            return self.menu_manager.navigate_prev(self.current_state)
-        elif action == app_config.INPUT_ACTION_SELECT:
-            return self._handle_sensors_menu_select()
-        return False
-        
-    def _handle_sensors_menu_select(self):
-        """Handle sensors menu item selection."""
-        selected_item = self.menu_manager.get_selected_item(self.current_state)
-        if (selected_item and selected_item.target_state == STATE_SENSOR_VIEW and selected_item.data):
-            self.current_sensor = selected_item.data["sensor_type"]
-            self._reset_view_state()
-            return self.state_manager.transition_to(STATE_SENSOR_VIEW)
-        return False
-
-    def _handle_sensors_menu_back(self):
-        """Handle back navigation from sensors menu."""
-        previous_menu_state_name = self.menu_manager.exit_submenu()
-        if previous_menu_state_name:
-            return self.state_manager.transition_to(previous_menu_state_name)
-        return self.state_manager.return_to_menu()
-
-    def _handle_settings_main_menu_input(self, action):
-        """Handle input for the main settings category menu (STATE_SETTINGS)."""
-        if action == app_config.INPUT_ACTION_NEXT:
-            return self.menu_manager.navigate_next(self.current_state)
-        elif action == app_config.INPUT_ACTION_PREV:
-            return self.menu_manager.navigate_prev(self.current_state)
-        elif action == app_config.INPUT_ACTION_SELECT:
-            return self._handle_settings_main_menu_select()
-        return False
-
-    def _handle_settings_main_menu_select(self):
-        """Handle selection from the main settings category menu."""
-        selected_item = self.menu_manager.get_selected_item(self.current_state)
-        if not selected_item or not selected_item.target_state:
-            return False
-        
-        logger.info(f"Settings Menu SELECT: item='{selected_item.name}', target_state='{selected_item.target_state}'")
-        
-        # If selected item is to go back to main menu, reset menu manager fully
-        if selected_item.target_state == STATE_MENU:
-            self.menu_manager.reset_to_main_menu()
-            
-        return self.state_manager.transition_to(selected_item.target_state)
-
-    def _handle_settings_main_menu_back(self):
-        """Handle back navigation from the main settings category menu."""
-        previous_menu_state_name = self.menu_manager.exit_submenu()
-        if previous_menu_state_name:
-            return self.state_manager.transition_to(previous_menu_state_name)
-        return self.state_manager.return_to_menu()
-
-    def _handle_display_settings_input(self, action):
-        """Handle input for the Display Settings view - delegates to SettingsManager."""
-        result = self.settings_manager.handle_display_settings_input(action)
-        if result == "GO_TO_MAIN_MENU":
-            self.menu_manager.reset_to_main_menu()
-            return self.state_manager.transition_to(STATE_MENU)
-        return result
-
-    def _handle_device_settings_input(self, action):
-        """Handle input for the Device Settings view - delegates to DeviceManager."""
-        result = self.device_manager.handle_device_settings_input(action)
-        if isinstance(result, str):
-            if result == "GO_TO_MAIN_MENU":
-                self.menu_manager.reset_to_main_menu()
-                return self.state_manager.transition_to(STATE_MENU)
-            elif result == "SELECT_COMBO_DURATION":
-                return self.state_manager.transition_to(STATE_SELECT_COMBO_DURATION)
-            elif result == "CONFIRM_REBOOT":
-                return self.state_manager.transition_to(STATE_CONFIRM_REBOOT)
-            elif result == "CONFIRM_SHUTDOWN":
-                return self.state_manager.transition_to(STATE_CONFIRM_SHUTDOWN)
-            elif result == "CONFIRM_RESTART_APP":
-                return self.state_manager.transition_to(STATE_CONFIRM_RESTART_APP)
-        return result
-
-    def _handle_confirmation_input(self, action):
-        """Handle confirmation input - delegates to DeviceManager."""
-        result = self.device_manager.handle_confirmation_input(action)
-        if result == "BACK_TO_DEVICE_SETTINGS":
-            return self.state_manager.transition_to(STATE_SETTINGS_DEVICE)
-        return result
-
-    def _handle_secret_games_input(self, action):
-        """Handle input for the secret games menu."""
-        if action == app_config.INPUT_ACTION_NEXT:
-            return self.menu_manager.navigate_next(self.current_state)
-        elif action == app_config.INPUT_ACTION_PREV:
-            return self.menu_manager.navigate_prev(self.current_state)
-        elif action == app_config.INPUT_ACTION_SELECT:
-            return self._handle_secret_games_select()
-        return False
-        
-    def _handle_secret_games_select(self):
-        """Handle secret games menu selection."""
-        selected_item = self.menu_manager.get_selected_item(self.current_state)
-        if not selected_item: return False
-            
-        logger.info(f"Secret Menu SELECT: {selected_item.name}")
-        
-        if selected_item.action_name == app_config.ACTION_LAUNCH_PONG:
-            if self.game_manager.launch_pong():
-                return self.state_manager.transition_to(STATE_PONG_ACTIVE)
-        elif selected_item.action_name == app_config.ACTION_LAUNCH_TETRIS:
-            pass 
-        elif selected_item.action_name == app_config.ACTION_RETURN_TO_MENU:
-            return self.state_manager.return_to_menu()
-        return False
-        
-    def _handle_view_input(self, action):
-        """Handle SELECT action for view states (dashboard, sensor view, system info) to freeze/unfreeze."""
-        if action == app_config.INPUT_ACTION_SELECT:
-            self.is_frozen = not self.is_frozen
-            if self.current_state == STATE_DASHBOARD:
-                self.auto_cycle = not self.auto_cycle
-            logger.info(f"View State '{self.current_state}': {'Frozen' if self.is_frozen else 'Unfrozen'}. Auto-cycle: {self.auto_cycle if self.current_state == STATE_DASHBOARD else 'N/A'}")
-            return True
-        return False 
     
     def _reset_view_state(self):
         """Reset view state (frozen, auto_cycle) when entering a new view that uses these."""
@@ -572,36 +387,3 @@ class AppState:
     def get_current_menu_index(self):
         """Get current menu index (now calls MenuManager)."""
         return self.menu_manager.get_current_menu_index(self.current_state)
-
-    def _handle_select_combo_duration_input(self, action):
-        """Handle combo duration input - delegates to SettingsManager."""
-        result = self.settings_manager.handle_combo_duration_input(action)
-        if result and action == app_config.INPUT_ACTION_SELECT:
-            # After applying, go back to device settings
-            return self.state_manager.transition_to(STATE_SETTINGS_DEVICE)
-        return result
-
-    def _handle_wifi_settings_input(self, action):
-        """Handle input for the WiFi Settings view - delegates to WifiManager."""
-        if not self.wifi_manager:
-            logger.error("WifiManager not initialized in AppState, cannot handle WiFi settings input.")
-            return self.state_manager.transition_to(STATE_SETTINGS) # Fallback
-
-        # Get the specific action requested from WifiManager based on user's menu navigation (Next, Prev, Select)
-        wifi_manager_action_result = self.wifi_manager.handle_input(action)
-
-        if isinstance(wifi_manager_action_result, str): # WifiManager returns an action string when SELECT is pressed
-            if wifi_manager_action_result == WIFI_ACTION_TOGGLE:
-                logger.info("AppState: WIFI_ACTION_TOGGLE received. Calling wifi_manager.toggle_wifi()")
-                self.wifi_manager.toggle_wifi() # WifiManager handles its own toggle and subsequent status update
-                # The UI will refresh based on WifiManager's updated status_str on the next frame
-                return True # Input was handled (action initiated)
-            elif wifi_manager_action_result == WIFI_ACTION_BACK_TO_SETTINGS:
-                return self.state_manager.transition_to(STATE_SETTINGS)
-            # Add other actions like SCAN, CONNECT later if they return specific strings
-            else:
-                logger.warning(f"Unknown action string from WifiManager: {wifi_manager_action_result}")
-                return False # Unrecognized action string
-        
-        # If wifi_manager_action_result is boolean, it means navigation occurred within wifi_manager (True) or not (False)
-        return wifi_manager_action_result 

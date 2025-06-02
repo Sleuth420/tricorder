@@ -53,3 +53,5 @@ Thumbs.db
 config_old.py
 *.bak
 *.tmp
+
+wifi_scan_output.txt

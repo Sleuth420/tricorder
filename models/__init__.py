@@ -11,6 +11,7 @@ from .state_manager import StateManager
 from .input_manager import InputManager
 from .menu_manager import MenuManager
 from .game_manager import GameManager
+from .ship_manager import ShipManager
 from .settings_manager import SettingsManager
 from .device_manager import DeviceManager
 from .wifi_manager import WifiManager, WIFI_ACTION_TOGGLE, WIFI_ACTION_SCAN, WIFI_ACTION_CONNECT, WIFI_ACTION_VIEW_SAVED, WIFI_ACTION_BACK_TO_SETTINGS, WIFI_ACTION_BROWSE_NETWORKS, WIFI_ACTION_BACK_TO_WIFI, WIFI_ACTION_CONNECT_TO_NETWORK, WIFI_ACTION_ENTER_PASSWORD
@@ -23,7 +24,7 @@ from .menu_item import MenuItem
 from .app_state import (
     STATE_MENU, STATE_SENSORS_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW,
     STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE,
-    STATE_SCHEMATICS,
+    STATE_SCHEMATICS, STATE_SHIP_MENU,
     STATE_SETTINGS_WIFI,
     STATE_SETTINGS_WIFI_NETWORKS,
     STATE_WIFI_PASSWORD_ENTRY,
@@ -44,12 +45,13 @@ __all__ = [
     'InputManager',
     'MenuManager',
     'GameManager',
+    'ShipManager',
     'SettingsManager',
     'DeviceManager',
     'WifiManager',
     'STATE_MENU', 'STATE_SENSORS_MENU', 'STATE_DASHBOARD', 'STATE_SENSOR_VIEW',
     'STATE_SYSTEM_INFO', 'STATE_SETTINGS', 'STATE_SECRET_GAMES', 'STATE_PONG_ACTIVE',
-    'STATE_SCHEMATICS',
+    'STATE_SCHEMATICS', 'STATE_SHIP_MENU',
     'STATE_SETTINGS_WIFI',
     'STATE_SETTINGS_WIFI_NETWORKS',
     'STATE_WIFI_PASSWORD_ENTRY',

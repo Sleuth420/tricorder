@@ -73,6 +73,8 @@ class InputRouter:
             return self._handle_secret_games_input(action)
         elif current_state in [STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO]:
             return self._handle_view_input(action)
+        elif current_state == STATE_SCHEMATICS:
+            return self._handle_schematics_input(action)
         elif current_state == STATE_SETTINGS_WIFI:
             return self._handle_wifi_settings_input(action)
         elif current_state == STATE_SETTINGS_WIFI_NETWORKS:
@@ -302,6 +304,23 @@ class InputRouter:
             if self.app_state.current_state == STATE_DASHBOARD:
                 self.app_state.auto_cycle = not self.app_state.auto_cycle
             logger.info(f"View State '{self.app_state.current_state}': {'Frozen' if self.app_state.is_frozen else 'Unfrozen'}. Auto-cycle: {self.app_state.auto_cycle if self.app_state.current_state == STATE_DASHBOARD else 'N/A'}")
+            return True
+        return False
+
+    def _handle_schematics_input(self, action):
+        """Handle input for the 3D schematics viewer."""
+        if action == app_config.INPUT_ACTION_PREV:
+            # Left rotation or back to ship menu (on hold)
+            self.app_state.ship_manager.apply_manual_rotation('LEFT')
+            return True
+        elif action == app_config.INPUT_ACTION_NEXT:
+            # Right rotation  
+            self.app_state.ship_manager.apply_manual_rotation('RIGHT')
+            return True
+        elif action == app_config.INPUT_ACTION_BACK:
+            # Return to ship menu
+            logger.debug("Schematics: BACK action, returning to ship menu")
+            self.app_state.state_manager.transition_to(STATE_SHIP_MENU)
             return True
         return False
 

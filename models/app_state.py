@@ -8,6 +8,7 @@ from .state_manager import StateManager
 from .input_manager import InputManager
 from .menu_manager import MenuManager
 from .game_manager import GameManager
+from .ship_manager import ShipManager
 from .settings_manager import SettingsManager
 from .device_manager import DeviceManager
 from .wifi_manager import WifiManager, WIFI_ACTION_TOGGLE, WIFI_ACTION_BACK_TO_SETTINGS, WIFI_ACTION_BROWSE_NETWORKS, WIFI_ACTION_BACK_TO_WIFI, WIFI_ACTION_CONNECT_TO_NETWORK, WIFI_ACTION_ENTER_PASSWORD # Import WifiManager and relevant actions
@@ -76,6 +77,7 @@ class AppState:
         self.selected_ship_data = None
         self.menu_manager = MenuManager(config_module)
         self.game_manager = GameManager(config_module, screen_width, screen_height)
+        self.ship_manager = ShipManager(config_module, screen_width, screen_height)
         self.settings_manager = SettingsManager(config_module)
         self.device_manager = DeviceManager(config_module)
         self.wifi_manager = WifiManager(config_module) # Instantiate WifiManager (no command func needed)

@@ -3,7 +3,8 @@
 
 # -- Fonts --
 # (Store font files in a 'fonts' subfolder or use system fonts)
-FONT_PRIMARY_PATH = "fonts/Minecraftia-Regular.ttf" 
+FONT_PRIMARY_PATH = "assets/fonts/Minecraftia-Regular.ttf"
+# FONT_PRIMARY_PATH = "assets/fonts/Finalnew.ttf"
 FONT_SIZE_LARGE = 30
 FONT_SIZE_MEDIUM = 20
 FONT_SIZE_SMALL = 16

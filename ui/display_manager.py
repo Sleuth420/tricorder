@@ -44,11 +44,14 @@ def init_display():
         if config.FULLSCREEN:
             # MODIFIED LINE: Explicitly request config.SCREEN_WIDTH and config.SCREEN_HEIGHT
             screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.FULLSCREEN)
-            pygame.mouse.set_visible(False)
             logger.info(f"Display set to fullscreen mode, requesting {config.SCREEN_WIDTH}x{config.SCREEN_HEIGHT}.") # Updated log
         else:
             screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
             logger.info(f"Display set to windowed mode ({config.SCREEN_WIDTH}x{config.SCREEN_HEIGHT}).")
+        
+        # Hide mouse cursor for kiosk mode (both fullscreen and windowed)
+        pygame.mouse.set_visible(False)
+        logger.info("Mouse cursor hidden for kiosk mode")
 
         # Load fonts
         try:

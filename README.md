@@ -262,6 +262,21 @@ Edit the wayfire.ini file and remove or comment out the tricorder line:
 # tricorder = cd /home/dev/tricorder && source venv/bin/activate && python main.py
 ```
 
+**Hiding the mouse cursor for kiosk mode:**
+For a clean kiosk experience, hide the mouse cursor:
+
+1. Install unclutter:
+   ```bash
+   sudo apt install unclutter
+   ```
+
+2. Add cursor hiding to your wayfire.ini autostart section:
+   ```ini
+   [autostart]
+   tricorder = cd /home/dev/tricorder && source venv/bin/activate && python main.py
+   hide_cursor = unclutter -idle 0.1 -root
+   ```
+
 **Alternative: Manual startup script**
 You can also create a desktop shortcut or startup script:
 

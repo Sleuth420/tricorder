@@ -298,13 +298,17 @@ class MenuManager:
             # If menu_stack is empty, this is the main menu. Otherwise, it's a submenu navigated to from main.
             return self.current_menu_definition # This will be main_menu_items if stack is empty
         elif current_state == STATE_SENSORS_MENU:
-            return self.sensors_menu_items # Sensors menu is directly managed
+            # Sensors menu should use the submenu stack like other submenus
+            return self.current_menu_definition
         elif current_state == STATE_SHIP_MENU:
-            return self._generate_ship_menu_items() # Ship selection menu
+            # Ship menu should use the submenu stack like sensors and settings
+            # If we're in STATE_SHIP_MENU, it should be managed by the stack
+            return self.current_menu_definition
         elif current_state == STATE_SECRET_GAMES:
             return self.secret_menu_items # Secret games menu is directly managed
         elif current_state == STATE_SETTINGS: # This is the main settings category menu
-            return self.settings_menu_items
+            # Settings menu should use the submenu stack like other submenus
+            return self.current_menu_definition
         # For sub-settings states like STATE_SETTINGS_WIFI, they might have their own menus
         # or they might be views without menus. If they have menus, this method needs expansion
         # or the AppState needs to ensure MenuManager is correctly set up when transitioning.

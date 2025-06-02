@@ -69,7 +69,8 @@ class ShipManager:
         self.roll = 0.0  
         self.yaw = 0.0
         
-        # Manual rotation controls
+        # Rotation mode control
+        self.auto_rotation_mode = True  # True = use sensors, False = manual only
         self.manual_rotation_speed = 2.0  # degrees per frame when using keys
         
         # Ship models
@@ -138,6 +139,10 @@ class ShipManager:
     
     def update_rotation_from_sensors(self):
         """Update rotation values from sensehat tilt sensors."""
+        # Only update from sensors if in auto mode
+        if not self.auto_rotation_mode:
+            return False
+            
         try:
             orientation = sensors.get_orientation()
             if orientation:
@@ -150,6 +155,13 @@ class ShipManager:
         except Exception as e:
             logger.debug(f"Could not read sensor orientation: {e}")
         return False
+        
+    def toggle_rotation_mode(self):
+        """Toggle between auto (sensor) and manual rotation modes."""
+        self.auto_rotation_mode = not self.auto_rotation_mode
+        mode_name = "Auto (Sensor)" if self.auto_rotation_mode else "Manual"
+        logger.info(f"Rotation mode switched to: {mode_name}")
+        return self.auto_rotation_mode
     
     def apply_manual_rotation(self, direction):
         """Apply manual rotation using keyboard/joystick controls."""
@@ -226,8 +238,13 @@ class ShipManager:
         rotation_surface = info_font.render(rotation_text, True, config_module.Theme.FOREGROUND)
         screen.blit(rotation_surface, (10, 30))
         
+        # Rotation mode indicator
+        mode_text = f"Mode: {'Auto (Sensor)' if self.auto_rotation_mode else 'Manual'}"
+        mode_surface = info_font.render(mode_text, True, config_module.Theme.ACCENT)
+        screen.blit(mode_surface, (10, 50))
+        
         # Controls help
-        help_text = "Tilt device or use A/D keys to rotate"
+        help_text = "Hold D or Middle Press = Menu"
         help_surface = info_font.render(help_text, True, config_module.Theme.FOREGROUND)
         help_rect = help_surface.get_rect(centerx=screen.get_width()//2, bottom=screen.get_height()-10)
         screen.blit(help_surface, help_rect)

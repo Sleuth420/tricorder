@@ -23,6 +23,7 @@ class InputManager:
         self.keys_held = set()
         self.secret_combo_start_time = None
         self.key_prev_press_start_time = None
+        self.key_next_press_start_time = None  # For 3D viewer pause menu
         self.joystick_middle_press_start_time = None
         
         # Secret combo configuration
@@ -49,6 +50,11 @@ class InputManager:
         if key == self.config.KEY_PREV and self.key_prev_press_start_time is None:
             self.key_prev_press_start_time = time.time()
             logger.debug("KEY_PREV press timer started.")
+            
+        # Start timing for KEY_NEXT long press (for 3D viewer pause menu)
+        if key == self.config.KEY_NEXT and self.key_next_press_start_time is None:
+            self.key_next_press_start_time = time.time()
+            logger.debug("KEY_NEXT press timer started.")
             
         return {
             'type': 'KEYDOWN',
@@ -77,6 +83,13 @@ class InputManager:
             self.key_prev_press_start_time = None
             logger.debug("KEY_PREV released, timer reset.")
             
+        # Handle KEY_NEXT release (for 3D viewer pause menu)
+        next_press_duration = None
+        if key == self.config.KEY_NEXT and self.key_next_press_start_time is not None:
+            next_press_duration = time.time() - self.key_next_press_start_time
+            self.key_next_press_start_time = None
+            logger.debug("KEY_NEXT released, timer reset.")
+            
         # Reset secret combo if combo keys are released
         if self.secret_combo_start_time and (key == self.config.KEY_PREV or key == self.config.KEY_NEXT):
             logger.info("KEYBOARD SECRET COMBO TIMER RESET (Key Up)")
@@ -86,6 +99,7 @@ class InputManager:
             'type': 'KEYUP',
             'key': key,
             'press_duration': press_duration,
+            'next_press_duration': next_press_duration,
             'keys_held': self.keys_held.copy()
         }
         
@@ -179,6 +193,23 @@ class InputManager:
     def reset_long_press_timer(self):
         """Reset the long press timer."""
         self.key_prev_press_start_time = None
+        
+    def check_next_key_long_press(self):
+        """
+        Check if KEY_NEXT (D key) has been held long enough for 3D viewer pause menu.
+        
+        Returns:
+            bool: True if long press duration is met
+        """
+        if not self.key_next_press_start_time:
+            return False
+            
+        hold_duration = time.time() - self.key_next_press_start_time
+        return hold_duration >= self.config.INPUT_LONG_PRESS_DURATION
+        
+    def reset_next_key_timer(self):
+        """Reset the next key long press timer."""
+        self.key_next_press_start_time = None
         
     def check_joystick_long_press(self, current_state):
         """

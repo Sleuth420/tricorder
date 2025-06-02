@@ -9,7 +9,7 @@ from ui.views.sensor_view import draw_sensor_view
 from ui.views.system_info_view import draw_system_info_view
 from ui.views.settings.settings_view import draw_settings_view
 from ui.views.secret_games_view import draw_secret_games_view
-from ui.views.tricorder_schematics import draw_schematics_view
+from ui.views.ship_3d_viewer import draw_schematics_view
 from ui.views.ship_menu_view import draw_ship_menu_view
 from ui.views.sensors_menu_view import draw_sensors_menu_view
 from ui.views.settings.display_settings_view import draw_display_settings_view

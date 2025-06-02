@@ -91,6 +91,8 @@ class InputRouter:
             return self.app_state.state_manager.return_to_menu()
         elif current_state == STATE_SENSORS_MENU:
             return self._handle_sensors_menu_back()
+        elif current_state == STATE_SHIP_MENU:
+            return self._handle_ship_menu_back()
         elif current_state == STATE_SETTINGS:
             return self._handle_settings_main_menu_back()
         elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY]:
@@ -135,6 +137,12 @@ class InputRouter:
             self.app_state.menu_manager.enter_submenu(
                 self.app_state.menu_manager.settings_menu_items, STATE_MENU, STATE_SETTINGS)
             return self.app_state.state_manager.transition_to(STATE_SETTINGS)
+        elif selected_item.target_state == STATE_SHIP_MENU:
+            # Ship menu is also a submenu that needs proper initialization
+            ship_menu_items = self.app_state.menu_manager._generate_ship_menu_items()
+            self.app_state.menu_manager.enter_submenu(
+                ship_menu_items, STATE_MENU, STATE_SHIP_MENU)
+            return self.app_state.state_manager.transition_to(STATE_SHIP_MENU)
         elif selected_item.target_state:
             if selected_item.target_state == STATE_SENSOR_VIEW and selected_item.data:
                 self.app_state.current_sensor = selected_item.data["sensor_type"]
@@ -190,9 +198,13 @@ class InputRouter:
         selected_item = self.app_state.menu_manager.get_selected_item(STATE_SHIP_MENU)
         if selected_item:
             if selected_item.target_state == STATE_MENU:
-                # Back option selected
-                logger.debug(f"Ship menu: Back option selected, transitioning to main menu")
-                self.app_state.state_manager.transition_to(STATE_MENU)
+                # Back option selected - use submenu system
+                logger.debug(f"Ship menu: Back option selected, exiting submenu")
+                previous_menu_state_name = self.app_state.menu_manager.exit_submenu()
+                if previous_menu_state_name:
+                    self.app_state.state_manager.transition_to(previous_menu_state_name)
+                else:
+                    self.app_state.state_manager.return_to_menu()
             elif selected_item.target_state == STATE_SCHEMATICS:
                 # Ship selected, store the selected ship data and go to 3D viewer
                 logger.debug(f"Ship menu: Selected ship '{selected_item.name}' with data {selected_item.data}")
@@ -204,9 +216,11 @@ class InputRouter:
 
     def _handle_ship_menu_back(self):
         """Handle back action in ship menu."""
-        logger.debug(f"Ship menu: BACK action, transitioning to main menu")
-        self.app_state.state_manager.transition_to(STATE_MENU)
-        return True
+        logger.debug(f"Ship menu: BACK action, exiting submenu")
+        previous_menu_state_name = self.app_state.menu_manager.exit_submenu()
+        if previous_menu_state_name:
+            return self.app_state.state_manager.transition_to(previous_menu_state_name)
+        return self.app_state.state_manager.return_to_menu()
 
     def _handle_settings_main_menu_input(self, action):
         """Handle input for the main settings category menu."""
@@ -309,18 +323,72 @@ class InputRouter:
 
     def _handle_schematics_input(self, action):
         """Handle input for the 3D schematics viewer."""
+        # Check if pause menu is active
+        if self.app_state.schematics_pause_menu_active:
+            return self._handle_schematics_pause_menu_input(action)
+        
+        # Normal 3D viewer controls when pause menu is not active
         if action == app_config.INPUT_ACTION_PREV:
-            # Left rotation or back to ship menu (on hold)
+            # Left rotation (A key)
             self.app_state.ship_manager.apply_manual_rotation('LEFT')
             return True
         elif action == app_config.INPUT_ACTION_NEXT:
-            # Right rotation  
+            # Right rotation (D key)
             self.app_state.ship_manager.apply_manual_rotation('RIGHT')
             return True
+        elif action == app_config.INPUT_ACTION_SELECT:
+            # Toggle pause menu (middle press)
+            self.app_state.schematics_pause_menu_active = True
+            self.app_state.schematics_pause_menu_index = 0
+            logger.debug("Schematics: Pause menu activated")
+            return True
         elif action == app_config.INPUT_ACTION_BACK:
-            # Return to ship menu
-            logger.debug("Schematics: BACK action, returning to ship menu")
+            # Emergency back (still works but not the primary method)
+            logger.debug("Schematics: Emergency BACK action, returning to ship menu")
             self.app_state.state_manager.transition_to(STATE_SHIP_MENU)
+            return True
+        return False
+    
+    def _handle_schematics_pause_menu_input(self, action):
+        """Handle input when the schematics pause menu is active."""
+        if action == app_config.INPUT_ACTION_PREV:
+            # Navigate up in pause menu
+            self.app_state.schematics_pause_menu_index = (self.app_state.schematics_pause_menu_index - 1) % 3
+            return True
+        elif action == app_config.INPUT_ACTION_NEXT:
+            # Navigate down in pause menu
+            self.app_state.schematics_pause_menu_index = (self.app_state.schematics_pause_menu_index + 1) % 3
+            return True
+        elif action == app_config.INPUT_ACTION_SELECT:
+            # Select pause menu option
+            return self._handle_schematics_pause_menu_select()
+        elif action == app_config.INPUT_ACTION_BACK:
+            # Close pause menu
+            self.app_state.schematics_pause_menu_active = False
+            logger.debug("Schematics: Pause menu closed")
+            return True
+        return False
+    
+    def _handle_schematics_pause_menu_select(self):
+        """Handle selection in the schematics pause menu."""
+        selected_index = self.app_state.schematics_pause_menu_index
+        
+        if selected_index == 0:
+            # Toggle rotation mode
+            self.app_state.ship_manager.toggle_rotation_mode()
+            self.app_state.schematics_pause_menu_active = False
+            logger.debug("Schematics: Rotation mode toggled, pause menu closed")
+            return True
+        elif selected_index == 1:
+            # Back to ship menu
+            self.app_state.schematics_pause_menu_active = False
+            self.app_state.state_manager.transition_to(STATE_SHIP_MENU)
+            logger.debug("Schematics: Returning to ship menu")
+            return True
+        elif selected_index == 2:
+            # Resume/Close menu
+            self.app_state.schematics_pause_menu_active = False
+            logger.debug("Schematics: Pause menu closed, resuming")
             return True
         return False
 

@@ -75,6 +75,10 @@ class AppState:
         
         # Ship selection data for 3D viewer
         self.selected_ship_data = None
+        
+        # 3D viewer pause menu state
+        self.schematics_pause_menu_active = False
+        self.schematics_pause_menu_index = 0
         self.menu_manager = MenuManager(config_module)
         self.game_manager = GameManager(config_module, screen_width, screen_height)
         self.ship_manager = ShipManager(config_module, screen_width, screen_height)
@@ -357,6 +361,16 @@ class AppState:
                 else:
                     state_changed = True
                 self.input_manager.reset_long_press_timer() # Reset only if processed or intended to be processed
+                
+        # Check D key long press for 3D viewer pause menu
+        if (self.current_state == STATE_SCHEMATICS and 
+            not self.schematics_pause_menu_active and
+            self.input_manager.check_next_key_long_press()):
+            logger.info(f"D key long press detected in 3D viewer. Activating pause menu.")
+            self.schematics_pause_menu_active = True
+            self.schematics_pause_menu_index = 0
+            self.input_manager.reset_next_key_timer()
+            state_changed = True
 
         return state_changed
     

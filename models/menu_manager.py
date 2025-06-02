@@ -124,15 +124,21 @@ class MenuManager:
         """Generates the ship selection menu items."""
         items = [
             MenuItem(
-                name="Enterprise NX-01", 
+                name="Test Cube", 
                 target_state=STATE_SCHEMATICS,
-                data={"ship_model": "enterprise_nx01", "ship_id": 1},
+                data={"ship_model": "test_cube", "ship_id": 1},
                 color_key="SIDEBAR_SCHEMATICS"
             ),
             MenuItem(
-                name="Test Cube", 
+                name="OpenGL Test", 
                 target_state=STATE_SCHEMATICS,
-                data={"ship_model": "test_cube", "ship_id": 2},
+                data={"ship_model": "opengl_test", "ship_id": 2},
+                color_key="SIDEBAR_SCHEMATICS"
+            ),
+            MenuItem(
+                name="Stargate SG-1 X-304", 
+                target_state=STATE_SCHEMATICS,
+                data={"ship_model": "stargate_304", "ship_id": 3},
                 color_key="SIDEBAR_SCHEMATICS"
             ),
             MenuItem(

@@ -76,7 +76,8 @@ class ShipManager:
         # Ship models
         self.ship_models = {
             'test_cube': self._generate_test_cube(),
-            'enterprise_nx01': self._generate_test_ship()
+            'opengl_test': self._generate_opengl_test(),
+            'stargate_304': self._generate_stargate_placeholder()
         }
         
         self.current_ship_model = 'test_cube'
@@ -102,30 +103,24 @@ class ShipManager:
         
         return {'vertices': vertices, 'edges': edges, 'name': 'Test Cube'}
     
-    def _generate_test_ship(self):
-        """Generate vertices and edges for a simple ship-like shape."""
-        # Simple ship shape - like a triangular prism
-        vertices = [
-            # Nose
-            [0, 0, 2],
-            # Body section
-            [-1, -0.5, 0], [1, -0.5, 0], [1, 0.5, 0], [-1, 0.5, 0],
-            # Tail section
-            [-0.5, -0.3, -2], [0.5, -0.3, -2], [0.5, 0.3, -2], [-0.5, 0.3, -2]
-        ]
-        
-        edges = [
-            # Nose to body
-            (0, 1), (0, 2), (0, 3), (0, 4),
-            # Body rectangle
-            (1, 2), (2, 3), (3, 4), (4, 1),
-            # Body to tail
-            (1, 5), (2, 6), (3, 7), (4, 8),
-            # Tail rectangle
-            (5, 6), (6, 7), (7, 8), (8, 5)
-        ]
-        
-        return {'vertices': vertices, 'edges': edges, 'name': 'Enterprise NX-01'}
+    def _generate_opengl_test(self):
+        """Placeholder for OpenGL-based 3D rendering test."""
+        # This will use the OpenGL renderer instead of wireframe
+        return {
+            'type': 'opengl',
+            'name': 'OpenGL Test Cube',
+            'use_opengl': True
+        }
+    
+    def _generate_stargate_placeholder(self):
+        """Placeholder for Stargate 304 model (not implemented yet)."""
+        return {
+            'type': 'model_file',
+            'name': 'Stargate SG-1 X-304',
+            'model_path': 'assets/stargate_304/X304_ship.obj',
+            'use_opengl': True,
+            'implemented': False
+        }
     
     def set_ship_model(self, ship_model_key):
         """Set the current ship model to display."""
@@ -186,6 +181,21 @@ class ShipManager:
             return
         
         ship_model = self.ship_models[self.current_ship_model]
+        
+        # Handle different model types
+        if ship_model.get('type') == 'opengl':
+            self._render_opengl_model(screen, ship_model, fonts, config_module)
+        elif ship_model.get('type') == 'model_file':
+            if ship_model.get('implemented', False):
+                self._render_model_file(screen, ship_model, fonts, config_module)
+            else:
+                self._render_not_implemented(screen, ship_model, fonts, config_module)
+        else:
+            # Default wireframe rendering for test_cube
+            self._render_wireframe_model(screen, ship_model, fonts, config_module)
+    
+    def _render_wireframe_model(self, screen, ship_model, fonts, config_module):
+        """Render wireframe model (test_cube)."""
         vertices = ship_model['vertices']
         edges = ship_model['edges']
         
@@ -225,29 +235,82 @@ class ShipManager:
             if 0 <= vertex_pos[0] < screen.get_width() and 0 <= vertex_pos[1] < screen.get_height():
                 pygame.draw.circle(screen, vertex_color, vertex_pos, 3)
         
-        # Draw ship info
+        self._draw_ship_info(screen, ship_model, fonts, config_module)
+    
+    def _render_opengl_model(self, screen, ship_model, fonts, config_module):
+        """Render using OpenGL (requires OpenGL context setup)."""
+        # For now, show a placeholder - OpenGL setup requires display mode changes
+        screen.fill(config_module.Theme.BACKGROUND)
+        
+        # Placeholder text
+        info_font = fonts.get('medium', fonts.get('small'))
+        placeholder_text = "OpenGL Test"
+        text_surface = info_font.render(placeholder_text, True, config_module.Theme.ACCENT)
+        text_rect = text_surface.get_rect(center=(screen.get_width()//2, screen.get_height()//2))
+        screen.blit(text_surface, text_rect)
+        
+        # Note about OpenGL
+        note_font = fonts.get('small', fonts.get('medium'))
+        note_text = "Requires OpenGL context"
+        note_surface = note_font.render(note_text, True, config_module.Theme.FOREGROUND)
+        note_rect = note_surface.get_rect(center=(screen.get_width()//2, screen.get_height()//2 + 30))
+        screen.blit(note_surface, note_rect)
+        
+        self._draw_ship_info(screen, ship_model, fonts, config_module)
+    
+    def _render_model_file(self, screen, ship_model, fonts, config_module):
+        """Render 3D model file (stargate_304)."""
+        # TODO: Implement actual model file loading
+        screen.fill(config_module.Theme.BACKGROUND)
+        
+        # Placeholder for model file rendering
+        info_font = fonts.get('medium', fonts.get('small'))
+        placeholder_text = "3D Model Loading"
+        text_surface = info_font.render(placeholder_text, True, config_module.Theme.ACCENT)
+        text_rect = text_surface.get_rect(center=(screen.get_width()//2, screen.get_height()//2))
+        screen.blit(text_surface, text_rect)
+        
+        self._draw_ship_info(screen, ship_model, fonts, config_module)
+    
+    def _render_not_implemented(self, screen, ship_model, fonts, config_module):
+        """Render placeholder for not implemented models."""
+        screen.fill(config_module.Theme.BACKGROUND)
+        
+        # Not implemented message
+        info_font = fonts.get('medium', fonts.get('small'))
+        placeholder_text = "Not Implemented Yet"
+        text_surface = info_font.render(placeholder_text, True, config_module.Theme.ALERT)
+        text_rect = text_surface.get_rect(center=(screen.get_width()//2, screen.get_height()//2))
+        screen.blit(text_surface, text_rect)
+        
+        # Model info
+        note_font = fonts.get('small', fonts.get('medium'))
+        note_text = f"Model: {ship_model.get('name', 'Unknown')}"
+        note_surface = note_font.render(note_text, True, config_module.Theme.FOREGROUND)
+        note_rect = note_surface.get_rect(center=(screen.get_width()//2, screen.get_height()//2 + 25))
+        screen.blit(note_surface, note_rect)
+        
+        self._draw_ship_info(screen, ship_model, fonts, config_module)
+    
+    def _draw_ship_info(self, screen, ship_model, fonts, config_module):
+        """Draw ship info overlay - optimized for small display."""
         info_font = fonts.get('small', fonts.get('medium'))
         ship_name = ship_model['name']
         
-        # Ship name
-        name_surface = info_font.render(f"Ship: {ship_name}", True, config_module.Theme.FOREGROUND)
-        screen.blit(name_surface, (10, 10))
+        # Compact ship name
+        name_surface = info_font.render(ship_name, True, config_module.Theme.FOREGROUND)
+        screen.blit(name_surface, (5, 5))
         
-        # Rotation values
-        rotation_text = f"P:{self.pitch:.1f}° R:{self.roll:.1f}° Y:{self.yaw:.1f}°"
+        # Compact rotation values
+        rotation_text = f"P:{self.pitch:.0f}° R:{self.roll:.0f}° Y:{self.yaw:.0f}°"
         rotation_surface = info_font.render(rotation_text, True, config_module.Theme.FOREGROUND)
-        screen.blit(rotation_surface, (10, 30))
+        screen.blit(rotation_surface, (5, 22))
         
-        # Rotation mode indicator
-        mode_text = f"Mode: {'Auto (Sensor)' if self.auto_rotation_mode else 'Manual'}"
+        # Mode indicator (top right)
+        mode_text = "Auto" if self.auto_rotation_mode else "Manual"
         mode_surface = info_font.render(mode_text, True, config_module.Theme.ACCENT)
-        screen.blit(mode_surface, (10, 50))
-        
-        # Controls help
-        help_text = "Hold D or Middle Press = Menu"
-        help_surface = info_font.render(help_text, True, config_module.Theme.FOREGROUND)
-        help_rect = help_surface.get_rect(centerx=screen.get_width()//2, bottom=screen.get_height()-10)
-        screen.blit(help_surface, help_rect)
+        mode_rect = mode_surface.get_rect(topright=(screen.get_width()-5, 5))
+        screen.blit(mode_surface, mode_rect)
     
     def get_current_ship_info(self):
         """Get information about the currently selected ship."""

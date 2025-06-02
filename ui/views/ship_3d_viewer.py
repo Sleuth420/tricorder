@@ -59,52 +59,67 @@ def draw_schematics_view(screen, app_state, fonts, config_module):
         )
 
 def _draw_pause_menu(screen, app_state, fonts, config_module):
-    """Draw the pause menu overlay for the 3D viewer."""
-    # Semi-transparent overlay
-    overlay = pygame.Surface((screen.get_width(), screen.get_height()))
-    overlay.set_alpha(128)
-    overlay.fill((0, 0, 0))
-    screen.blit(overlay, (0, 0))
-    
-    # Menu box
-    menu_width = 200
-    menu_height = 120
-    menu_x = (screen.get_width() - menu_width) // 2
-    menu_y = (screen.get_height() - menu_height) // 2
-    
-    menu_rect = pygame.Rect(menu_x, menu_y, menu_width, menu_height)
-    pygame.draw.rect(screen, config_module.Theme.MENU_HEADER_BG, menu_rect)
-    pygame.draw.rect(screen, config_module.Theme.ACCENT, menu_rect, 2)
-    
-    # Menu title
-    title_font = fonts.get('medium', fonts.get('small'))
-    title_text = "3D VIEWER MENU"
-    title_surface = title_font.render(title_text, True, config_module.Theme.FOREGROUND)
-    title_rect = title_surface.get_rect(centerx=menu_rect.centerx, y=menu_rect.y + 10)
+    """Draw the pause menu overlay for the 3D viewer - simplified like confirmation dialog."""
+    screen.fill(config_module.Theme.BACKGROUND)
+    screen_width = screen.get_width()
+    screen_height = screen.get_height()
+
+    font_large = fonts['large']
+    font_medium = fonts['medium']
+
+    # Display the menu title
+    title_surface = font_large.render("3D VIEWER MENU", True, config_module.Theme.ACCENT)
+    title_rect = title_surface.get_rect(center=(screen_width // 2, screen_height // 4))
     screen.blit(title_surface, title_rect)
-    
+
     # Menu options
-    option_font = fonts.get('small', fonts.get('medium'))
-    options = [
-        "Toggle Mode",
-        "Back to Ship Menu", 
-        "Resume"
-    ]
+    options = ["Toggle Mode", "Back to Ships", "Resume"]
+    current_selection_idx = app_state.schematics_pause_menu_index
+
+    y_offset = title_rect.bottom + 40
     
-    option_y_start = title_rect.bottom + 15
-    option_height = 20
-    
-    for i, option in enumerate(options):
-        option_y = option_y_start + (i * option_height)
+    for i, option_text in enumerate(options):
+        text_color = config_module.Theme.FOREGROUND
+        item_width = 160
+        item_height = font_medium.get_height() + 20
         
-        # Highlight selected option
-        if i == app_state.schematics_pause_menu_index:
-            highlight_rect = pygame.Rect(menu_x + 5, option_y - 2, menu_width - 10, option_height - 4)
-            pygame.draw.rect(screen, config_module.Theme.ACCENT, highlight_rect)
-            text_color = config_module.Theme.BACKGROUND
+        item_display_rect = pygame.Rect(
+            (screen_width // 2) - item_width // 2, 
+            y_offset + (i * (item_height + 10)),
+            item_width,
+            item_height
+        )
+
+        if i == current_selection_idx:
+            text_color = config_module.Theme.MENU_SELECTED_TEXT
+            bg_color_selected = config_module.Theme.MENU_SELECTED_BG
+            pygame.draw.rect(screen, bg_color_selected, item_display_rect, border_radius=5)
         else:
-            text_color = config_module.Theme.FOREGROUND
-        
-        option_surface = option_font.render(option, True, text_color)
-        option_rect = option_surface.get_rect(centerx=menu_rect.centerx, y=option_y)
+            # Draw a border for unselected items to make them look like buttons
+            pygame.draw.rect(screen, config_module.Theme.GRAPH_BORDER, item_display_rect, 2, border_radius=5)
+
+        option_surface = font_medium.render(option_text, True, text_color)
+        option_rect = option_surface.get_rect(center=item_display_rect.center)
         screen.blit(option_surface, option_rect)
+
+    # Show current rotation mode
+    rotation_mode = "Auto (Sensor)" if app_state.ship_manager.auto_rotation_mode else "Manual (Keys)"
+    mode_text = f"Current Mode: {rotation_mode}"
+    mode_font = fonts.get('small', fonts.get('medium'))
+    mode_surface = mode_font.render(mode_text, True, config_module.Theme.FOREGROUND)
+    mode_rect = mode_surface.get_rect(center=(screen_width // 2, y_offset + len(options) * (item_height + 10) + 20))
+    screen.blit(mode_surface, mode_rect)
+
+    # Footer hints
+    key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
+    key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
+    key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
+    
+    selected_option = options[current_selection_idx]
+    hint = f"< {key_prev_name}/{key_next_name}=Navigate | {key_select_name}={selected_option} | Hold {key_prev_name}=Resume >"
+
+    render_footer(
+        screen, hint, fonts,
+        config_module.Theme.FOREGROUND,
+        screen_width, screen_height
+    )

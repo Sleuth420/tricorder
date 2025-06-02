@@ -10,9 +10,16 @@ sense-hat==2.6.0    # For Sense HAT sensor access
 # System monitoring
 psutil==5.9.6       # For system monitoring (CPU, memory, disk)
 
-# Optional utilities that might be useful
+# 3D Graphics and OpenGL rendering
+PyOpenGL==3.1.9     # OpenGL bindings for Python
+PyOpenGL-accelerate==3.1.9  # Accelerated OpenGL operations (optional but recommended)
+PyGLM==2.8.2        # OpenGL Mathematics library for 3D transformations
+
+# 3D Model support
+pygltflib==1.16.4   # GLTF file format support for 3D models
+
+# Image processing
+Pillow==11.2.1      # Python Imaging Library
+
+# Optional utilities
 matplotlib==3.8.0   # For advanced graphing capabilities (if needed)
-PyOpenGL
-pygltflib
-PyGLM
-Pillow

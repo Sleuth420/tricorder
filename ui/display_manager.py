@@ -28,6 +28,10 @@ from ui.views.settings.wifi_password_entry_view import draw_wifi_password_entry_
 
 logger = logging.getLogger(__name__)
 
+# Global variables to track display mode
+current_display_mode = "NORMAL"  # "NORMAL" or "OPENGL"
+opengl_screen = None
+
 def init_display():
     """
     Initializes Pygame and the display window. Loads fonts.
@@ -42,13 +46,8 @@ def init_display():
         
         import config  # Import here to avoid circular imports
         
-        if config.FULLSCREEN:
-            # MODIFIED LINE: Explicitly request config.SCREEN_WIDTH and config.SCREEN_HEIGHT
-            screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.FULLSCREEN)
-            logger.info(f"Display set to fullscreen mode, requesting {config.SCREEN_WIDTH}x{config.SCREEN_HEIGHT}.") # Updated log
-        else:
-            screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
-            logger.info(f"Display set to windowed mode ({config.SCREEN_WIDTH}x{config.SCREEN_HEIGHT}).")
+        # Start with normal display mode
+        screen = _init_normal_display(config)
         
         # Hide mouse cursor for kiosk mode (both fullscreen and windowed)
         pygame.mouse.set_visible(False)
@@ -78,6 +77,95 @@ def init_display():
         pygame.quit()
         return None, None, None
 
+def _init_normal_display(config):
+    """Initialize normal pygame display mode."""
+    global current_display_mode
+    
+    if config.FULLSCREEN:
+        screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.FULLSCREEN)
+        logger.info(f"Display set to fullscreen mode, requesting {config.SCREEN_WIDTH}x{config.SCREEN_HEIGHT}.")
+    else:
+        screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
+        logger.info(f"Display set to windowed mode ({config.SCREEN_WIDTH}x{config.SCREEN_HEIGHT}).")
+    
+    current_display_mode = "NORMAL"
+    return screen
+
+def _init_opengl_display(config):
+    """Initialize OpenGL display mode."""
+    global current_display_mode, opengl_screen
+    
+    try:
+        # Import OpenGL to check availability
+        import OpenGL.GL as gl
+        import OpenGL.GLU as glu
+        
+        if config.FULLSCREEN:
+            opengl_screen = pygame.display.set_mode(
+                (config.SCREEN_WIDTH, config.SCREEN_HEIGHT), 
+                pygame.FULLSCREEN | pygame.OPENGL | pygame.DOUBLEBUF
+            )
+        else:
+            opengl_screen = pygame.display.set_mode(
+                (config.SCREEN_WIDTH, config.SCREEN_HEIGHT), 
+                pygame.OPENGL | pygame.DOUBLEBUF
+            )
+        
+        # Set up OpenGL viewport
+        gl.glViewport(0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT)
+        
+        current_display_mode = "OPENGL"
+        logger.info("OpenGL display mode initialized")
+        return opengl_screen
+        
+    except ImportError:
+        logger.error("OpenGL not available, cannot switch to OpenGL mode")
+        return None
+    except Exception as e:
+        logger.error(f"Failed to initialize OpenGL display: {e}")
+        return None
+
+def _needs_opengl_mode(app_state):
+    """Check if current state needs OpenGL mode."""
+    if app_state.current_state == STATE_SCHEMATICS:
+        # Check if current ship model is OpenGL Test AND pause menu is not active
+        current_ship_info = app_state.ship_manager.get_current_ship_info()
+        if (current_ship_info and 
+            current_ship_info.get('model_key') == 'opengl_test' and
+            not app_state.schematics_pause_menu_active):
+            return True
+    return False
+
+def _switch_display_mode_if_needed(app_state):
+    """Switch display mode if needed for current state."""
+    global current_display_mode
+    
+    needs_opengl = _needs_opengl_mode(app_state)
+    
+    if needs_opengl and current_display_mode != "OPENGL":
+        # Switch to OpenGL mode
+        import config
+        screen = _init_opengl_display(config)
+        if screen:
+            # Reset any existing OpenGL renderers since we have a new context
+            if hasattr(app_state, 'ship_manager') and app_state.ship_manager.opengl_renderer:
+                app_state.ship_manager.opengl_renderer.reset_for_new_context()
+            logger.info("Switched to OpenGL display mode")
+            return screen
+        else:
+            logger.warning("Failed to switch to OpenGL mode, staying in normal mode")
+            return pygame.display.get_surface()
+    
+    elif not needs_opengl and current_display_mode != "NORMAL":
+        # Switch back to normal mode
+        import config
+        screen = _init_normal_display(config)
+        logger.info("Switched back to normal display mode")
+        return screen
+    
+    # No mode change needed
+    return pygame.display.get_surface()
+
 def update_display(screen, app_state, sensor_values, sensor_history, fonts, config_module):
     """
     Updates the display based on the current application state.
@@ -95,6 +183,12 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
     """
     if not screen or not fonts:
         logger.error("Screen or fonts not initialized for drawing.")
+        return
+    
+    # Check if we need to switch display modes
+    screen = _switch_display_mode_if_needed(app_state)
+    if not screen:
+        logger.error("Failed to get valid display surface")
         return
         
     # Draw the appropriate view based on app state
@@ -115,7 +209,12 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         draw_settings_view(screen, app_state, fonts, config_module)
     elif app_state.current_state == STATE_SCHEMATICS:
         # Schematics state will show the 3D model viewer
-        draw_schematics_view(screen, app_state, fonts, config_module)
+        if current_display_mode == "OPENGL":
+            # For OpenGL mode, we need special handling
+            _render_opengl_schematics(screen, app_state, fonts, config_module)
+        else:
+            # Normal mode rendering
+            draw_schematics_view(screen, app_state, fonts, config_module)
     elif app_state.current_state == STATE_SHIP_MENU:
         # Ship selection menu
         draw_ship_menu_view(screen, app_state, fonts, config_module)
@@ -166,4 +265,17 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
         
     # Update the display
-    pygame.display.flip()
+    if current_display_mode == "OPENGL":
+        pygame.display.flip()
+    else:
+        pygame.display.flip()
+
+def _render_opengl_schematics(screen, app_state, fonts, config_module):
+    """Handle OpenGL rendering for schematics view with full UI controls."""
+    # Import here to avoid circular imports
+    from ui.views.ship_3d_viewer import draw_schematics_view
+    
+    # Use the normal schematics view which handles all controls,
+    # but the ship manager will automatically use OpenGL rendering
+    # when the current model is 'opengl_test'
+    draw_schematics_view(screen, app_state, fonts, config_module)

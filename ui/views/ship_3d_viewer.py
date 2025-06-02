@@ -33,30 +33,44 @@ def draw_schematics_view(screen, app_state, fonts, config_module):
             else:
                 logger.warning(f"3D Viewer: Failed to load ship model '{ship_model_key}', using default")
     
-    # Update rotation from sensors (this happens every frame)
-    sensor_updated = app_state.ship_manager.update_rotation_from_sensors()
+    # Check if we're using OpenGL mode
+    current_ship_info = app_state.ship_manager.get_current_ship_info()
+    is_opengl_mode = (current_ship_info and 
+                     current_ship_info.get('model_key') == 'opengl_test')
+    
+    # For OpenGL mode, we need to handle pause menu differently since we can't draw pygame UI on top
+    if is_opengl_mode and app_state.schematics_pause_menu_active:
+        # In OpenGL mode, draw pause menu using regular pygame (will switch display mode)
+        _draw_pause_menu(screen, app_state, fonts, config_module)
+        return
+    
+    # Update rotation from sensors only if in auto mode
+    if app_state.ship_manager.auto_rotation_mode:
+        sensor_updated = app_state.ship_manager.update_rotation_from_sensors()
     
     # Render the 3D ship
     app_state.ship_manager.render_ship(screen, fonts, config_module)
     
-    # Draw pause menu if active
-    if app_state.schematics_pause_menu_active:
-        _draw_pause_menu(screen, app_state, fonts, config_module)
-    else:
-        # Draw footer with controls when pause menu is not active
-        key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
-        key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
-        
-        hint_text = f"< {key_prev_name}/{key_next_name}=Rotate | Hold {key_next_name} or Middle Press=Menu >"
-        
-        render_footer(
-            screen,
-            hint_text,
-            fonts,
-            config_module.Theme.FOREGROUND,
-            screen.get_width(),
-            screen.get_height()
-        )
+    # Only draw UI elements if not in OpenGL mode (since we can't overlay pygame UI on OpenGL)
+    if not is_opengl_mode:
+        # Draw pause menu if active
+        if app_state.schematics_pause_menu_active:
+            _draw_pause_menu(screen, app_state, fonts, config_module)
+        else:
+            # Draw footer with controls when pause menu is not active
+            key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
+            key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
+            
+            hint_text = f"< {key_prev_name}/{key_next_name}=Rotate | Hold {key_next_name} or Middle Press=Menu >"
+            
+            render_footer(
+                screen,
+                hint_text,
+                fonts,
+                config_module.Theme.FOREGROUND,
+                screen.get_width(),
+                screen.get_height()
+            )
 
 def _draw_pause_menu(screen, app_state, fonts, config_module):
     """Draw the pause menu overlay for the 3D viewer - simplified like confirmation dialog."""

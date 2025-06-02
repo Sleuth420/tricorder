@@ -133,25 +133,25 @@ class PasswordEntryManager:
         
         logger.info(f"Character selection: selected '{selected}', current password length: {len(self.current_password)}")
         
-        if selected == 'BACKSPACE':
+        if selected == 'DELETE':
             if self.current_password:
                 removed_char = self.current_password[-1]
                 self.current_password = self.current_password[:-1]
-                logger.info(f"Backspace: removed '{removed_char}', new length: {len(self.current_password)}")
+                logger.info(f"Delete: removed '{removed_char}', new length: {len(self.current_password)}")
             else:
-                logger.debug("Backspace pressed but password is empty")
+                logger.debug("Delete pressed but password is empty")
             return True
             
         elif selected == 'CAPS':
             # Toggle caps lock
             return self.character_selector.toggle_caps_lock()
             
-        elif selected == 'TOGGLE_SHOW':
+        elif selected == 'SHOW':
             self.show_password = not self.show_password
             logger.info(f"Password visibility toggled: {self.show_password}")
             return True
             
-        elif selected == 'CONNECT':
+        elif selected == 'GO':
             if self.current_password or self._is_open_network():
                 ssid = self.target_network.get('ssid', 'Unknown') if self.target_network else 'Unknown'
                 logger.info(f"Connect requested for '{ssid}' with password length: {len(self.current_password)}")

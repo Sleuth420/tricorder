@@ -14,34 +14,20 @@ class CharacterSelector:
         self.screen_rect = screen_rect
         self.config = config_module
         
-        # Detect screen size for optimization
-        self.is_small_screen = screen_rect.width <= 400 or screen_rect.height <= 300
-        
-        # Use appropriate fonts based on screen size
+        # Use fonts
         self._setup_fonts(fonts)
         
         # Caps lock state
         self.caps_lock = False
         
-        # Character grid layout - optimized for small screens
-        if self.is_small_screen:
-            # Compact layout for 320x240 screens
-            self.characters = [
-                ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-                ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
-                ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', '@'],
-                ['z', 'x', 'c', 'v', 'b', 'n', 'm', '.', '-', '_'],
-                ['SPACE', 'CAPS', 'BACKSPACE', 'SHOW', 'CONNECT']  # Full names for clarity
-            ]
-        else:
-            # Full layout for larger screens
-            self.characters = [
-                ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-                ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
-                ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';'],
-                ['z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/'],
-                ['SPACE', 'CAPS', 'BACKSPACE', 'TOGGLE_SHOW', 'CONNECT', 'CANCEL']
-            ]
+        # Single character grid layout
+        self.characters = [
+            ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+            ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+            ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', '@'],
+            ['z', 'x', 'c', 'v', 'b', 'n', 'm', '.', '-', '_'],
+            ['SPACE', 'CAPS', 'DELETE', 'SHOW', 'GO', 'CANCEL']
+        ]
         
         # Cursor position
         self.cursor_row = 0
@@ -50,41 +36,25 @@ class CharacterSelector:
         # Layout calculations
         self._calculate_layout()
         
-        logger.info(f"Character selector initialized for {'small' if self.is_small_screen else 'large'} screen "
-                   f"({screen_rect.width}x{screen_rect.height}) with cursor at ({self.cursor_row}, {self.cursor_col})")
+        logger.info(f"Character selector initialized for {screen_rect.width}x{screen_rect.height} with cursor at ({self.cursor_row}, {self.cursor_col})")
 
     def _setup_fonts(self, fonts):
-        """Setup fonts based on screen size."""
+        """Setup fonts."""
         try:
-            if self.is_small_screen:
-                # Smaller fonts for 320x240 screens
-                self.char_font = fonts.get('small', pygame.font.Font(None, 12)) if fonts else pygame.font.Font(None, 12)
-                self.title_font = fonts.get('small', pygame.font.Font(None, 14)) if fonts else pygame.font.Font(None, 14)
-                self.footer_font = fonts.get('small', pygame.font.Font(None, 10)) if fonts else pygame.font.Font(None, 10)
-                logger.info("Character selector using small screen fonts")
-            else:
-                # Standard fonts for larger screens
-                self.char_font = fonts.get('small', pygame.font.Font(None, 16)) if fonts else pygame.font.Font(None, 16)
-                self.title_font = fonts.get('medium', pygame.font.Font(None, 20)) if fonts else pygame.font.Font(None, 20)
-                self.footer_font = fonts.get('small', pygame.font.Font(None, 14)) if fonts else pygame.font.Font(None, 14)
-                logger.info("Character selector using standard screen fonts")
-                
+            self.char_font = fonts.get('small', pygame.font.Font(None, 16)) if fonts else pygame.font.Font(None, 16)
+            self.title_font = fonts.get('medium', pygame.font.Font(None, 20)) if fonts else pygame.font.Font(None, 20)
+            self.footer_font = fonts.get('small', pygame.font.Font(None, 14)) if fonts else pygame.font.Font(None, 14)
             self.fonts = fonts
-            
+            logger.info("Character selector fonts loaded")
+                
         except Exception as e:
             logger.warning(f"Error setting up fonts, using pygame defaults: {e}")
-            # Fallback to pygame default fonts
-            if self.is_small_screen:
-                self.char_font = pygame.font.Font(None, 12)
-                self.title_font = pygame.font.Font(None, 14)
-                self.footer_font = pygame.font.Font(None, 10)
-            else:
-                self.char_font = pygame.font.Font(None, 16)
-                self.title_font = pygame.font.Font(None, 20)
-                self.footer_font = pygame.font.Font(None, 14)
+            self.char_font = pygame.font.Font(None, 16)
+            self.title_font = pygame.font.Font(None, 20)
+            self.footer_font = pygame.font.Font(None, 14)
             self.fonts = None
         
-        # Test font rendering immediately
+        # Test font rendering
         try:
             test_surface = self.char_font.render("A", True, (255, 255, 255))
             logger.info(f"Font test successful - rendered 'A' with size {test_surface.get_size()}")
@@ -92,19 +62,11 @@ class CharacterSelector:
             logger.error(f"Font rendering test failed: {e}")
 
     def _calculate_layout(self):
-        """Calculate the layout dimensions optimized for screen size."""
-        if self.is_small_screen:
-            # Compact layout for 320x240 screens
-            title_height = 16
-            password_field_height = 18
-            footer_height = 24
-            padding = 2
-        else:
-            # Standard layout for larger screens
-            title_height = 30
-            password_field_height = 40
-            footer_height = 60
-            padding = 20
+        """Calculate the layout dimensions."""
+        title_height = 30
+        password_field_height = 40
+        footer_height = 60
+        padding = 20
         
         # Available space for character grid
         available_height = (self.screen_rect.height - 
@@ -118,13 +80,9 @@ class CharacterSelector:
         self.cell_width = available_width // max_cols
         self.cell_height = available_height // num_rows
         
-        # Ensure minimum cell size for usability
-        if self.is_small_screen:
-            min_cell_width = 24
-            min_cell_height = 16
-        else:
-            min_cell_width = 40
-            min_cell_height = 25
+        # Ensure minimum cell size
+        min_cell_width = 40
+        min_cell_height = 25
             
         self.cell_width = max(self.cell_width, min_cell_width)
         self.cell_height = max(self.cell_height, min_cell_height)
@@ -147,8 +105,7 @@ class CharacterSelector:
         self.footer_height = footer_height
         self.padding = padding
         
-        logger.debug(f"Layout calculated for {'small' if self.is_small_screen else 'large'} screen: "
-                    f"grid at ({self.grid_x}, {self.grid_y}), cell size ({self.cell_width}, {self.cell_height})")
+        logger.debug(f"Layout calculated: grid at ({self.grid_x}, {self.grid_y}), cell size ({self.cell_width}, {self.cell_height})")
 
     def navigate(self, direction):
         """Navigate the cursor in the specified direction."""
@@ -219,9 +176,8 @@ class CharacterSelector:
             # Draw character grid
             self._draw_character_grid(screen)
             
-            # Draw footer (only for larger screens to save space)
-            if not self.is_small_screen:
-                self._draw_footer(screen)
+            # Draw footer
+            self._draw_footer(screen)
             
             logger.debug(f"Character selector drawn successfully, cursor at ({self.cursor_row}, {self.cursor_col})")
             
@@ -234,10 +190,6 @@ class CharacterSelector:
     def _draw_title(self, screen, title):
         """Draw the title at the top."""
         try:
-            # Truncate title for small screens
-            if self.is_small_screen and len(title) > 25:
-                title = title[:22] + "..."
-                
             title_surface = self.title_font.render(title, True, self.config.Theme.FOREGROUND)
             title_rect = title_surface.get_rect(centerx=self.screen_rect.centerx, y=self.title_y)
             screen.blit(title_surface, title_rect)
@@ -248,21 +200,15 @@ class CharacterSelector:
     def _draw_password_field(self, screen, text, show_password):
         """Draw the password input field."""
         try:
-            # Adjust field size for small screens
-            if self.is_small_screen:
-                field_rect = pygame.Rect(self.padding, self.password_y, 
-                                       self.screen_rect.width - self.padding * 2, 16)
-            else:
-                field_rect = pygame.Rect(20, self.password_y, self.screen_rect.width - 40, 30)
-                
+            field_rect = pygame.Rect(20, self.password_y, self.screen_rect.width - 40, 30)
             pygame.draw.rect(screen, self.config.Theme.MENU_SELECTED_BG, field_rect)
             pygame.draw.rect(screen, self.config.Theme.FOREGROUND, field_rect, 1)
             
             # Display text
             display_text = text if show_password else '*' * len(text)
             
-            # Truncate text based on screen size
-            max_chars = 40 if self.is_small_screen else 30
+            # Truncate text if too long
+            max_chars = 30
             if len(display_text) > max_chars:
                 display_text = display_text[-max_chars:]
                 
@@ -270,12 +216,11 @@ class CharacterSelector:
             text_rect = text_surface.get_rect(centery=field_rect.centery, x=field_rect.x + 3)
             screen.blit(text_surface, text_rect)
             
-            # Show character count (only on larger screens to save space)
-            if not self.is_small_screen:
-                count_text = f"({len(text)}/63)"
-                count_surface = self.footer_font.render(count_text, True, self.config.Theme.FOREGROUND)
-                count_rect = count_surface.get_rect(centery=field_rect.centery, right=field_rect.right - 5)
-                screen.blit(count_surface, count_rect)
+            # Show character count
+            count_text = f"({len(text)}/63)"
+            count_surface = self.footer_font.render(count_text, True, self.config.Theme.FOREGROUND)
+            count_rect = count_surface.get_rect(centery=field_rect.centery, right=field_rect.right - 5)
+            screen.blit(count_surface, count_rect)
             
             logger.debug(f"Password field drawn with {len(text)} characters, show_password={show_password}")
             
@@ -292,8 +237,8 @@ class CharacterSelector:
                     x = self.grid_x + col_idx * self.cell_width
                     y = self.grid_y + row_idx * self.cell_height
                     
-                    # Cell rectangle with reduced spacing
-                    cell_padding = 1 if self.is_small_screen else 2
+                    # Cell rectangle
+                    cell_padding = 2
                     cell_rect = pygame.Rect(x + cell_padding, y + cell_padding, 
                                           self.cell_width - cell_padding * 2, 
                                           self.cell_height - cell_padding * 2)
@@ -310,7 +255,7 @@ class CharacterSelector:
                         # Draw thin border for unselected cells
                         pygame.draw.rect(screen, self.config.Theme.FOREGROUND, cell_rect, 1)
                     
-                    # Character text - don't truncate action names anymore
+                    # Character text
                     try:
                         display_char = char
                         
@@ -352,12 +297,8 @@ class CharacterSelector:
             logger.error(f"Error drawing character grid: {e}", exc_info=True)
 
     def _draw_footer(self, screen):
-        """Draw the footer with instructions (only for larger screens)."""
+        """Draw the footer with instructions."""
         try:
-            if self.is_small_screen:
-                # Skip footer on small screens to save space
-                return
-                
             instructions = [
                 "A/D: Navigate | Joystick: Move cursor",
                 "ENTER: Select character | Hold A: Cancel"

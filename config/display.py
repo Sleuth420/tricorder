@@ -23,4 +23,4 @@ GRAPH_POINT_SIZE = 2     # Size of the data points in pixels
 
 # -- Splash Screen --
 SPLASH_LOGO_PATH = "assets/images/logo.png"
-SPLASH_DURATION_MS = 3000 
+SPLASH_DURATION_MS = 3000  # Note: Loading screen now has minimum 5 seconds with progress bar 

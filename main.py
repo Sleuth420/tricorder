@@ -7,9 +7,10 @@ import pygame
 import logging
 import time
 import platform
+import os
+import threading
 
 # Force SDL to use x11 video driver BEFORE pygame.init() - but only on Linux
-import os
 if platform.system() == "Linux":
     os.environ["SDL_VIDEODRIVER"] = "x11"
 
@@ -29,6 +30,134 @@ from input.input_handler import process_input, init_joystick
 
 # Get a logger for this module
 logger = logging.getLogger(__name__)
+
+def count_python_lines():
+    """Count all lines of Python code in the project, excluding unwanted directories and files."""
+    exclude_dirs = {'__pycache__', 'venv', 'venv_windows', '.git', 'logs', 'assets'}
+    exclude_extensions = {'.txt', '.md', '.png', '.jpg', '.jpeg', '.gif', '.json', '.log', '.gitignore'}
+    exclude_files = {'config_old.py'}  # Specific files to exclude
+    
+    total_lines = 0
+    python_files = []
+    
+    for root, dirs, files in os.walk('.'):
+        # Remove excluded directories from dirs list to prevent os.walk from entering them
+        dirs[:] = [d for d in dirs if d not in exclude_dirs]
+        
+        for file in files:
+            file_path = os.path.join(root, file)
+            file_ext = os.path.splitext(file)[1].lower()
+            
+            # Only count .py files, but exclude specific files
+            if file_ext == '.py' and file not in exclude_files:
+                try:
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        lines = len(f.readlines())
+                        total_lines += lines
+                        python_files.append((file_path, lines))
+                except Exception as e:
+                    logger.warning(f"Could not read {file_path}: {e}")
+    
+    logger.info(f"Counted {total_lines} lines of Python code across {len(python_files)} files")
+    return total_lines, python_files
+
+def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage_text):
+    """Draw the loading screen with splash logo, progress bar, and line count."""
+    screen.fill(config.Theme.BACKGROUND)
+    
+    # Draw the splash logo
+    screen.blit(logo_splash, logo_rect)
+    
+    # Loading bar dimensions
+    bar_width = int(screen.get_width() * 0.6)
+    bar_height = 20
+    bar_x = (screen.get_width() - bar_width) // 2
+    bar_y = logo_rect.bottom + 40
+    
+    # Draw loading bar background
+    bar_bg_rect = pygame.Rect(bar_x - 2, bar_y - 2, bar_width + 4, bar_height + 4)
+    pygame.draw.rect(screen, config.Theme.FOREGROUND, bar_bg_rect)
+    pygame.draw.rect(screen, config.Theme.BACKGROUND, pygame.Rect(bar_x, bar_y, bar_width, bar_height))
+    
+    # Draw loading bar fill
+    fill_width = int(bar_width * progress)
+    if fill_width > 0:
+        fill_rect = pygame.Rect(bar_x, bar_y, fill_width, bar_height)
+        pygame.draw.rect(screen, config.Theme.ACCENT, fill_rect)
+    
+    # Draw progress percentage
+    try:
+        progress_font = fonts.get('medium', pygame.font.Font(None, config.FONT_SIZE_MEDIUM))
+    except:
+        progress_font = pygame.font.Font(None, config.FONT_SIZE_MEDIUM)
+    
+    progress_text = f"{int(progress * 100)}%"
+    progress_surface = progress_font.render(progress_text, True, config.Theme.FOREGROUND)
+    progress_rect = progress_surface.get_rect(center=(screen.get_width() // 2, bar_y + bar_height + 25))
+    screen.blit(progress_surface, progress_rect)
+    
+    # Draw current stage text
+    stage_surface = progress_font.render(stage_text, True, config.Theme.FOREGROUND)
+    stage_rect = stage_surface.get_rect(center=(screen.get_width() // 2, progress_rect.bottom + 20))
+    screen.blit(stage_surface, stage_rect)
+    
+    # Draw line count if available
+    if total_lines > 0:
+        lines_text = f"Python Lines: {current_lines:,} / {total_lines:,}"
+        lines_surface = progress_font.render(lines_text, True, config.Theme.ACCENT)
+        lines_rect = lines_surface.get_rect(center=(screen.get_width() // 2, stage_rect.bottom + 20))
+        screen.blit(lines_surface, lines_rect)
+    
+    pygame.display.flip()
+
+class LoadingProgress:
+    """Thread-safe loading progress tracker."""
+    def __init__(self):
+        self.current_lines = 0
+        self.total_lines = 0
+        self.stage = "Initializing..."
+        self.complete = False
+        self.lock = threading.Lock()
+    
+    def update(self, current_lines=None, total_lines=None, stage=None, complete=None):
+        with self.lock:
+            if current_lines is not None:
+                self.current_lines = current_lines
+            if total_lines is not None:
+                self.total_lines = total_lines
+            if stage is not None:
+                self.stage = stage
+            if complete is not None:
+                self.complete = complete
+    
+    def get_status(self):
+        with self.lock:
+            return self.current_lines, self.total_lines, self.stage, self.complete
+
+def loading_worker(progress_tracker):
+    """Background worker that performs the actual loading tasks."""
+    try:
+        # Stage 1: Count Python lines
+        progress_tracker.update(stage="Counting Python files...")
+        time.sleep(0.5)  # Small delay to show the stage
+        
+        total_lines, python_files = count_python_lines()
+        progress_tracker.update(total_lines=total_lines, current_lines=total_lines)
+        
+        # Stage 2: Initialize sensors (if not already done)
+        progress_tracker.update(stage="Initializing sensors...")
+        time.sleep(0.5)
+        
+        # Stage 3: Preparing system
+        progress_tracker.update(stage="Preparing system...")
+        time.sleep(0.5)
+        
+        # Stage 4: Loading complete
+        progress_tracker.update(stage="Loading complete!", complete=True)
+        
+    except Exception as e:
+        logger.error(f"Error in loading worker: {e}", exc_info=True)
+        progress_tracker.update(stage="Loading completed with errors", complete=True)
 
 def display_critical_error_on_screen(screen, fonts, config_module, messages):
     """Helper function to display critical error messages if possible."""
@@ -89,24 +218,71 @@ def main():
 
     exit_code = 0
     try:
-        # Non-critical Initializations (splash, sensors)
+        # Non-critical Initializations (loading screen with splash, sensors)
         try:
             logo_splash = pygame.image.load(config.SPLASH_LOGO_PATH).convert_alpha()
-            # Scale the logo to be 80% of screen width while maintaining aspect ratio
+            # Scale the logo to be 60% of screen width while maintaining aspect ratio (reduced to make room for loading elements)
             screen_width = screen.get_width()
-            target_width = int(screen_width * 0.8)
+            target_width = int(screen_width * 0.6)
             aspect_ratio = logo_splash.get_height() / logo_splash.get_width()
             target_height = int(target_width * aspect_ratio)
             logo_splash = pygame.transform.smoothscale(logo_splash, (target_width, target_height))
-            logo_rect = logo_splash.get_rect(center=screen.get_rect().center)
-            screen.fill(config.Theme.BACKGROUND)
-            screen.blit(logo_splash, logo_rect)
-            pygame.display.flip()
-            logger.info("Displaying splash screen...")
-            pygame.time.wait(config.SPLASH_DURATION_MS)
-            logger.info("Splash screen finished.")
+            # Position logo higher to make room for loading elements
+            logo_center_y = screen.get_height() // 3
+            logo_rect = logo_splash.get_rect(center=(screen.get_width() // 2, logo_center_y))
+            
+            logger.info("Starting loading screen...")
+            
+            # Create progress tracker and start loading worker
+            progress_tracker = LoadingProgress()
+            loading_thread = threading.Thread(target=loading_worker, args=(progress_tracker,))
+            loading_thread.daemon = True
+            loading_thread.start()
+            
+            # Loading screen loop - minimum 5 seconds
+            loading_start_time = time.time()
+            minimum_loading_time = 5.0  # 5 seconds minimum
+            
+            while True:
+                current_time = time.time()
+                elapsed_time = current_time - loading_start_time
+                
+                # Get current loading status
+                current_lines, total_lines, stage, complete = progress_tracker.get_status()
+                
+                # Calculate progress (combination of time and completion)
+                time_progress = min(elapsed_time / minimum_loading_time, 1.0)
+                
+                # If loading is complete and minimum time has passed
+                if complete and elapsed_time >= minimum_loading_time:
+                    progress = 1.0
+                    draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage)
+                    time.sleep(0.5)  # Brief pause to show 100%
+                    break
+                elif complete:
+                    # Loading done but minimum time not reached - show time-based progress
+                    progress = time_progress
+                else:
+                    # Loading not done - show partial progress based on time
+                    progress = time_progress * 0.9  # Max 90% until actually complete
+                
+                # Draw the loading screen
+                draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage)
+                
+                # Handle quit events during loading
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        logger.info("pygame.QUIT event received during loading. Exiting.")
+                        pygame.quit()
+                        sys.exit(0)
+                
+                # Small delay to prevent excessive CPU usage
+                time.sleep(0.1)
+            
+            logger.info("Loading screen finished.")
+            
         except Exception as e_splash:
-            logger.warning(f"Could not load or display splash screen logo: {e_splash}", exc_info=True)
+            logger.warning(f"Could not load or display loading screen: {e_splash}", exc_info=True)
 
         try:
             sensors_active = sensors.init_sensors()

@@ -19,6 +19,7 @@ STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
 STATE_SETTINGS_BLUETOOTH = "SETTINGS_BLUETOOTH"
 STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
 STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
+STATE_SETTINGS_CONTROLS = "SETTINGS_CONTROLS"
 
 import config as app_config
 
@@ -200,6 +201,11 @@ class MenuManager:
             MenuItem(
                 name="Display Settings", # For Auto-Cycle Interval
                 target_state=STATE_SETTINGS_DISPLAY,
+                color_key="SIDEBAR_SYSTEM" # Example color
+            ),
+            MenuItem(
+                name="Controls", # New Controls menu item
+                target_state=STATE_SETTINGS_CONTROLS,
                 color_key="SIDEBAR_SYSTEM" # Example color
             ),
             MenuItem(

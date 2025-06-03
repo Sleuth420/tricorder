@@ -23,6 +23,7 @@ STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
 STATE_SETTINGS_BLUETOOTH = "SETTINGS_BLUETOOTH"
 STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
 STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
+STATE_SETTINGS_CONTROLS = "SETTINGS_CONTROLS"
 STATE_SELECT_COMBO_DURATION = "SELECT_COMBO_DURATION"
 STATE_SETTINGS_WIFI_NETWORKS = "SETTINGS_WIFI_NETWORKS"
 STATE_WIFI_PASSWORD_ENTRY = "WIFI_PASSWORD_ENTRY"
@@ -67,6 +68,8 @@ class InputRouter:
             return self._handle_display_settings_input(action)
         elif current_state == STATE_SETTINGS_DEVICE:
             return self._handle_device_settings_input(action)
+        elif current_state == STATE_SETTINGS_CONTROLS:
+            return self._handle_controls_settings_input(action)
         elif current_state == STATE_SELECT_COMBO_DURATION:
             return self._handle_select_combo_duration_input(action)
         elif current_state in [STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP]:
@@ -97,7 +100,7 @@ class InputRouter:
             return self._handle_schematics_menu_back()
         elif current_state == STATE_SETTINGS:
             return self._handle_settings_main_menu_back()
-        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY]:
+        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY]:
             logger.info(f"BACK from {current_state}, returning to appropriate parent")
             if current_state == STATE_SELECT_COMBO_DURATION:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_DEVICE)
@@ -306,6 +309,15 @@ class InputRouter:
             elif result == "CONFIRM_RESTART_APP":
                 return self.app_state.state_manager.transition_to(STATE_CONFIRM_RESTART_APP)
         return result
+
+    def _handle_controls_settings_input(self, action):
+        """Handle input for the Controls Settings view."""
+        if action == app_config.INPUT_ACTION_NEXT:
+            return self.app_state.controls_manager.navigate_next()
+        elif action == app_config.INPUT_ACTION_PREV:
+            return self.app_state.controls_manager.navigate_prev()
+        # Back action is handled by the universal back handler
+        return False
 
     def _handle_confirmation_input(self, action):
         """Handle confirmation input."""

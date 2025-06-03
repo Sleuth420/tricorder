@@ -11,6 +11,7 @@ from .game_manager import GameManager
 from .schematics_manager import SchematicsManager
 from .settings_manager import SettingsManager
 from .device_manager import DeviceManager
+from .controls_manager import ControlsManager
 from .loading_manager import LoadingManager
 from .wifi_manager import WifiManager, WIFI_ACTION_TOGGLE, WIFI_ACTION_BACK_TO_SETTINGS, WIFI_ACTION_BROWSE_NETWORKS, WIFI_ACTION_BACK_TO_WIFI, WIFI_ACTION_CONNECT_TO_NETWORK, WIFI_ACTION_ENTER_PASSWORD # Import WifiManager and relevant actions
 from .password_entry_manager import PasswordEntryManager
@@ -37,6 +38,7 @@ STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
 STATE_SETTINGS_BLUETOOTH = "SETTINGS_BLUETOOTH"
 STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
 STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
+STATE_SETTINGS_CONTROLS = "SETTINGS_CONTROLS"
 STATE_SELECT_COMBO_DURATION = "SELECT_COMBO_DURATION" # New state for selecting combo duration
 
 # WiFi Sub-States
@@ -88,6 +90,7 @@ class AppState:
         self.schematics_manager = SchematicsManager(config_module, screen_width, screen_height)
         self.settings_manager = SettingsManager(config_module)
         self.device_manager = DeviceManager(config_module)
+        self.controls_manager = ControlsManager(config_module)
         self.loading_manager = LoadingManager(config_module, screen_width, screen_height)
         self.wifi_manager = WifiManager(config_module) # Instantiate WifiManager (no command func needed)
         # Password entry manager - initialized with screen dimensions
@@ -177,6 +180,12 @@ class AppState:
     def pending_device_action(self):
         """Get pending device action."""
         return self.device_manager.pending_device_action
+    
+    # Controls Manager Properties for UI compatibility
+    @property
+    def controls_index(self):
+        """Get controls view index."""
+        return self.controls_manager.get_current_index()
 
     @property
     def menu_items(self):

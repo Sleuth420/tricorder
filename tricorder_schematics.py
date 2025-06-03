@@ -14,7 +14,7 @@ from data.sensors import get_orientation # Or a more advanced filtered orientati
 logger = logging.getLogger(__name__)
 
 # --- Constants ---
-MODEL_PATH = "assets/stargate_304/X304_ship.glb" # Correct path to your model
+MODEL_PATH = "assets/apollo_ncc1570/Apollo_NCC1570.glb" # Correct path to your model
 FOV = 45  # Field of view for perspective projection
 NEAR_CLIP = 0.1
 FAR_CLIP = 100.0

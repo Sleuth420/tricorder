@@ -10,6 +10,8 @@ from data import sensors
 # OpenGL imports (optional - will be checked for availability)
 try:
     from ui.components.opengl_renderer import OpenGLRenderer
+    from ui.components.opengl_model_renderer import OpenGLModelRenderer
+    from ui.components.obj_loader import OBJLoader
     OPENGL_AVAILABLE = True
 except ImportError:
     OPENGL_AVAILABLE = False
@@ -86,7 +88,7 @@ class ShipManager:
         self.ship_models = {
             'test_cube': self._generate_test_cube(),
             'opengl_test': self._generate_opengl_test(),
-            'stargate_sg1_x304': self._generate_stargate_placeholder()
+            'apollo_1570': self._generate_apollo_model()
         }
         
         # Current active model
@@ -95,6 +97,10 @@ class ShipManager:
         # Initialize renderers
         self.wireframe_renderer = Simple3DRenderer(screen_width, screen_height)
         self.opengl_renderer = None  # Created on demand
+        self.model_renderer = None   # Created on demand for OBJ models
+        
+        # Loaded OBJ models cache
+        self.loaded_obj_models = {}  # Cache for loaded OBJ models
         
         # Sensor smoothing for noise reduction
         self.smoothing_enabled = True
@@ -141,16 +147,17 @@ class ShipManager:
             "description": "GPU-rendered green cube with real OpenGL shaders"
         }
     
-    def _generate_stargate_placeholder(self):
-        """Generate placeholder for Stargate X-304 model."""
+    def _generate_apollo_model(self):
+        """Generate Apollo OpenGL model definition."""
         return {
-            "name": "Stargate SG-1 X-304",
-            "type": "model_file",
-            "file_path": "assets/stargate_304/X304_ship.obj",
-            "implemented": False,
-            "vertices": [],
+            "name": "Apollo NCC-1570",
+            "type": "opengl_model",
+            "model_key": "apollo_1570",
+            "file_path": "assets/apollo_ncc1570/Apollo_NCC1570.obj",
+            "implemented": True,
+            "vertices": [],  # Will be loaded from OBJ file
             "edges": [],
-            "description": "Daedalus-class battlecruiser from Stargate SG-1"
+            "description": "Apollo-class light cruiser from Star Trek"
         }
     
     def set_ship_model(self, ship_model_key):
@@ -292,6 +299,8 @@ class ShipManager:
         # Handle different model types
         if ship_model.get('type') == 'opengl':
             self._render_opengl_model(screen, ship_model, fonts, config_module, pause_menu_active, pause_menu_index)
+        elif ship_model.get('type') == 'opengl_model':
+            self._render_obj_model(screen, ship_model, fonts, config_module, pause_menu_active, pause_menu_index)
         elif ship_model.get('type') == 'model_file':
             if ship_model.get('implemented', False):
                 self._render_model_file(screen, ship_model, fonts, config_module)
@@ -387,6 +396,96 @@ class ShipManager:
         fallback_surface = fallback_font.render(fallback_text, True, config_module.Theme.FOREGROUND)
         fallback_rect = fallback_surface.get_rect(center=(screen.get_width()//2, error_rect.bottom + 30))
         screen.blit(fallback_surface, fallback_rect)
+    
+    def _render_obj_model(self, screen, ship_model, fonts, config_module, pause_menu_active=False, pause_menu_index=0):
+        """Render OBJ model using OpenGL with model renderer."""
+        if not OPENGL_AVAILABLE:
+            self._render_obj_fallback(screen, ship_model, fonts, config_module)
+            return
+        
+        try:
+            # Load OBJ model if not already loaded
+            obj_model = self._load_obj_model(ship_model)
+            if not obj_model:
+                self._render_obj_fallback(screen, ship_model, fonts, config_module)
+                return
+            
+            # Create model renderer if needed  
+            if not self.model_renderer:
+                self.model_renderer = OpenGLModelRenderer(
+                    self.screen_width, self.screen_height, self.config
+                )
+                logger.info("OpenGL model renderer created")
+            
+            # Load model into renderer if not already loaded
+            if not self.model_renderer.loaded_model:
+                success = self.model_renderer.load_model(obj_model)
+                if not success:
+                    logger.error("Failed to load OBJ model into renderer")
+                    self._render_obj_fallback(screen, ship_model, fonts, config_module)
+                    return
+            
+            # Render the model with text overlay and pause menu
+            success = self.model_renderer.render(
+                self.pitch, self.roll, self.yaw, fonts, ship_model,
+                pause_menu_active, pause_menu_index
+            )
+            
+            if not success:
+                # Fallback if OpenGL fails
+                self._render_obj_fallback(screen, ship_model, fonts, config_module)
+        except Exception as e:
+            logger.error(f"OBJ model rendering failed: {e}", exc_info=True)
+            self._render_obj_fallback(screen, ship_model, fonts, config_module)
+    
+    def _load_obj_model(self, ship_model):
+        """Load an OBJ model from file, with caching."""
+        file_path = ship_model.get('file_path')
+        if not file_path:
+            logger.error("No file path specified for OBJ model")
+            return None
+        
+        # Check cache first
+        if file_path in self.loaded_obj_models:
+            return self.loaded_obj_models[file_path]
+        
+        # Load from file
+        logger.info(f"Loading OBJ model from: {file_path}")
+        obj_model = OBJLoader.load(file_path)
+        
+        if obj_model:
+            # Cache the loaded model
+            self.loaded_obj_models[file_path] = obj_model
+            logger.info(f"OBJ model loaded and cached: {file_path}")
+        else:
+            logger.error(f"Failed to load OBJ model: {file_path}")
+        
+        return obj_model
+    
+    def _render_obj_fallback(self, screen, ship_model, fonts, config_module):
+        """Fallback rendering when OBJ model loading fails."""
+        screen.fill(config_module.Theme.BACKGROUND)
+        
+        font = fonts['medium']
+        error_text = f"Failed to Load: {ship_model['name']}"
+        error_surface = font.render(error_text, True, config_module.Theme.ALERT)
+        error_rect = error_surface.get_rect(center=(screen.get_width()//2, screen.get_height()//2 - 30))
+        screen.blit(error_surface, error_rect)
+        
+        # Show file path
+        path_font = fonts['small']
+        path_text = f"File: {ship_model.get('file_path', 'No path specified')}"
+        path_surface = path_font.render(path_text, True, config_module.Theme.FOREGROUND)
+        path_rect = path_surface.get_rect(center=(screen.get_width()//2, error_rect.bottom + 20))
+        screen.blit(path_surface, path_rect)
+        
+        # Show suggestions
+        suggestion_text = "Check if file exists and PyOpenGL is installed"
+        suggestion_surface = path_font.render(suggestion_text, True, config_module.Theme.FOREGROUND)
+        suggestion_rect = suggestion_surface.get_rect(center=(screen.get_width()//2, path_rect.bottom + 20))
+        screen.blit(suggestion_surface, suggestion_rect)
+        
+        self._draw_ship_info(screen, ship_model, fonts, config_module)
     
     def _render_model_file(self, screen, ship_model, fonts, config_module):
         """Render a 3D model from file (future implementation for X-304)."""

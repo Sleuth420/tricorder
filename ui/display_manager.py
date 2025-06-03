@@ -128,10 +128,13 @@ def _init_opengl_display(config):
 def _needs_opengl_mode(app_state):
     """Check if current state needs OpenGL mode."""
     if app_state.current_state == STATE_SCHEMATICS:
-        # Check if current ship model is OpenGL Test (pause menu doesn't matter - render in OpenGL)
+        # Check if current ship model needs OpenGL rendering
         current_ship_info = app_state.ship_manager.get_current_ship_info()
-        if current_ship_info and current_ship_info.get('model_key') == 'opengl_test':
-            return True
+        if current_ship_info:
+            model_key = current_ship_info.get('model_key')
+                    # OpenGL models need OpenGL mode
+        if model_key in ['opengl_test', 'apollo_1570']:
+                return True
     return False
 
 def _switch_display_mode_if_needed(app_state):

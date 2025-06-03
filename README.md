@@ -40,7 +40,7 @@ tricorder/
 │   └── pong.py             # Pong game logic
 ├── assets/
 │   ├── images/
-│   └── stargate_304/
+│   └── apollo_ncc1570/
 ├── input/
 │   ├── __init__.py
 │   └── input_handler.py    # Processes Pygame events into detailed input results

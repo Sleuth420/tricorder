@@ -136,9 +136,9 @@ class MenuManager:
                 color_key="SIDEBAR_SCHEMATICS"
             ),
             MenuItem(
-                name="Stargate SG-1 X-304", 
+                name="Apollo NCC-1570", 
                 target_state=STATE_SCHEMATICS,
-                data={"ship_model": "stargate_304", "ship_id": 3},
+                data={"ship_model": "apollo_1570", "ship_id": 3},
                 color_key="SIDEBAR_SCHEMATICS"
             ),
             MenuItem(

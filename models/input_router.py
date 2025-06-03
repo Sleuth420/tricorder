@@ -351,25 +351,32 @@ class InputRouter:
 
     def _handle_schematics_input(self, action):
         """Handle input for the 3D schematics viewer."""
+        logger.debug(f"Schematics input received: action='{action}'")
+        
         # Check if pause menu is active
         if self.app_state.schematics_pause_menu_active:
+            logger.debug("Pause menu is active, delegating to pause menu handler")
             return self._handle_schematics_pause_menu_input(action)
         
         # Check if we're in manual or auto rotation mode
         is_manual_mode = not self.app_state.ship_manager.auto_rotation_mode
+        logger.debug(f"Rotation mode: {'Manual' if is_manual_mode else 'Auto'}")
         
         if is_manual_mode:
             # Manual mode: A/D control rotation, long press A/D control up/down rotation
             if action == app_config.INPUT_ACTION_PREV:
                 # Left rotation (A key)
+                logger.debug("Manual mode: A key - applying LEFT rotation")
                 self.app_state.ship_manager.apply_manual_rotation('LEFT')
                 return True
             elif action == app_config.INPUT_ACTION_NEXT:
                 # Right rotation (D key)
+                logger.debug("Manual mode: D key - applying RIGHT rotation")
                 self.app_state.ship_manager.apply_manual_rotation('RIGHT')
                 return True
             elif action == app_config.INPUT_ACTION_SELECT:
                 # Toggle pause menu (middle press)
+                logger.info("Manual mode: SELECT (Enter) key - activating pause menu")
                 self.app_state.schematics_pause_menu_active = True
                 self.app_state.schematics_pause_menu_index = 0
                 logger.debug("Schematics: Pause menu activated")

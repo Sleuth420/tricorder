@@ -23,11 +23,18 @@ class LoadingScreen:
         self.status_text = "Loading..."
         self.detail_text = ""
         
-        # Visual parameters
-        self.bar_width = min(400, screen_width - 100)
-        self.bar_height = 20
-        self.bar_x = (screen_width - self.bar_width) // 2
-        self.bar_y = (screen_height // 2) + 50
+        # Visual parameters optimized for small screens
+        # Make progress bar much larger and use more screen space
+        if screen_width <= 320:  # Small screen optimizations
+            self.bar_width = screen_width - 40  # Use most of the width (was screen_width - 60)
+            self.bar_height = 45  # Much taller bar for visibility (was 30)
+            self.bar_x = 20  # Smaller side margins
+            self.bar_y = (screen_height // 2) + 20  # Position closer to center
+        else:  # Larger screens
+            self.bar_width = min(300, screen_width - 80)  # Wider than before
+            self.bar_height = 35  # Taller than original
+            self.bar_x = (screen_width - self.bar_width) // 2
+            self.bar_y = (screen_height // 2) + 40
         
         logger.info("Loading screen initialized")
     
@@ -57,73 +64,41 @@ class LoadingScreen:
         # Clear screen
         screen.fill(self.config.Theme.BACKGROUND)
         
-        # Draw title
+        # Draw title - bigger for small screens
         title_font = fonts.get('large', fonts.get('medium'))
         title_text = "TRICORDER"
         title_surface = title_font.render(title_text, True, self.config.Theme.ACCENT)
-        title_rect = title_surface.get_rect(center=(self.screen_width // 2, self.screen_height // 2 - 100))
+        # Position title higher for small screens to make room for larger progress bar
+        title_y = self.screen_height // 2 - 80 if self.screen_width <= 320 else self.screen_height // 2 - 60
+        title_rect = title_surface.get_rect(center=(self.screen_width // 2, title_y))
         screen.blit(title_surface, title_rect)
         
-        # Draw spinning animation
-        self._draw_spinner(screen, title_rect.centerx, title_rect.bottom + 30)
+        # Skip spinner - progress bar is enough for small screens
+        # Focus on one clear progress indicator instead of both
         
-        # Draw status text
-        status_font = fonts.get('medium', fonts.get('small'))
+        # Draw status text - bigger font and closer positioning
+        status_font = fonts.get('large' if self.screen_width <= 320 else 'medium', fonts.get('medium'))  # Bigger on small screens
         status_surface = status_font.render(self.status_text, True, self.config.Theme.FOREGROUND)
-        status_rect = status_surface.get_rect(center=(self.screen_width // 2, self.bar_y - 40))
+        status_rect = status_surface.get_rect(center=(self.screen_width // 2, self.bar_y - 60))  # More space for larger bar
         screen.blit(status_surface, status_rect)
         
-        # Draw detail text if provided
-        if self.detail_text:
-            detail_font = fonts.get('small', fonts.get('medium'))
-            detail_surface = detail_font.render(self.detail_text, True, self.config.Theme.FOREGROUND)
-            detail_rect = detail_surface.get_rect(center=(self.screen_width // 2, status_rect.bottom + 20))
-            screen.blit(detail_surface, detail_rect)
-        
-        # Draw progress bar
+        # Draw progress bar - larger and more prominent
         self._draw_progress_bar(screen)
         
-        # Draw footer
-        footer_font = fonts.get('small', fonts.get('medium'))
-        footer_text = "Please wait..."
-        footer_surface = footer_font.render(footer_text, True, self.config.Theme.FOREGROUND)
-        footer_rect = footer_surface.get_rect(center=(self.screen_width // 2, self.bar_y + 60))
-        screen.blit(footer_surface, footer_rect)
-    
-    def _draw_spinner(self, screen, center_x, center_y):
-        """Draw a spinning loading indicator."""
-        current_time = time.time()
-        angle = (current_time - self.start_time) * 180  # Degrees per second
-        
-        radius = 15
-        thickness = 3
-        
-        # Draw spinning arc
-        arc_length = 120  # Degrees
-        start_angle = angle % 360
-        end_angle = (start_angle + arc_length) % 360
-        
-        # Convert to radians for drawing
-        start_rad = math.radians(start_angle)
-        end_rad = math.radians(end_angle)
-        
-        # Draw arc using multiple small lines
-        steps = 20
-        for i in range(steps):
-            t = i / (steps - 1)
-            current_angle = start_rad + (end_rad - start_rad) * t
-            x = center_x + radius * math.cos(current_angle)
-            y = center_y + radius * math.sin(current_angle)
-            
-            # Draw small circle at this position
-            pygame.draw.circle(screen, self.config.Theme.ACCENT, (int(x), int(y)), thickness)
+        # Show detail text if provided and short enough for small screens
+        if self.detail_text and len(self.detail_text) <= 25:  # Keep it short for small screens
+            detail_font = fonts.get('small', fonts.get('medium'))
+            detail_surface = detail_font.render(self.detail_text, True, self.config.Theme.FOREGROUND)
+            detail_rect = detail_surface.get_rect(center=(self.screen_width // 2, self.bar_y + self.bar_height + 25))
+            screen.blit(detail_surface, detail_rect)
     
     def _draw_progress_bar(self, screen):
-        """Draw the progress bar."""
-        # Draw background bar
+        """Draw the progress bar - optimized for small screens."""
+        # Draw background bar with more prominent styling
         bar_rect = pygame.Rect(self.bar_x, self.bar_y, self.bar_width, self.bar_height)
+        
+        # Draw background with darker color for better contrast
         pygame.draw.rect(screen, self.config.Theme.GRAPH_BORDER, bar_rect)
-        pygame.draw.rect(screen, self.config.Theme.BACKGROUND, bar_rect)
         
         # Draw progress fill
         if self.progress > 0:
@@ -131,16 +106,22 @@ class LoadingScreen:
             fill_rect = pygame.Rect(self.bar_x, self.bar_y, fill_width, self.bar_height)
             pygame.draw.rect(screen, self.config.Theme.ACCENT, fill_rect)
         
-        # Draw border
-        pygame.draw.rect(screen, self.config.Theme.FOREGROUND, bar_rect, 2)
+        # Draw border - thicker for better visibility
+        pygame.draw.rect(screen, self.config.Theme.FOREGROUND, bar_rect, 3)  # Thicker border (was 2)
         
-        # Draw percentage text
+        # Draw percentage text - bigger font for small screens
         if hasattr(self, 'config') and hasattr(self.config, 'Theme'):
             percent_text = f"{int(self.progress * 100)}%"
-            # Use a simple font for percentage
+            # Use much larger font for percentage on small screens
             try:
-                font = pygame.font.Font(None, 16)
+                if self.screen_width <= 320:
+                    font_size = 28  # Much bigger for small screens
+                else:
+                    font_size = 20  # Bigger than original 16
+                font = pygame.font.Font(None, font_size)
                 percent_surface = font.render(percent_text, True, self.config.Theme.FOREGROUND)
+                
+                # Position percentage text inside the bar
                 percent_rect = percent_surface.get_rect(center=(self.bar_x + self.bar_width // 2, self.bar_y + self.bar_height // 2))
                 screen.blit(percent_surface, percent_rect)
             except:

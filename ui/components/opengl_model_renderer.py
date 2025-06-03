@@ -61,7 +61,7 @@ class OpenGLModelRenderer:
         
         # Calculate model scaling and centering
         self.model_center = model.get_center()
-        self.model_scale = model.get_scale_factor(target_size=2.0)  # Fit in 2-unit cube
+        self.model_scale = model.get_scale_factor(target_size=3.5)  # Larger for better visibility on small screens
         
         logger.info(f"Model loaded: center={self.model_center}, scale={self.model_scale}")
         
@@ -231,7 +231,7 @@ class OpenGLModelRenderer:
                 pass
         self.loaded_textures.clear()
     
-    def render(self, pitch, roll, yaw, fonts=None, ship_info=None, pause_menu_active=False, pause_menu_index=0):
+    def render(self, pitch, roll, yaw, fonts=None, ship_info=None, pause_menu_active=False, pause_menu_index=0, auto_rotation_mode=True):
         """
         Render the loaded model with given rotation.
         
@@ -241,6 +241,7 @@ class OpenGLModelRenderer:
             ship_info: Ship information dictionary
             pause_menu_active: Whether pause menu is shown
             pause_menu_index: Selected pause menu index
+            auto_rotation_mode: Whether in auto or manual rotation mode
             
         Returns:
             bool: True if rendering successful
@@ -260,7 +261,7 @@ class OpenGLModelRenderer:
             
             if pause_menu_active and fonts:
                 # Draw pause menu
-                self._draw_pause_menu_overlay(fonts, pause_menu_index, pitch, roll, yaw)
+                self._draw_pause_menu_overlay(fonts, pause_menu_index, pitch, roll, yaw, auto_rotation_mode)
             else:
                 # Draw the 3D model
                 self._render_model(pitch, roll, yaw)
@@ -294,10 +295,10 @@ class OpenGLModelRenderer:
         # Move camera back
         glTranslatef(0.0, 0.0, -5.0)
         
-        # Apply rotations
-        glRotatef(math.degrees(pitch), 1.0, 0.0, 0.0)
-        glRotatef(math.degrees(roll), 0.0, 0.0, 1.0)
-        glRotatef(math.degrees(yaw), 0.0, 1.0, 0.0)
+        # Apply rotations (pitch, roll, yaw are already in degrees)
+        glRotatef(pitch, 1.0, 0.0, 0.0)
+        glRotatef(roll, 0.0, 0.0, 1.0)
+        glRotatef(yaw, 0.0, 1.0, 0.0)
         
         # Scale and center the model
         glScalef(self.model_scale, self.model_scale, self.model_scale)
@@ -339,7 +340,23 @@ class OpenGLModelRenderer:
         current_material = None
         current_texture_id = None
         
+        # Track texture loading for progress (only on first render)
+        materials_to_load = []
+        if hasattr(self.loaded_model, 'materials'):
+            for face in self.loaded_model.faces:
+                face_material = face.get('material')
+                if (face_material and 
+                    face_material in self.loaded_model.materials and
+                    face_material not in self.loaded_textures and
+                    face_material not in materials_to_load):
+                    materials_to_load.append(face_material)
+        
+        texture_load_count = 0
+        total_materials = len(materials_to_load)
+        
         logger.debug(f"Rendering {len(self.loaded_model.faces)} faces with {len(self.loaded_textures)} textures available")
+        if total_materials > 0:
+            logger.info(f"First render: will load {total_materials} textures on-demand")
         
         for face in self.loaded_model.faces:
             # Set material if it changed
@@ -364,9 +381,12 @@ class OpenGLModelRenderer:
                         new_texture_id = self.loaded_textures[face_material]
                     else:
                         # Try to load texture now (OpenGL context is active)
+                        logger.info(f"Loading texture for material: {face_material}")
                         new_texture_id = self._load_material_texture(face_material, mat)
                         if new_texture_id:
                             self.loaded_textures[face_material] = new_texture_id
+                            texture_load_count += 1
+                            logger.info(f"Texture loaded ({texture_load_count}/{total_materials}): {face_material}")
                 
                 if new_texture_id != current_texture_id:
                     current_texture_id = new_texture_id
@@ -407,6 +427,9 @@ class OpenGLModelRenderer:
                     glVertex3f(x, y, z)
             
             glEnd()
+            
+        if total_materials > 0 and texture_load_count > 0:
+            logger.info(f"First render complete: loaded {texture_load_count} textures")
     
     def _apply_material(self, material: Dict[str, Any]):
         """Apply material properties to OpenGL."""
@@ -451,8 +474,8 @@ class OpenGLModelRenderer:
             if len(desc_text) > 50:
                 desc_text = desc_text[:50] + "..."
             
-            # Rotation info  
-            rotation_text = f"Pitch: {math.degrees(pitch):.1f}° Roll: {math.degrees(roll):.1f}° Yaw: {math.degrees(yaw):.1f}°"
+            # Rotation info (pitch, roll, yaw are already in degrees)
+            rotation_text = f"Pitch: {pitch:.1f}° Roll: {roll:.1f}° Yaw: {yaw:.1f}°"
             
             # Render surfaces
             name_surface = info_font.render(name_text, True, (0, 255, 70))
@@ -508,7 +531,7 @@ class OpenGLModelRenderer:
         except Exception as e:
             logger.error(f"Error drawing text surface: {e}")
     
-    def _draw_pause_menu_overlay(self, fonts, pause_menu_index, pitch, roll, yaw):
+    def _draw_pause_menu_overlay(self, fonts, pause_menu_index, pitch, roll, yaw, auto_rotation_mode):
         """Draw pause menu (reuse from base implementation)."""
         # Save matrices
         glMatrixMode(GL_PROJECTION)
@@ -545,7 +568,8 @@ class OpenGLModelRenderer:
             self._draw_text_surface(title_surface, title_x, title_y)
             
             # Menu options
-            options = ["Toggle Mode", "Back to Ships", "Resume"]
+            current_mode = "Auto" if auto_rotation_mode else "Manual"
+            options = [f"Toggle Mode ({current_mode})", "Back to Ships", "Resume"]
             menu_font = fonts.get('medium', fonts.get('small'))
             start_y = 150
             item_height = 40
@@ -557,9 +581,9 @@ class OpenGLModelRenderer:
                 option_x = (self.screen_width - option_surface.get_width()) // 2
                 self._draw_text_surface(option_surface, option_x, y_pos)
             
-            # Rotation values
+            # Rotation values (pitch, roll, yaw are already in degrees)
             rotation_font = fonts.get('small', fonts.get('medium'))
-            rotation_text = f"Pitch: {math.degrees(pitch):.1f}° Roll: {math.degrees(roll):.1f}° Yaw: {math.degrees(yaw):.1f}°"
+            rotation_text = f"Pitch: {pitch:.1f}° Roll: {roll:.1f}° Yaw: {yaw:.1f}°"
             rotation_surface = rotation_font.render(rotation_text, True, (255, 200, 0))
             rotation_x = (self.screen_width - rotation_surface.get_width()) // 2
             rotation_y = self.screen_height - (start_y + len(options) * item_height + 20)

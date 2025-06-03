@@ -68,7 +68,7 @@ class OpenGLRenderer:
         self.initialized = False
         logger.info("OpenGL renderer reset for new context")
     
-    def render(self, pitch, roll, yaw, fonts=None, ship_info=None, pause_menu_active=False, pause_menu_index=0):
+    def render(self, pitch, roll, yaw, fonts=None, ship_info=None, pause_menu_active=False, pause_menu_index=0, auto_rotation_mode=True):
         """
         Render a 3D cube with the given rotation and optional text overlay.
         This is called when the display is already in OpenGL mode.
@@ -109,7 +109,7 @@ class OpenGLRenderer:
             # Draw pause menu or normal 3D view
             if pause_menu_active and fonts:
                 # Full-screen pause menu - don't draw cube
-                self._draw_pause_menu_overlay(fonts, pause_menu_index, pitch, roll, yaw)
+                self._draw_pause_menu_overlay(fonts, pause_menu_index, pitch, roll, yaw, auto_rotation_mode)
             else:
                 # Normal 3D view - draw cube and overlays
                 # Reset the model-view matrix
@@ -118,10 +118,10 @@ class OpenGLRenderer:
                 # Move back from the origin
                 glTranslatef(0.0, 0.0, -5.0)
                 
-                # Apply rotation from sensor data
-                glRotatef(math.degrees(pitch), 1.0, 0.0, 0.0)
-                glRotatef(math.degrees(roll), 0.0, 0.0, 1.0)
-                glRotatef(math.degrees(yaw), 0.0, 1.0, 0.0)
+                # Apply rotation from sensor data (pitch, roll, yaw are already in degrees)
+                glRotatef(pitch, 1.0, 0.0, 0.0)
+                glRotatef(roll, 0.0, 0.0, 1.0)
+                glRotatef(yaw, 0.0, 1.0, 0.0)
                 
                 # Draw a colored cube
                 self._draw_cube()
@@ -205,8 +205,8 @@ class OpenGLRenderer:
             name_text = f"Model: {ship_info.get('name', 'Unknown')}"
             desc_text = ship_info.get('description', 'No description')[:50] + "..." if len(ship_info.get('description', '')) > 50 else ship_info.get('description', '')
             
-            # Rotation info  
-            rotation_text = f"Pitch: {math.degrees(pitch):.1f}° Roll: {math.degrees(roll):.1f}° Yaw: {math.degrees(yaw):.1f}°"
+            # Rotation info (pitch, roll, yaw are already in degrees)
+            rotation_text = f"Pitch: {pitch:.1f}° Roll: {roll:.1f}° Yaw: {yaw:.1f}°"
             
             # Render text to surfaces
             name_surface = info_font.render(name_text, True, (0, 255, 70))  # Sickbay green
@@ -271,7 +271,7 @@ class OpenGLRenderer:
         except Exception as e:
             logger.error(f"Error drawing text surface: {e}")
     
-    def _draw_pause_menu_overlay(self, fonts, pause_menu_index, pitch, roll, yaw):
+    def _draw_pause_menu_overlay(self, fonts, pause_menu_index, pitch, roll, yaw, auto_rotation_mode):
         """Draw pause menu overlay on OpenGL surface using 2D projection."""
         # Save current matrices
         glMatrixMode(GL_PROJECTION)
@@ -311,7 +311,8 @@ class OpenGLRenderer:
             self._draw_text_surface(title_surface, title_x, title_y)
             
             # Menu options (restore original layout)
-            options = ["Toggle Mode", "Back to Ships", "Resume"]
+            current_mode = "Auto" if auto_rotation_mode else "Manual"
+            options = [f"Toggle Mode ({current_mode})", "Back to Ships", "Resume"]
             menu_font = fonts.get('medium', fonts.get('small'))
             start_y = 150  # Original start position from top
             item_height = 40
@@ -323,9 +324,9 @@ class OpenGLRenderer:
                 option_x = (self.screen_width - option_surface.get_width()) // 2
                 self._draw_text_surface(option_surface, option_x, y_pos)
             
-            # Current rotation values (restore original position)
+            # Current rotation values (pitch, roll, yaw are already in degrees)
             rotation_font = fonts.get('small', fonts.get('medium'))
-            rotation_text = f"Pitch: {math.degrees(pitch):.1f}° Roll: {math.degrees(roll):.1f}° Yaw: {math.degrees(yaw):.1f}°"
+            rotation_text = f"Pitch: {pitch:.1f}° Roll: {roll:.1f}° Yaw: {yaw:.1f}°"
             rotation_surface = rotation_font.render(rotation_text, True, (255, 200, 0))
             rotation_x = (self.screen_width - rotation_surface.get_width()) // 2
             rotation_y = self.screen_height - (start_y + len(options) * item_height + 20)  # Convert to bottom-up

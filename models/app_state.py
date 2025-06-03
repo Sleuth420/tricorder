@@ -350,12 +350,19 @@ class AppState:
             
             try:
                 # Perform the actual model loading with progress tracking
-                with loading_operation:
-                    success = self.ship_manager.set_ship_model(ship_model_key, loading_operation)
-                    if success:
-                        logger.info(f"Model '{ship_model_key}' loaded successfully")
-                    else:
-                        logger.warning(f"Failed to load model '{ship_model_key}'")
+                # Don't use context manager to avoid blocking - manually manage progress
+                loading_operation.current_step = 0
+                loading_operation.loading_screen.update_progress(0.0, loading_operation.operation_name)
+                
+                success = self.ship_manager.set_ship_model(ship_model_key, loading_operation)
+                
+                # Manually complete the loading operation
+                loading_operation.loading_screen.update_progress(1.0, "Complete!")
+                
+                if success:
+                    logger.info(f"Model '{ship_model_key}' loaded successfully")
+                else:
+                    logger.warning(f"Failed to load model '{ship_model_key}'")
                 
                 # Clear the pending load and transition to target state
                 target_state = self.loading_manager.complete_loading_operation()
@@ -371,6 +378,8 @@ class AppState:
                 # On error, still complete the loading but log the issue
                 target_state = self.loading_manager.complete_loading_operation()
                 if target_state:
+                    if hasattr(self, '_loading_start_time'):
+                        delattr(self, '_loading_start_time')
                     self.state_manager.transition_to(target_state)
             
             return True  # State will change when loading completes
@@ -542,11 +551,19 @@ class AppState:
         if is_manual_mode:
             # In manual mode, keys control rotation, not navigation
             if key == self.config.KEY_PREV:
-                # A key released - handled by main rotation logic, no special action
-                return False
+                # A key released - apply left rotation
+                self.ship_manager.apply_manual_rotation('LEFT')
+                logger.debug("A key released: Manual rotation LEFT")
+                return True
             elif key == self.config.KEY_NEXT:
-                # D key released - handled by main rotation logic, no special action  
-                return False
+                # D key released - apply right rotation
+                self.ship_manager.apply_manual_rotation('RIGHT')
+                logger.debug("D key released: Manual rotation RIGHT")
+                return True
+            elif action_name == app_config.INPUT_ACTION_SELECT:
+                # Enter key in manual mode - pass through to input router to activate pause menu
+                logger.debug("Enter key released in manual mode - routing to input router")
+                return self._route_action(action_name)
             elif action_name == app_config.INPUT_ACTION_BACK:
                 # Emergency back only (shouldn't happen in normal manual operation)
                 logger.debug("Emergency back action in manual mode")

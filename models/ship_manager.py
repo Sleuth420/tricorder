@@ -171,8 +171,12 @@ class ShipManager:
             if ship_model.get('type') == 'opengl_model' and loading_operation:
                 try:
                     loading_operation.step("Preparing model...")
+                    self._refresh_loading_display(loading_operation)
+                    
                     obj_model = self._load_obj_model_with_progress(ship_model, loading_operation)
+                    
                     loading_operation.step("Initializing renderer...")
+                    self._refresh_loading_display(loading_operation)
                     
                     # Pre-initialize the model renderer
                     if OPENGL_AVAILABLE and obj_model:
@@ -183,8 +187,15 @@ class ShipManager:
                             )
                         
                         loading_operation.step("Loading model into renderer...")
+                        self._refresh_loading_display(loading_operation)
+                        
+                        # Load the model structure first
                         self.model_renderer.load_model(obj_model)
                         
+                        # Now preload textures if OpenGL context is available
+                        loading_operation.set_detail("Preloading textures...")
+                        self._refresh_loading_display(loading_operation)
+                        self._preload_model_textures(obj_model, loading_operation)
                 except Exception as e:
                     logger.error(f"Error during model loading: {e}")
             
@@ -203,10 +214,12 @@ class ShipManager:
         # Check cache first
         if file_path in self.loaded_obj_models:
             loading_operation.set_detail("Loading from cache...")
+            self._refresh_loading_display(loading_operation)
             return self.loaded_obj_models[file_path]
         
         # Load from file with progress updates
         loading_operation.set_detail(f"Loading {os.path.basename(file_path)}...")
+        self._refresh_loading_display(loading_operation)
         logger.info(f"Loading OBJ model from: {file_path}")
         
         from ui.components.obj_loader import OBJLoader
@@ -216,10 +229,11 @@ class ShipManager:
             # Cache the loaded model
             self.loaded_obj_models[file_path] = obj_model
             loading_operation.set_detail("Model loaded successfully")
+            self._refresh_loading_display(loading_operation)
             logger.info(f"OBJ model loaded and cached: {file_path}")
         else:
             loading_operation.set_detail("Failed to load model")
-            logger.error(f"Failed to load OBJ model: {file_path}")
+            self._refresh_loading_display(loading_operation)
         
         return obj_model
     
@@ -448,7 +462,7 @@ class ShipManager:
             # Render the cube with text overlay and pause menu
             success = self.opengl_renderer.render(
                 self.pitch, self.roll, self.yaw, fonts, ship_model,
-                pause_menu_active, pause_menu_index
+                pause_menu_active, pause_menu_index, self.auto_rotation_mode
             )
             
             if not success:
@@ -506,7 +520,7 @@ class ShipManager:
             # Render the model with text overlay and pause menu
             success = self.model_renderer.render(
                 self.pitch, self.roll, self.yaw, fonts, ship_model,
-                pause_menu_active, pause_menu_index
+                pause_menu_active, pause_menu_index, self.auto_rotation_mode
             )
             
             if not success:
@@ -637,4 +651,68 @@ class ShipManager:
         self.smoothed_pitch = 0.0
         self.smoothed_roll = 0.0
         self.smoothed_yaw = 0.0
-        logger.debug("Sensor smoothing state reset") 
+        logger.debug("Sensor smoothing state reset")
+
+    def _refresh_loading_display(self, loading_operation):
+        """Refresh the loading display to show progress updates during model loading."""
+        try:
+            import pygame
+            
+            # Get the current display surface
+            screen = pygame.display.get_surface()
+            if not screen:
+                return
+            
+            # Create simple fallback fonts if needed
+            try:
+                fonts = {
+                    'large': pygame.font.Font(None, 24),
+                    'medium': pygame.font.Font(None, 20), 
+                    'small': pygame.font.Font(None, 16)
+                }
+            except:
+                # If font creation fails, skip the refresh
+                return
+            
+            # Clear screen and draw loading screen directly
+            loading_screen = loading_operation.loading_screen
+            loading_screen.draw(screen, fonts)
+            
+            # Force display update
+            pygame.display.flip()
+            
+            # Process any pending events to keep the application responsive
+            pygame.event.pump()
+            
+        except Exception as e:
+            # Don't let display refresh errors stop model loading
+            logger.debug(f"Error refreshing loading display: {e}")
+            pass 
+
+    def _preload_model_textures(self, obj_model, loading_operation):
+        """Preload textures for a model during loading phase."""
+        try:
+            # Check if model renderer is available and has texture loading capability
+            if not self.model_renderer or not hasattr(self.model_renderer, '_load_material_texture'):
+                loading_operation.set_detail("Skipping texture preload (no renderer)")
+                self._refresh_loading_display(loading_operation)
+                return
+            
+            # Check if model has materials to load
+            if not hasattr(obj_model, 'materials') or not obj_model.materials:
+                loading_operation.set_detail("No textures to preload")
+                self._refresh_loading_display(loading_operation)
+                return
+            
+            # We need an OpenGL context to load textures, but during loading phase
+            # we're in normal pygame mode. We'll defer texture loading to first render
+            # but update the loading screen to show we're ready
+            loading_operation.set_detail(f"Ready to load {len(obj_model.materials)} textures on first render")
+            self._refresh_loading_display(loading_operation)
+            
+            logger.info(f"Model loaded with {len(obj_model.materials)} materials, textures will load on first render")
+            
+        except Exception as e:
+            logger.warning(f"Error in texture preload: {e}")
+            loading_operation.set_detail("Texture preload failed, will load on first render")
+            self._refresh_loading_display(loading_operation) 

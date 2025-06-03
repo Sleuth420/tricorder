@@ -3,7 +3,7 @@
 
 import pygame
 import logging
-from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_SCHEMATICS, STATE_SCHEMATICS_MENU, STATE_SENSORS_MENU, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_DEVICE, STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY, STATE_LOADING
+from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SCHEMATICS, STATE_SCHEMATICS_MENU, STATE_SENSORS_MENU, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_DEVICE, STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY, STATE_LOADING
 from ui.menu import draw_menu_screen
 from ui.views.sensor_view import draw_sensor_view
 from ui.views.system_info_view import draw_system_info_view
@@ -240,6 +240,30 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
             # Draw fallback screen (optional)
             screen.fill(config_module.Theme.BACKGROUND)
             error_text = fonts['medium'].render("Error: Pong game not loaded", True, config_module.Theme.ALERT)
+            screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
+    elif app_state.current_state == STATE_BREAKOUT_ACTIVE:
+        # Draw the active Breakout game
+        if app_state.active_breakout_game:
+            # Clear background before drawing game
+            screen.fill(config_module.Theme.BACKGROUND)
+            app_state.active_breakout_game.draw(screen, fonts, config_module)
+        else:
+            logger.error("In BREAKOUT_ACTIVE state but no active_breakout_game instance found!")
+            # Draw fallback screen (optional)
+            screen.fill(config_module.Theme.BACKGROUND)
+            error_text = fonts['medium'].render("Error: Breakout game not loaded", True, config_module.Theme.ALERT)
+            screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
+    elif app_state.current_state == STATE_SNAKE_ACTIVE:
+        # Draw the active Snake game
+        if app_state.active_snake_game:
+            # Clear background before drawing game
+            screen.fill(config_module.Theme.BACKGROUND)
+            app_state.active_snake_game.draw(screen, fonts, config_module)
+        else:
+            logger.error("In SNAKE_ACTIVE state but no active_snake_game instance found!")
+            # Draw fallback screen (optional)
+            screen.fill(config_module.Theme.BACKGROUND)
+            error_text = fonts['medium'].render("Error: Snake game not loaded", True, config_module.Theme.ALERT)
             screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
     elif app_state.current_state == STATE_SENSORS_MENU:
         # Draw the sensors menu

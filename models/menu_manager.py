@@ -155,12 +155,22 @@ class MenuManager:
             MenuItem(
                 name="Pong", 
                 action_name=app_config.ACTION_LAUNCH_PONG, 
-                image_path="assets/images/spork.png"
+                image_path="assets/images/game_pong_preview.png"
+            ),
+            MenuItem(
+                name="Breakout", 
+                action_name=app_config.ACTION_LAUNCH_BREAKOUT, 
+                image_path="assets/images/game_breakout_preview.png"
+            ),
+            MenuItem(
+                name="Snake", 
+                action_name=app_config.ACTION_LAUNCH_SNAKE, 
+                image_path="assets/images/game_snake_preview.png"
             ),
             MenuItem(
                 name="Tetris", 
                 action_name=app_config.ACTION_LAUNCH_TETRIS, 
-                image_path="assets/images/spork.png"
+                image_path="assets/images/game_tetris_preview.png"
             ),
             MenuItem(
                 name="Quit", 

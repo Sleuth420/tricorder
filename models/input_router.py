@@ -15,6 +15,8 @@ STATE_SYSTEM_INFO = "SYSTEM"
 STATE_SETTINGS = "SETTINGS"
 STATE_SECRET_GAMES = "SECRET_GAMES"
 STATE_PONG_ACTIVE = "PONG_ACTIVE"
+STATE_BREAKOUT_ACTIVE = "BREAKOUT_ACTIVE"
+STATE_SNAKE_ACTIVE = "SNAKE_ACTIVE"
 STATE_SCHEMATICS = "SCHEMATICS"
 STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU"
 STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
@@ -105,7 +107,7 @@ class InputRouter:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_WIFI_NETWORKS)
             else:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS)
-        elif current_state not in [STATE_MENU, STATE_PONG_ACTIVE]:
+        elif current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE]:
             logger.info(f"BACK from {current_state} (general view), returning to previous or menu")
             return (self.app_state.state_manager.return_to_previous() or 
                    self.app_state.state_manager.return_to_menu())
@@ -333,6 +335,12 @@ class InputRouter:
         if selected_item.action_name == app_config.ACTION_LAUNCH_PONG:
             if self.app_state.game_manager.launch_pong():
                 return self.app_state.state_manager.transition_to(STATE_PONG_ACTIVE)
+        elif selected_item.action_name == app_config.ACTION_LAUNCH_BREAKOUT:
+            if self.app_state.game_manager.launch_breakout():
+                return self.app_state.state_manager.transition_to(STATE_BREAKOUT_ACTIVE)
+        elif selected_item.action_name == app_config.ACTION_LAUNCH_SNAKE:
+            if self.app_state.game_manager.launch_snake():
+                return self.app_state.state_manager.transition_to(STATE_SNAKE_ACTIVE)
         elif selected_item.action_name == app_config.ACTION_LAUNCH_TETRIS:
             pass 
         elif selected_item.action_name == app_config.ACTION_RETURN_TO_MENU:

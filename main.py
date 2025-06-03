@@ -19,7 +19,7 @@ import config
 import logging_config
 
 # Import application components from the new modular structure
-from models.app_state import AppState, STATE_MENU, STATE_PONG_ACTIVE
+from models.app_state import AppState, STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE
 from models.reading_history import ReadingHistory
 from data import sensors
 from data import system_info
@@ -326,9 +326,13 @@ def main():
 
                 if app_state.current_state == STATE_PONG_ACTIVE and app_state.active_pong_game:
                     app_state.game_manager.update_pong(app_state.keys_held)
+                elif app_state.current_state == STATE_BREAKOUT_ACTIVE and app_state.active_breakout_game:
+                    app_state.game_manager.update_breakout(app_state.keys_held)
+                elif app_state.current_state == STATE_SNAKE_ACTIVE and app_state.active_snake_game:
+                    app_state.game_manager.update_snake(app_state.keys_held)
 
                 # 3. Read Sensor Data
-                if app_state.current_state != STATE_PONG_ACTIVE:
+                if app_state.current_state not in [STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE]:
                     should_read_sensors = (not app_state.is_frozen or
                                           (current_time - app_state.last_reading_time >= 1.0))
                     if should_read_sensors:

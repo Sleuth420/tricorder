@@ -26,6 +26,8 @@ STATE_SYSTEM_INFO = "SYSTEM"  # System info view
 STATE_SETTINGS = "SETTINGS"   # Main settings category menu
 STATE_SECRET_GAMES = "SECRET_GAMES" # Secret menu
 STATE_PONG_ACTIVE = "PONG_ACTIVE" # Pong game
+STATE_BREAKOUT_ACTIVE = "BREAKOUT_ACTIVE" # Breakout game
+STATE_SNAKE_ACTIVE = "SNAKE_ACTIVE" # Snake game
 STATE_SCHEMATICS = "SCHEMATICS" # Schematics viewer
 STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU" # Schematics selection menu
 STATE_LOADING = "LOADING"     # Loading screen
@@ -128,6 +130,16 @@ class AppState:
     def active_pong_game(self):
         """Get the active Pong game instance."""
         return self.game_manager.get_pong_game()
+        
+    @property
+    def active_breakout_game(self):
+        """Get the active Breakout game instance."""
+        return self.game_manager.get_breakout_game()
+        
+    @property
+    def active_snake_game(self):
+        """Get the active Snake game instance."""
+        return self.game_manager.get_snake_game()
 
     @property
     def secret_menu_items(self):
@@ -232,6 +244,10 @@ class AppState:
                 if action_name:
                     if self.current_state == STATE_PONG_ACTIVE:
                         state_changed_by_action = self._handle_pong_joystick_input(action_name) or state_changed_by_action
+                    elif self.current_state == STATE_BREAKOUT_ACTIVE:
+                        state_changed_by_action = self._handle_breakout_joystick_input(action_name) or state_changed_by_action
+                    elif self.current_state == STATE_SNAKE_ACTIVE:
+                        state_changed_by_action = self._handle_snake_joystick_input(action_name) or state_changed_by_action
                     elif self.current_state == STATE_WIFI_PASSWORD_ENTRY:
                         # Handle joystick navigation for password entry
                         direction = result.get('direction')
@@ -250,10 +266,18 @@ class AppState:
             elif event_type == 'JOYSTICK_UP_HELD':
                 if self.current_state == STATE_PONG_ACTIVE:
                     self.game_manager.handle_pong_input(app_config.INPUT_ACTION_PREV)
+                elif self.current_state == STATE_BREAKOUT_ACTIVE:
+                    self.game_manager.handle_breakout_input(app_config.INPUT_ACTION_PREV)
+                elif self.current_state == STATE_SNAKE_ACTIVE:
+                    self.game_manager.handle_snake_input(app_config.INPUT_ACTION_PREV)
             
             elif event_type == 'JOYSTICK_DOWN_HELD':
                 if self.current_state == STATE_PONG_ACTIVE:
                     self.game_manager.handle_pong_input(app_config.INPUT_ACTION_NEXT)
+                elif self.current_state == STATE_BREAKOUT_ACTIVE:
+                    self.game_manager.handle_breakout_input(app_config.INPUT_ACTION_NEXT)
+                elif self.current_state == STATE_SNAKE_ACTIVE:
+                    self.game_manager.handle_snake_input(app_config.INPUT_ACTION_NEXT)
 
             elif event_type == 'JOYSTICK_MIDDLE_PRESS':
                 self.input_manager.handle_joystick_press()
@@ -292,13 +316,33 @@ class AppState:
                 elif game_result:
                     state_changed = True
         
+        elif self.current_state == STATE_BREAKOUT_ACTIVE and self.active_breakout_game:
+            if self.active_breakout_game.game_over and key == self.config.KEY_PREV:
+                state_changed = self._quit_breakout_to_menu()
+            elif action_name:
+                game_result = self.game_manager.handle_breakout_input(action_name)
+                if game_result == "QUIT_TO_MENU":
+                    state_changed = self._quit_breakout_to_menu()
+                elif game_result:
+                    state_changed = True
+        
+        elif self.current_state == STATE_SNAKE_ACTIVE and self.active_snake_game:
+            if self.active_snake_game.game_over and key == self.config.KEY_PREV:
+                state_changed = self._quit_snake_to_menu()
+            elif action_name:
+                game_result = self.game_manager.handle_snake_input(action_name)
+                if game_result == "QUIT_TO_MENU":
+                    state_changed = self._quit_snake_to_menu()
+                elif game_result:
+                    state_changed = True
+        
         # Special handling for schematics view - check rotation mode
         elif self.current_state == STATE_SCHEMATICS and not self.schematics_pause_menu_active:
             state_changed = self._handle_schematics_key_release(key, action_name)
         
         # General key releases for menu navigation or back action
         elif action_name == app_config.INPUT_ACTION_BACK:
-            if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_SECRET_GAMES, STATE_SENSORS_MENU, STATE_SETTINGS]:
+            if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SECRET_GAMES, STATE_SENSORS_MENU, STATE_SETTINGS]:
                 state_changed = self.state_manager.return_to_previous()
                 if not state_changed or not self.state_manager.previous_state:
                     state_changed = self.state_manager.return_to_menu()
@@ -317,10 +361,46 @@ class AppState:
             return True
         return False
         
+    def _handle_breakout_joystick_input(self, action_name):
+        """Handle joystick input specifically for Breakout game."""
+        game_result = self.game_manager.handle_breakout_input(action_name)
+        
+        if game_result == "QUIT_TO_MENU":
+            return self._quit_breakout_to_menu()
+        elif game_result:
+            return True
+        return False
+        
+    def _handle_snake_joystick_input(self, action_name):
+        """Handle joystick input specifically for Snake game."""
+        game_result = self.game_manager.handle_snake_input(action_name)
+        
+        if game_result == "QUIT_TO_MENU":
+            return self._quit_snake_to_menu()
+        elif game_result:
+            return True
+        return False
+        
     def _quit_pong_to_menu(self):
         """Quit Pong game and return to menu."""
         target_state = STATE_MENU
         if self.previous_state and self.previous_state != STATE_PONG_ACTIVE:
+            target_state = self.previous_state
+        self.game_manager.close_current_game()
+        return self.state_manager.transition_to(target_state)
+        
+    def _quit_breakout_to_menu(self):
+        """Quit Breakout game and return to menu."""
+        target_state = STATE_MENU
+        if self.previous_state and self.previous_state != STATE_BREAKOUT_ACTIVE:
+            target_state = self.previous_state
+        self.game_manager.close_current_game()
+        return self.state_manager.transition_to(target_state)
+        
+    def _quit_snake_to_menu(self):
+        """Quit Snake game and return to menu."""
+        target_state = STATE_MENU
+        if self.previous_state and self.previous_state != STATE_SNAKE_ACTIVE:
             target_state = self.previous_state
         self.game_manager.close_current_game()
         return self.state_manager.transition_to(target_state)
@@ -394,6 +474,8 @@ class AppState:
             logger.info("Secret combo detected! Activating secret games menu")
             state_changed = self.state_manager.transition_to(STATE_SECRET_GAMES)
             self.input_manager.reset_secret_combo()
+            # Reset long press timer to prevent immediate exit
+            self.input_manager.reset_long_press_timer()
             
         # Check joystick long press for secret menu (only from main menu on settings item)
         if (self.current_state == STATE_MENU and 
@@ -402,9 +484,14 @@ class AppState:
             logger.info("Joystick long press on Settings item detected! Activating secret games menu")
             state_changed = self.state_manager.transition_to(STATE_SECRET_GAMES)
             self.input_manager.reset_joystick_timer()
+            # Reset long press timer to prevent immediate exit
+            self.input_manager.reset_long_press_timer()
             
         if self.current_state == STATE_PONG_ACTIVE:
             self.game_manager.handle_continuous_pong_input(self.keys_held)
+        elif self.current_state == STATE_BREAKOUT_ACTIVE:
+            self.game_manager.handle_continuous_breakout_input(self.keys_held)
+        # Snake doesn't need continuous input - it uses discrete turns
             
         # Check KEY_PREV long press for back to menu / previous state
         if self.input_manager.check_long_press_duration():
@@ -421,7 +508,7 @@ class AppState:
                     logger.info(f"KEY_PREV Long press detected in {self.current_state}.")
                     handled_by_back_action = self._route_action(app_config.INPUT_ACTION_BACK)
                     if not handled_by_back_action:
-                        if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_SECRET_GAMES]:
+                        if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SECRET_GAMES]:
                             logger.info(f"Long press in view state {self.current_state}, returning to previous or menu.")
                             state_changed = self.state_manager.return_to_previous()
                             if not state_changed or not self.state_manager.previous_state:

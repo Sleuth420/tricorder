@@ -241,6 +241,9 @@ class AppState:
                                 self.password_entry_manager.handle_joystick_input(direction_map[direction])
                         else:
                             state_changed_by_action = self._route_action(action_name) or state_changed_by_action
+                    elif self.current_state == STATE_SCHEMATICS and not self.schematics_pause_menu_active:
+                        # Special handling for joystick in schematics view
+                        state_changed_by_action = self._handle_schematics_joystick_input(result) or state_changed_by_action
                     else:
                         state_changed_by_action = self._route_action(action_name) or state_changed_by_action
 
@@ -288,6 +291,10 @@ class AppState:
                     state_changed = self._quit_pong_to_menu()
                 elif game_result:
                     state_changed = True
+        
+        # Special handling for schematics view - check rotation mode
+        elif self.current_state == STATE_SCHEMATICS and not self.schematics_pause_menu_active:
+            state_changed = self._handle_schematics_key_release(key, action_name)
         
         # General key releases for menu navigation or back action
         elif action_name == app_config.INPUT_ACTION_BACK:
@@ -395,27 +402,34 @@ class AppState:
             # If a secret combo is currently being timed (i.e., secret_combo_start_time is not None),
             # prioritize that and don't trigger the independent 'Back' action from KEY_PREV.
             if self.input_manager.secret_combo_start_time is None:
-                logger.info(f"KEY_PREV Long press detected in {self.current_state}.")
-                handled_by_back_action = self._route_action(app_config.INPUT_ACTION_BACK)
-                if not handled_by_back_action:
-                    if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_SECRET_GAMES]:
-                        logger.info(f"Long press in view state {self.current_state}, returning to previous or menu.")
-                        state_changed = self.state_manager.return_to_previous()
-                        if not state_changed or not self.state_manager.previous_state:
-                            state_changed = self.state_manager.return_to_menu()
+                # Special handling for schematics view based on rotation mode
+                if self.current_state == STATE_SCHEMATICS and not self.schematics_pause_menu_active:
+                    handled = self._handle_schematics_long_press('PREV')
+                    if handled:
+                        state_changed = True
+                    self.input_manager.reset_long_press_timer()
                 else:
-                    state_changed = True
-                self.input_manager.reset_long_press_timer() # Reset only if processed or intended to be processed
+                    logger.info(f"KEY_PREV Long press detected in {self.current_state}.")
+                    handled_by_back_action = self._route_action(app_config.INPUT_ACTION_BACK)
+                    if not handled_by_back_action:
+                        if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_SECRET_GAMES]:
+                            logger.info(f"Long press in view state {self.current_state}, returning to previous or menu.")
+                            state_changed = self.state_manager.return_to_previous()
+                            if not state_changed or not self.state_manager.previous_state:
+                                state_changed = self.state_manager.return_to_menu()
+                    else:
+                        state_changed = True
+                    self.input_manager.reset_long_press_timer() # Reset only if processed or intended to be processed
                 
-        # Check D key long press for 3D viewer pause menu
+        # Check D key long press for 3D viewer  
         if (self.current_state == STATE_SCHEMATICS and 
             not self.schematics_pause_menu_active and
             self.input_manager.check_next_key_long_press()):
-            logger.info(f"D key long press detected in 3D viewer. Activating pause menu.")
-            self.schematics_pause_menu_active = True
-            self.schematics_pause_menu_index = 0
+            # Handle based on rotation mode
+            handled = self._handle_schematics_long_press('NEXT')
+            if handled:
+                state_changed = True
             self.input_manager.reset_next_key_timer()
-            state_changed = True
 
         return state_changed
     
@@ -478,3 +492,96 @@ class AppState:
     def is_loading(self):
         """Check if currently in loading state."""
         return self.current_state == STATE_LOADING
+
+    def _handle_schematics_joystick_input(self, joystick_result):
+        """Handle joystick input for schematics view based on rotation mode."""
+        direction = joystick_result.get('direction')
+        action_name = joystick_result.get('action')
+        
+        # Check if we're in manual mode
+        is_manual_mode = not self.ship_manager.auto_rotation_mode
+        
+        if is_manual_mode:
+            # In manual mode, joystick directions control rotation
+            if direction == 'left':
+                self.ship_manager.apply_manual_rotation('LEFT')
+                logger.debug("Joystick LEFT: Manual rotation left")
+                return True
+            elif direction == 'right':
+                self.ship_manager.apply_manual_rotation('RIGHT')
+                logger.debug("Joystick RIGHT: Manual rotation right")
+                return True
+            elif direction == 'up':
+                self.ship_manager.apply_manual_rotation('UP')
+                logger.debug("Joystick UP: Manual rotation up")
+                return True
+            elif direction == 'down':
+                self.ship_manager.apply_manual_rotation('DOWN')
+                logger.debug("Joystick DOWN: Manual rotation down")
+                return True
+            # For middle press, fall through to normal SELECT handling
+            elif direction == 'middle':
+                return self._route_action(app_config.INPUT_ACTION_SELECT)
+        else:
+            # In auto mode, use normal joystick behavior
+            # But don't allow BACK from joystick left in auto mode either
+            if action_name == app_config.INPUT_ACTION_BACK:
+                # In auto mode, joystick left could go back
+                logger.debug("Joystick LEFT: Back action in auto mode")
+                return self._route_action(action_name)
+            elif action_name:
+                return self._route_action(action_name)
+        
+        return False
+    
+    def _handle_schematics_key_release(self, key, action_name):
+        """Handle key release events specifically for schematics view."""
+        # Check rotation mode
+        is_manual_mode = not self.ship_manager.auto_rotation_mode
+        
+        if is_manual_mode:
+            # In manual mode, keys control rotation, not navigation
+            if key == self.config.KEY_PREV:
+                # A key released - handled by main rotation logic, no special action
+                return False
+            elif key == self.config.KEY_NEXT:
+                # D key released - handled by main rotation logic, no special action  
+                return False
+            elif action_name == app_config.INPUT_ACTION_BACK:
+                # Emergency back only (shouldn't happen in normal manual operation)
+                logger.debug("Emergency back action in manual mode")
+                return self._route_action(action_name)
+        else:
+            # In auto mode, use normal key behavior
+            if action_name:
+                return self._route_action(action_name)
+        
+        return False
+    
+    def _handle_schematics_long_press(self, key_type):
+        """Handle long press events for schematics view based on rotation mode."""
+        is_manual_mode = not self.ship_manager.auto_rotation_mode
+        
+        if is_manual_mode:
+            # In manual mode, long press A/D should rotate up/down
+            if key_type == 'PREV':  # Long press A
+                self.ship_manager.apply_manual_rotation('UP')
+                logger.debug("Long press A: Manual rotation UP")
+                return True
+            elif key_type == 'NEXT':  # Long press D
+                self.ship_manager.apply_manual_rotation('DOWN')
+                logger.debug("Long press D: Manual rotation DOWN")
+                return True
+        else:
+            # In auto mode, long press A should go back
+            if key_type == 'PREV':  # Long press A
+                logger.info("Long press A in auto mode: Going back")
+                return self._route_action(app_config.INPUT_ACTION_BACK)
+            elif key_type == 'NEXT':  # Long press D
+                # In auto mode, could activate pause menu or ignore
+                logger.info("Long press D in auto mode: Activating pause menu")
+                self.schematics_pause_menu_active = True
+                self.schematics_pause_menu_index = 0
+                return True
+        
+        return False

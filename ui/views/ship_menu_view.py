@@ -43,7 +43,7 @@ def draw_ship_menu_view(screen, app_state, fonts, config_module):
     
     for i, item in enumerate(menu_items):
         text_color = config_module.Theme.FOREGROUND
-        item_width = 200
+        item_width = 300  # Increased from 200 to accommodate longer ship names
         item_height = font_medium.get_height() + 20
         
         item_display_rect = pygame.Rect(

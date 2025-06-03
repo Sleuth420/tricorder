@@ -153,8 +153,11 @@ def _switch_display_mode_if_needed(app_state):
         screen = _init_opengl_display(config)
         if screen:
             # Reset any existing OpenGL renderers since we have a new context
-            if hasattr(app_state, 'ship_manager') and app_state.ship_manager.opengl_renderer:
-                app_state.ship_manager.opengl_renderer.reset_for_new_context()
+            if hasattr(app_state, 'ship_manager'):
+                if app_state.ship_manager.opengl_renderer:
+                    app_state.ship_manager.opengl_renderer.reset_for_new_context()
+                if app_state.ship_manager.model_renderer:
+                    app_state.ship_manager.model_renderer.reset_for_new_context()
             logger.info("Switched to OpenGL display mode")
             return screen
         else:

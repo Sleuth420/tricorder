@@ -355,26 +355,54 @@ class InputRouter:
         if self.app_state.schematics_pause_menu_active:
             return self._handle_schematics_pause_menu_input(action)
         
-        # Normal 3D viewer controls when pause menu is not active
-        if action == app_config.INPUT_ACTION_PREV:
-            # Left rotation (A key)
-            self.app_state.ship_manager.apply_manual_rotation('LEFT')
-            return True
-        elif action == app_config.INPUT_ACTION_NEXT:
-            # Right rotation (D key)
-            self.app_state.ship_manager.apply_manual_rotation('RIGHT')
-            return True
-        elif action == app_config.INPUT_ACTION_SELECT:
-            # Toggle pause menu (middle press)
-            self.app_state.schematics_pause_menu_active = True
-            self.app_state.schematics_pause_menu_index = 0
-            logger.debug("Schematics: Pause menu activated")
-            return True
-        elif action == app_config.INPUT_ACTION_BACK:
-            # Emergency back (still works but not the primary method)
-            logger.debug("Schematics: Emergency BACK action, returning to ship menu")
-            self.app_state.state_manager.transition_to(STATE_SHIP_MENU)
-            return True
+        # Check if we're in manual or auto rotation mode
+        is_manual_mode = not self.app_state.ship_manager.auto_rotation_mode
+        
+        if is_manual_mode:
+            # Manual mode: A/D control rotation, long press A/D control up/down rotation
+            if action == app_config.INPUT_ACTION_PREV:
+                # Left rotation (A key)
+                self.app_state.ship_manager.apply_manual_rotation('LEFT')
+                return True
+            elif action == app_config.INPUT_ACTION_NEXT:
+                # Right rotation (D key)
+                self.app_state.ship_manager.apply_manual_rotation('RIGHT')
+                return True
+            elif action == app_config.INPUT_ACTION_SELECT:
+                # Toggle pause menu (middle press)
+                self.app_state.schematics_pause_menu_active = True
+                self.app_state.schematics_pause_menu_index = 0
+                logger.debug("Schematics: Pause menu activated")
+                return True
+            elif action == app_config.INPUT_ACTION_BACK:
+                # In manual mode, BACK only works as emergency fallback
+                # Normal back should go through pause menu
+                logger.debug("Schematics: Emergency BACK action in manual mode")
+                self.app_state.state_manager.transition_to(STATE_SHIP_MENU)
+                return True
+        else:
+            # Auto mode: Normal navigation behavior, manual rotation disabled
+            if action == app_config.INPUT_ACTION_PREV:
+                # In auto mode, A key does normal navigation (could be used for other purposes)
+                # For now, we'll ignore it or handle it differently
+                logger.debug("Schematics: PREV action in auto mode (ignored)")
+                return True
+            elif action == app_config.INPUT_ACTION_NEXT:
+                # In auto mode, D key does normal navigation  
+                logger.debug("Schematics: NEXT action in auto mode (ignored)")
+                return True
+            elif action == app_config.INPUT_ACTION_SELECT:
+                # Toggle pause menu (middle press)
+                self.app_state.schematics_pause_menu_active = True
+                self.app_state.schematics_pause_menu_index = 0
+                logger.debug("Schematics: Pause menu activated")
+                return True
+            elif action == app_config.INPUT_ACTION_BACK:
+                # In auto mode, BACK works normally (long press A)
+                logger.debug("Schematics: BACK action in auto mode, returning to ship menu")
+                self.app_state.state_manager.transition_to(STATE_SHIP_MENU)
+                return True
+        
         return False
     
     def _handle_schematics_pause_menu_input(self, action):

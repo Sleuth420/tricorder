@@ -8,7 +8,7 @@ from .state_manager import StateManager
 from .input_manager import InputManager
 from .menu_manager import MenuManager
 from .game_manager import GameManager
-from .ship_manager import ShipManager
+from .schematics_manager import SchematicsManager
 from .settings_manager import SettingsManager
 from .device_manager import DeviceManager
 from .loading_manager import LoadingManager
@@ -27,7 +27,7 @@ STATE_SETTINGS = "SETTINGS"   # Main settings category menu
 STATE_SECRET_GAMES = "SECRET_GAMES" # Secret menu
 STATE_PONG_ACTIVE = "PONG_ACTIVE" # Pong game
 STATE_SCHEMATICS = "SCHEMATICS" # Schematics viewer
-STATE_SHIP_MENU = "SHIP_MENU" # Ship selection menu
+STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU" # Schematics selection menu
 STATE_LOADING = "LOADING"     # Loading screen
 
 # New Settings Sub-View States
@@ -75,15 +75,15 @@ class AppState:
         self.state_manager = StateManager(config_module)
         self.input_manager = InputManager(config_module)
         
-        # Ship selection data for 3D viewer
-        self.selected_ship_data = None
+        # Schematics selection data for 3D viewer
+        self.selected_schematics_data = None  # Data from schematics menu selection
         
         # 3D viewer pause menu state
         self.schematics_pause_menu_active = False
         self.schematics_pause_menu_index = 0
         self.menu_manager = MenuManager(config_module)
         self.game_manager = GameManager(config_module, screen_width, screen_height)
-        self.ship_manager = ShipManager(config_module, screen_width, screen_height)
+        self.schematics_manager = SchematicsManager(config_module, screen_width, screen_height)
         self.settings_manager = SettingsManager(config_module)
         self.device_manager = DeviceManager(config_module)
         self.loading_manager = LoadingManager(config_module, screen_width, screen_height)
@@ -345,7 +345,7 @@ class AppState:
                 return True  # Keep showing loading screen
             
             pending_load = self.loading_manager.get_pending_model_load()
-            ship_model_key = pending_load['ship_model_key']
+            schematics_model_key = pending_load['schematics_model_key']
             loading_operation = pending_load['loading_operation']
             
             try:
@@ -354,15 +354,15 @@ class AppState:
                 loading_operation.current_step = 0
                 loading_operation.loading_screen.update_progress(0.0, loading_operation.operation_name)
                 
-                success = self.ship_manager.set_ship_model(ship_model_key, loading_operation)
+                success = self.schematics_manager.set_schematics_model(schematics_model_key, loading_operation)
                 
                 # Manually complete the loading operation
                 loading_operation.loading_screen.update_progress(1.0, "Complete!")
                 
                 if success:
-                    logger.info(f"Model '{ship_model_key}' loaded successfully")
+                    logger.info(f"Model '{schematics_model_key}' loaded successfully")
                 else:
-                    logger.warning(f"Failed to load model '{ship_model_key}'")
+                    logger.warning(f"Failed to load model '{schematics_model_key}'")
                 
                 # Clear the pending load and transition to target state
                 target_state = self.loading_manager.complete_loading_operation()
@@ -508,24 +508,24 @@ class AppState:
         action_name = joystick_result.get('action')
         
         # Check if we're in manual mode
-        is_manual_mode = not self.ship_manager.auto_rotation_mode
+        is_manual_mode = not self.schematics_manager.auto_rotation_mode
         
         if is_manual_mode:
             # In manual mode, joystick directions control rotation
             if direction == 'left':
-                self.ship_manager.apply_manual_rotation('LEFT')
+                self.schematics_manager.apply_manual_rotation('LEFT')
                 logger.debug("Joystick LEFT: Manual rotation left")
                 return True
             elif direction == 'right':
-                self.ship_manager.apply_manual_rotation('RIGHT')
+                self.schematics_manager.apply_manual_rotation('RIGHT')
                 logger.debug("Joystick RIGHT: Manual rotation right")
                 return True
             elif direction == 'up':
-                self.ship_manager.apply_manual_rotation('UP')
+                self.schematics_manager.apply_manual_rotation('UP')
                 logger.debug("Joystick UP: Manual rotation up")
                 return True
             elif direction == 'down':
-                self.ship_manager.apply_manual_rotation('DOWN')
+                self.schematics_manager.apply_manual_rotation('DOWN')
                 logger.debug("Joystick DOWN: Manual rotation down")
                 return True
             # For middle press, fall through to normal SELECT handling
@@ -546,18 +546,18 @@ class AppState:
     def _handle_schematics_key_release(self, key, action_name):
         """Handle key release events specifically for schematics view."""
         # Check rotation mode
-        is_manual_mode = not self.ship_manager.auto_rotation_mode
+        is_manual_mode = not self.schematics_manager.auto_rotation_mode
         
         if is_manual_mode:
             # In manual mode, keys control rotation, not navigation
             if key == self.config.KEY_PREV:
                 # A key released - apply left rotation
-                self.ship_manager.apply_manual_rotation('LEFT')
+                self.schematics_manager.apply_manual_rotation('LEFT')
                 logger.debug("A key released: Manual rotation LEFT")
                 return True
             elif key == self.config.KEY_NEXT:
                 # D key released - apply right rotation
-                self.ship_manager.apply_manual_rotation('RIGHT')
+                self.schematics_manager.apply_manual_rotation('RIGHT')
                 logger.debug("D key released: Manual rotation RIGHT")
                 return True
             elif action_name == app_config.INPUT_ACTION_SELECT:
@@ -577,16 +577,16 @@ class AppState:
     
     def _handle_schematics_long_press(self, key_type):
         """Handle long press events for schematics view based on rotation mode."""
-        is_manual_mode = not self.ship_manager.auto_rotation_mode
+        is_manual_mode = not self.schematics_manager.auto_rotation_mode
         
         if is_manual_mode:
             # In manual mode, long press A/D should rotate up/down
             if key_type == 'PREV':  # Long press A
-                self.ship_manager.apply_manual_rotation('UP')
+                self.schematics_manager.apply_manual_rotation('UP')
                 logger.debug("Long press A: Manual rotation UP")
                 return True
             elif key_type == 'NEXT':  # Long press D
-                self.ship_manager.apply_manual_rotation('DOWN')
+                self.schematics_manager.apply_manual_rotation('DOWN')
                 logger.debug("Long press D: Manual rotation DOWN")
                 return True
         else:

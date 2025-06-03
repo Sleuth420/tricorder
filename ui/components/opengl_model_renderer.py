@@ -231,14 +231,14 @@ class OpenGLModelRenderer:
                 pass
         self.loaded_textures.clear()
     
-    def render(self, pitch, roll, yaw, fonts=None, ship_info=None, pause_menu_active=False, pause_menu_index=0, auto_rotation_mode=True):
+    def render(self, pitch, roll, yaw, fonts=None, schematics_info=None, pause_menu_active=False, pause_menu_index=0, auto_rotation_mode=True):
         """
         Render the loaded model with given rotation.
         
         Args:
             pitch, roll, yaw: Rotation angles in degrees
             fonts: Font dictionary for text overlay
-            ship_info: Ship information dictionary
+            schematics_info: Schematics information dictionary
             pause_menu_active: Whether pause menu is shown
             pause_menu_index: Selected pause menu index
             auto_rotation_mode: Whether in auto or manual rotation mode
@@ -268,8 +268,8 @@ class OpenGLModelRenderer:
                 
                 # Draw overlays
                 if fonts:
-                    if ship_info:
-                        self._draw_text_overlay(fonts, ship_info, pitch, roll, yaw)
+                    if schematics_info:
+                        self._draw_text_overlay(fonts, schematics_info, pitch, roll, yaw)
                     self._draw_footer_controls(fonts)
             
             return True
@@ -449,7 +449,7 @@ class OpenGLModelRenderer:
         if 'shininess' in material:
             glMaterialf(GL_FRONT, GL_SHININESS, material['shininess'])
     
-    def _draw_text_overlay(self, fonts, ship_info, pitch, roll, yaw):
+    def _draw_text_overlay(self, fonts, schematics_info, pitch, roll, yaw):
         """Draw text overlay (reusing implementation from base renderer)."""
         # Save matrices
         glMatrixMode(GL_PROJECTION)
@@ -468,9 +468,9 @@ class OpenGLModelRenderer:
         try:
             info_font = fonts.get('small', fonts.get('medium'))
             
-            # Ship info
-            name_text = f"Model: {ship_info.get('name', 'Unknown')}"
-            desc_text = ship_info.get('description', 'No description')
+            # Schematics info
+            name_text = f"Model: {schematics_info.get('name', 'Unknown')}"
+            desc_text = schematics_info.get('description', 'No description')
             if len(desc_text) > 50:
                 desc_text = desc_text[:50] + "..."
             
@@ -569,7 +569,7 @@ class OpenGLModelRenderer:
             
             # Menu options
             current_mode = "Auto" if auto_rotation_mode else "Manual"
-            options = [f"Toggle Mode ({current_mode})", "Back to Ships", "Resume"]
+            options = [f"Toggle Mode ({current_mode})", "Back to Schematics", "Resume"]
             menu_font = fonts.get('medium', fonts.get('small'))
             start_y = 150
             item_height = 40

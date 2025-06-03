@@ -16,7 +16,7 @@ STATE_SETTINGS = "SETTINGS"
 STATE_SECRET_GAMES = "SECRET_GAMES"
 STATE_PONG_ACTIVE = "PONG_ACTIVE"
 STATE_SCHEMATICS = "SCHEMATICS"
-STATE_SHIP_MENU = "SHIP_MENU"
+STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU"
 STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
 STATE_SETTINGS_BLUETOOTH = "SETTINGS_BLUETOOTH"
 STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
@@ -57,8 +57,8 @@ class InputRouter:
             return self._handle_menu_input(action)
         elif current_state == STATE_SENSORS_MENU:
             return self._handle_sensors_menu_input(action)
-        elif current_state == STATE_SHIP_MENU:
-            return self._handle_ship_menu_input(action)
+        elif current_state == STATE_SCHEMATICS_MENU:
+            return self._handle_schematics_menu_input(action)
         elif current_state == STATE_SETTINGS:
             return self._handle_settings_main_menu_input(action)
         elif current_state == STATE_SETTINGS_DISPLAY:
@@ -91,8 +91,8 @@ class InputRouter:
             return self.app_state.state_manager.return_to_menu()
         elif current_state == STATE_SENSORS_MENU:
             return self._handle_sensors_menu_back()
-        elif current_state == STATE_SHIP_MENU:
-            return self._handle_ship_menu_back()
+        elif current_state == STATE_SCHEMATICS_MENU:
+            return self._handle_schematics_menu_back()
         elif current_state == STATE_SETTINGS:
             return self._handle_settings_main_menu_back()
         elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY]:
@@ -137,12 +137,12 @@ class InputRouter:
             self.app_state.menu_manager.enter_submenu(
                 self.app_state.menu_manager.settings_menu_items, STATE_MENU, STATE_SETTINGS)
             return self.app_state.state_manager.transition_to(STATE_SETTINGS)
-        elif selected_item.target_state == STATE_SHIP_MENU:
-            # Ship menu is also a submenu that needs proper initialization
-            ship_menu_items = self.app_state.menu_manager._generate_ship_menu_items()
+        elif selected_item.target_state == STATE_SCHEMATICS_MENU:
+            # Schematics menu is also a submenu that needs proper initialization
+            schematics_menu_items = self.app_state.menu_manager._generate_schematics_menu_items()
             self.app_state.menu_manager.enter_submenu(
-                ship_menu_items, STATE_MENU, STATE_SHIP_MENU)
-            return self.app_state.state_manager.transition_to(STATE_SHIP_MENU)
+                schematics_menu_items, STATE_MENU, STATE_SCHEMATICS_MENU)
+            return self.app_state.state_manager.transition_to(STATE_SCHEMATICS_MENU)
         elif selected_item.target_state:
             if selected_item.target_state == STATE_SENSOR_VIEW and selected_item.data:
                 self.app_state.current_sensor = selected_item.data["sensor_type"]
@@ -178,46 +178,46 @@ class InputRouter:
             return self.app_state.state_manager.transition_to(previous_menu_state_name)
         return self.app_state.state_manager.return_to_menu()
 
-    def _handle_ship_menu_input(self, action):
-        """Handle input for the ship selection menu."""
+    def _handle_schematics_menu_input(self, action):
+        """Handle input for the schematics selection menu."""
         if action in [app_config.INPUT_ACTION_NEXT, app_config.INPUT_ACTION_PREV]:
-            # Navigate the ship menu
+            # Navigate the schematics menu
             if action == app_config.INPUT_ACTION_NEXT:
-                self.app_state.menu_manager.navigate_next(STATE_SHIP_MENU)
+                self.app_state.menu_manager.navigate_next(STATE_SCHEMATICS_MENU)
             else:
-                self.app_state.menu_manager.navigate_prev(STATE_SHIP_MENU)
+                self.app_state.menu_manager.navigate_prev(STATE_SCHEMATICS_MENU)
             return True
         elif action == app_config.INPUT_ACTION_SELECT:
-            return self._handle_ship_menu_select()
+            return self._handle_schematics_menu_select()
         elif action == app_config.INPUT_ACTION_BACK:
-            return self._handle_ship_menu_back()
+            return self._handle_schematics_menu_back()
         return False
 
-    def _handle_ship_menu_select(self):
-        """Handle selection in the ship menu."""
-        selected_item = self.app_state.menu_manager.get_selected_item(STATE_SHIP_MENU)
+    def _handle_schematics_menu_select(self):
+        """Handle selection in the schematics menu."""
+        selected_item = self.app_state.menu_manager.get_selected_item(STATE_SCHEMATICS_MENU)
         if selected_item:
             if selected_item.target_state == STATE_MENU:
                 # Back option selected - use submenu system
-                logger.debug(f"Ship menu: Back option selected, exiting submenu")
+                logger.debug(f"Schematics menu: Back option selected, exiting submenu")
                 previous_menu_state_name = self.app_state.menu_manager.exit_submenu()
                 if previous_menu_state_name:
                     self.app_state.state_manager.transition_to(previous_menu_state_name)
                 else:
                     self.app_state.state_manager.return_to_menu()
             elif selected_item.target_state == STATE_SCHEMATICS:
-                # Ship selected, store the selected ship data and go to 3D viewer
-                logger.debug(f"Ship menu: Selected ship '{selected_item.name}' with data {selected_item.data}")
-                # Store selected ship info in app state for the 3D viewer
-                self.app_state.selected_ship_data = selected_item.data
+                # Schematics selected, store the selected schematics data and go to 3D viewer
+                logger.debug(f"Schematics menu: Selected schematics '{selected_item.name}' with data {selected_item.data}")
+                # Store selected schematics info in app state for the 3D viewer
+                self.app_state.selected_schematics_data = selected_item.data
                 
                 # Check if this requires model loading
-                if selected_item.data and 'ship_model' in selected_item.data:
-                    ship_model_key = selected_item.data['ship_model']
-                    ship_model = self.app_state.ship_manager.ship_models.get(ship_model_key)
+                if selected_item.data and 'schematics_model' in selected_item.data:
+                    schematics_model_key = selected_item.data['schematics_model']
+                    schematics_model = self.app_state.schematics_manager.schematics_models.get(schematics_model_key)
                     
                     # For complex models (OBJ files), use loading screen
-                    if ship_model and ship_model.get('type') == 'opengl_model':
+                    if schematics_model and schematics_model.get('type') == 'opengl_model':
                         # Start loading operation
                         loading_op = self.app_state.start_loading_operation(
                             STATE_SCHEMATICS, 
@@ -227,14 +227,14 @@ class InputRouter:
                         
                         # Schedule the actual model loading for next frame
                         # This allows the loading screen to be displayed first
-                        self.app_state.loading_manager.set_pending_model_load(ship_model_key, loading_op)
+                        self.app_state.loading_manager.set_pending_model_load(schematics_model_key, loading_op)
                     else:
                         # For simple models, load directly
-                        success = self.app_state.ship_manager.set_ship_model(ship_model_key)
+                        success = self.app_state.schematics_manager.set_schematics_model(schematics_model_key)
                         if success:
-                            logger.info(f"Ship model pre-set to '{ship_model_key}' for smooth transition")
+                            logger.info(f"Schematics model pre-set to '{schematics_model_key}' for smooth transition")
                         else:
-                            logger.warning(f"Failed to pre-set ship model '{ship_model_key}'")
+                            logger.warning(f"Failed to pre-set schematics model '{schematics_model_key}'")
                         self.app_state.state_manager.transition_to(STATE_SCHEMATICS)
                 else:
                     # No model specified, go directly to schematics
@@ -242,9 +242,9 @@ class InputRouter:
             return True
         return False
 
-    def _handle_ship_menu_back(self):
-        """Handle back action in ship menu."""
-        logger.debug(f"Ship menu: BACK action, exiting submenu")
+    def _handle_schematics_menu_back(self):
+        """Handle back action in schematics menu."""
+        logger.debug(f"Schematics menu: BACK action, exiting submenu")
         previous_menu_state_name = self.app_state.menu_manager.exit_submenu()
         if previous_menu_state_name:
             return self.app_state.state_manager.transition_to(previous_menu_state_name)
@@ -359,7 +359,7 @@ class InputRouter:
             return self._handle_schematics_pause_menu_input(action)
         
         # Check if we're in manual or auto rotation mode
-        is_manual_mode = not self.app_state.ship_manager.auto_rotation_mode
+        is_manual_mode = not self.app_state.schematics_manager.auto_rotation_mode
         logger.debug(f"Rotation mode: {'Manual' if is_manual_mode else 'Auto'}")
         
         if is_manual_mode:
@@ -367,12 +367,12 @@ class InputRouter:
             if action == app_config.INPUT_ACTION_PREV:
                 # Left rotation (A key)
                 logger.debug("Manual mode: A key - applying LEFT rotation")
-                self.app_state.ship_manager.apply_manual_rotation('LEFT')
+                self.app_state.schematics_manager.apply_manual_rotation('LEFT')
                 return True
             elif action == app_config.INPUT_ACTION_NEXT:
                 # Right rotation (D key)
                 logger.debug("Manual mode: D key - applying RIGHT rotation")
-                self.app_state.ship_manager.apply_manual_rotation('RIGHT')
+                self.app_state.schematics_manager.apply_manual_rotation('RIGHT')
                 return True
             elif action == app_config.INPUT_ACTION_SELECT:
                 # Toggle pause menu (middle press)
@@ -385,7 +385,7 @@ class InputRouter:
                 # In manual mode, BACK only works as emergency fallback
                 # Normal back should go through pause menu
                 logger.debug("Schematics: Emergency BACK action in manual mode")
-                self.app_state.state_manager.transition_to(STATE_SHIP_MENU)
+                self.app_state.state_manager.transition_to(STATE_SCHEMATICS_MENU)
                 return True
         else:
             # Auto mode: Normal navigation behavior, manual rotation disabled
@@ -406,8 +406,8 @@ class InputRouter:
                 return True
             elif action == app_config.INPUT_ACTION_BACK:
                 # In auto mode, BACK works normally (long press A)
-                logger.debug("Schematics: BACK action in auto mode, returning to ship menu")
-                self.app_state.state_manager.transition_to(STATE_SHIP_MENU)
+                logger.debug("Schematics: BACK action in auto mode, returning to schematics menu")
+                self.app_state.state_manager.transition_to(STATE_SCHEMATICS_MENU)
                 return True
         
         return False
@@ -438,15 +438,15 @@ class InputRouter:
         
         if selected_index == 0:
             # Toggle rotation mode
-            self.app_state.ship_manager.toggle_rotation_mode()
+            self.app_state.schematics_manager.toggle_rotation_mode()
             self.app_state.schematics_pause_menu_active = False
             logger.debug("Schematics: Rotation mode toggled, pause menu closed")
             return True
         elif selected_index == 1:
-            # Back to ship menu
+            # Back to schematics menu
             self.app_state.schematics_pause_menu_active = False
-            self.app_state.state_manager.transition_to(STATE_SHIP_MENU)
-            logger.debug("Schematics: Returning to ship menu")
+            self.app_state.state_manager.transition_to(STATE_SCHEMATICS_MENU)
+            logger.debug("Schematics: Returning to schematics menu")
             return True
         elif selected_index == 2:
             # Resume/Close menu

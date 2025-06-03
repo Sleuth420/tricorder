@@ -12,7 +12,7 @@ STATE_SYSTEM_INFO = "SYSTEM"
 STATE_SETTINGS = "SETTINGS"
 STATE_SECRET_GAMES = "SECRET_GAMES"
 STATE_SCHEMATICS = "SCHEMATICS"
-STATE_SHIP_MENU = "SHIP_MENU"
+STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU"
 
 # Import new settings states
 STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
@@ -80,7 +80,7 @@ class MenuManager:
         ))
         items.append(MenuItem(
             name="Schematics", 
-            target_state=STATE_SHIP_MENU, 
+            target_state=STATE_SCHEMATICS_MENU, 
             color_key="SIDEBAR_SCHEMATICS"
         ))
         items.append(MenuItem(
@@ -120,25 +120,25 @@ class MenuManager:
                 
         return items
 
-    def _generate_ship_menu_items(self):
-        """Generates the ship selection menu items."""
+    def _generate_schematics_menu_items(self):
+        """Generates the schematics selection menu items."""
         items = [
             MenuItem(
                 name="Test Cube", 
                 target_state=STATE_SCHEMATICS,
-                data={"ship_model": "test_cube", "ship_id": 1},
+                data={"schematics_model": "test_cube", "schematics_id": 1},
                 color_key="SIDEBAR_SCHEMATICS"
             ),
             MenuItem(
-                name="OpenGL Test", 
+                name="Worf", 
                 target_state=STATE_SCHEMATICS,
-                data={"ship_model": "opengl_test", "ship_id": 2},
+                data={"schematics_model": "worf", "schematics_id": 2},
                 color_key="SIDEBAR_SCHEMATICS"
             ),
             MenuItem(
                 name="Apollo NCC-1570", 
                 target_state=STATE_SCHEMATICS,
-                data={"ship_model": "apollo_1570", "ship_id": 3},
+                data={"schematics_model": "apollo_1570", "schematics_id": 3},
                 color_key="SIDEBAR_SCHEMATICS"
             ),
             MenuItem(
@@ -306,9 +306,9 @@ class MenuManager:
         elif current_state == STATE_SENSORS_MENU:
             # Sensors menu should use the submenu stack like other submenus
             return self.current_menu_definition
-        elif current_state == STATE_SHIP_MENU:
-            # Ship menu should use the submenu stack like sensors and settings
-            # If we're in STATE_SHIP_MENU, it should be managed by the stack
+        elif current_state == STATE_SCHEMATICS_MENU:
+            # Schematics menu should use the submenu stack like sensors and settings
+            # If we're in STATE_SCHEMATICS_MENU, it should be managed by the stack
             return self.current_menu_definition
         elif current_state == STATE_SECRET_GAMES:
             return self.secret_menu_items # Secret games menu is directly managed

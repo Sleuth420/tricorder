@@ -71,10 +71,10 @@ class LoadingManager:
         """Check if currently in loading state."""
         return self.loading_target_state is not None
     
-    def set_pending_model_load(self, ship_model_key, loading_operation):
+    def set_pending_model_load(self, schematics_model_key, loading_operation):
         """Set a pending model load operation."""
         self.pending_model_load = {
-            'ship_model_key': ship_model_key,
+            'schematics_model_key': schematics_model_key,
             'loading_operation': loading_operation
         }
     

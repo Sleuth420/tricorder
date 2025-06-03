@@ -68,7 +68,7 @@ class OpenGLRenderer:
         self.initialized = False
         logger.info("OpenGL renderer reset for new context")
     
-    def render(self, pitch, roll, yaw, fonts=None, ship_info=None, pause_menu_active=False, pause_menu_index=0, auto_rotation_mode=True):
+    def render(self, pitch, roll, yaw, fonts=None, schematics_info=None, pause_menu_active=False, pause_menu_index=0, auto_rotation_mode=True):
         """
         Render a 3D cube with the given rotation and optional text overlay.
         This is called when the display is already in OpenGL mode.
@@ -128,8 +128,8 @@ class OpenGLRenderer:
                 
                 # Draw text overlay and footer controls
                 if fonts:
-                    if ship_info:
-                        self._draw_text_overlay(fonts, ship_info, pitch, roll, yaw)
+                    if schematics_info:
+                        self._draw_text_overlay(fonts, schematics_info, pitch, roll, yaw)
                     # Always show footer controls when not in pause menu
                     self._draw_footer_controls(fonts)
             
@@ -180,7 +180,7 @@ class OpenGLRenderer:
                 glVertex3f(*vertices[vertex_index])
         glEnd()
     
-    def _draw_text_overlay(self, fonts, ship_info, pitch, roll, yaw):
+    def _draw_text_overlay(self, fonts, schematics_info, pitch, roll, yaw):
         """Draw text overlay on OpenGL surface using 2D projection."""
         # Save current matrices
         glMatrixMode(GL_PROJECTION)
@@ -201,9 +201,9 @@ class OpenGLRenderer:
             # Create text surfaces using pygame
             info_font = fonts.get('small', fonts.get('medium'))
             
-            # Ship info
-            name_text = f"Model: {ship_info.get('name', 'Unknown')}"
-            desc_text = ship_info.get('description', 'No description')[:50] + "..." if len(ship_info.get('description', '')) > 50 else ship_info.get('description', '')
+            # Schematics info
+            name_text = f"Model: {schematics_info.get('name', 'Unknown')}"
+            desc_text = schematics_info.get('description', 'No description')[:50] + "..." if len(schematics_info.get('description', '')) > 50 else schematics_info.get('description', '')
             
             # Rotation info (pitch, roll, yaw are already in degrees)
             rotation_text = f"Pitch: {pitch:.1f}° Roll: {roll:.1f}° Yaw: {yaw:.1f}°"
@@ -312,7 +312,7 @@ class OpenGLRenderer:
             
             # Menu options (restore original layout)
             current_mode = "Auto" if auto_rotation_mode else "Manual"
-            options = [f"Toggle Mode ({current_mode})", "Back to Ships", "Resume"]
+            options = [f"Toggle Mode ({current_mode})", "Back to Schematics", "Resume"]
             menu_font = fonts.get('medium', fonts.get('small'))
             start_y = 150  # Original start position from top
             item_height = 40

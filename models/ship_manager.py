@@ -104,9 +104,9 @@ class ShipManager:
         
         # Sensor smoothing for noise reduction
         self.smoothing_enabled = True
-        self.smoothing_factor = 0.15  # How much new reading affects result (0.1 = very smooth, 0.5 = responsive)
-        self.deadzone = 2.0  # Ignore changes smaller than this (degrees)
-        self.sensitivity = 0.8  # Overall sensitivity multiplier (0.5 = half sensitivity)
+        self.smoothing_factor = 0.08  # How much new reading affects result (0.1 = very smooth, 0.5 = responsive)
+        self.deadzone = 5.0  # Ignore changes smaller than this (degrees)
+        self.sensitivity = 0.4  # Overall sensitivity multiplier (0.5 = half sensitivity)
         
         # Smoothed sensor values (moving average)
         self.smoothed_pitch = 0.0
@@ -160,15 +160,93 @@ class ShipManager:
             "description": "Apollo-class light cruiser from Star Trek"
         }
     
-    def set_ship_model(self, ship_model_key):
-        """Set the current ship model to display."""
+    def set_ship_model(self, ship_model_key, loading_operation=None):
+        """Set the current ship model to display with optional loading progress."""
         if ship_model_key in self.ship_models:
             self.current_ship_model = ship_model_key
             logger.info(f"Ship model set to: {ship_model_key}")
+            
+            # If this is an OBJ model, preload it with progress tracking
+            ship_model = self.ship_models[ship_model_key]
+            if ship_model.get('type') == 'opengl_model' and loading_operation:
+                try:
+                    loading_operation.step("Preparing model...")
+                    obj_model = self._load_obj_model_with_progress(ship_model, loading_operation)
+                    loading_operation.step("Initializing renderer...")
+                    
+                    # Pre-initialize the model renderer
+                    if OPENGL_AVAILABLE and obj_model:
+                        if not self.model_renderer:
+                            from ui.components.opengl_model_renderer import OpenGLModelRenderer
+                            self.model_renderer = OpenGLModelRenderer(
+                                self.screen_width, self.screen_height, self.config
+                            )
+                        
+                        loading_operation.step("Loading model into renderer...")
+                        self.model_renderer.load_model(obj_model)
+                        
+                except Exception as e:
+                    logger.error(f"Error during model loading: {e}")
+            
             return True
         else:
             logger.warning(f"Unknown ship model: {ship_model_key}")
             return False
+    
+    def _load_obj_model_with_progress(self, ship_model, loading_operation):
+        """Load an OBJ model from file with progress tracking."""
+        file_path = ship_model.get('file_path')
+        if not file_path:
+            logger.error("No file path specified for OBJ model")
+            return None
+        
+        # Check cache first
+        if file_path in self.loaded_obj_models:
+            loading_operation.set_detail("Loading from cache...")
+            return self.loaded_obj_models[file_path]
+        
+        # Load from file with progress updates
+        loading_operation.set_detail(f"Loading {os.path.basename(file_path)}...")
+        logger.info(f"Loading OBJ model from: {file_path}")
+        
+        from ui.components.obj_loader import OBJLoader
+        obj_model = OBJLoader.load(file_path)
+        
+        if obj_model:
+            # Cache the loaded model
+            self.loaded_obj_models[file_path] = obj_model
+            loading_operation.set_detail("Model loaded successfully")
+            logger.info(f"OBJ model loaded and cached: {file_path}")
+        else:
+            loading_operation.set_detail("Failed to load model")
+            logger.error(f"Failed to load OBJ model: {file_path}")
+        
+        return obj_model
+    
+    def _load_obj_model(self, ship_model):
+        """Load an OBJ model from file, with caching (fallback without progress)."""
+        file_path = ship_model.get('file_path')
+        if not file_path:
+            logger.error("No file path specified for OBJ model")
+            return None
+        
+        # Check cache first
+        if file_path in self.loaded_obj_models:
+            return self.loaded_obj_models[file_path]
+        
+        # Load from file
+        logger.info(f"Loading OBJ model from: {file_path}")
+        from ui.components.obj_loader import OBJLoader
+        obj_model = OBJLoader.load(file_path)
+        
+        if obj_model:
+            # Cache the loaded model
+            self.loaded_obj_models[file_path] = obj_model
+            logger.info(f"OBJ model loaded and cached: {file_path}")
+        else:
+            logger.error(f"Failed to load OBJ model: {file_path}")
+        
+        return obj_model
     
     def update_rotation_from_sensors(self):
         """Update rotation values from sensehat tilt sensors with smoothing and filtering."""
@@ -437,30 +515,6 @@ class ShipManager:
         except Exception as e:
             logger.error(f"OBJ model rendering failed: {e}", exc_info=True)
             self._render_obj_fallback(screen, ship_model, fonts, config_module)
-    
-    def _load_obj_model(self, ship_model):
-        """Load an OBJ model from file, with caching."""
-        file_path = ship_model.get('file_path')
-        if not file_path:
-            logger.error("No file path specified for OBJ model")
-            return None
-        
-        # Check cache first
-        if file_path in self.loaded_obj_models:
-            return self.loaded_obj_models[file_path]
-        
-        # Load from file
-        logger.info(f"Loading OBJ model from: {file_path}")
-        obj_model = OBJLoader.load(file_path)
-        
-        if obj_model:
-            # Cache the loaded model
-            self.loaded_obj_models[file_path] = obj_model
-            logger.info(f"OBJ model loaded and cached: {file_path}")
-        else:
-            logger.error(f"Failed to load OBJ model: {file_path}")
-        
-        return obj_model
     
     def _render_obj_fallback(self, screen, ship_model, fonts, config_module):
         """Fallback rendering when OBJ model loading fails."""

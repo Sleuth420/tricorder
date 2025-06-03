@@ -5,6 +5,7 @@ import pygame
 import math
 import logging
 from typing import Optional, Dict, Any
+import os
 
 try:
     from OpenGL.GL import *
@@ -33,6 +34,10 @@ class OpenGLModelRenderer:
         self.model_scale = 1.0
         self.model_center = (0.0, 0.0, 0.0)
         
+        # Texture management
+        self.loaded_textures = {}  # Cache for loaded textures {material_name: texture_id}
+        self.current_texture = None
+        
         if not OPENGL_AVAILABLE:
             logger.error("PyOpenGL not available for model rendering")
             return
@@ -60,12 +65,91 @@ class OpenGLModelRenderer:
         
         logger.info(f"Model loaded: center={self.model_center}, scale={self.model_scale}")
         
-        # Clear any existing display list
-        if self.display_list:
-            glDeleteLists(self.display_list, 1)
-            self.display_list = None
-            
+        # Clear any existing display list and textures
+        self._cleanup_resources()
+        
+        # Don't load textures here - defer until OpenGL context is active
+        # Textures will be loaded on first render
+        logger.info(f"Model loaded with {len(model.materials)} materials (textures will load on first render)")
+        
         return True
+    
+    def _load_model_textures(self, model: OBJModel):
+        """Load textures for the model materials."""
+        if not model.materials:
+            logger.info("No materials found in model, using default material")
+            return
+        
+        for material_name, material_data in model.materials.items():
+            texture_id = self._load_material_texture(material_name, material_data)
+            if texture_id:
+                self.loaded_textures[material_name] = texture_id
+                logger.info(f"Loaded texture for material: {material_name}")
+    
+    def _load_material_texture(self, material_name: str, material_data: Dict) -> Optional[int]:
+        """Load texture for a specific material."""
+        # Look for texture map in material data
+        texture_path = None
+        
+        # Check for various texture map types
+        if 'map_Kd' in material_data:  # Diffuse map
+            texture_path = material_data['map_Kd']
+        elif 'map_Ka' in material_data:  # Ambient map
+            texture_path = material_data['map_Ka']
+        
+        if not texture_path:
+            logger.debug(f"No texture map found for material: {material_name}")
+            return None
+        
+        logger.info(f"Attempting to load texture for material '{material_name}': {texture_path}")
+        
+        # Convert relative path to absolute if needed
+        if not os.path.isabs(texture_path):
+            # Assume texture is relative to the model directory
+            model_dir = os.path.dirname(self.loaded_model.file_path) if hasattr(self.loaded_model, 'file_path') else 'assets/apollo_ncc1570'
+            texture_path = os.path.join(model_dir, texture_path)
+            logger.info(f"Resolved texture path: {texture_path}")
+        
+        if not os.path.exists(texture_path):
+            logger.warning(f"Texture file not found: {texture_path}")
+            return None
+        
+        try:
+            # Load texture using pygame
+            logger.info(f"Loading texture file: {texture_path}")
+            texture_surface = pygame.image.load(texture_path)
+            
+            # Convert to RGB format - pygame surfaces don't have get_format() method
+            # Just convert to RGB directly
+            texture_surface = texture_surface.convert()
+            logger.debug("Converted texture to RGB format")
+            
+            texture_data = pygame.image.tostring(texture_surface, "RGB", False)
+            
+            width = texture_surface.get_width()
+            height = texture_surface.get_height()
+            
+            logger.info(f"Texture loaded: {width}x{height} pixels")
+            
+            # Generate OpenGL texture
+            texture_id = glGenTextures(1)
+            glBindTexture(GL_TEXTURE_2D, texture_id)
+            
+            # Set texture parameters
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+            
+            # Upload texture data
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data)
+            
+            logger.info(f"Texture uploaded to OpenGL successfully: {texture_path} (ID: {texture_id})")
+            return texture_id
+            
+        except Exception as e:
+            logger.error(f"Failed to load texture {texture_path}: {e}", exc_info=True)
+            return None
         
     def _init_opengl(self):
         """Initialize OpenGL settings - called when in OpenGL context."""
@@ -113,6 +197,9 @@ class OpenGLModelRenderer:
             glEnable(GL_COLOR_MATERIAL)
             glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)
             
+            # Enable texturing
+            glEnable(GL_TEXTURE_2D)
+            
             self.initialized = True
             logger.info("OpenGL model renderer initialized")
             
@@ -123,10 +210,26 @@ class OpenGLModelRenderer:
     def reset_for_new_context(self):
         """Reset renderer for new OpenGL context."""
         self.initialized = False
-        if self.display_list:
-            # Display list will be invalid in new context
-            self.display_list = None
+        # Clear cached resources since they're invalid in new context
+        self._cleanup_resources()
         logger.info("OpenGL model renderer reset for new context")
+    
+    def _cleanup_resources(self):
+        """Clean up OpenGL resources."""
+        if self.display_list:
+            try:
+                glDeleteLists(self.display_list, 1)
+            except:
+                pass
+            self.display_list = None
+        
+        # Clean up textures
+        for texture_id in self.loaded_textures.values():
+            try:
+                glDeleteTextures([texture_id])
+            except:
+                pass
+        self.loaded_textures.clear()
     
     def render(self, pitch, roll, yaw, fonts=None, ship_info=None, pause_menu_active=False, pause_menu_index=0):
         """
@@ -234,6 +337,9 @@ class OpenGLModelRenderer:
         }
         
         current_material = None
+        current_texture_id = None
+        
+        logger.debug(f"Rendering {len(self.loaded_model.faces)} faces with {len(self.loaded_textures)} textures available")
         
         for face in self.loaded_model.faces:
             # Set material if it changed
@@ -243,10 +349,35 @@ class OpenGLModelRenderer:
                 
                 if face_material and face_material in self.loaded_model.materials:
                     mat = self.loaded_model.materials[face_material]
+                    logger.debug(f"Applying material: {face_material}")
                 else:
                     mat = default_material
+                    logger.debug(f"Using default material for face material: {face_material}")
                 
                 self._apply_material(mat)
+                
+                # Load and bind texture if available (on-demand loading during render)
+                new_texture_id = None
+                if face_material:
+                    # Check if texture is already loaded
+                    if face_material in self.loaded_textures:
+                        new_texture_id = self.loaded_textures[face_material]
+                    else:
+                        # Try to load texture now (OpenGL context is active)
+                        new_texture_id = self._load_material_texture(face_material, mat)
+                        if new_texture_id:
+                            self.loaded_textures[face_material] = new_texture_id
+                
+                if new_texture_id != current_texture_id:
+                    current_texture_id = new_texture_id
+                    if current_texture_id:
+                        glEnable(GL_TEXTURE_2D)
+                        glBindTexture(GL_TEXTURE_2D, current_texture_id)
+                        logger.debug(f"Bound texture {current_texture_id} for material {face_material}")
+                    else:
+                        glDisable(GL_TEXTURE_2D)
+                        if face_material:
+                            logger.debug(f"No texture available for material: {face_material}")
             
             # Render face
             face_vertices = face['vertices']

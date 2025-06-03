@@ -11,6 +11,7 @@ from .game_manager import GameManager
 from .ship_manager import ShipManager
 from .settings_manager import SettingsManager
 from .device_manager import DeviceManager
+from .loading_manager import LoadingManager
 from .wifi_manager import WifiManager, WIFI_ACTION_TOGGLE, WIFI_ACTION_BACK_TO_SETTINGS, WIFI_ACTION_BROWSE_NETWORKS, WIFI_ACTION_BACK_TO_WIFI, WIFI_ACTION_CONNECT_TO_NETWORK, WIFI_ACTION_ENTER_PASSWORD # Import WifiManager and relevant actions
 from .password_entry_manager import PasswordEntryManager
 from .input_router import InputRouter
@@ -27,6 +28,7 @@ STATE_SECRET_GAMES = "SECRET_GAMES" # Secret menu
 STATE_PONG_ACTIVE = "PONG_ACTIVE" # Pong game
 STATE_SCHEMATICS = "SCHEMATICS" # Schematics viewer
 STATE_SHIP_MENU = "SHIP_MENU" # Ship selection menu
+STATE_LOADING = "LOADING"     # Loading screen
 
 # New Settings Sub-View States
 STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
@@ -84,6 +86,7 @@ class AppState:
         self.ship_manager = ShipManager(config_module, screen_width, screen_height)
         self.settings_manager = SettingsManager(config_module)
         self.device_manager = DeviceManager(config_module)
+        self.loading_manager = LoadingManager(config_module, screen_width, screen_height)
         self.wifi_manager = WifiManager(config_module) # Instantiate WifiManager (no command func needed)
         # Password entry manager - initialized with screen dimensions
         import pygame
@@ -323,6 +326,48 @@ class AppState:
         """Update application state and check for timed events."""
         state_changed = False
         
+        # Handle pending model loads (after loading screen is displayed)
+        if self.loading_manager.has_pending_model_load() and self.current_state == STATE_LOADING:
+            # Ensure loading screen is visible for at least a short time
+            if not hasattr(self, '_loading_start_time'):
+                self._loading_start_time = time.time()
+                return True  # Keep showing loading screen
+            
+            # Wait at least 0.5 seconds before starting model load
+            if time.time() - self._loading_start_time < 0.5:
+                return True  # Keep showing loading screen
+            
+            pending_load = self.loading_manager.get_pending_model_load()
+            ship_model_key = pending_load['ship_model_key']
+            loading_operation = pending_load['loading_operation']
+            
+            try:
+                # Perform the actual model loading with progress tracking
+                with loading_operation:
+                    success = self.ship_manager.set_ship_model(ship_model_key, loading_operation)
+                    if success:
+                        logger.info(f"Model '{ship_model_key}' loaded successfully")
+                    else:
+                        logger.warning(f"Failed to load model '{ship_model_key}'")
+                
+                # Clear the pending load and transition to target state
+                target_state = self.loading_manager.complete_loading_operation()
+                if target_state:
+                    # Clean up loading timing
+                    if hasattr(self, '_loading_start_time'):
+                        delattr(self, '_loading_start_time')
+                    self.state_manager.transition_to(target_state)
+                    state_changed = True
+                
+            except Exception as e:
+                logger.error(f"Error during model loading: {e}")
+                # On error, still complete the loading but log the issue
+                target_state = self.loading_manager.complete_loading_operation()
+                if target_state:
+                    self.state_manager.transition_to(target_state)
+            
+            return True  # State will change when loading completes
+        
         # Check secret combo duration (only from main menu on settings item)
         if (self.current_state == STATE_MENU and
             self.input_manager.check_secret_combo_duration() and
@@ -405,5 +450,31 @@ class AppState:
         return self.menu_manager.get_current_menu_items(self.current_state)
         
     def get_current_menu_index(self):
-        """Get current menu index (now calls MenuManager)."""
+        """Get current menu index for the current state."""
         return self.menu_manager.get_current_menu_index(self.current_state)
+    
+    def start_loading_operation(self, target_state, operation_name="Loading", total_steps=3):
+        """
+        Start a loading operation with progress tracking.
+        
+        Args:
+            target_state (str): State to transition to after loading
+            operation_name (str): Name of the operation
+            total_steps (int): Total number of loading steps
+        """
+        loading_operation = self.loading_manager.start_loading_operation(target_state, operation_name, total_steps)
+        # Transition to loading state
+        self.state_manager.transition_to(STATE_LOADING)
+        return loading_operation
+    
+    def complete_loading_operation(self):
+        """Complete the current loading operation and transition to target state."""
+        return self.loading_manager.complete_loading_operation()
+    
+    def get_loading_screen(self):
+        """Get the current loading screen instance."""
+        return self.loading_manager.get_loading_screen()
+    
+    def is_loading(self):
+        """Check if currently in loading state."""
+        return self.current_state == STATE_LOADING

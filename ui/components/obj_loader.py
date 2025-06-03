@@ -18,6 +18,7 @@ class OBJModel:
         self.materials = {} # Material definitions
         self.groups = {}    # Object groups and their faces
         self.bounds = None  # Bounding box (min_x, min_y, min_z, max_x, max_y, max_z)
+        self.file_path = None  # Added for texture loading
         
     def calculate_bounds(self):
         """Calculate the bounding box of the model."""
@@ -172,6 +173,9 @@ class OBJLoader:
             # Calculate model bounds
             model.calculate_bounds()
             
+            # Store the file path for texture loading
+            model.file_path = file_path
+            
             logger.info(f"OBJ loaded successfully: {file_path}")
             logger.info(f"  Vertices: {len(model.vertices)}")
             logger.info(f"  Normals: {len(model.normals)}")
@@ -232,6 +236,18 @@ class OBJLoader:
                             materials[current_material]['shininess'] = float(parts[1])
                         elif command == 'd' or command == 'Tr':  # Transparency
                             materials[current_material]['transparency'] = float(parts[1])
+                        elif command == 'map_Kd':  # Diffuse texture map
+                            materials[current_material]['map_Kd'] = ' '.join(parts[1:])
+                        elif command == 'map_Ka':  # Ambient texture map
+                            materials[current_material]['map_Ka'] = ' '.join(parts[1:])
+                        elif command == 'map_Ks':  # Specular texture map
+                            materials[current_material]['map_Ks'] = ' '.join(parts[1:])
+                        elif command == 'map_Ns':  # Specular highlight texture map
+                            materials[current_material]['map_Ns'] = ' '.join(parts[1:])
+                        elif command == 'map_d':  # Alpha texture map
+                            materials[current_material]['map_d'] = ' '.join(parts[1:])
+                        elif command == 'map_bump' or command == 'bump':  # Bump map
+                            materials[current_material]['map_bump'] = ' '.join(parts[1:])
                             
             logger.info(f"Materials loaded from {mtl_path}: {list(materials.keys())}")
             

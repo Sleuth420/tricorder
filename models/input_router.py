@@ -211,17 +211,34 @@ class InputRouter:
                 # Store selected ship info in app state for the 3D viewer
                 self.app_state.selected_ship_data = selected_item.data
                 
-                # IMPORTANT: Set the ship model IMMEDIATELY before state transition
-                # This ensures the display mode switch happens correctly on the first frame
+                # Check if this requires model loading
                 if selected_item.data and 'ship_model' in selected_item.data:
                     ship_model_key = selected_item.data['ship_model']
-                    success = self.app_state.ship_manager.set_ship_model(ship_model_key)
-                    if success:
-                        logger.info(f"Ship model pre-set to '{ship_model_key}' for smooth transition")
+                    ship_model = self.app_state.ship_manager.ship_models.get(ship_model_key)
+                    
+                    # For complex models (OBJ files), use loading screen
+                    if ship_model and ship_model.get('type') == 'opengl_model':
+                        # Start loading operation
+                        loading_op = self.app_state.start_loading_operation(
+                            STATE_SCHEMATICS, 
+                            f"Loading {selected_item.name}", 
+                            3
+                        )
+                        
+                        # Schedule the actual model loading for next frame
+                        # This allows the loading screen to be displayed first
+                        self.app_state.loading_manager.set_pending_model_load(ship_model_key, loading_op)
                     else:
-                        logger.warning(f"Failed to pre-set ship model '{ship_model_key}'")
-                
-                self.app_state.state_manager.transition_to(STATE_SCHEMATICS)
+                        # For simple models, load directly
+                        success = self.app_state.ship_manager.set_ship_model(ship_model_key)
+                        if success:
+                            logger.info(f"Ship model pre-set to '{ship_model_key}' for smooth transition")
+                        else:
+                            logger.warning(f"Failed to pre-set ship model '{ship_model_key}'")
+                        self.app_state.state_manager.transition_to(STATE_SCHEMATICS)
+                else:
+                    # No model specified, go directly to schematics
+                    self.app_state.state_manager.transition_to(STATE_SCHEMATICS)
             return True
         return False
 

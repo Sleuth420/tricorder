@@ -14,6 +14,10 @@ STATE_SECRET_GAMES = "SECRET_GAMES"
 STATE_PONG_ACTIVE = "PONG_ACTIVE"
 STATE_SCHEMATICS = "SCHEMATICS"
 STATE_SHIP_MENU = "SHIP_MENU"
+STATE_LOADING = "LOADING"
+
+# States that should not be used as previous states (intermediate/temporary states)
+INTERMEDIATE_STATES = {STATE_LOADING}
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +50,11 @@ class StateManager:
             return False
             
         logger.info(f"State transition: {self.current_state} -> {new_state}")
-        self.previous_state = self.current_state
+        
+        # Only update previous_state if current state is not an intermediate state
+        if self.current_state not in INTERMEDIATE_STATES:
+            self.previous_state = self.current_state
+        
         self.current_state = new_state
         return True
         

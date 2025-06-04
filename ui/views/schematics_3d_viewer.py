@@ -53,13 +53,12 @@ def draw_schematics_view(screen, app_state, fonts, config_module):
             # Draw footer with controls when pause menu is not active
             key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
             key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
+            key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
             
-            hint_text = f"< {key_prev_name}/{key_next_name}=Rotate | Hold {key_next_name} or Middle Press=Menu >"
-            
+            hint_text = ""
+
             render_footer(
-                screen,
-                hint_text,
-                fonts,
+                screen, hint_text, fonts,
                 config_module.Theme.FOREGROUND,
                 screen.get_width(),
                 screen.get_height()
@@ -122,8 +121,7 @@ def _draw_pause_menu(screen, app_state, fonts, config_module):
     key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
     key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
     
-    selected_option = options[current_selection_idx]
-    hint = f"< {key_prev_name}/{key_next_name}=Navigate | {key_select_name}={selected_option} | Hold {key_prev_name}=Resume >"
+    hint = ""
 
     render_footer(
         screen, hint, fonts,

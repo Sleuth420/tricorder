@@ -80,8 +80,7 @@ def draw_schematics_menu_view(screen, app_state, fonts, config_module):
     key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
     key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
     
-    selected_name = menu_items[selected_index].name if menu_items and 0 <= selected_index < len(menu_items) else "Item"
-    hint_text = f"< {key_prev_name}/{key_next_name}=Navigate | {key_select_name}={selected_name} | Hold {key_prev_name}=Back >"
+    hint_text = ""
 
     render_footer(
         screen, hint_text, fonts,

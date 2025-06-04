@@ -165,7 +165,7 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
     key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
     key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
     action_text = "Freeze" if not app_state.is_frozen else "Unfreeze"
-    hint_text = f"< Hold {key_prev_name}=Menu | {key_select_name}={action_text} | {key_next_name}= - >"
+    hint_text = ""
 
     render_footer(
         screen, hint_text, fonts,

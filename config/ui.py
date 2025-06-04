@@ -25,4 +25,4 @@ AUTO_CYCLE_INTERVAL = 5  # Seconds between auto-cycling in dashboard mode
 AUTO_CYCLE_INTERVAL_OPTIONS = [1, 5, 10, 15, 30, 60, "<- Back to Main Menu"] # Seconds, New, updated string option with simpler arrow
 
 # -- Secret Menu Settings -- (New Section)
-SECRET_COMBO_DURATION_OPTIONS = [2.0, 3.0, 5.0, 7.0, 10.0] # Seconds 
+SECRET_COMBO_DURATION_OPTIONS = [2.0, 3.0, 5.0, 7.0, 10.0] # Seconds

@@ -139,10 +139,10 @@ def draw_sensors_menu_view(screen, app_state, sensor_values, sensor_history, fon
 
     # --- Part 6: Draw Footer (centered on main content area only) ---
     key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
-    key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
     key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
-    key_back_name = "BACK"  # Generic back key name
-    hint_text = f"< {key_prev_name}=Up | {key_select_name}=Select | {key_next_name}=Down | {key_back_name}=Back >"
+    key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
+    key_back_name = "BACK"
+    hint_text = ""
 
     # Create a custom footer rendering that centers on main content area
     footer_font = fonts.get('small', fonts.get('medium'))

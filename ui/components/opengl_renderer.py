@@ -334,7 +334,7 @@ class OpenGLRenderer:
             
             # Controls hint (restore original position)
             hint_font = fonts.get('small', fonts.get('medium'))
-            hint_text = "A/D: Navigate | Enter: Select | Hold A: Resume"
+            hint_text = ""
             hint_surface = hint_font.render(hint_text, True, (255, 255, 255))
             hint_x = (self.screen_width - hint_surface.get_width()) // 2
             hint_y = 40  # Original was 40 from bottom, which is still 40 from bottom
@@ -372,7 +372,7 @@ class OpenGLRenderer:
         try:
             # Footer controls
             hint_font = fonts.get('small', fonts.get('medium'))
-            hint_text = "A/D: Rotate | Enter: Menu | Hold A: Back"
+            hint_text = ""
             hint_surface = hint_font.render(hint_text, True, (255, 255, 255))
             hint_x = (self.screen_width - hint_surface.get_width()) // 2
             hint_y = 20  # 20 pixels from bottom

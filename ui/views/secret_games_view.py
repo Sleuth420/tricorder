@@ -119,10 +119,7 @@ def draw_secret_games_view(screen, app_state, fonts, config):
     key_next_name = pygame.key.name(config.KEY_NEXT).upper()
     key_select_name = pygame.key.name(config.KEY_SELECT).upper()
     
-    if selected_game.name == "Quit":
-        controls_text = f"{key_prev_name}/{key_next_name}=Navigate | {key_select_name}=Exit | Hold {key_prev_name}=Back"
-    else:
-        controls_text = f"{key_prev_name}/{key_next_name}=Navigate | {key_select_name}=Play | Hold {key_prev_name}=Back"
+    controls_text = ""
     
     controls_font = fonts.get('small', fonts.get('medium'))
     controls_surface = controls_font.render(controls_text, True, config.Theme.FOREGROUND)

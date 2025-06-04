@@ -4,6 +4,9 @@
 import pygame
 import logging
 import time
+from datetime import datetime
+from config import version
+
 # from ui.components.ui_elements import draw_panel # Likely unused, will confirm and remove if so
 from ui.components.text_display import render_footer
 # from ui.views.system_info_view import draw_system_info_view # Unused in this file
@@ -15,6 +18,49 @@ from config import CLASSIFIED_TEXT
 # are accessed via the 'config_module' parameter passed to functions.
 
 logger = logging.getLogger(__name__)
+
+def _get_footer_content(config_module):
+    """
+    Generate footer content with stardate and build number.
+    
+    Args:
+        config_module (module): Configuration module
+        
+    Returns:
+        str: Footer content string
+    """
+    try:
+        # Calculate TNG-era stardate
+        # TNG system: First digit 4 (24th century), then year progression
+        # For real world: calculate as if we're in 24th century
+        now = datetime.now()
+        
+        # Base stardate calculation - TNG style
+        # Years since 2323 (start of TNG era) + fractional day
+        years_since_2323 = now.year - 2323
+        day_of_year = now.timetuple().tm_yday
+        total_days_in_year = 366 if now.year % 4 == 0 else 365
+        
+        # Calculate fractional year progress
+        year_progress = day_of_year / total_days_in_year
+        
+        # TNG stardate format: 4XXXX.X
+        # Where XXXX represents years and progress, X represents fractional day
+        stardate_base = 40000 + (years_since_2323 * 1000) + int(year_progress * 1000)
+        
+        # Fractional day (0.1 = 2.4 hours, so 0.5 = noon)
+        fractional_day = (now.hour * 60 + now.minute) / 1440.0
+        
+        stardate = stardate_base + fractional_day
+        
+        # Get build number from version module
+        build_number = version.get_build_number()
+        
+        return f"Stardate {stardate:.1f} | {build_number}"
+        
+    except Exception as e:
+        logger.error(f"Error generating footer content: {e}")
+        return "Stardate 47457.1 | ALPHA 0.0.1"
 
 # Arrow indicator configuration - now moved to config/ui.py
 # _arrow_config = {
@@ -242,9 +288,9 @@ def draw_menu_screen(screen, app_state, fonts, config_module, sensor_values):
 
     # --- Part 6: Draw Footer (centered on main content area only) ---
     key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
-    key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
     key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
-    hint_text = f"< {key_prev_name}=Up | {key_select_name}=Select | {key_next_name}=Down >"
+    key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
+    hint_text = _get_footer_content(config_module)
 
     # Create a custom footer rendering that centers on main content area
     footer_font = fonts.get('small', fonts.get('medium'))
@@ -260,3 +306,5 @@ def draw_menu_screen(screen, app_state, fonts, config_module, sensor_values):
 # REMOVED _draw_system_info function - moved to ui/views/system_info_view.py
 
 # REMOVED _draw_settings function - moved to ui/views/settings_view.py 
+
+ 

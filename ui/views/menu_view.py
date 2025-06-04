@@ -11,8 +11,52 @@ from models.menu import get_menu_items
 from data import system_info
 from ui.components.text_display import render_footer
 from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS
+from config import version
 
 logger = logging.getLogger(__name__)
+
+def _get_footer_content(config):
+    """
+    Generate footer content with stardate and build number.
+    
+    Args:
+        config (module): Configuration module
+        
+    Returns:
+        str: Footer content string
+    """
+    try:
+        # Calculate TNG-era stardate
+        # TNG system: First digit 4 (24th century), then year progression
+        # For real world: calculate as if we're in 24th century
+        now = datetime.now()
+        
+        # Base stardate calculation - TNG style
+        # Years since 2323 (start of TNG era) + fractional day
+        years_since_2323 = now.year - 2323
+        day_of_year = now.timetuple().tm_yday
+        total_days_in_year = 366 if now.year % 4 == 0 else 365
+        
+        # Calculate fractional year progress
+        year_progress = day_of_year / total_days_in_year
+        
+        # TNG stardate format: 4XXXX.X
+        # Where XXXX represents years and progress, X represents fractional day
+        stardate_base = 40000 + (years_since_2323 * 1000) + int(year_progress * 1000)
+        
+        # Fractional day (0.1 = 2.4 hours, so 0.5 = noon)
+        fractional_day = (now.hour * 60 + now.minute) / 1440.0
+        
+        stardate = stardate_base + fractional_day
+        
+        # Get build number from version module
+        build_number = version.get_build_number()
+        
+        return f"Stardate {stardate:.1f} | {build_number}"
+        
+    except Exception as e:
+        logger.error(f"Error generating footer content: {e}")
+        return "Stardate 47457.1 | ALPHA 0.0.1"
 
 def draw_menu_view(screen, app_state, sensor_values, sensor_history, fonts, config):
     """
@@ -49,10 +93,11 @@ def draw_menu_view(screen, app_state, sensor_values, sensor_history, fonts, conf
     main_content_rect = pygame.Rect(sidebar_width, 0, screen_width - sidebar_width, screen_height)
     _draw_main_content(screen, main_content_rect, fonts, config, sensor_values)
     
-    # Draw footer
+    # Draw footer with stardate and build
+    footer_content = _get_footer_content(config)
     render_footer(
         screen,
-        "< PREV = A | SELECT = Enter | NEXT = D >",
+        footer_content,
         fonts,
         config.COLOR_FOREGROUND,
         screen_width,

@@ -134,7 +134,7 @@ def draw_dashboard(screen, app_state, sensor_values, sensor_history, fonts, conf
         
     render_footer(
         screen,
-        hint_text,
+        "",
         fonts,
         config.COLOR_FOREGROUND,
         screen_width,

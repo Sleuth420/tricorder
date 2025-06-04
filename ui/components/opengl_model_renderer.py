@@ -591,10 +591,10 @@ class OpenGLModelRenderer:
             
             # Controls hint
             hint_font = fonts.get('small', fonts.get('medium'))
-            hint_text = "A/D: Navigate | Enter: Select | Hold A: Resume"
+            hint_text = ""
             hint_surface = hint_font.render(hint_text, True, (255, 255, 255))
             hint_x = (self.screen_width - hint_surface.get_width()) // 2
-            hint_y = 40
+            hint_y = 40  # 40 pixels from bottom
             self._draw_text_surface(hint_surface, hint_x, hint_y)
             
         except Exception as e:
@@ -610,24 +610,28 @@ class OpenGLModelRenderer:
 
     def _draw_footer_controls(self, fonts):
         """Draw footer controls."""
+        # Save current matrices
         glMatrixMode(GL_PROJECTION)
         glPushMatrix()
         glLoadIdentity()
+        
+        # Set up 2D orthographic projection for text
         glOrtho(0, self.screen_width, 0, self.screen_height, -1, 1)
         
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
         glLoadIdentity()
         
-        glDisable(GL_LIGHTING)
+        # Disable depth testing for text overlay
         glDisable(GL_DEPTH_TEST)
         
         try:
+            # Footer controls
             hint_font = fonts.get('small', fonts.get('medium'))
-            hint_text = "A/D: Rotate | Enter: Menu | Hold A: Back"
+            hint_text = ""
             hint_surface = hint_font.render(hint_text, True, (255, 255, 255))
             hint_x = (self.screen_width - hint_surface.get_width()) // 2
-            hint_y = 20
+            hint_y = 20  # 20 pixels from bottom
             self._draw_text_surface(hint_surface, hint_x, hint_y)
             
         except Exception as e:

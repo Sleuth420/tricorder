@@ -68,13 +68,10 @@ def draw_select_combo_duration_view(screen, app_state, fonts, config_module):
     key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
     key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
     
-    hint_text = f"< {key_prev_name}=Up | {key_select_name}=Select | {key_next_name}=Down > (Hold {key_prev_name}=Back)"
+    hint_text = ""
 
     render_footer(
-        screen,
-        hint_text,
-        fonts,
+        screen, hint_text, fonts,
         config_module.Theme.FOREGROUND,
-        screen_width,
-        screen_height
+        screen_width, screen_height
     ) 

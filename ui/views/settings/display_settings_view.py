@@ -92,9 +92,8 @@ def draw_display_settings_view(screen, app_state, fonts, config_module):
     key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
     key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
     key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
-    # back_action_name = "BACK"
     
-    hint = f"< {key_prev_name}=Up | {key_select_name}=Apply | {key_next_name}=Down | Hold {key_prev_name}=Back >"
+    hint = ""
 
     render_footer(
         screen, hint, fonts,

@@ -86,10 +86,8 @@ def draw_settings_view(screen, app_state, fonts, config_module):
     key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
     key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
     key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
-    # Use app_config.INPUT_ACTION_BACK for the name of the back action
-    # back_action_name = "BACK" # Or derive from config if a specific key is mapped to general back
     
-    hint = f"< {key_prev_name}=Up | {key_select_name}=Select | {key_next_name}=Down | Hold {key_prev_name}=Back >"
+    hint = ""
 
     render_footer(
         screen, hint, fonts,

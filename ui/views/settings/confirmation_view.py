@@ -68,18 +68,11 @@ def draw_confirmation_view(screen, app_state, fonts, config_module, message="Are
         screen.blit(option_surface, option_rect)
 
     # Footer hints
-    # For confirmation, SELECT maps to current_selection_idx (Yes/No)
-    # BACK maps to No/Cancel
-    key_prev_name = pygame.key.name(config_module.KEY_PREV).upper() # Or Up/Down for Yes/No toggle
+    key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
     key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
     key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
-    key_back_name = "BACK" # Or map to config_module.KEY_BACK if defined
     
-    hint = f"< {key_prev_name}/{key_next_name}=Toggle | {key_select_name}=Confirm | Hold {key_prev_name}=Cancel >"
-    if current_selection_idx == 0: # "Yes" is selected
-        hint = f"< {key_prev_name}/{key_next_name}=Toggle | {key_select_name}=YES | Hold {key_prev_name}=Cancel >"
-    else: # "No" is selected
-        hint = f"< {key_prev_name}/{key_next_name}=Toggle | {key_select_name}=NO | Hold {key_prev_name}=Cancel >"
+    hint = ""
 
     render_footer(
         screen, hint, fonts,

@@ -87,9 +87,8 @@ def draw_wifi_settings_view(screen, app_state, fonts, config_module):
     key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
     key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
     key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
-    # back_action_name = pygame.key.name(config_module.INPUT_ACTION_BACK).upper() # This is not a key
-
-    hint = f"< {key_prev_name}=Up | {key_select_name}=Select | {key_next_name}=Down | Hold {key_prev_name}=Back >"
+    
+    hint = ""
 
     render_footer(
         screen, hint, fonts,
@@ -227,6 +226,6 @@ def draw_wifi_networks_view(screen, app_state, fonts, config_module):
     
     # Bigger footer with better positioning
     footer_y = screen_height - 35
-    footer_text = "A/D: Navigate | ENTER: Select | Hold A: Back"
+    footer_text = ""
     footer_surface = fonts['medium'].render(footer_text, True, config_module.Theme.FOREGROUND)
     screen.blit(footer_surface, (20, footer_y)) 

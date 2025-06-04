@@ -125,7 +125,7 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
         
     render_footer(
         screen,
-        hint_text,
+        "",
         fonts,
         config.COLOR_FOREGROUND,
         screen_width,

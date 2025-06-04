@@ -498,9 +498,23 @@ class InputRouter:
                 self.app_state.wifi_manager.toggle_wifi()
                 return True
             elif wifi_manager_action_result == WIFI_ACTION_BROWSE_NETWORKS:
-                logger.info("WIFI_ACTION_BROWSE_NETWORKS received. Transitioning to network browsing.")
-                self.app_state.wifi_manager.scan_networks()
-                return self.app_state.state_manager.transition_to(STATE_SETTINGS_WIFI_NETWORKS)
+                logger.info("WIFI_ACTION_BROWSE_NETWORKS received. Starting loading screen.")
+                # Start loading operation for network scanning
+                loading_operation = self.app_state.start_loading_operation(
+                    target_state=STATE_SETTINGS_WIFI_NETWORKS,
+                    operation_name="Finding available networks",
+                    total_steps=3
+                )
+                
+                # Start network scan in background
+                def scan_completion_callback():
+                    # Complete the loading and transition to networks view
+                    target = self.app_state.complete_loading_operation()
+                    if target:
+                        self.app_state.state_manager.transition_to(target)
+                
+                self.app_state.wifi_manager.start_background_scan(scan_completion_callback, loading_operation)
+                return True
             elif wifi_manager_action_result == WIFI_ACTION_BACK_TO_SETTINGS:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS)
             else:

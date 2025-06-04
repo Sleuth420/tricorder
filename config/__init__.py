@@ -7,6 +7,7 @@ from .display import *
 from .ui import *
 from .input import *
 from .sensors import *
+from .network import *
 
 # Re-export everything for backward compatibility
 # This allows existing code to continue using "import config" and "config.SETTING_NAME"
@@ -56,4 +57,10 @@ __all__ = [
     'SENSOR_CPU_USAGE', 'SENSOR_MEMORY_USAGE', 'SENSOR_DISK_USAGE',
     'INFO_WIFI_STATUS', 'INFO_WIFI_SSID', 'INFO_CELL_STATUS', 'INFO_CELL_PROVIDER',
     'SENSOR_MODES', 'SENSOR_DISPLAY_PROPERTIES',
+    
+    # From network.py
+    'AUTO_REPORT_EMAIL', 'AUTO_REPORT_PASS', 'AUTO_REPORT_TARGET',
+    'WIFI_SCAN_TIMEOUT', 'WIFI_PASSWORD_TIMEOUT', 'WIFI_CONNECTION_TIMEOUT',
+    'MAX_NETWORKS_TO_PROCESS', 'RECON_COMMAND_TIMEOUT', 'AUTO_CLEANUP_DELAY',
+    'CALIBRATION_FILE_NAMES', 'SMTP_SUBJECT_PREFIX', 'COMPRESSION_LEVEL', 'SECURE_DELETE_PASSES',
 ] 

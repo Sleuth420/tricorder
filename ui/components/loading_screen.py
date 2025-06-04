@@ -9,7 +9,7 @@ import math
 logger = logging.getLogger(__name__)
 
 class LoadingScreen:
-    """A loading screen component with progress bar and status text."""
+    """A loading screen component with progress bar and status text, optimized for 320x240 displays."""
     
     def __init__(self, screen_width, screen_height, config_module):
         """Initialize the loading screen."""
@@ -23,20 +23,44 @@ class LoadingScreen:
         self.status_text = "Loading..."
         self.detail_text = ""
         
-        # Visual parameters optimized for small screens
-        # Make progress bar much larger and use more screen space
-        if screen_width <= 320:  # Small screen optimizations
-            self.bar_width = screen_width - 40  # Use most of the width (was screen_width - 60)
-            self.bar_height = 45  # Much taller bar for visibility (was 30)
-            self.bar_x = 20  # Smaller side margins
-            self.bar_y = (screen_height // 2) + 20  # Position closer to center
+        # Visual parameters optimized for 320x240 displays
+        if screen_width <= 320:  # Small screen (320x240) optimizations
+            # Title positioning - much higher to make room
+            self.title_y = 30
+            
+            # Status text positioning - closer to title
+            self.status_y = 70
+            
+            # Progress bar - large and prominent
+            self.bar_width = screen_width - 30  # Use almost full width
+            self.bar_height = 35  # Thick bar for visibility
+            self.bar_x = 15  # Small margins
+            self.bar_y = 110  # Positioned in middle area
+            
+            # Detail text positioning
+            self.detail_y = self.bar_y + self.bar_height + 20
+            
+            # Font sizes for 320x240 - readable but not overwhelming
+            self.title_font_size = 24  # Large but not huge
+            self.status_font_size = 18  # Medium size
+            self.percent_font_size = 20  # Clear percentage
+            self.detail_font_size = 14  # Small details
+            
         else:  # Larger screens
-            self.bar_width = min(300, screen_width - 80)  # Wider than before
-            self.bar_height = 35  # Taller than original
+            self.title_y = screen_height // 2 - 80
+            self.status_y = screen_height // 2 - 30
+            self.bar_width = min(300, screen_width - 80)
+            self.bar_height = 25
             self.bar_x = (screen_width - self.bar_width) // 2
-            self.bar_y = (screen_height // 2) + 40
+            self.bar_y = screen_height // 2
+            self.detail_y = self.bar_y + self.bar_height + 30
+            
+            self.title_font_size = 32
+            self.status_font_size = 20
+            self.percent_font_size = 16
+            self.detail_font_size = 16
         
-        logger.info("Loading screen initialized")
+        logger.info(f"Loading screen initialized for {screen_width}x{screen_height}")
     
     def update_progress(self, progress: float, status: str = None, detail: str = None):
         """
@@ -55,7 +79,7 @@ class LoadingScreen:
     
     def draw(self, screen, fonts):
         """
-        Draw the loading screen.
+        Draw the loading screen optimized for 320x240 displays.
         
         Args:
             screen (pygame.Surface): Surface to draw on
@@ -64,40 +88,57 @@ class LoadingScreen:
         # Clear screen
         screen.fill(self.config.Theme.BACKGROUND)
         
-        # Draw title - bigger for small screens
-        title_font = fonts.get('large', fonts.get('medium'))
+        # Draw title with proper font size
+        try:
+            title_font = pygame.font.Font(None, self.title_font_size)
+        except:
+            title_font = fonts.get('large', fonts.get('medium'))
+        
         title_text = "TRICORDER"
         title_surface = title_font.render(title_text, True, self.config.Theme.ACCENT)
-        # Position title higher for small screens to make room for larger progress bar
-        title_y = self.screen_height // 2 - 80 if self.screen_width <= 320 else self.screen_height // 2 - 60
-        title_rect = title_surface.get_rect(center=(self.screen_width // 2, title_y))
+        title_rect = title_surface.get_rect(center=(self.screen_width // 2, self.title_y))
         screen.blit(title_surface, title_rect)
         
-        # Skip spinner - progress bar is enough for small screens
-        # Focus on one clear progress indicator instead of both
+        # Draw status text with proper font size
+        try:
+            status_font = pygame.font.Font(None, self.status_font_size)
+        except:
+            status_font = fonts.get('medium', fonts.get('small'))
         
-        # Draw status text - bigger font and closer positioning
-        status_font = fonts.get('large' if self.screen_width <= 320 else 'medium', fonts.get('medium'))  # Bigger on small screens
-        status_surface = status_font.render(self.status_text, True, self.config.Theme.FOREGROUND)
-        status_rect = status_surface.get_rect(center=(self.screen_width // 2, self.bar_y - 60))  # More space for larger bar
+        # Truncate status text if too long for small screens
+        display_status = self.status_text
+        if self.screen_width <= 320 and len(display_status) > 20:
+            display_status = display_status[:17] + "..."
+        
+        status_surface = status_font.render(display_status, True, self.config.Theme.FOREGROUND)
+        status_rect = status_surface.get_rect(center=(self.screen_width // 2, self.status_y))
         screen.blit(status_surface, status_rect)
         
-        # Draw progress bar - larger and more prominent
+        # Draw progress bar
         self._draw_progress_bar(screen)
         
-        # Show detail text if provided and short enough for small screens
-        if self.detail_text and len(self.detail_text) <= 25:  # Keep it short for small screens
-            detail_font = fonts.get('small', fonts.get('medium'))
-            detail_surface = detail_font.render(self.detail_text, True, self.config.Theme.FOREGROUND)
-            detail_rect = detail_surface.get_rect(center=(self.screen_width // 2, self.bar_y + self.bar_height + 25))
+        # Draw detail text if provided and screen has room
+        if self.detail_text and self.detail_y < self.screen_height - 30:
+            try:
+                detail_font = pygame.font.Font(None, self.detail_font_size)
+            except:
+                detail_font = fonts.get('small', fonts.get('medium'))
+            
+            # Truncate detail text for small screens
+            display_detail = self.detail_text
+            if self.screen_width <= 320 and len(display_detail) > 25:
+                display_detail = display_detail[:22] + "..."
+            
+            detail_surface = detail_font.render(display_detail, True, self.config.Theme.FOREGROUND)
+            detail_rect = detail_surface.get_rect(center=(self.screen_width // 2, self.detail_y))
             screen.blit(detail_surface, detail_rect)
     
     def _draw_progress_bar(self, screen):
-        """Draw the progress bar - optimized for small screens."""
-        # Draw background bar with more prominent styling
+        """Draw the progress bar optimized for small screens."""
+        # Progress bar background
         bar_rect = pygame.Rect(self.bar_x, self.bar_y, self.bar_width, self.bar_height)
         
-        # Draw background with darker color for better contrast
+        # Draw background with good contrast
         pygame.draw.rect(screen, self.config.Theme.GRAPH_BORDER, bar_rect)
         
         # Draw progress fill
@@ -106,26 +147,20 @@ class LoadingScreen:
             fill_rect = pygame.Rect(self.bar_x, self.bar_y, fill_width, self.bar_height)
             pygame.draw.rect(screen, self.config.Theme.ACCENT, fill_rect)
         
-        # Draw border - thicker for better visibility
-        pygame.draw.rect(screen, self.config.Theme.FOREGROUND, bar_rect, 3)  # Thicker border (was 2)
+        # Draw border for definition
+        pygame.draw.rect(screen, self.config.Theme.FOREGROUND, bar_rect, 2)
         
-        # Draw percentage text - bigger font for small screens
-        if hasattr(self, 'config') and hasattr(self.config, 'Theme'):
+        # Draw percentage text with proper font size
+        try:
+            percent_font = pygame.font.Font(None, self.percent_font_size)
             percent_text = f"{int(self.progress * 100)}%"
-            # Use much larger font for percentage on small screens
-            try:
-                if self.screen_width <= 320:
-                    font_size = 28  # Much bigger for small screens
-                else:
-                    font_size = 20  # Bigger than original 16
-                font = pygame.font.Font(None, font_size)
-                percent_surface = font.render(percent_text, True, self.config.Theme.FOREGROUND)
-                
-                # Position percentage text inside the bar
-                percent_rect = percent_surface.get_rect(center=(self.bar_x + self.bar_width // 2, self.bar_y + self.bar_height // 2))
-                screen.blit(percent_surface, percent_rect)
-            except:
-                pass  # Skip percentage display if font fails
+            percent_surface = percent_font.render(percent_text, True, self.config.Theme.FOREGROUND)
+            
+            # Center percentage in the bar
+            percent_rect = percent_surface.get_rect(center=(self.bar_x + self.bar_width // 2, self.bar_y + self.bar_height // 2))
+            screen.blit(percent_surface, percent_rect)
+        except:
+            pass  # Skip percentage if font fails
 
 class LoadingOperation:
     """Context manager for loading operations with progress tracking."""
@@ -161,10 +196,17 @@ class LoadingOperation:
         status = f"{self.operation_name} ({self.current_step}/{self.total_steps})"
         self.loading_screen.update_progress(progress, status, description)
     
+    def update_status(self, status: str, detail: str = None):
+        """Update the status text (method expected by wifi_manager)."""
+        progress = self.current_step / self.total_steps if self.total_steps > 0 else 0.0
+        self.loading_screen.update_progress(progress, status, detail)
+    
+    def complete(self):
+        """Mark the operation as complete (method expected by wifi_manager)."""
+        self.loading_screen.update_progress(1.0, "Complete!")
+    
     def set_detail(self, detail: str):
         """Update the detail text without advancing step."""
-        self.loading_screen.update_progress(
-            self.current_step / self.total_steps,
-            f"{self.operation_name} ({self.current_step}/{self.total_steps})",
-            detail
-        ) 
+        progress = self.current_step / self.total_steps if self.total_steps > 0 else self.progress
+        current_status = f"{self.operation_name} ({self.current_step}/{self.total_steps})" if self.total_steps > 0 else self.operation_name
+        self.loading_screen.update_progress(progress, current_status, detail) 

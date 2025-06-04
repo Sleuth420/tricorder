@@ -15,5 +15,8 @@ pygltflib==1.16.4   # GLTF file format support
 PyGLM==2.8.2        # OpenGL Mathematics library
 Pillow==11.2.1      # Python Imaging Library
 
+# Environment configuration
+python-dotenv==1.0.0  # For loading environment variables from .env file
+
 # Note: sense-hat is excluded as it's Raspberry Pi specific
 # Mock sensor data is provided for Windows development 

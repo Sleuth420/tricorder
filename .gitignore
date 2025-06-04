@@ -55,3 +55,6 @@ config_old.py
 *.tmp
 
 wifi_scan_output.txt
+# Environment variables
+.env
+.env.example

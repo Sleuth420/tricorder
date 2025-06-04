@@ -113,12 +113,7 @@ def draw_wifi_networks_view(screen, app_state, fonts, config_module):
     title_text = title_font.render("WiFi Networks", True, config_module.Theme.FOREGROUND)
     screen.blit(title_text, (20, 15))
     
-    # Show scanning/error states - bigger fonts
-    if app_state.wifi_manager.scanning_in_progress:
-        status_text = fonts['large'].render("Scanning...", True, config_module.Theme.FOREGROUND)
-        screen.blit(status_text, (20, 70))
-        return
-    
+    # Show error states only - scanning is handled by the reusable loading screen
     if app_state.wifi_manager.last_scan_error:
         error_text = fonts['large'].render(f"Error: {app_state.wifi_manager.last_scan_error}", True, config_module.Theme.ALERT)
         screen.blit(error_text, (20, 70))

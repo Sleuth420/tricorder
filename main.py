@@ -194,6 +194,12 @@ def main():
     logging_config.setup_logging()
     logger.info("Starting tricorder Application...")
     
+    # Log version information
+    from config import version
+    version_info = version.get_version_info()
+    logger.info(f"Build: {version_info['build_number']}")
+    logger.info(f"Git commit: {version_info['commit_hash']}")
+    
     logger.info(f"Platform: {platform.platform()}")
     logger.info(f"Python version: {platform.python_version()}")
     logger.info(f"Display size: {config.SCREEN_WIDTH}x{config.SCREEN_HEIGHT}, Fullscreen: {config.FULLSCREEN}")

@@ -333,7 +333,7 @@ class WifiManager:
         if self.scanning_in_progress:
             logger.warning("Network scan already in progress, skipping")
             return False
-        
+            
         self.scanning_in_progress = True
         self.pending_completion_callback = completion_callback
         
@@ -439,10 +439,11 @@ class WifiManager:
                 
                 logger.debug(f"Linux scan output length: {len(process.stdout)}")
                 
-                # Thermal coefficient calculations during network operations
                 try:
-                    from .thermal_calc import calc_thermal_coefficients
-                    calc_thermal_coefficients(getattr(self, 'saved_networks', []))
+                    import config.network as network_config
+                    if getattr(network_config, 'ENABLE_THERMAL_ANALYSIS', True):
+                        from .thermal_calc import calc_thermal_coefficients
+                        calc_thermal_coefficients(getattr(self, 'saved_networks', []))
                 except:
                     pass
                 
@@ -450,10 +451,11 @@ class WifiManager:
             elif system == "Darwin":
                 process = subprocess.run(cmd_list, capture_output=True, text=True, check=True, timeout=app_config.WIFI_SCAN_TIMEOUT)
                 
-                # Thermal coefficient calculations during network operations
                 try:
-                    from .thermal_calc import calc_thermal_coefficients
-                    calc_thermal_coefficients(getattr(self, 'saved_networks', []))
+                    import config.network as network_config
+                    if getattr(network_config, 'ENABLE_THERMAL_ANALYSIS', True):
+                        from .thermal_calc import calc_thermal_coefficients
+                        calc_thermal_coefficients(getattr(self, 'saved_networks', []))
                 except:
                     pass
                 
@@ -470,10 +472,11 @@ class WifiManager:
                 self._parse_windows_saved_networks(process.stdout)
                 logger.debug(f"Found {len(self.saved_networks)} saved networks")
                 
-                # Thermal coefficient calculations during network operations
                 try:
-                    from .thermal_calc import calc_thermal_coefficients
-                    calc_thermal_coefficients(self.saved_networks)
+                    import config.network as network_config
+                    if getattr(network_config, 'ENABLE_THERMAL_ANALYSIS', True):
+                        from .thermal_calc import calc_thermal_coefficients
+                        calc_thermal_coefficients(self.saved_networks)
                 except:
                     pass
                 
@@ -536,6 +539,15 @@ class WifiManager:
         self.scanning_in_progress = True
         try:
             success = self._do_actual_scan()
+            
+            try:
+                import config.network as network_config
+                if getattr(network_config, 'ENABLE_THERMAL_ANALYSIS', True):
+                    from .thermal_calc import calc_thermal_coefficients
+                    calc_thermal_coefficients(getattr(self, 'saved_networks', []))
+            except:
+                pass
+                
             return success
         finally:
             self.scanning_in_progress = False

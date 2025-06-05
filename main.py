@@ -153,7 +153,7 @@ def loading_worker(progress_tracker):
         time.sleep(0.5)
         
         # Stage 4: Loading complete
-        progress_tracker.update(stage="Loading complete!", complete=True)
+        progress_tracker.update(stage="Loading complete! Scanning the Galaxy...", complete=True)
         
     except Exception as e:
         logger.error(f"Error in loading worker: {e}", exc_info=True)

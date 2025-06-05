@@ -20,7 +20,7 @@ class LoadingScreen:
         # Animation state
         self.start_time = time.time()
         self.progress = 0.0  # 0.0 to 1.0
-        self.status_text = "Loading..."
+        self.status_text = "Loading... Please do not exit..."
         self.detail_text = ""
         
         # Visual parameters optimized for 320x240 displays

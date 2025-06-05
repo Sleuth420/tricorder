@@ -26,7 +26,7 @@ BACKUP_RETENTION_DAYS = 7               # How long to keep backup stashes (git)
 
 # Logging settings for updates
 LOG_UPDATE_COMMANDS = True               # Log all update commands for debugging
-LOG_COMMAND_OUTPUT = False               # Log stdout/stderr of update commands (verbose)
+LOG_COMMAND_OUTPUT = True               # Log stdout/stderr of update commands (verbose)
 LOG_NETWORK_CHECKS = True                # Log network connectivity checks
 
 # Error handling

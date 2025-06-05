@@ -3,7 +3,7 @@
 
 import pygame
 import logging
-from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SCHEMATICS, STATE_SCHEMATICS_MENU, STATE_SENSORS_MENU, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_DEVICE, STATE_SETTINGS_CONTROLS, STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY, STATE_LOADING
+from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SCHEMATICS, STATE_SCHEMATICS_MENU, STATE_SENSORS_MENU, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_DEVICE, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY, STATE_LOADING
 from ui.menu import draw_menu_screen
 from ui.views.sensor_view import draw_sensor_view
 from ui.views.system_info_view import draw_system_info_view
@@ -18,6 +18,7 @@ from ui.views.settings.confirmation_view import draw_confirmation_view
 from ui.views.settings.select_combo_duration_view import draw_select_combo_duration_view
 from ui.views.settings.wifi_settings_view import draw_wifi_settings_view, draw_wifi_networks_view
 from ui.views.settings.wifi_password_entry_view import draw_wifi_password_entry_view
+from ui.views.settings.update_view import draw_update_view
 from ui.views.schematics_menu_view import draw_schematics_menu_view
 
 # Temporary placeholder function until schematics_view.py is created
@@ -275,6 +276,8 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         draw_device_settings_view(screen, app_state, fonts, config_module)
     elif app_state.current_state == STATE_SETTINGS_CONTROLS:
         draw_controls_view(screen, app_state, fonts, config_module)
+    elif app_state.current_state == STATE_SETTINGS_UPDATE:
+        draw_update_view(screen, app_state, fonts, config_module)
     elif app_state.current_state == STATE_CONFIRM_REBOOT:
         draw_confirmation_view(screen, app_state, fonts, config_module, message="Reboot Device?")
     elif app_state.current_state == STATE_CONFIRM_SHUTDOWN:

@@ -24,6 +24,7 @@ STATE_SETTINGS_BLUETOOTH = "SETTINGS_BLUETOOTH"
 STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
 STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
 STATE_SETTINGS_CONTROLS = "SETTINGS_CONTROLS"
+STATE_SETTINGS_UPDATE = "SETTINGS_UPDATE"
 STATE_SELECT_COMBO_DURATION = "SELECT_COMBO_DURATION"
 STATE_SETTINGS_WIFI_NETWORKS = "SETTINGS_WIFI_NETWORKS"
 STATE_WIFI_PASSWORD_ENTRY = "WIFI_PASSWORD_ENTRY"
@@ -70,6 +71,8 @@ class InputRouter:
             return self._handle_device_settings_input(action)
         elif current_state == STATE_SETTINGS_CONTROLS:
             return self._handle_controls_settings_input(action)
+        elif current_state == STATE_SETTINGS_UPDATE:
+            return self._handle_update_settings_input(action)
         elif current_state == STATE_SELECT_COMBO_DURATION:
             return self._handle_select_combo_duration_input(action)
         elif current_state in [STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP]:
@@ -100,7 +103,7 @@ class InputRouter:
             return self._handle_schematics_menu_back()
         elif current_state == STATE_SETTINGS:
             return self._handle_settings_main_menu_back()
-        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY]:
+        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY]:
             logger.info(f"BACK from {current_state}, returning to appropriate parent")
             if current_state == STATE_SELECT_COMBO_DURATION:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_DEVICE)
@@ -318,6 +321,80 @@ class InputRouter:
             return self.app_state.controls_manager.navigate_prev()
         # Back action is handled by the universal back handler
         return False
+
+    def _handle_update_settings_input(self, action):
+        """Handle input for the Update Settings view."""
+        result = self.app_state.update_manager.handle_update_input(action)
+        if isinstance(result, str):
+            if result == "GO_BACK":
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS)
+            elif result == "START_APP_UPDATE":
+                return self._start_app_update()
+            elif result == "START_SYSTEM_UPDATE":
+                return self._start_system_update()
+        return result
+    
+    def _start_app_update(self):
+        """Start the application update process with loading screen."""
+        # Start loading operation
+        loading_operation = self.app_state.start_loading_operation(
+            STATE_SETTINGS_UPDATE, 
+            "Updating Application",
+            total_steps=5
+        )
+        
+        # Run the update in the background
+        def perform_update():
+            success = self.app_state.update_manager.perform_app_update(loading_operation)
+            
+            # Complete loading operation
+            self.app_state.complete_loading_operation()
+            
+            if success:
+                # Restart application after successful update
+                self.app_state.update_manager.restart_application()
+            else:
+                # Stay in update menu to show results
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS_UPDATE)
+        
+        # Start update process
+        import threading
+        update_thread = threading.Thread(target=perform_update)
+        update_thread.daemon = True
+        update_thread.start()
+        
+        return True
+    
+    def _start_system_update(self):
+        """Start the system update process with loading screen."""
+        # Start loading operation
+        loading_operation = self.app_state.start_loading_operation(
+            STATE_SETTINGS_UPDATE, 
+            "Updating System",
+            total_steps=8
+        )
+        
+        # Run the update in the background
+        def perform_update():
+            success = self.app_state.update_manager.perform_system_update(loading_operation)
+            
+            # Complete loading operation
+            self.app_state.complete_loading_operation()
+            
+            if success:
+                # Restart application after successful update
+                self.app_state.update_manager.restart_application()
+            else:
+                # Stay in update menu to show results
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS_UPDATE)
+        
+        # Start update process
+        import threading
+        update_thread = threading.Thread(target=perform_update)
+        update_thread.daemon = True
+        update_thread.start()
+        
+        return True
 
     def _handle_confirmation_input(self, action):
         """Handle confirmation input."""

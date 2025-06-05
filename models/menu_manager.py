@@ -20,6 +20,7 @@ STATE_SETTINGS_BLUETOOTH = "SETTINGS_BLUETOOTH"
 STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
 STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
 STATE_SETTINGS_CONTROLS = "SETTINGS_CONTROLS"
+STATE_SETTINGS_UPDATE = "SETTINGS_UPDATE"
 
 import config as app_config
 
@@ -206,6 +207,11 @@ class MenuManager:
             MenuItem(
                 name="Controls", # New Controls menu item
                 target_state=STATE_SETTINGS_CONTROLS,
+                color_key="SIDEBAR_SYSTEM" # Example color
+            ),
+            MenuItem(
+                name="System Updates", # New Update menu item
+                target_state=STATE_SETTINGS_UPDATE,
                 color_key="SIDEBAR_SYSTEM" # Example color
             ),
             MenuItem(

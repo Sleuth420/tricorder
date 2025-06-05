@@ -16,6 +16,7 @@ from .loading_manager import LoadingManager
 from .wifi_manager import WifiManager, WIFI_ACTION_TOGGLE, WIFI_ACTION_BACK_TO_SETTINGS, WIFI_ACTION_BROWSE_NETWORKS, WIFI_ACTION_BACK_TO_WIFI, WIFI_ACTION_CONNECT_TO_NETWORK, WIFI_ACTION_ENTER_PASSWORD # Import WifiManager and relevant actions
 from .password_entry_manager import PasswordEntryManager
 from .input_router import InputRouter
+from .update_manager import UpdateManager
 import config as app_config
 
 # Application state constants
@@ -39,6 +40,7 @@ STATE_SETTINGS_BLUETOOTH = "SETTINGS_BLUETOOTH"
 STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
 STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
 STATE_SETTINGS_CONTROLS = "SETTINGS_CONTROLS"
+STATE_SETTINGS_UPDATE = "SETTINGS_UPDATE"
 STATE_SELECT_COMBO_DURATION = "SELECT_COMBO_DURATION" # New state for selecting combo duration
 
 # WiFi Sub-States
@@ -93,6 +95,7 @@ class AppState:
         self.controls_manager = ControlsManager(config_module)
         self.loading_manager = LoadingManager(config_module, screen_width, screen_height)
         self.wifi_manager = WifiManager(config_module) # Instantiate WifiManager (no command func needed)
+        self.update_manager = UpdateManager(config_module) # Instantiate UpdateManager
         # Password entry manager - initialized with screen dimensions
         import pygame
         screen_rect = pygame.Rect(0, 0, screen_width, screen_height)
@@ -186,6 +189,12 @@ class AppState:
     def controls_index(self):
         """Get controls view index."""
         return self.controls_manager.get_current_index()
+    
+    # Update Manager Properties for UI compatibility
+    @property
+    def update_menu_index(self):
+        """Get update menu index."""
+        return self.update_manager.update_menu_index
 
     @property
     def menu_items(self):

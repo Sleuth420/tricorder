@@ -1,0 +1,38 @@
+# /boot/firmware/config.txt
+
+# --- Graphics Driver Configuration ---
+dtoverlay=vc4-fkms-v3d
+
+# --- Firmware KMS Setup ---
+# KEEP this enabled. We want our cmdline.txt video= string to be authoritative.
+disable_fw_kms_setup=1
+
+# --- Global Settings (Applied to ALL Raspberry Pi models) ---
+[all]
+# --- Composite Video (TV Out) Configuration ---
+# General firmware flag
+enable_tvout=1
+
+# sdtv_mode and sdtv_aspect are less relevant when video= is in cmdline.txt
+#sdtv_mode=0
+#sdtv_aspect=1
+
+# --- Framebuffer Resolution ---
+# Let the video= string in cmdline.txt fully define the mode.
+#framebuffer_width=320
+#framebuffer_height=240
+
+# --- HDMI ---
+# Ensure HDMI is fully ignored
+hdmi_ignore_hotplug=1
+hdmi_force_hotplug=0
+
+# --- Overscan Settings ---
+# These are now locateed directly in /boot/firmware/cmdline.txt
+# Ensure 'disable_overscan=1' is COMMENTED OUT or REMOVED above this line.
+# Add positive values to create black borders and shrink the image
+# Start with these values and adjust as needed.
+#overscan_left=20
+#overscan_right=20
+#overscan_top=20
+#overscan_bottom=20

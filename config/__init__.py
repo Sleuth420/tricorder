@@ -8,6 +8,7 @@ from .ui import *
 from .input import *
 from .sensors import *
 from .network import *
+from .update import *
 
 # Re-export everything for backward compatibility
 # This allows existing code to continue using "import config" and "config.SETTING_NAME"

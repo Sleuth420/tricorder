@@ -618,10 +618,10 @@ class UpdateManager:
             except Exception as rollback_error:
                 logger.error(f"❌ Rollback failed: {rollback_error}")
                 if loading_operation:
-                    loading_operation.update_status(f"Rollback failed: {str(rollback_error)}")
+                                        loading_operation.update_status(f"Rollback failed: {str(rollback_error)}")
             
             return False
-    
+
     def perform_system_update(self, loading_operation=None):
         """
         Perform full system update with comprehensive safety mechanisms.
@@ -740,13 +740,47 @@ class UpdateManager:
         """Update git repository."""
         logger.info("Updating git repository...")
         
-        commands = [
-            ["git", "fetch", "origin"],
-            ["git", "reset", "--hard", "origin/master"]  # Force update to master
-        ]
+        # First fetch from origin
+        self._run_system_command(["git", "fetch", "origin"])
         
-        for cmd in commands:
-            subprocess.run(cmd, cwd=self.project_root, check=True, capture_output=True)
+        # Determine which branch to use (main or master)
+        branch = "main"  # Default to main
+        try:
+            # Check if main branch exists on remote
+            result = subprocess.run(
+                ["git", "ls-remote", "--heads", "origin", "main"],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            
+            if not result.stdout.strip():
+                # main doesn't exist, try master
+                logger.debug("main branch not found on remote, trying master...")
+                result = subprocess.run(
+                    ["git", "ls-remote", "--heads", "origin", "master"],
+                    cwd=self.project_root,
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+                
+                if result.stdout.strip():
+                    branch = "master"
+                    logger.debug("Using master branch")
+                else:
+                    raise Exception("Neither main nor master branch found on remote")
+            else:
+                logger.debug("Using main branch")
+                
+        except Exception as e:
+            logger.warning(f"Could not determine remote branch, defaulting to main: {e}")
+            branch = "main"
+        
+        # Reset to the determined branch
+        logger.info(f"🔄 Resetting to origin/{branch}...")
+        self._run_system_command(["git", "reset", "--hard", f"origin/{branch}"])
         
         logger.info("Git repository updated successfully")
     

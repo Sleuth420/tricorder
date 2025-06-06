@@ -802,18 +802,10 @@ class UpdateManager:
         python_exe = sys.executable
         
         # Update pip first
-        subprocess.run(
-            [python_exe, "-m", "pip", "install", "--upgrade", "pip"],
-            check=True,
-            capture_output=True
-        )
+        self._run_system_command([python_exe, "-m", "pip", "install", "--upgrade", "pip"])
         
         # Install/update requirements
-        subprocess.run(
-            [python_exe, "-m", "pip", "install", "-r", str(req_file), "--upgrade"],
-            check=True,
-            capture_output=True
-        )
+        self._run_system_command([python_exe, "-m", "pip", "install", "-r", str(req_file), "--upgrade"])
         
         logger.info("Python dependencies updated successfully")
     

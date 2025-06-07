@@ -14,7 +14,7 @@ else:
     SCREEN_HEIGHT = 240     # Pi size
     FULLSCREEN = True       # Fullscreen on Pi
 
-FPS = 15                # Frames per second/update rate
+FPS = 30                # Frames per second/update rate
 
 # -- Graph Settings (Mainly for Line Graphs) --
 GRAPH_HISTORY_SIZE = 30  # Number of data points to keep (= seconds at 1 reading/sec)
@@ -23,4 +23,5 @@ GRAPH_POINT_SIZE = 2     # Size of the data points in pixels
 
 # -- Splash Screen --
 SPLASH_LOGO_PATH = "assets/images/logo.png"
-SPLASH_DURATION_MS = 3000  # Note: Loading screen now has minimum 5 seconds with progress bar 
+SPLASH_DURATION_MS = 3000  # Original splash duration (not used in loading screen)
+LOADING_SCREEN_MIN_DURATION = 5.0  # Minimum loading screen duration in seconds 

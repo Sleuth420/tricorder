@@ -48,8 +48,8 @@ def count_python_lines():
             file_path = os.path.join(root, file)
             file_ext = os.path.splitext(file)[1].lower()
             
-            # Only count .py files, but exclude specific files
-            if file_ext == '.py' and file not in exclude_files:
+            # Only count .py files, but exclude specific files and extensions
+            if file_ext == '.py' and file not in exclude_files and file_ext not in exclude_extensions:
                 try:
                     with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                         lines = len(f.readlines())
@@ -72,7 +72,7 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
     bar_width = int(screen.get_width() * 0.6)
     bar_height = 20
     bar_x = (screen.get_width() - bar_width) // 2
-    bar_y = logo_rect.bottom + 40
+    bar_y = logo_rect.bottom + 35  # Increased from 30 to 35
     
     # Draw loading bar background
     bar_bg_rect = pygame.Rect(bar_x - 2, bar_y - 2, bar_width + 4, bar_height + 4)
@@ -93,19 +93,19 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
     
     progress_text = f"{int(progress * 100)}%"
     progress_surface = progress_font.render(progress_text, True, config.Theme.FOREGROUND)
-    progress_rect = progress_surface.get_rect(center=(screen.get_width() // 2, bar_y + bar_height + 25))
+    progress_rect = progress_surface.get_rect(center=(screen.get_width() // 2, bar_y + bar_height + 25))  # Increased from 20 to 25
     screen.blit(progress_surface, progress_rect)
     
     # Draw current stage text
     stage_surface = progress_font.render(stage_text, True, config.Theme.FOREGROUND)
-    stage_rect = stage_surface.get_rect(center=(screen.get_width() // 2, progress_rect.bottom + 20))
+    stage_rect = stage_surface.get_rect(center=(screen.get_width() // 2, progress_rect.bottom + 18))  # Increased from 15 to 18
     screen.blit(stage_surface, stage_rect)
     
     # Draw line count if available
     if total_lines > 0:
         lines_text = f"Python Lines: {current_lines:,} / {total_lines:,}"
         lines_surface = progress_font.render(lines_text, True, config.Theme.ACCENT)
-        lines_rect = lines_surface.get_rect(center=(screen.get_width() // 2, stage_rect.bottom + 20))
+        lines_rect = lines_surface.get_rect(center=(screen.get_width() // 2, stage_rect.bottom + 15))  # Increased from 10 to 15
         screen.blit(lines_surface, lines_rect)
     
     pygame.display.flip()
@@ -227,14 +227,14 @@ def main():
         # Non-critical Initializations (loading screen with splash, sensors)
         try:
             logo_splash = pygame.image.load(config.SPLASH_LOGO_PATH).convert_alpha()
-            # Scale the logo to be 60% of screen width while maintaining aspect ratio (reduced to make room for loading elements)
+            # Scale the logo to be 50% of screen width while maintaining aspect ratio (reduced for better text fit)
             screen_width = screen.get_width()
-            target_width = int(screen_width * 0.6)
+            target_width = int(screen_width * 0.5)
             aspect_ratio = logo_splash.get_height() / logo_splash.get_width()
             target_height = int(target_width * aspect_ratio)
             logo_splash = pygame.transform.smoothscale(logo_splash, (target_width, target_height))
-            # Position logo higher to make room for loading elements
-            logo_center_y = screen.get_height() // 3
+            # Position logo lower to balance spacing better
+            logo_center_y = int(screen.get_height() * 0.3)  # Changed from // 4 to 30% for better balance
             logo_rect = logo_splash.get_rect(center=(screen.get_width() // 2, logo_center_y))
             
             logger.info("Starting loading screen...")
@@ -245,9 +245,9 @@ def main():
             loading_thread.daemon = True
             loading_thread.start()
             
-            # Loading screen loop - minimum 5 seconds
+            # Loading screen loop - minimum duration from config
             loading_start_time = time.time()
-            minimum_loading_time = 5.0  # 5 seconds minimum
+            minimum_loading_time = config.LOADING_SCREEN_MIN_DURATION
             
             while True:
                 current_time = time.time()

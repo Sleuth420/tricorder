@@ -49,7 +49,7 @@ def _draw_sensors_main_content(screen, main_content_rect, app_state, sensor_valu
     # Get currently selected sensor info
     menu_items = app_state.get_current_menu_items()
     selected_index = app_state.get_current_menu_index()
-    
+
     if menu_items and 0 <= selected_index < len(menu_items):
         selected_item = menu_items[selected_index]
         # Extract sensor_key from the data dictionary
@@ -180,10 +180,10 @@ def _draw_sensors_footer(screen, main_content_rect, fonts, config_module, screen
     key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
     
     hint_text = f"{key_prev_name}/{key_next_name}: Navigate | {key_select_name}: Select | Long {key_prev_name}: Back"
-    
+
     # Create footer rendering centered on main content area
     footer_font = fonts.get('small', fonts.get('medium'))
     footer_surface = footer_font.render(hint_text, True, config_module.Theme.FOREGROUND)
     footer_y = screen_height - footer_surface.get_height() - 5
     footer_x = main_content_rect.centerx - footer_surface.get_width() // 2
-    screen.blit(footer_surface, (footer_x, footer_y)) 
+    screen.blit(footer_surface, (footer_x, footer_y))

@@ -90,7 +90,7 @@ def _draw_main_menu_content(screen, main_content_rect, sensor_values, fonts, con
         logo_surface = pygame.image.load(config_module.SPLASH_LOGO_PATH).convert_alpha()
     except pygame.error as e:
         logger.warning(f"Could not load logo '{config_module.SPLASH_LOGO_PATH}' for menu: {e}")
-
+    
     if logo_surface:
         content_width = main_content_rect.width
         content_height = main_content_rect.height
@@ -144,7 +144,7 @@ def _draw_main_menu_content(screen, main_content_rect, sensor_values, fonts, con
     ssid_rect = ssid_surface.get_rect(centerx=main_content_rect.centerx, y=status_rect.bottom + 5)
     screen.blit(status_surface, status_rect)
     screen.blit(ssid_surface, ssid_rect)
-
+    
 def _draw_secret_games_content(screen, main_content_rect, fonts, config_module):
     """
     Draw secret games menu specific content.

@@ -26,3 +26,6 @@ AUTO_CYCLE_INTERVAL_OPTIONS = [1, 5, 10, 15, 30, 60, "<- Back to Main Menu"] # S
 
 # -- Secret Menu Settings -- (New Section)
 SECRET_COMBO_DURATION_OPTIONS = [2.0, 3.0, 5.0, 7.0, 10.0] # Seconds
+
+# -- List Menu Settings --
+LIST_MENU_MAX_VISIBLE_ITEMS = 4  # Maximum items visible before scrolling

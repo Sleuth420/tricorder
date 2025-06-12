@@ -33,5 +33,5 @@ def draw_settings_view(screen, app_state, fonts, config_module):
         selected_index=selected_index,
         fonts=fonts,
         config_module=config_module,
-        footer_hint=""  # Use default footer
+        footer_hint=None  # No footer for settings
     ) 

@@ -8,7 +8,7 @@ from ui.components.text_display import render_footer
 logger = logging.getLogger(__name__)
 
 def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, config_module, 
-                             footer_hint="", max_visible_items=4, item_style="simple"):
+                             footer_hint="", item_style="simple"):
     """
     Draw a scrollable list menu with consistent header/footer layout.
     
@@ -20,7 +20,6 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
         fonts (dict): Dictionary of loaded fonts
         config_module (module): Configuration module
         footer_hint (str): Custom footer hint text (optional)
-        max_visible_items (int): Maximum items visible before scrolling
         item_style (str): "simple", "button", or "detailed"
         
     Returns:
@@ -31,21 +30,21 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
     screen_height = screen.get_height()
     
     # === HEADER SECTION ===
-    # More spacing from top and around header
-    header_top_margin = screen_height // 12  # Responsive top spacing
+    # Less spacing from top for more content space
+    header_top_margin = screen_height // 20  # Reduced top spacing
     header_height = config_module.HEADER_HEIGHT + 20  # Taller header for better spacing
     header_rect = pygame.Rect(0, header_top_margin, screen_width, header_height)
     pygame.draw.rect(screen, config_module.Theme.BACKGROUND, header_rect)
     
     # Use larger font for header and center it
     font_large = fonts['large']
-    header_text = font_large.render(title, True, config_module.Theme.ACCENT)
+    header_text = font_large.render(title, True, config_module.Palette.RED_ALERT)
     header_text_rect = header_text.get_rect(center=(screen_width // 2, header_rect.centery))
     screen.blit(header_text, header_text_rect)
     
     # === CONTENT SECTION ===
     # More spacing between header and content
-    content_y = header_rect.bottom + (screen_height // 15)  # Responsive spacing
+    content_y = header_rect.bottom + (screen_height // 10)  # Increased spacing
     footer_height = config_module.FONT_SIZE_SMALL * 3  # Approximate footer space
     available_height = screen_height - content_y - footer_height - 20
     
@@ -55,10 +54,8 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
     item_text_height = font_medium.get_height()
     effective_item_height = item_text_height + item_height_padding
     
-    # Use config value for max visible items, but respect available space
-    config_max_items = getattr(config_module, 'LIST_MENU_MAX_VISIBLE_ITEMS', 4)
-    calculated_max_items = max(3, available_height // (effective_item_height + 20))  # Better spacing
-    max_visible_items = min(config_max_items, calculated_max_items)
+    # Use config value for max visible items - exactly 4 items
+    max_visible_items = getattr(config_module, 'LIST_MENU_MAX_VISIBLE_ITEMS', 4)
     
     # Handle scrolling
     total_items = len(menu_items)
@@ -112,13 +109,19 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
                 item_width, effective_item_height
             )
         
-
-        
-        # Draw selection background or border
+        # Draw selection border
         if is_selected:
             text_color = config_module.Theme.MENU_SELECTED_TEXT
-            bg_color = config_module.Theme.MENU_SELECTED_BG
-            pygame.draw.rect(screen, bg_color, item_rect, border_radius=5)
+            # Draw left-pointing arrow to the right of the menu item
+            arrow_x = item_rect.right + 10
+            arrow_y = item_rect.centery
+            arrow_size = 12
+            arrow_points = [
+                (arrow_x, arrow_y),  # Left point (tip)
+                (arrow_x + arrow_size, arrow_y - arrow_size // 2),  # Top right
+                (arrow_x + arrow_size, arrow_y + arrow_size // 2)   # Bottom right
+            ]
+            pygame.draw.polygon(screen, config_module.Theme.ACCENT, arrow_points)
         elif item_style == "button":
             # Draw border for unselected button items
             pygame.draw.rect(screen, config_module.Theme.GRAPH_BORDER, item_rect, 2, border_radius=5)
@@ -134,22 +137,22 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
             text_rect = item_surface.get_rect(center=item_rect.center)
         
         screen.blit(item_surface, text_rect)
-        y_offset += effective_item_height + 20  # Better spacing between items
+        y_offset += effective_item_height + 15  # Reduced spacing between items
     
     # === SCROLL INDICATORS ===
     if total_items > max_visible_items:
         font_medium = fonts['medium']
         
         if visible_start > 0:
-            up_indicator = "More above"
+            up_indicator = "↑"
             up_surface = font_medium.render(up_indicator, True, config_module.Theme.ACCENT)
-            up_rect = up_surface.get_rect(center=(screen_width // 2, content_y - 5))
+            up_rect = up_surface.get_rect(center=(screen_width // 2, content_y - 15))
             screen.blit(up_surface, up_rect)
         
         if visible_end < total_items:
-            down_indicator = "More below"
+            down_indicator = "↓"
             down_surface = font_medium.render(down_indicator, True, config_module.Theme.ACCENT)
-            down_rect = down_surface.get_rect(center=(screen_width // 2, y_offset - 15))
+            down_rect = down_surface.get_rect(center=(screen_width // 2, y_offset + 10))
             screen.blit(down_surface, down_rect)
     
     # === FOOTER === (Optional footer - only show if footer_hint is provided)
@@ -193,7 +196,7 @@ def draw_simple_list_menu(screen, title, menu_items, selected_index, fonts, conf
     """
     return draw_scrollable_list_menu(
         screen, title, menu_items, selected_index, fonts, config_module,
-        footer_hint=footer_hint if show_footer else None, max_visible_items=10, item_style="simple"
+        footer_hint=footer_hint if show_footer else None, item_style="simple"
     )
 
 def draw_button_list_menu(screen, title, menu_items, selected_index, fonts, config_module, footer_hint=""):
@@ -214,5 +217,5 @@ def draw_button_list_menu(screen, title, menu_items, selected_index, fonts, conf
     """
     return draw_scrollable_list_menu(
         screen, title, menu_items, selected_index, fonts, config_module,
-        footer_hint=footer_hint, max_visible_items=5, item_style="button"
+        footer_hint=footer_hint, item_style="button"
     ) 

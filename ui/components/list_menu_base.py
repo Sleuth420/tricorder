@@ -38,7 +38,7 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
     
     # Use larger font for header and center it
     font_large = fonts['large']
-    header_text = font_large.render(title, True, config_module.Palette.RED_ALERT)
+    header_text = font_large.render(title, True, config_module.Palette.VIKING_BLUE)
     header_text_rect = header_text.get_rect(center=(screen_width // 2, header_rect.centery))
     screen.blit(header_text, header_text_rect)
     
@@ -115,7 +115,7 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
             # Draw left-pointing arrow to the right of the menu item
             arrow_x = item_rect.right + 10
             arrow_y = item_rect.centery
-            arrow_size = 12
+            arrow_size = 16
             arrow_points = [
                 (arrow_x, arrow_y),  # Left point (tip)
                 (arrow_x + arrow_size, arrow_y - arrow_size // 2),  # Top right

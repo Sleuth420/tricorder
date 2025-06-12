@@ -33,7 +33,7 @@ SENSOR_DISPLAY_PROPERTIES = {
         "display_name": "Env: Temp",
         "units": "°C", # Changed from C
         "graph_type": "VERTICAL_BAR", # "LINE", "VERTICAL_BAR", "NONE"
-        "color_key": "SIDEBAR_TEMP", # For AppState MenuItem color
+        "color_key": "SIDEBAR_HUMID", # For AppState MenuItem color
         "vertical_graph_config": { # Specific to VerticalBarGraph
             "min_val": 0, # Changed from 32
             "max_val": 50, # Changed from 100 (typical SenseHAT range for ambient)
@@ -50,7 +50,7 @@ SENSOR_DISPLAY_PROPERTIES = {
         "display_name": "Env: Humid",
         "units": "%",
         "graph_type": "VERTICAL_BAR",
-        "color_key": "SIDEBAR_HUMID",
+        "color_key": "SIDEBAR_TEMP",
         "vertical_graph_config": {
             "min_val": 0,
         "max_val": 100,

@@ -64,31 +64,31 @@ class MenuManager:
         items.append(MenuItem(
             name="Systems", 
             target_state=STATE_SYSTEM_INFO, 
-            color_key="SIDEBAR_SYSTEM"
+            color_key="HARVEST_GOLD"
         ))
 
         # Add the "Sensors" submenu item
         items.append(MenuItem(
             name="Sensors", 
             target_state=STATE_SENSORS_MENU, 
-            color_key="SIDEBAR_TEMP"
+            color_key="VIKING_BLUE"
         ))
 
         # Add other non-sensor items
         items.append(MenuItem(
             name="Sweep", 
             target_state=STATE_DASHBOARD, 
-            color_key="SIDEBAR_ALL"
+            color_key="COPPER_ROSE"
         ))
         items.append(MenuItem(
             name="Schematics", 
             target_state=STATE_SCHEMATICS_MENU, 
-            color_key="SIDEBAR_SCHEMATICS"
+            color_key="EAST_SIDE_PURPLE"
         ))
         items.append(MenuItem(
             name="Settings", 
             target_state=STATE_SETTINGS, 
-            color_key="SIDEBAR_SETTINGS"
+            color_key="LONDON_HUE"
         ))
 
         return items

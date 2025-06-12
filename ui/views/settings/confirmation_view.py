@@ -12,7 +12,7 @@ CONFIRMATION_OPTIONS = ["Yes", "No"] # Or "Confirm", "Cancel"
 
 def draw_confirmation_view(screen, app_state, fonts, config_module, message="Are you sure?"):
     """
-    Draw a generic confirmation screen.
+    Draw a generic confirmation screen with consistent styling.
 
     Args:
         screen (pygame.Surface): The surface to draw on
@@ -24,58 +24,54 @@ def draw_confirmation_view(screen, app_state, fonts, config_module, message="Are
     screen.fill(config_module.Theme.BACKGROUND)
     screen_width = screen.get_width()
     screen_height = screen.get_height()
-    rect = pygame.Rect(0, 0, screen_width, screen_height)
 
     font_large = fonts['large']
     font_medium = fonts['medium']
 
-    # Display the confirmation message
-    msg_surface = font_large.render(message, True, config_module.Theme.ACCENT)
+    # Display the confirmation message with viking blue header color for consistency
+    msg_surface = font_large.render(message, True, config_module.Palette.VIKING_BLUE)
     msg_rect = msg_surface.get_rect(center=(screen_width // 2, screen_height // 3))
     screen.blit(msg_surface, msg_rect)
 
-    # Determine selected option (Yes/No). AppState needs to manage this index.
-    # For simplicity, assuming a new attribute like app_state.confirmation_option_index (0 for Yes, 1 for No)
+    # Get selected option from app_state
     current_selection_idx = getattr(app_state, 'confirmation_option_index', 0) 
-    # This attribute would be navigated by INPUT_ACTION_PREV/NEXT in AppState._handle_confirmation_input
-    # and selected by INPUT_ACTION_SELECT.
 
-    y_offset = msg_rect.bottom + 50
-    option_spacing = 60
+    y_offset = msg_rect.bottom + 60
+    item_spacing = 15  # Tighter spacing like our other menus
 
     for i, option_text in enumerate(CONFIRMATION_OPTIONS):
         text_color = config_module.Theme.FOREGROUND
-        item_width = 150
-        item_height = font_medium.get_height() + 20
+        is_selected = (i == current_selection_idx)
         
-        item_display_rect = pygame.Rect(
-            (screen_width // 2) - item_width // 2, 
-            y_offset + (i * (item_height + 15)),
+        # Create item rectangle - centered like our list menus
+        item_width = 120
+        item_height = font_medium.get_height() + 15
+        item_rect = pygame.Rect(
+            (screen_width // 2) - (item_width // 2), 
+            y_offset + (i * (item_height + item_spacing)),
             item_width,
             item_height
         )
 
-        if i == current_selection_idx:
+        if is_selected:
             text_color = config_module.Theme.MENU_SELECTED_TEXT
-            bg_color_selected = config_module.Theme.MENU_SELECTED_BG
-            pygame.draw.rect(screen, bg_color_selected, item_display_rect, border_radius=5)
+            # Draw left-pointing arrow like our list menus
+            arrow_x = item_rect.right + 10
+            arrow_y = item_rect.centery
+            arrow_size = 16
+            arrow_points = [
+                (arrow_x, arrow_y),  # Left point (tip)
+                (arrow_x + arrow_size, arrow_y - arrow_size // 2),  # Top right
+                (arrow_x + arrow_size, arrow_y + arrow_size // 2)   # Bottom right
+            ]
+            pygame.draw.polygon(screen, config_module.Theme.ACCENT, arrow_points)
         else:
-            # Draw a border for unselected items to make them look like buttons
-            pygame.draw.rect(screen, config_module.Theme.GRAPH_BORDER, item_display_rect, 2, border_radius=5)
+            # Draw subtle border for unselected items
+            pygame.draw.rect(screen, config_module.Theme.GRAPH_BORDER, item_rect, 1, border_radius=5)
 
+        # Render option text - centered like our list menus
         option_surface = font_medium.render(option_text, True, text_color)
-        option_rect = option_surface.get_rect(center=item_display_rect.center)
+        option_rect = option_surface.get_rect(center=item_rect.center)
         screen.blit(option_surface, option_rect)
 
-    # Footer hints
-    key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
-    key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
-    key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
-    
-    hint = ""
-
-    render_footer(
-        screen, hint, fonts,
-        config_module.Theme.FOREGROUND,
-        screen_width, screen_height
-    ) 
+    # No footer for simple confirmation view - keeps it clean 

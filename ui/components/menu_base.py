@@ -72,11 +72,16 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, base_sidebar_
             )
 
             try:
-                # item.color_key should be a string like "SIDEBAR_SYSTEM"
-                # Get the color directly from config_module.Theme using getattr
-                item_bg_color = getattr(config_module.Theme, item.color_key) if item.color_key else config_module.Theme.ACCENT
+                # item.color_key should be a string like "SIDEBAR_SYSTEM" or a Palette color name
+                # Try Theme first, then Palette for backwards compatibility
+                if hasattr(config_module.Theme, item.color_key):
+                    item_bg_color = getattr(config_module.Theme, item.color_key)
+                elif hasattr(config_module.Palette, item.color_key):
+                    item_bg_color = getattr(config_module.Palette, item.color_key)
+                else:
+                    item_bg_color = config_module.Theme.ACCENT
             except AttributeError:
-                logger.warning(f"Theme color attribute '{item.color_key}' not found for menu item '{item.name}'. Using default accent.")
+                logger.warning(f"Color attribute '{item.color_key}' not found in Theme or Palette for menu item '{item.name}'. Using default accent.")
                 item_bg_color = config_module.COLOR_ACCENT # Fallback color
             
             pygame.draw.rect(screen, item_bg_color, item_rect)

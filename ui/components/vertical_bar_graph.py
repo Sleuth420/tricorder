@@ -98,37 +98,95 @@ class VerticalBarGraph:
         if not self.dynamic_range or current_value is None:
             return self.min_val, self.max_val
         
-        # Define ranges that give exactly 4 intervals
-        if self.units == "°C":  # Temperature
-            ranges = [(0, 30), (10, 40), (20, 50)]
+        # Define ranges for temperature
+        if self.units == "°C":
+            ranges = [
+                (-10, 20),
+                (0, 30),
+                (10, 40),
+                (20, 50),
+                (30, 60),
+                (40, 70)
+            ]
             threshold = 3.0
-        elif self.units == "%":  # Humidity  
-            ranges = [(0, 75), (25, 100)]
+            required_consecutive = 10
+        elif self.units == "%":
+            ranges = [
+                (0, 25),
+                (15, 40),
+                (30, 55),
+                (45, 70),
+                (60, 85),
+                (75, 100)
+            ]
             threshold = 5.0
-        elif self.units == "mbar":  # Pressure
-            ranges = [(950, 1010), (970, 1030), (990, 1050)]
+            required_consecutive = 5
+        elif self.units == "mbar":
+            ranges = [
+                (900, 950),
+                (925, 975),
+                (950, 1000),
+                (975, 1025),
+                (1000, 1050),
+                (1025, 1075)
+            ]
             threshold = 3.0
+            required_consecutive = 5
         else:
             ranges = [(0, 75), (25, 100)]
             threshold = 5.0
-        
-        # Initialize with correct range on first reading
-        if self.current_display_min == self.min_val and self.current_display_max == self.max_val:
-            for range_min, range_max in ranges:
-                if range_min <= current_value <= range_max:
-                    self.current_display_min = range_min  
-                    self.current_display_max = range_max
-                    break
-        
-        # Switch when within threshold of current range edge
-        if (current_value <= (self.current_display_min + threshold) or 
-            current_value >= (self.current_display_max - threshold)):
+            required_consecutive = 5
+
+        # Initialize with correct range on first reading only
+        if not hasattr(self, 'current_display_min') or not hasattr(self, 'current_display_max'):
             for range_min, range_max in ranges:
                 if range_min <= current_value <= range_max:
                     self.current_display_min = range_min
                     self.current_display_max = range_max
+                    self.consecutive_readings = 0
+                    print(f"[DBG] Initialized range to {range_min}-{range_max} for value {current_value}")
                     break
-        
+
+        # Find the next range (up or down) if needed
+        current_idx = None
+        for idx, (range_min, range_max) in enumerate(ranges):
+            if (range_min, range_max) == (self.current_display_min, self.current_display_max):
+                current_idx = idx
+                break
+
+        next_range = None
+        # Check if we are near the upper edge and can go up
+        if current_idx is not None and current_idx + 1 < len(ranges):
+            upper_min, upper_max = ranges[current_idx + 1]
+            if upper_min <= current_value <= upper_max:
+                next_range = (upper_min, upper_max)
+                edge = 'upper'
+        # Check if we are near the lower edge and can go down
+        if next_range is None and current_idx is not None and current_idx - 1 >= 0:
+            lower_min, lower_max = ranges[current_idx - 1]
+            if lower_min <= current_value <= lower_max:
+                next_range = (lower_min, lower_max)
+                edge = 'lower'
+
+        # Only increment counter if within threshold of edge
+        if self.current_display_min <= current_value <= self.current_display_max:
+            near_upper = current_value > self.current_display_max - threshold
+            near_lower = current_value < self.current_display_min + threshold
+            if near_upper or near_lower:
+                self.consecutive_readings = getattr(self, 'consecutive_readings', 0) + 1
+                print(f"[DBG] Value {current_value} near {('upper' if near_upper else 'lower')} edge of {self.current_display_min}-{self.current_display_max}. Consecutive: {self.consecutive_readings}")
+                if self.consecutive_readings >= required_consecutive and next_range:
+                    print(f"[DBG] Switching range from {self.current_display_min}-{self.current_display_max} to {next_range[0]}-{next_range[1]} after {required_consecutive} consecutive readings.")
+                    self.current_display_min, self.current_display_max = next_range
+                    self.consecutive_readings = 0
+            else:
+                if getattr(self, 'consecutive_readings', 0) != 0:
+                    print(f"[DBG] Value {current_value} not near edge. Resetting consecutive counter.")
+                self.consecutive_readings = 0
+        else:
+            print(f"[DBG] Value {current_value} is outside current range {self.current_display_min}-{self.current_display_max}")
+            self.consecutive_readings = 0
+
         return self.current_display_min, self.current_display_max
 
     def _value_to_y(self, value, display_min, display_max):
@@ -184,7 +242,6 @@ class VerticalBarGraph:
         elif self.units == "mbar":  # Pressure - ~2.5 mbar per tick (8 ticks in 20 mbar span)
             small_interval = 2.5
             major_interval = 20
-
         else:
             small_interval = 3  # Default for CPU/Memory/Disk - ~3% per tick
             major_interval = 25
@@ -206,14 +263,20 @@ class VerticalBarGraph:
             
             current_tick += small_interval
 
-        # Zone boundaries are now shown by the colored ticks above - no need for sliding lines
-
-        # Draw exactly 4 major ticks always
-        major_ticks = []
-        interval = (display_max - display_min) / 3  # 3 intervals = 4 ticks
-        for i in range(4):
-            tick_value = display_min + (i * interval)
-            major_ticks.append(tick_value)
+        # Draw exactly 4 major ticks using the predefined ranges
+        if self.units == "°C":  # Temperature
+            major_ticks = [10, 20, 30, 40]  # Normal range ticks
+        elif self.units == "%":  # Humidity
+            major_ticks = [30, 45, 60, 75]  # Normal range ticks
+        elif self.units == "mbar":  # Pressure
+            major_ticks = [950, 975, 1000, 1025]  # Normal range ticks
+        else:
+            # Default to evenly spaced ticks
+            major_ticks = []
+            interval = (display_max - display_min) / 3
+            for i in range(4):
+                tick_value = display_min + (i * interval)
+                major_ticks.append(tick_value)
         
         for tick_value in major_ticks:
             proportion = (tick_value - display_min) / display_range if display_range > 0 else 0
@@ -230,12 +293,15 @@ class VerticalBarGraph:
             label_surface = self.font_small.render(label_text, True, self.config.Theme.WHITE)
             label_rect = label_surface.get_rect(centery=y, right=self.scale_line_x - self.label_offset_x)
             self.screen.blit(label_surface, label_rect)
-            
-            # Draw units only for min and max values
-            if tick_value == major_ticks[0] or tick_value == major_ticks[-1]:
-                units_surface = self.font_small.render(self.units, True, self.config.Theme.WHITE)
-                units_rect = units_surface.get_rect(centery=y, left=self.scale_line_x + self.label_offset_x)
-                self.screen.blit(units_surface, units_rect)
+
+            # Draw units at top and bottom of graph, on the left side
+            units_surface = self.font_small.render(self.units, True, self.config.Theme.WHITE)
+            # Top units
+            top_units_rect = units_surface.get_rect(centery=self.scale_top_y, right=self.scale_line_x - self.label_offset_x - 30)
+            self.screen.blit(units_surface, top_units_rect)
+            # Bottom units
+            bottom_units_rect = units_surface.get_rect(centery=self.scale_bottom_y, right=self.scale_line_x - self.label_offset_x - 30)
+            self.screen.blit(units_surface, bottom_units_rect)
 
         # Draw current value pointer (enhanced and more prominent)
         if current_value is not None:

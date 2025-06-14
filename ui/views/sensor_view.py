@@ -3,7 +3,7 @@
 
 import pygame
 import logging
-from ui.components.text_display import render_title, render_value, render_note, render_footer
+from ui.components.text_display import render_title, render_value, render_note, render_footer, render_text
 from ui.components.vertical_bar_graph import VerticalBarGraph
 from ui.components.graph import draw_graph # Re-import the old graph component
 # Import app state constants
@@ -56,19 +56,31 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
     title_rect = title_surface.get_rect(topleft=(10, 10))
     screen.blit(title_surface, title_rect)
     
-    # Draw current value to the right of the title
+    # Draw frozen indicator if needed (moved to top right)
+    if app_state.is_frozen:
+        frozen_font = fonts['medium']
+        frozen_surface = frozen_font.render("[FROZEN]", True, config_module.Theme.FROZEN_INDICATOR)
+        frozen_rect = frozen_surface.get_rect(topright=(screen_width - 10, 10))
+        screen.blit(frozen_surface, frozen_rect)
+    
+    # Draw current value below the title
     value_font = fonts['large']
     value_text = f"{text_val} {unit}".strip()
     value_surface = value_font.render(value_text, True, config_module.Theme.FOREGROUND)
-    value_rect = value_surface.get_rect(midleft=(title_rect.right + 20, title_rect.centery))
+    value_rect = value_surface.get_rect(midleft=(10, title_rect.bottom + 15))
     screen.blit(value_surface, value_rect)
     
-    # Draw frozen indicator if needed
-    if app_state.is_frozen:
-        frozen_font = fonts['small']
-        frozen_surface = frozen_font.render("[FROZEN]", True, config_module.Theme.FROZEN_INDICATOR)
-        frozen_rect = frozen_surface.get_rect(midleft=(value_rect.right + 20, value_rect.centery))
-        screen.blit(frozen_surface, frozen_rect)
+    # Draw note in middle right if present
+    if note:
+        note_x_pos = screen_width - 10  # Right side of screen  
+        note_y_pos = screen_height // 2  # Middle of screen
+        render_text(
+            screen, note, 
+            fonts['small'] if 'small' in fonts else fonts['medium'],
+            config_module.Theme.ACCENT,
+            (note_x_pos, note_y_pos),
+            align="right"
+        )
     
     graph_type = display_props.get("graph_type", "NONE")
 
@@ -105,12 +117,14 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
     elif graph_type == "VERTICAL_BAR":
         vbar_config = display_props.get("vertical_graph_config")
         if vbar_config:
-            # Calculate graph dimensions to maximize available space - make it wider
-            graph_width = 120  # Increased from 80 for better visibility and spacing
-            graph_height = screen_height - title_rect.bottom - config_module.FONT_SIZE_SMALL*3  # More vertical space
-            graph_margin_top = 20
+            # Calculate graph dimensions to maximize available space
+            graph_width = 120  # Width of the graph
+            # Maximize vertical space by using fixed margins from top and bottom
+            graph_margin_top = 20  # Fixed margin from top of screen
+            graph_margin_bottom = 20  # Fixed margin from bottom of screen
+            graph_height = screen_height - graph_margin_top - graph_margin_bottom  # Use all available space between margins
             graph_x = (screen_width - graph_width) // 2
-            graph_y = title_rect.bottom + graph_margin_top
+            graph_y = graph_margin_top  # Start from fixed top margin
             graph_rect = pygame.Rect(graph_x, graph_y, graph_width, graph_height)
             
             try:
@@ -160,20 +174,6 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
         fallback_rect = fallback_surf.get_rect(center=(screen_width // 2, title_rect.bottom + 80))
         screen.blit(fallback_surf, fallback_rect)
 
-    if note:
-        # Position note in top area to avoid overlapping with vertical bar graph scale
-        note_x_pos = screen_width - 10  # Right side of screen  
-        note_y_pos = title_rect.bottom + 5  # Just below the title area
-        # Use render_text with right alignment to prevent text from going off screen
-        from ui.components.text_display import render_text
-        render_text(
-            screen, note, 
-            fonts['small'] if 'small' in fonts else fonts['medium'],
-            config_module.Theme.ACCENT,
-            (note_x_pos, note_y_pos),
-            align="right"
-        )
-    
     key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
     key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
     key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()

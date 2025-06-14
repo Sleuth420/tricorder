@@ -11,18 +11,22 @@ SENSOR_CLOCK = "CLOCK"
 SENSOR_CPU_USAGE = "CPU_USAGE"
 SENSOR_MEMORY_USAGE = "MEMORY_USAGE"
 SENSOR_DISK_USAGE = "DISK_USAGE"
+SENSOR_VOLTAGE = "VOLTAGE"
+SENSOR_BATTERY = "BATTERY"
 
 # Network info keys (used in sensor_values, not strictly cycling sensor modes)
 INFO_WIFI_STATUS = "WIFI_STATUS"
 INFO_WIFI_SSID = "WIFI_SSID"
 INFO_CELL_STATUS = "CELL_STATUS"
 INFO_CELL_PROVIDER = "CELL_PROVIDER"
+INFO_BLUETOOTH_STATUS = "BLUETOOTH_STATUS"
+INFO_BLUETOOTH_DEVICE = "BLUETOOTH_DEVICE"
 
 # -- Sensor Modes --
 # List of sensor modes the user can cycle through
 SENSOR_MODES = [
     SENSOR_TEMPERATURE, SENSOR_HUMIDITY, SENSOR_PRESSURE, SENSOR_ORIENTATION, SENSOR_ACCELERATION, 
-    SENSOR_CLOCK, SENSOR_CPU_USAGE, SENSOR_MEMORY_USAGE, SENSOR_DISK_USAGE
+    SENSOR_CLOCK, SENSOR_CPU_USAGE, SENSOR_MEMORY_USAGE, SENSOR_DISK_USAGE, SENSOR_VOLTAGE, SENSOR_BATTERY
 ]
 
 # -- Sensor Display Properties (New consolidated structure) --
@@ -172,5 +176,21 @@ SENSOR_DISPLAY_PROPERTIES = {
         },
         "range_override": (0, 100),
         "precision": 1
+    },
+    SENSOR_VOLTAGE: {
+        "display_name": "Voltage",
+        "units": "V",
+        "graph_type": "NONE", # Don't graph voltage, just display
+        "color_key": "SIDEBAR_SYSTEM",
+        "range_override": None,
+        "precision": 2
+    },
+    SENSOR_BATTERY: {
+        "display_name": "Battery",
+        "units": "%",
+        "graph_type": "NONE", # Don't graph battery, just display
+        "color_key": "SIDEBAR_SYSTEM",
+        "range_override": None,
+        "precision": 0
     }
 } 

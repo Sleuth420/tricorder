@@ -83,6 +83,8 @@ def update_all_data(sensor_values, reading_history, app_config):
         app_config.SENSOR_CPU_USAGE: lambda: system_info.get_cpu_usage()[0], # Only need percent for now
         app_config.SENSOR_MEMORY_USAGE: lambda: system_info.get_memory_usage()[0], # Only need percent
         app_config.SENSOR_DISK_USAGE: lambda: system_info.get_disk_usage()[0], # Only need percent
+        app_config.SENSOR_VOLTAGE: system_info.get_voltage_info,
+        app_config.SENSOR_BATTERY: lambda: system_info.get_battery_info()[0], # Only need percent
     }
 
     # Iterate through SENSOR_MODES defined in config
@@ -126,10 +128,10 @@ def update_all_data(sensor_values, reading_history, app_config):
     sensor_values[app_config.INFO_WIFI_STATUS] = {"text": wifi_status_val, "unit": "", "note": "", "value": None}
     sensor_values[app_config.INFO_WIFI_SSID] = {"text": wifi_ssid_val, "unit": "", "note": "", "value": None}
 
-    # Cellular Info
-    cell_status_val, cell_provider_val = system_info.get_cellular_info()
-    sensor_values[app_config.INFO_CELL_STATUS] = {"text": cell_status_val, "unit": "", "note": "", "value": None}
-    sensor_values[app_config.INFO_CELL_PROVIDER] = {"text": cell_provider_val, "unit": "", "note": "", "value": None}
+    # Bluetooth Info (replacing cellular)
+    bluetooth_status_val, bluetooth_device_val = system_info.get_bluetooth_info()
+    sensor_values[app_config.INFO_BLUETOOTH_STATUS] = {"text": bluetooth_status_val, "unit": "", "note": "", "value": None}
+    sensor_values[app_config.INFO_BLUETOOTH_DEVICE] = {"text": bluetooth_device_val, "unit": "", "note": "", "value": None}
 
     # --- Special case for CPU to include temperature as note if available ---
     if app_config.SENSOR_CPU_USAGE in sensor_values:
@@ -155,5 +157,11 @@ def update_all_data(sensor_values, reading_history, app_config):
         _p, disk_used, disk_total = system_info.get_disk_usage()
         if disk_used is not None and disk_total is not None:
              sensor_values[app_config.SENSOR_DISK_USAGE]["note"] = f"{disk_used:.1f}GB/{disk_total:.1f}GB"
+
+    # --- Special case for Battery to include status as note ---
+    if app_config.SENSOR_BATTERY in sensor_values:
+        _percent, battery_status = system_info.get_battery_info()
+        if battery_status:
+            sensor_values[app_config.SENSOR_BATTERY]["note"] = battery_status
 
     logger.debug("Data update complete.") 

@@ -27,7 +27,7 @@ IS_WINDOWS_DEV = platform.system() == "Windows"
 # Mock data class definition
 class MockSensorData:
     def __init__(self):
-        self.base_temp = 22.0
+        self.base_temp = 38.0
         self.base_humidity = 45.0
         self.base_pressure = 1013.25
         self.orientation = {'pitch': 0.0, 'roll': 0.0, 'yaw': 0.0}

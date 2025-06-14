@@ -1,193 +1,201 @@
 # --- ui/views/system_info_view.py ---
-# Handles rendering of the system information screen
+# Handles rendering of the redesigned system information screen
 
 import pygame
 import logging
-from ui.components.ui_elements import draw_panel
+from ui.components.horizontal_status_bar import HorizontalStatusBar
 from ui.components.text_display import render_footer
 import config as app_config # For theme colors and constants
 
 logger = logging.getLogger(__name__)
 
-def draw_system_info_view(screen, app_state, sensor_values, fonts, config_module, target_rect=None, draw_footer=True):
+def draw_system_info_view(screen, app_state, sensor_values, fonts, config_module, target_rect=None, draw_footer=False):
     """
-    Draw the system information screen.
+    Draw the redesigned system information screen with horizontal status bars.
 
     Args:
         screen (pygame.Surface): The surface to draw on
         app_state (AppState): The current application state (for frozen status)
-        sensor_values (dict): Dictionary containing formatted system values (new structure)
+        sensor_values (dict): Dictionary containing formatted system values
         fonts (dict): Dictionary of loaded fonts
         config_module (module): Configuration module (config package)
         target_rect (pygame.Rect, optional): The rectangle to draw within. Defaults to the full screen.
-        draw_footer (bool): Whether to draw the footer. Defaults to True.
+        draw_footer (bool): Whether to draw the footer. Defaults to False (disabled).
     """
+    screen.fill(config_module.Theme.BACKGROUND)
+    
     screen_width = screen.get_width()
     screen_height = screen.get_height()
-
-    if target_rect:
-        rect = target_rect
-        pygame.draw.rect(screen, config_module.Theme.BACKGROUND, rect)
-    else:
-        rect = pygame.Rect(0, 0, screen_width, screen_height)
-        screen.fill(config_module.Theme.BACKGROUND)
-
-    header_height = 20 
-    header_rect = pygame.Rect(rect.left, rect.top, rect.width, header_height)
+    
+    # Header - use proportional spacing like list_menu_base.py
+    header_top_margin = screen_height // 20
+    header_height = config_module.HEADER_HEIGHT
+    header_rect = pygame.Rect(0, header_top_margin, screen_width, header_height)
     pygame.draw.rect(screen, config_module.Theme.BACKGROUND, header_rect)
 
-    font = fonts['medium']
-    header_text_str = "System Information"
+    font_medium = fonts['medium']
+    font_small = fonts['small']
+    
+    header_text_str = "System Status"
     if app_state.is_frozen:
         header_text_str += " [FROZEN]"
     header_text_color = config_module.Theme.ACCENT if not app_state.is_frozen else config_module.Theme.FROZEN_INDICATOR
-    header_text = font.render(header_text_str, True, header_text_color)
-    screen.blit(header_text, (rect.left + 20, header_rect.centery - header_text.get_height() // 2))
+    header_text = font_medium.render(header_text_str, True, header_text_color)
+    screen.blit(header_text, (header_rect.centerx - header_text.get_width() // 2, header_rect.centery - header_text.get_height() // 2))
 
-    logo_surface = None
-    logo_rect = None
-    logo_padding = 5
-    try:
-        logo_surface = pygame.image.load(config_module.SPLASH_LOGO_PATH).convert_alpha()
-        max_logo_height = 30
-        if logo_surface.get_height() > max_logo_height:
-            scale = max_logo_height / logo_surface.get_height()
-            new_width = int(logo_surface.get_width() * scale)
-            logo_surface = pygame.transform.smoothscale(logo_surface, (new_width, max_logo_height))
-        logo_rect = logo_surface.get_rect(centerx=rect.centerx, top=header_rect.bottom + logo_padding)
-        screen.blit(logo_surface, logo_rect)
-        logo_bottom = logo_rect.bottom + logo_padding
-    except pygame.error as e:
-        logger.warning(f"Could not load or display logo '{config_module.SPLASH_LOGO_PATH}': {e}")
-        logo_bottom = header_rect.bottom
+    # Use proportional margins based on screen size
+    content_margin = max(8, screen_width // 30)  # 3-4% of screen width
+    content_y = header_rect.bottom + content_margin
+    
+    # Section 1: Time and Date - fixed height like other views
+    time_section_height = 40
+    time_rect = pygame.Rect(content_margin, content_y, screen_width - (content_margin * 2), time_section_height)
+    
+    # Get time data
+    clock_data = sensor_values.get(app_config.SENSOR_CLOCK, {})
+    time_text = clock_data.get("text", "N/A")
+    date_text = clock_data.get("note", "")
+    
+    # Draw time (larger)
+    time_surface = font_medium.render(time_text, True, config_module.Theme.FOREGROUND)
+    time_pos = (time_rect.left, time_rect.top)
+    screen.blit(time_surface, time_pos)
+    
+    # Draw date (smaller, below time)
+    if date_text:
+        date_surface = font_small.render(date_text, True, config_module.Theme.ACCENT)
+        date_pos = (time_rect.left, time_rect.top + time_surface.get_height() + 5)
+        screen.blit(date_surface, date_pos)
 
-    content_y = logo_bottom + 5
-    footer_height_calc = config_module.FONT_SIZE_SMALL * 2 if draw_footer else 0
-    available_content_height = rect.height - content_y - footer_height_calc
-    content_rect = pygame.Rect(rect.left + 10, content_y, rect.width - 20, available_content_height)
-
-    if available_content_height <= 0:
-        logger.warning("Not enough vertical space for system_info_view content.")
-        if draw_footer:
-            key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
-            key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
-            key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
-            action_text = "Freeze" if not app_state.is_frozen else "Unfreeze"
-            hint = f"< Hold {key_prev_name}=Menu | {key_select_name}={action_text} | {key_next_name}= - >"
-            render_footer(screen, hint, fonts, config_module.Theme.FOREGROUND, rect.width, rect.bottom)
-        return
-
-    # Define panel color schemes using Theme
-    wifi_panel_theme = {
-        'background': config_module.Theme.CONTENT_WIFI_INFO_BG,
-        'border': config_module.Theme.ACCENT,
-        'title': config_module.Theme.CONTENT_PANEL_HEADER_BG, 
-        'title_text': config_module.Theme.CONTENT_PANEL_TITLE_TEXT
-    }
-    cell_panel_theme = {
-        'background': config_module.Theme.CONTENT_CELLULAR_INFO_BG,
-        'border': config_module.Theme.ACCENT,
-        'title': config_module.Theme.CONTENT_PANEL_HEADER_BG,
-        'title_text': config_module.Theme.CONTENT_PANEL_TITLE_TEXT
-    }
-
-    network_proportion = 0.6
-    network_height = max(40, int(available_content_height * network_proportion))
-    network_rect = pygame.Rect(content_rect.left, content_rect.top, content_rect.width, network_height)
-    panel_spacing = 5
-    panel_height = (network_rect.height - panel_spacing) // 2
-    panel_width = network_rect.width
-
-    # WiFi panel
-    wifi_rect = pygame.Rect(network_rect.left, network_rect.top, panel_width, panel_height)
-    wifi_content_area = draw_panel(screen, wifi_rect, "WiFi", fonts, wifi_panel_theme)
+    # Section 2: Network Status - fixed height like other views
+    network_section_y = time_rect.bottom + content_margin
+    network_section_height = 50
+    network_rect = pygame.Rect(content_margin, network_section_y, screen_width - (content_margin * 2), network_section_height)
+    
+    # WiFi Status
     wifi_status_data = sensor_values.get(app_config.INFO_WIFI_STATUS, {})
     wifi_ssid_data = sensor_values.get(app_config.INFO_WIFI_SSID, {})
     wifi_status = wifi_status_data.get("text", "N/A")
-    network_name = wifi_ssid_data.get("text", "N/A")
-    wifi_status_color = config_module.Theme.CONTENT_WIFI_ONLINE_STATUS if wifi_status.lower() == "online" else config_module.Theme.ALERT
-    status_surface = fonts['small'].render(wifi_status, True, wifi_status_color)
-    status_pos = (wifi_content_area.left + 5, wifi_content_area.centery - status_surface.get_height() - 2)
-    screen.blit(status_surface, status_pos)
-    network_surface = fonts['small'].render(network_name, True, config_module.Theme.FOREGROUND)
-    network_pos = (wifi_content_area.left + 5, wifi_content_area.centery + 2)
-    screen.blit(network_surface, network_pos)
-
-    # Cellular panel
-    cell_rect = pygame.Rect(network_rect.left, network_rect.top + panel_height + panel_spacing, panel_width, panel_height)
-    cell_content_area = draw_panel(screen, cell_rect, "Cellular", fonts, cell_panel_theme)
-    cell_status_data = sensor_values.get(app_config.INFO_CELL_STATUS, {})
-    cell_provider_data = sensor_values.get(app_config.INFO_CELL_PROVIDER, {})
-    cell_status = cell_status_data.get("text", "N/A")
-    provider = cell_provider_data.get("text", "N/A")
-    cell_provider_color = config_module.Theme.FOREGROUND if provider != "N/A" else config_module.Theme.ALERT
-    cell_status_color = config_module.Theme.WHITE if cell_status.lower() == "online" else config_module.Theme.ALERT # Assuming white for online status text
-    provider_surface = fonts['small'].render(provider, True, cell_provider_color)
-    provider_pos = (cell_content_area.left + 5, cell_content_area.centery - provider_surface.get_height() - 2)
-    screen.blit(provider_surface, provider_pos)
-    status_surface_cell = fonts['small'].render(cell_status, True, cell_status_color)
-    status_pos_cell = (cell_content_area.left + 5, cell_content_area.centery + 2)
-    screen.blit(status_surface_cell, status_pos_cell)
-
-    # System Information list (below network info)
-    sys_info_top = network_rect.bottom + 10
-    font_to_use = fonts['small']
-    line_padding = 4
+    wifi_ssid = wifi_ssid_data.get("text", "N/A")
     
-    sys_info_items_config = [
-        (app_config.SENSOR_CLOCK, "Time: "),
-        (app_config.SENSOR_CPU_USAGE, "CPU: "),
-        (app_config.SENSOR_MEMORY_USAGE, "Memory: "),
-        (app_config.SENSOR_DISK_USAGE, "Disk: ")
-    ]
-    num_sys_items = len(sys_info_items_config)
-    required_sys_info_height = num_sys_items * (font_to_use.get_height() + line_padding)
-    original_available_sys_info_height = available_content_height - network_height - 10
-    sys_info_height = min(required_sys_info_height, original_available_sys_info_height)
-    sys_rect = pygame.Rect(content_rect.left, sys_info_top, content_rect.width, sys_info_height)
-
-    if sys_info_height > font_to_use.get_height():
-        pygame.draw.rect(screen, config_module.Theme.BACKGROUND, sys_rect) # Clear this specific area
-        line_height = font_to_use.get_height() + line_padding
-        current_y = sys_rect.top + line_padding // 2
-        items_drawn_count = 0
-        for sensor_key, label_prefix in sys_info_items_config:
-            if items_drawn_count * line_height >= sys_rect.height: # Stop if no more vertical space in allocated rect
-                break
-            sensor_data = sensor_values.get(sensor_key, {})
-            value_text = sensor_data.get("text", "N/A")
-            unit_text = sensor_data.get("unit", "")
-            note_text = sensor_data.get("note", "")
-            
-            full_text = f"{label_prefix}{value_text}{unit_text}"
-            if note_text and sensor_key != app_config.SENSOR_CLOCK: # Clock note is handled differently by data_updater for full date
-                full_text += f" ({note_text})"
-            elif sensor_key == app_config.SENSOR_CLOCK and note_text:
-                 # For clock, the note is the full date, display it on a new line or side by side if space allows
-                 # For simplicity now, let's display clock note on new line if present
-                 time_surface = font_to_use.render(f"{label_prefix}{value_text}", True, config_module.Theme.FOREGROUND)
-                 screen.blit(time_surface, (sys_rect.left + 10, current_y))
-                 current_y += line_height
-                 items_drawn_count += 1
-                 if items_drawn_count * line_height < sys_rect.height and note_text: # Check space for note
-                     date_surface = font_to_use.render(note_text, True, config_module.Theme.ACCENT) # Different color for date?
-                     screen.blit(date_surface, (sys_rect.left + 20, current_y)) # Indent date slightly
-                     current_y += line_height
-                     items_drawn_count += 1
-                 continue # Skip to next item
-
-            text_surface = font_to_use.render(full_text, True, config_module.Theme.FOREGROUND)
-            screen.blit(text_surface, (sys_rect.left + 10, current_y))
-            current_y += line_height
-            items_drawn_count += 1
+    wifi_color = config_module.Palette.GREEN if wifi_status.lower() in ["connected", "online"] else config_module.Palette.RED_ALERT
+    wifi_text = f"WiFi: {wifi_status}"
+    if wifi_status.lower() in ["connected", "online"] and wifi_ssid != "N/A" and wifi_ssid != "Connected":
+        wifi_text += f" - {wifi_ssid}"
+    
+    wifi_surface = font_small.render(wifi_text, True, wifi_color)
+    wifi_pos = (network_rect.left, network_rect.top)
+    screen.blit(wifi_surface, wifi_pos)
+    
+    # Bluetooth Status
+    bluetooth_status_data = sensor_values.get(app_config.INFO_BLUETOOTH_STATUS, {})
+    bluetooth_device_data = sensor_values.get(app_config.INFO_BLUETOOTH_DEVICE, {})
+    bluetooth_status = bluetooth_status_data.get("text", "N/A")
+    bluetooth_device = bluetooth_device_data.get("text", "")
+    
+    if bluetooth_status.lower() == "connected":
+        bluetooth_color = config_module.Palette.GREEN
+    elif bluetooth_status.lower() in ["on", "available"]:
+        bluetooth_color = config_module.Palette.ENGINEERING_GOLD
     else:
-        logger.warning("Skipping System Info list drawing due to insufficient calculated height.")
+        bluetooth_color = config_module.Palette.RED_ALERT
+    
+    bluetooth_text = f"Bluetooth: {bluetooth_status}"
+    if bluetooth_device and bluetooth_device not in ["N/A", "Not Available", "Windows", "Unsupported"]:
+        bluetooth_text += f" - {bluetooth_device}"
+    
+    bluetooth_surface = font_small.render(bluetooth_text, True, bluetooth_color)
+    bluetooth_pos = (network_rect.left, network_rect.top + wifi_surface.get_height() + 10)
+    screen.blit(bluetooth_surface, bluetooth_pos)
 
-    if draw_footer:
-        key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
-        key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
-        key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
-        action_text = "Freeze" if not app_state.is_frozen else "Unfreeze"
-        hint = ""
+    # Section 3: System Status Bars - fixed position and spacing
+    status_bars_y = network_rect.bottom + content_margin
+    available_status_height = screen_height - status_bars_y - content_margin  # Reserve bottom margin
+    status_bars_rect = pygame.Rect(content_margin, status_bars_y, screen_width - (content_margin * 2), available_status_height)
+    
+    # Define status bar configurations
+    status_bar_configs = []
+    
+    # CPU Status Bar
+    cpu_data = sensor_values.get(app_config.SENSOR_CPU_USAGE, {})
+    cpu_value = cpu_data.get("value")
+    if cpu_value is not None:
+        status_bar_configs.append({
+            "label": "CPU",
+            "value": cpu_value,
+            "units": "%",
+            "green_range": (0, 60),
+            "yellow_range": (60, 85)
+        })
+    
+    # Memory Status Bar
+    memory_data = sensor_values.get(app_config.SENSOR_MEMORY_USAGE, {})
+    memory_value = memory_data.get("value")
+    if memory_value is not None:
+        status_bar_configs.append({
+            "label": "Memory",
+            "value": memory_value,
+            "units": "%",
+            "green_range": (0, 60),
+            "yellow_range": (60, 85)
+        })
+    
+    # Voltage Status Bar (always show)
+    voltage_data = sensor_values.get(app_config.SENSOR_VOLTAGE, {})
+    voltage_value = voltage_data.get("value")
+    status_bar_configs.append({
+        "label": "Voltage",
+        "value": voltage_value,
+        "units": "V",
+        "green_range": (4.8, 5.2),  # Normal USB voltage range
+        "yellow_range": (4.5, 4.8)  # Warning range
+    })
+    
+    # Battery Status Bar (always show)
+    battery_data = sensor_values.get(app_config.SENSOR_BATTERY, {})
+    battery_value = battery_data.get("value")
+    status_bar_configs.append({
+        "label": "Battery",
+        "value": battery_value,
+        "units": "%",
+        "green_range": (30, 100),
+        "yellow_range": (15, 30)
+    })
+    
+    # Draw status bars with simple fixed spacing like other views
+    if status_bar_configs:
+        # Use simple fixed dimensions like other views
+        bar_height = 25  # Fixed height like other views
+        bar_spacing = 30  # Fixed spacing like other views
+        
+        current_y = status_bars_rect.top
+        
+        for config_dict in status_bar_configs:
+            bar_rect = pygame.Rect(status_bars_rect.left, current_y, status_bars_rect.width, bar_height)
+            
+            try:
+                status_bar = HorizontalStatusBar(
+                    screen=screen,
+                    rect=bar_rect,
+                    label=config_dict["label"],
+                    units=config_dict["units"],
+                    min_val=0,
+                    max_val=100 if config_dict["units"] == "%" else 6.0,  # 6V max for voltage
+                    green_range=config_dict["green_range"],
+                    yellow_range=config_dict["yellow_range"],
+                    fonts=fonts,
+                    config_module=config_module
+                )
+                status_bar.draw(config_dict["value"])
+            except Exception as e:
+                logger.error(f"Error drawing status bar for {config_dict['label']}: {e}", exc_info=True)
+            
+            current_y += bar_height + bar_spacing
+    else:
+        # No status bars available, show message
+        fallback_text = "No system status data available"
+        fallback_surface = font_small.render(fallback_text, True, config_module.Theme.ALERT)
+        fallback_pos = (status_bars_rect.left, status_bars_rect.top + (status_bars_rect.height // 4))
+        screen.blit(fallback_surface, fallback_pos)
 
-        render_footer(screen, hint, fonts, config_module.Theme.FOREGROUND, rect.width, rect.bottom) 
+    # Footer is completely removed - no drawing at all 

@@ -1,14 +1,14 @@
 # Requirements for the Tricorder Application - Windows Development
 
 # Core dependencies
-pygame==2.5.2       # For display and UI
-numpy==1.26.0       # For numerical operations with sensor data
+pygame==2.6.1
+numpy==2.3.0
 
 # System monitoring
-psutil==5.9.6       # For system monitoring (CPU, memory, disk)
+psutil==7.0.0
 
 # Graphics and rendering
-matplotlib==3.8.0   # For advanced graphing capabilities
+matplotlib==3.10.3
 PyOpenGL==3.1.9     # OpenGL bindings for Python
 PyOpenGL-accelerate==3.1.9  # Accelerated OpenGL operations
 pygltflib==1.16.4   # GLTF file format support
@@ -16,7 +16,7 @@ PyGLM==2.8.2        # OpenGL Mathematics library
 Pillow==11.2.1      # Python Imaging Library
 
 # Environment configuration
-python-dotenv==1.0.0  # For loading environment variables from .env file
+python-dotenv==1.1.0
 
 # Note: sense-hat is excluded as it's Raspberry Pi specific
 # Mock sensor data is provided for Windows development 

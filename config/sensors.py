@@ -34,14 +34,15 @@ SENSOR_DISPLAY_PROPERTIES = {
         "units": "°C", # Changed from C
         "graph_type": "VERTICAL_BAR", # "LINE", "VERTICAL_BAR", "NONE"
         "color_key": "SIDEBAR_HUMID", # For AppState MenuItem color
-        "vertical_graph_config": { # Specific to VerticalBarGraph
-            "min_val": 0, # Changed from 32
-            "max_val": 50, # Changed from 100 (typical SenseHAT range for ambient)
-            "normal_range": (18, 28), # Typical room temp
+        "vertical_graph_config": {
+            "min_val": 0,
+            "max_val": 50,
+            "normal_range": (18, 28),
             "critical_low": 10,
             "critical_high": 35,
-            "num_ticks": 9, # Adjusted for 0-50 range
-            "precision": 1
+            "num_ticks": 5,
+            "precision": 1,
+            "dynamic_range": True
         },
         "range_override": (0, 50), # For line graph if ever used, or general reference
         "precision": 1
@@ -54,11 +55,15 @@ SENSOR_DISPLAY_PROPERTIES = {
         "vertical_graph_config": {
             "min_val": 0,
         "max_val": 100,
-            "normal_range": (30, 70), # Adjusted normal range
-            "critical_low": 20,
-            "critical_high": 80,
-            "num_ticks": 11,
-            "precision": 1
+            "normal_range": (30, 70), # Normal humidity range (GREEN zone)
+            "critical_low": 20,  # Below this = RED (too dry)
+            "critical_high": 80, # Above this = RED (too humid)
+            "num_ticks": 5, # Reduced from 11 for better readability
+            "precision": 1,
+            "dynamic_range": True,  # Enable smart zoom
+            "zoom_factor": 0.4,     # Show 40% of full range (40% window)
+            "min_zoom_range": 25,   # Never zoom closer than 25% range
+            "stability_threshold": 5.0  # Scale only changes when humidity changes by 5%
         },
         "range_override": (0, 100),
         "precision": 1
@@ -71,11 +76,15 @@ SENSOR_DISPLAY_PROPERTIES = {
         "vertical_graph_config": {
         "min_val": 950,
         "max_val": 1050,
-        "normal_range": (980, 1030),
-        "critical_low": 960,
-        "critical_high": 1040,
-            "num_ticks": 11,
-            "precision": 1
+        "normal_range": (980, 1030), # Normal atmospheric pressure (GREEN zone)
+        "critical_low": 960,   # Below this = RED (very low pressure)
+        "critical_high": 1040, # Above this = RED (very high pressure)
+            "num_ticks": 5, # Reduced from 11 for better readability
+            "precision": 1,
+            "dynamic_range": True,  # Enable smart zoom
+            "zoom_factor": 0.6,     # Show 60% of full range (60mbar window)
+            "min_zoom_range": 40,   # Never zoom closer than 40 mbar range
+            "stability_threshold": 8.0  # Scale only changes when pressure changes by 8mbar
         },
         "range_override": (950, 1050),
         "precision": 1
@@ -93,19 +102,10 @@ SENSOR_DISPLAY_PROPERTIES = {
     SENSOR_ACCELERATION: {
         "display_name": "Inertia",
         "units": "G",
-        "graph_type": "VERTICAL_BAR", # Or LINE if preferred for one axis
-        "component_to_graph": "y", # Specify which component for VerticalBarGraph, e.g., 'y' or 'x' or 'z'
+        "graph_type": "LINE", # Using line graph for Z component over time
+        "component_to_graph": "z", # Using Z component for inertia
         "color_key": "SIDEBAR_ACCEL",
-        "vertical_graph_config": { # Example for Y-axis G-force
-            "min_val": -2, # Adjusted range for typical motion
-            "max_val": 2,
-        "normal_range": (-0.5, 0.5),
-        "critical_low": -1.5,
-        "critical_high": 1.5,
-            "num_ticks": 9,
-            "precision": 2
-        },
-        "range_override": (-2, 2), # For line graph of a single component
+        "range_override": (-2, 2), # For line graph of Z component
         "precision": 2
     },
     SENSOR_CLOCK: {
@@ -119,12 +119,18 @@ SENSOR_DISPLAY_PROPERTIES = {
     SENSOR_CPU_USAGE: {
         "display_name": "CPU",
         "units": "%",
-        "graph_type": "LINE", # Or VERTICAL_BAR
+        "graph_type": "VERTICAL_BAR", # Changed from LINE to VERTICAL_BAR
         "color_key": "SIDEBAR_SYSTEM", # Example color
         "vertical_graph_config": {
-             "min_val": 0, "max_val": 100, "normal_range": (0, 75),
-             "critical_low": 0, "critical_high": 90, "num_ticks": 11,
-             "precision": 1
+             "min_val": 0, "max_val": 100, 
+             "normal_range": (0, 75),      # Normal CPU usage (GREEN zone)
+             "critical_low": 0, "critical_high": 90, # Above 90% = RED (overloaded)
+             "num_ticks": 5,
+             "precision": 1,
+             "dynamic_range": True,  # Enable smart zoom
+             "zoom_factor": 0.6,     # Show 60% of full range
+             "min_zoom_range": 30,   # Never zoom closer than 30% range
+             "stability_threshold": 10.0  # Scale only changes when CPU usage changes by 10%
         },
         "range_override": (0, 100),
         "precision": 1
@@ -132,12 +138,18 @@ SENSOR_DISPLAY_PROPERTIES = {
     SENSOR_MEMORY_USAGE: {
         "display_name": "Memory",
         "units": "%",
-        "graph_type": "LINE", # Or VERTICAL_BAR
+        "graph_type": "VERTICAL_BAR", # Changed from LINE to VERTICAL_BAR
         "color_key": "SIDEBAR_SYSTEM", # Example color
          "vertical_graph_config": {
-             "min_val": 0, "max_val": 100, "normal_range": (0, 75),
-             "critical_low": 0, "critical_high": 90, "num_ticks": 11,
-             "precision": 1
+             "min_val": 0, "max_val": 100, 
+             "normal_range": (0, 75),      # Normal memory usage (GREEN zone)
+             "critical_low": 0, "critical_high": 90, # Above 90% = RED (low memory)
+             "num_ticks": 5,
+             "precision": 1,
+             "dynamic_range": True,  # Enable smart zoom
+             "zoom_factor": 0.6,     # Show 60% of full range
+             "min_zoom_range": 30,   # Never zoom closer than 30% range
+             "stability_threshold": 10.0  # Scale only changes when memory usage changes by 10%
         },
         "range_override": (0, 100),
         "precision": 1
@@ -145,12 +157,18 @@ SENSOR_DISPLAY_PROPERTIES = {
     SENSOR_DISK_USAGE: {
         "display_name": "Disk",
         "units": "%",
-        "graph_type": "LINE", # Or VERTICAL_BAR
+        "graph_type": "VERTICAL_BAR", # Changed from LINE to VERTICAL_BAR
         "color_key": "SIDEBAR_SYSTEM", # Example color
          "vertical_graph_config": {
-             "min_val": 0, "max_val": 100, "normal_range": (0, 80),
-             "critical_low": 0, "critical_high": 95, "num_ticks": 11,
-             "precision": 1
+             "min_val": 0, "max_val": 100, 
+             "normal_range": (0, 80),      # Normal disk usage (GREEN zone)
+             "critical_low": 0, "critical_high": 95, # Above 95% = RED (disk full)
+             "num_ticks": 5,
+             "precision": 1,
+             "dynamic_range": True,  # Enable smart zoom
+             "zoom_factor": 0.5,     # Show 50% of full range
+             "min_zoom_range": 25,   # Never zoom closer than 25% range
+             "stability_threshold": 8.0  # Scale only changes when disk usage changes by 8%
         },
         "range_override": (0, 100),
         "precision": 1

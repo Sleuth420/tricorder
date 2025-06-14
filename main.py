@@ -343,9 +343,8 @@ def main():
 
                 # 3. Read Sensor Data
                 if app_state.current_state not in [STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE]:
-                    should_read_sensors = (not app_state.is_frozen or
-                                          (current_time - app_state.last_reading_time >= 1.0))
-                    if should_read_sensors:
+                    # Only update sensors if not frozen
+                    if not app_state.is_frozen:
                         app_state.last_reading_time = current_time
                         update_all_data(sensor_values, reading_history, config)
                 

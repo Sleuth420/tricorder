@@ -108,25 +108,43 @@ The application follows a modular architecture with clear separation of concerns
    cd tricorder
    ```
 
-2. Install system-level Sense HAT package:
+2. Install system-level dependencies:
    ```bash
    sudo apt update
-   sudo apt install sense-hat
+   sudo apt install sense-hat python3-rtimu python3-dev build-essential
+   sudo pip3 install sense-hat
    ```
 
-3. Set up Python virtual environment with system site packages (to allow Sense HAT access):
+3. Set up Python virtual environment:
    ```bash
-   # Create virtual environment with system site packages
-   python3 -m venv venv --system-site-packages
+   # Create virtual environment
+   python3 -m venv venv
    
    # Activate virtual environment
    source venv/bin/activate
    
-   # Install Python dependencies
+   # Install Python dependencies (excluding PyOpenGL-accelerate which causes build issues)
    pip install -r requirements.txt
    ```
 
-4. Enable I2C interface (required for Sense HAT):
+4. Link system-level Sense HAT libraries to virtual environment:
+   ```bash
+   # Remove any existing sense_hat installations in venv
+   rm -rf ~/Desktop/tricorder/venv/lib/python3.11/site-packages/sense_hat*
+   
+   # Create symbolic links to system packages
+   ln -s /usr/lib/python3/dist-packages/sense_hat ~/Desktop/tricorder/venv/lib/python3.11/site-packages/
+   ln -s /usr/lib/python3/dist-packages/sense_hat-2.6.0.dist-info ~/Desktop/tricorder/venv/lib/python3.11/site-packages/
+   ln -s /usr/lib/python3/dist-packages/RTIMU* ~/Desktop/tricorder/venv/lib/python3.11/site-packages/
+   ```
+
+5. Verify Sense HAT installation:
+   ```bash
+   # Test that Sense HAT can be imported
+   python3 -c "import sense_hat; print('Sense HAT library is working')"
+   ```
+
+6. Enable I2C interface (required for Sense HAT):
    ```bash
    sudo raspi-config
    ```
@@ -136,7 +154,7 @@ The application follows a modular architecture with clear separation of concerns
    - Enable I2C
    - Select "Yes" to reboot when prompted
 
-5. After reboot, verify Sense HAT is detected:
+7. After reboot, verify Sense HAT is detected:
    ```bash
    sudo i2cdetect -y 1
    ```
@@ -325,8 +343,28 @@ You can also create a desktop shortcut or startup script:
 
 ### Raspberry Pi
 - **Sense HAT not detected**: Check I2C is enabled and Sense HAT is properly connected
-- **Permission errors**: Ensure virtual environment has system site packages access
+- **"No module named 'sense_hat'" error**: Ensure symbolic links are created correctly (step 4 in setup)
+- **"No module named 'RTIMU'" error**: Install python3-rtimu and create RTIMU symbolic links
+- **PyOpenGL-accelerate build errors**: This package is optional and has been removed from requirements.txt due to compilation issues on ARM64
+- **Permission errors**: Ensure you have proper permissions for creating symbolic links
 - **Display issues**: Verify display configuration and resolution settings
+
+#### Common Sense HAT Issues:
+If you encounter Sense HAT import errors after following the setup:
+
+1. **Check if system packages are installed**:
+   ```bash
+   python3 -c "import sys; sys.path.append('/usr/lib/python3/dist-packages'); import sense_hat; print('System sense_hat works')"
+   ```
+
+2. **Recreate symbolic links if needed**:
+   ```bash
+   rm -rf ~/Desktop/tricorder/venv/lib/python3.11/site-packages/sense_hat*
+   rm -rf ~/Desktop/tricorder/venv/lib/python3.11/site-packages/RTIMU*
+   ln -s /usr/lib/python3/dist-packages/sense_hat ~/Desktop/tricorder/venv/lib/python3.11/site-packages/
+   ln -s /usr/lib/python3/dist-packages/sense_hat-2.6.0.dist-info ~/Desktop/tricorder/venv/lib/python3.11/site-packages/
+   ln -s /usr/lib/python3/dist-packages/RTIMU* ~/Desktop/tricorder/venv/lib/python3.11/site-packages/
+   ```
 
 ### General
 - **Import errors**: Ensure virtual environment is activated and dependencies are installed

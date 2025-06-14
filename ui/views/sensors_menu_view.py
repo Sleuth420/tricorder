@@ -33,7 +33,7 @@ def draw_sensors_menu_view(screen, app_state, sensor_values, sensor_history, fon
     _draw_sensors_main_content(screen, main_content_rect, app_state, sensor_values, fonts, config_module)
     
     # Draw footer
-    _draw_sensors_footer(screen, main_content_rect, fonts, config_module, screen_height)
+    # _draw_sensors_footer(screen, main_content_rect, fonts, config_module, screen_height)
 
 def _draw_sensors_main_content(screen, main_content_rect, app_state, sensor_values, fonts, config_module):
     """
@@ -81,7 +81,7 @@ def _draw_sensor_preview(screen, main_content_rect, title_rect, sensor_key, sens
     
     # Sensor name
     name_font = fonts['medium']
-    name_text = f"Selected: {display_name}"
+    name_text = display_name
     name_surface = name_font.render(name_text, True, config_module.Theme.FOREGROUND)
     name_rect = name_surface.get_rect(centerx=main_content_rect.centerx, y=title_rect.bottom + 30)
     screen.blit(name_surface, name_rect)
@@ -103,15 +103,15 @@ def _draw_sensor_preview(screen, main_content_rect, title_rect, sensor_key, sens
         note_rect = note_surface.get_rect(centerx=main_content_rect.centerx, y=value_rect.bottom + 10)
         screen.blit(note_surface, note_rect)
     
-    # Graph type indicator
-    graph_type = display_props.get("graph_type", "NONE")
-    if graph_type != "NONE":
-        graph_font = fonts['small']
-        graph_text = f"Graph: {graph_type.replace('_', ' ').title()}"
-        graph_surface = graph_font.render(graph_text, True, config_module.Palette.LIGHT_GREY)
-        graph_rect = graph_surface.get_rect(centerx=main_content_rect.centerx, 
-                                          y=(note_rect.bottom + 15) if note else (value_rect.bottom + 25))
-        screen.blit(graph_surface, graph_rect)
+    # Graph type indicator - commented out to reduce UI clutter
+    # graph_type = display_props.get("graph_type", "NONE")
+    # if graph_type != "NONE":
+    #     graph_font = fonts['small']
+    #     graph_text = f"Graph: {graph_type.replace('_', ' ').title()}"
+    #     graph_surface = graph_font.render(graph_text, True, config_module.Palette.LIGHT_GREY)
+    #     graph_rect = graph_surface.get_rect(centerx=main_content_rect.centerx, 
+    #                                       y=(note_rect.bottom + 15) if note else (value_rect.bottom + 25))
+    #     screen.blit(graph_surface, graph_rect)
 
 def _draw_general_instructions(screen, main_content_rect, title_rect, fonts, config_module):
     """

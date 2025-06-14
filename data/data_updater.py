@@ -27,14 +27,11 @@ def _format_sensor_value(sensor_key, raw_value, display_props):
                 numeric_val = raw_value.get(display_props.get("component_to_graph", 'pitch')) 
 
             elif sensor_key == config.SENSOR_ACCELERATION and isinstance(raw_value, dict):
+                # Keep X and Y values for display, but use Z for graph/arrow
                 text_val = f"X:{raw_value['x']:.2f} Y:{raw_value['y']:.2f}"
-                note = f"Z:{raw_value['z']:.2f}{unit}"
-                # For history/graphing, use the specified component (e.g., 'y' from config)
-                component = display_props.get("component_to_graph")
-                if component and component in raw_value:
-                    numeric_val = raw_value[component]
-                else: # Fallback if component not specified or not in data
-                    numeric_val = raw_value.get('y') # Default to Y if not specified or invalid
+                note = ""  # No note needed
+                # For history/graphing, use Z component for inertia
+                numeric_val = raw_value.get('z')
             
             elif sensor_key == config.SENSOR_CLOCK and hasattr(raw_value, 'strftime'):
                 text_val = raw_value.strftime("%H:%M:%S")

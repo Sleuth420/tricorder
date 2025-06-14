@@ -40,12 +40,15 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
     display_props = config_module.SENSOR_DISPLAY_PROPERTIES.get(current_sensor_key, {})
     display_name = display_props.get("display_name", current_sensor_key)
 
-    # Get the values for the current sensor using the new structure
+                    # Get the values for the current sensor using the new structure
     current_sensor_data = sensor_values.get(current_sensor_key, {})
     text_val = current_sensor_data.get("text", "N/A")
     unit = current_sensor_data.get("unit", "")
     note = current_sensor_data.get("note", "")
     numeric_val = current_sensor_data.get("value")
+    
+    # Prepare text for vertical bar graph arrow display
+    arrow_text = text_val  # Default to main text (inertia no longer uses vertical bar graph)
     
     # Draw sensor name in top left
     title_font = fonts['medium']
@@ -102,8 +105,8 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
     elif graph_type == "VERTICAL_BAR":
         vbar_config = display_props.get("vertical_graph_config")
         if vbar_config:
-            # Calculate graph dimensions to maximize available space
-            graph_width = 80  # Increased width for better visibility
+            # Calculate graph dimensions to maximize available space - make it wider
+            graph_width = 120  # Increased from 80 for better visibility and spacing
             graph_height = screen_height - title_rect.bottom - config_module.FONT_SIZE_SMALL*3  # More vertical space
             graph_margin_top = 20
             graph_x = (screen_width - graph_width) // 2
@@ -122,9 +125,13 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
                     config_module=config_module,
                     critical_low=vbar_config.get("critical_low"),
                     critical_high=vbar_config.get("critical_high"),
-                    num_ticks=vbar_config.get("num_ticks", 11)
+                    num_ticks=vbar_config.get("num_ticks", 11),
+                    dynamic_range=vbar_config.get("dynamic_range", False),
+                    zoom_factor=vbar_config.get("zoom_factor", 0.3),
+                    min_zoom_range=vbar_config.get("min_zoom_range"),
+                    stability_threshold=vbar_config.get("stability_threshold", 2.0)
                 )
-                vertical_graph.draw(numeric_val)
+                vertical_graph.draw(numeric_val, arrow_text)
             except KeyError as e:
                  logger.error(f"Missing key in VERTICAL_GRAPH_CONFIG for {current_sensor_key}: {e}", exc_info=True)
             except Exception as e:
@@ -154,11 +161,17 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
         screen.blit(fallback_surf, fallback_rect)
 
     if note:
-        note_y_pos = screen_height - config_module.FONT_SIZE_SMALL*3 - 10
-        render_note(
-            screen, note, fonts,
+        # Position note in top area to avoid overlapping with vertical bar graph scale
+        note_x_pos = screen_width - 10  # Right side of screen  
+        note_y_pos = title_rect.bottom + 5  # Just below the title area
+        # Use render_text with right alignment to prevent text from going off screen
+        from ui.components.text_display import render_text
+        render_text(
+            screen, note, 
+            fonts['small'] if 'small' in fonts else fonts['medium'],
             config_module.Theme.ACCENT,
-            (screen_width // 2, note_y_pos)
+            (note_x_pos, note_y_pos),
+            align="right"
         )
     
     key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()

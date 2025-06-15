@@ -41,4 +41,4 @@ UI_BREAKPOINT_MEDIUM = 800  # Development screens
 UI_BREAKPOINT_LARGE = 1200  # Large development screens
 
 # Debug Configuration
-UI_DEBUG_DRAWING = True    # Enable detailed drawing/layout logging (shows dimensions, positions, etc.)
+UI_DEBUG_DRAWING = False    # Enable detailed drawing/layout logging (shows dimensions, positions, etc.)

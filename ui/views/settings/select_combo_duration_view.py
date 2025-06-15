@@ -3,9 +3,9 @@
 
 import pygame
 import logging
-from ui.components.list_menu_base import draw_simple_list_menu
+from ui.components.menus.list_menu_base import draw_simple_list_menu
 import config as app_config # For SECRET_COMBO_DURATION_OPTIONS and Theme
-from ui.components.text_display import render_footer, render_title # render_text_with_selection_indicator is not standard
+from ui.components.text.text_display import render_footer, render_title # render_text_with_selection_indicator is not standard
 
 logger = logging.getLogger(__name__)
 

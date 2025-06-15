@@ -3,7 +3,7 @@
 
 import pygame
 import logging
-from ui.components.list_menu_base import draw_simple_list_menu
+from ui.components.menus.list_menu_base import draw_simple_list_menu
 # import config as app_config # Not strictly needed if config_module is always passed and used
 
 logger = logging.getLogger(__name__)

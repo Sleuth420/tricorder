@@ -9,9 +9,9 @@ from data import sensors
 
 # OpenGL imports (optional - will be checked for availability)
 try:
-    from ui.components.opengl_renderer import OpenGLRenderer
-    from ui.components.opengl_model_renderer import OpenGLModelRenderer
-    from ui.components.obj_loader import OBJLoader
+    from ui.components.rendering.opengl_renderer import OpenGLRenderer
+    from ui.components.rendering.opengl_model_renderer import OpenGLModelRenderer
+    from ui.components.rendering.obj_loader import OBJLoader
     OPENGL_AVAILABLE = True
 except ImportError:
     OPENGL_AVAILABLE = False
@@ -194,7 +194,7 @@ class SchematicsManager:
                     # Pre-initialize the model renderer
                     if OPENGL_AVAILABLE and obj_model:
                         if not self.model_renderer:
-                            from ui.components.opengl_model_renderer import OpenGLModelRenderer
+                            from ui.components.rendering.opengl_model_renderer import OpenGLModelRenderer
                             self.model_renderer = OpenGLModelRenderer(
                                 self.screen_width, self.screen_height, self.config, self.ui_scaler
                             )
@@ -236,7 +236,7 @@ class SchematicsManager:
         self._refresh_loading_display(loading_operation)
         logger.info(f"Loading OBJ model from: {file_path}")
         
-        from ui.components.obj_loader import OBJLoader
+        from ui.components.rendering.obj_loader import OBJLoader
         obj_model = OBJLoader.load(file_path)
         
         if obj_model:
@@ -264,7 +264,7 @@ class SchematicsManager:
         
         # Load from file
         logger.info(f"Loading OBJ model from: {file_path}")
-        from ui.components.obj_loader import OBJLoader
+        from ui.components.rendering.obj_loader import OBJLoader
         obj_model = OBJLoader.load(file_path)
         
         if obj_model:

@@ -3,9 +3,9 @@
 
 import pygame
 import logging
-from ui.components.text_display import render_title, render_value, render_note, render_footer, render_text
-from ui.components.vertical_bar_graph import VerticalBarGraph
-from ui.components.graph import draw_graph # Re-import the old graph component
+from ui.components.text.text_display import render_title, render_value, render_note, render_footer, render_text
+from ui.components.charts.vertical_bar_graph import VerticalBarGraph
+from ui.components.charts.graph import draw_graph # Re-import the old graph component
 # Import app state constants
 from models.app_state import STATE_SENSOR_VIEW, STATE_DASHBOARD # These are fine as they are AppState internal states
 # Import config for sensor mode constants and display properties

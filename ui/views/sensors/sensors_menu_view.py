@@ -3,8 +3,8 @@
 
 import pygame
 import logging
-from ui.components.menu_base import draw_menu_base_layout
-from ui.components.text_display import render_footer
+from ui.components.menus.menu_base import draw_menu_base_layout
+from ui.components.text.text_display import render_footer
 
 logger = logging.getLogger(__name__)
 

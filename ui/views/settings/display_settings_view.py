@@ -3,8 +3,8 @@
 
 import pygame
 import logging
-from ui.components.list_menu_base import draw_simple_list_menu
-from ui.components.text_display import render_footer, render_text
+from ui.components.menus.list_menu_base import draw_simple_list_menu
+from ui.components.text.text_display import render_footer, render_text
 # import config as app_config # For accessing current interval and action names
 # We will use config_module passed in, but need options for iteration
 from config import AUTO_CYCLE_INTERVAL_OPTIONS # Import directly for iterating options

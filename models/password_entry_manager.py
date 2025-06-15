@@ -2,7 +2,7 @@
 # Manages password entry state and character selection
 
 import logging
-from ui.components.character_selector import CharacterSelector
+from ui.components.forms.character_selector import CharacterSelector
 import config as app_config
 
 logger = logging.getLogger(__name__)

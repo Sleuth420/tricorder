@@ -4,8 +4,8 @@
 import pygame
 import platform
 import logging
-from ui.components.list_menu_base import draw_simple_list_menu
-from ui.components.text_display import render_footer, render_text
+from ui.components.menus.list_menu_base import draw_simple_list_menu
+from ui.components.text.text_display import render_footer, render_text
 
 logger = logging.getLogger(__name__)
 

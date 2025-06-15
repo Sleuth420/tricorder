@@ -37,7 +37,7 @@ class LoadingManager:
         Returns:
             LoadingOperation: The loading operation context manager
         """
-        from ui.components.loading_screen import LoadingScreen, LoadingOperation
+        from ui.components.loading.loading_screen import LoadingScreen, LoadingOperation
         
         # Create loading screen if needed
         if not self.loading_screen:

@@ -7,8 +7,8 @@ import time
 from datetime import datetime
 from config import version
 
-from ui.components.menu_base import draw_menu_base_layout
-from ui.components.text_display import render_footer
+from ui.components.menus.menu_base import draw_menu_base_layout
+from ui.components.text.text_display import render_footer
 from models.app_state import STATE_MENU, STATE_SECRET_GAMES # Import necessary states
 from config import CLASSIFIED_TEXT
 

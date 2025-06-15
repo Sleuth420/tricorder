@@ -28,7 +28,7 @@ from data.data_updater import update_all_data
 from ui.display_manager import init_display, update_display
 from input.input_handler import process_input, init_joystick
 from utils.error_handling import display_critical_error_on_screen
-from ui.components.main_loading_screen import draw_loading_screen, LoadingProgress, loading_worker
+from ui.components.loading.main_loading_screen import draw_loading_screen, LoadingProgress, loading_worker
 
 # Get a logger for this module
 logger = logging.getLogger(__name__)

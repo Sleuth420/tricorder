@@ -3,7 +3,7 @@
 
 import pygame
 import logging
-from ui.components.text_display import render_footer, render_text
+from ui.components.text.text_display import render_footer, render_text
 import config as app_config # For action names
 
 logger = logging.getLogger(__name__)

@@ -5,12 +5,12 @@ import pygame
 import logging
 from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SCHEMATICS, STATE_SCHEMATICS_MENU, STATE_SENSORS_MENU, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_DEVICE, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY, STATE_LOADING
 from ui.menu import draw_menu_screen
-from ui.views.sensor_view import draw_sensor_view
-from ui.views.system_info_view import draw_system_info_view
+from ui.views.sensors.sensor_view import draw_sensor_view
+from ui.views.system.system_info_view import draw_system_info_view
 from ui.views.settings.settings_view import draw_settings_view
-from ui.views.secret_games_view import draw_secret_games_view
-from ui.views.schematics_3d_viewer import draw_schematics_view
-from ui.views.sensors_menu_view import draw_sensors_menu_view
+from ui.views.games.secret_games_view import draw_secret_games_view
+from ui.views.schematics.schematics_3d_viewer import draw_schematics_view
+from ui.views.sensors.sensors_menu_view import draw_sensors_menu_view
 from ui.views.settings.display_settings_view import draw_display_settings_view
 from ui.views.settings.device_settings_view import draw_device_settings_view
 from ui.views.settings.controls_view import draw_controls_view
@@ -19,7 +19,7 @@ from ui.views.settings.select_combo_duration_view import draw_select_combo_durat
 from ui.views.settings.wifi_settings_view import draw_wifi_settings_view, draw_wifi_networks_view
 from ui.views.settings.wifi_password_entry_view import draw_wifi_password_entry_view
 from ui.views.settings.update_view import draw_update_view
-from ui.views.schematics_menu_view import draw_schematics_menu_view
+from ui.views.schematics.schematics_menu_view import draw_schematics_menu_view
 
 # Import UIScaler for centralized scaling
 from utils.ui_scaler import UIScaler
@@ -360,7 +360,7 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
 def _render_opengl_schematics(screen, app_state, fonts, config_module, ui_scaler):
     """Handle OpenGL rendering for schematics view with full UI controls."""
     # Import here to avoid circular imports
-    from ui.views.schematics_3d_viewer import draw_schematics_view
+    from ui.views.schematics.schematics_3d_viewer import draw_schematics_view
     
     # Use the normal schematics view which handles all controls,
     # but the schematics manager will automatically use OpenGL rendering

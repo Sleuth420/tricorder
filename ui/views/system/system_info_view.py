@@ -3,11 +3,11 @@
 
 import pygame
 import logging
-from ui.components.horizontal_status_bar import HorizontalStatusBar
-from ui.components.text_display import render_footer
+from ui.components.charts.horizontal_status_bar import HorizontalStatusBar
+from ui.components.text.text_display import render_footer
 import config as app_config # For theme colors and constants
 from datetime import datetime
-from ui.components.header import Header
+from ui.components.layout.header import Header
 
 logger = logging.getLogger(__name__)
 

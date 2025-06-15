@@ -337,13 +337,14 @@ class VerticalBarGraph:
                              (self.scale_line_x + self.tick_length, pointer_y),
                              6)
             
-            # Draw enhanced pointer triangle (moved even further away from scale)
-            pointer_base_x = self.scale_line_x + self.tick_length + 25  # Increased from 15 to 25
-            triangle_size = self.pointer_height + 5  # Make it bigger
+            # Draw much smaller pointer triangle
+            pointer_base_x = self.scale_line_x + self.tick_length + 15  # Reduced from 20 to 15
+            triangle_size = max(8, self.pointer_height - 8)  # Much smaller (minimum 8px)
+            arrow_width = max(15, self.pointer_width - 15)  # Much narrower arrow
             points = [
                 (pointer_base_x, pointer_y),
-                (pointer_base_x + self.pointer_width, pointer_y - triangle_size // 2),
-                (pointer_base_x + self.pointer_width, pointer_y + triangle_size // 2)
+                (pointer_base_x + arrow_width, pointer_y - triangle_size // 2),
+                (pointer_base_x + arrow_width, pointer_y + triangle_size // 2)
             ]
             # Fill arrow with temperature zone color
             pygame.draw.polygon(self.screen, pointer_color, points)
@@ -358,7 +359,7 @@ class VerticalBarGraph:
             # Draw moving current temperature number next to the arrow
             temp_text = formatted_text if formatted_text else f"{current_value:.1f}"
             temp_surface = self.font_medium.render(temp_text, True, self.config.Theme.WHITE)
-            temp_rect = temp_surface.get_rect(midleft=(pointer_base_x + self.pointer_width + 10, pointer_y))
+            temp_rect = temp_surface.get_rect(midleft=(pointer_base_x + arrow_width + 10, pointer_y))
             self.screen.blit(temp_surface, temp_rect)
 
         # Debug: Draw bounding box

@@ -92,16 +92,16 @@ def draw_menu_screen(screen, app_state, fonts, config_module, sensor_values, ui_
 
     # Draw specific main content based on current state
     if app_state.current_state == STATE_MENU:
-        _draw_main_menu_content(screen, main_content_rect, sensor_values, fonts, config_module, ui_scaler)
+        _draw_main_menu_content(screen, main_content_rect, sensor_values, fonts, config_module, ui_scaler, app_state)
     elif app_state.current_state == STATE_SECRET_GAMES:
         _draw_secret_games_content(screen, main_content_rect, fonts, config_module, ui_scaler)
     
     # Draw footer with stardate
     _draw_main_menu_footer(screen, main_content_rect, fonts, config_module, screen_height, ui_scaler)
 
-def _draw_main_menu_content(screen, main_content_rect, sensor_values, fonts, config_module, ui_scaler):
+def _draw_main_menu_content(screen, main_content_rect, sensor_values, fonts, config_module, ui_scaler, app_state):
     """
-    Draw main menu specific content (logo and WiFi status) with responsive scaling.
+    Draw main menu specific content with Star Trek tricorder theming and animations.
     
     Args:
         screen (pygame.Surface): The surface to draw on
@@ -110,22 +110,43 @@ def _draw_main_menu_content(screen, main_content_rect, sensor_values, fonts, con
         fonts (dict): Dictionary of loaded fonts
         config_module (module): Configuration module
         ui_scaler (UIScaler): UI scaling system for responsive design
+        app_state (AppState): Application state for timing and animations
     """
+    # Get current time for animations
+    current_time = time.time()
+    
+    # Logo cycling system - change logo every 10 seconds
+    logo_cycle_interval = 10.0
+    logo_cycle_phase = int(current_time / logo_cycle_interval) % 2
+    
+    # Available logo images (you can add more to assets/images/)
+    logo_paths = [
+        config_module.SPLASH_LOGO_PATH,  # Main logo
+        "assets/images/spork.png"        # Alternative image
+    ]
+    
+    current_logo_path = logo_paths[logo_cycle_phase]
+    
     logo_surface = None
     scaled_logo_height = 0 
     try:
-        logo_surface = pygame.image.load(config_module.SPLASH_LOGO_PATH).convert_alpha()
+        logo_surface = pygame.image.load(current_logo_path).convert_alpha()
     except pygame.error as e:
-        logger.warning(f"Could not load logo '{config_module.SPLASH_LOGO_PATH}' for menu: {e}")
+        logger.warning(f"Could not load logo '{current_logo_path}' for menu: {e}")
+        # Fallback to main logo
+        try:
+            logo_surface = pygame.image.load(config_module.SPLASH_LOGO_PATH).convert_alpha()
+        except pygame.error as e2:
+            logger.warning(f"Could not load fallback logo: {e2}")
     
     if logo_surface:
         content_width = main_content_rect.width
         content_height = main_content_rect.height
         logo_orig_width, logo_orig_height = logo_surface.get_size()
         
-        # Use UIScaler for responsive logo sizing
-        max_logo_width = int(content_width * 0.6)
-        max_logo_height = int(content_height * 0.5)
+        # Use UIScaler for responsive logo sizing - make it larger since we removed WiFi info
+        max_logo_width = int(content_width * 0.8)  # Increased from 0.6
+        max_logo_height = int(content_height * 0.7)  # Increased from 0.5
         
         scaled_width = logo_orig_width
         scaled_logo_height = logo_orig_height
@@ -144,39 +165,199 @@ def _draw_main_menu_content(screen, main_content_rect, sensor_values, fonts, con
                 logger.warning(f"Could not scale logo: {e}")
                 logo_surface = None
     
-    logo_display_y = main_content_rect.top + (main_content_rect.height // 3) - (scaled_logo_height // 2 if logo_surface else 0)
+    # Center the logo vertically in the available space
+    logo_display_y = main_content_rect.top + (main_content_rect.height // 2) - (scaled_logo_height // 2 if logo_surface else 0)
+    
     if logo_surface:
         logo_rect = logo_surface.get_rect(centerx=main_content_rect.centerx, y=logo_display_y)
+        
+        # Add subtle fade transition effect during logo changes
+        fade_duration = 1.0  # 1 second fade
+        cycle_progress = (current_time % logo_cycle_interval) / logo_cycle_interval
+        
+        # Fade out in last second, fade in during first second
+        if cycle_progress > (1.0 - fade_duration / logo_cycle_interval):
+            # Fading out
+            fade_progress = (cycle_progress - (1.0 - fade_duration / logo_cycle_interval)) / (fade_duration / logo_cycle_interval)
+            alpha = int(255 * (1.0 - fade_progress))
+        elif cycle_progress < (fade_duration / logo_cycle_interval):
+            # Fading in
+            fade_progress = cycle_progress / (fade_duration / logo_cycle_interval)
+            alpha = int(255 * fade_progress)
+        else:
+            alpha = 255
+        
+        # Apply alpha if fading
+        if alpha < 255:
+            logo_surface = logo_surface.copy()
+            logo_surface.set_alpha(alpha)
+        
+        # Add subtle "breathing" scale effect
+        breathing_cycle = 8.0  # 8 second breathing cycle
+        breathing_progress = (current_time % breathing_cycle) / breathing_cycle
+        breathing_scale = 1.0 + (0.02 * (0.5 + 0.5 * pygame.math.Vector2(1, 0).rotate(breathing_progress * 360).x))
+        
+        if breathing_scale != 1.0:
+            # Scale the logo slightly for breathing effect
+            new_width = int(logo_surface.get_width() * breathing_scale)
+            new_height = int(logo_surface.get_height() * breathing_scale)
+            if new_width > 0 and new_height > 0:
+                try:
+                    logo_surface = pygame.transform.smoothscale(logo_surface, (new_width, new_height))
+                    # Recalculate position to keep centered
+                    logo_rect = logo_surface.get_rect(centerx=main_content_rect.centerx, centery=logo_display_y + scaled_logo_height // 2)
+                except pygame.error:
+                    pass  # Use original if scaling fails
+        
         screen.blit(logo_surface, logo_rect)
-        # Use UIScaler for responsive spacing
-        wifi_text_y_start = logo_rect.bottom + ui_scaler.margin("medium")
-    else:
-        wifi_text_y_start = main_content_rect.centery - fonts['medium'].get_height()
-
-    wifi_status_text = "WiFi: N/A"
-    wifi_ssid_text = "SSID: N/A"
-    wifi_status_color = config_module.Theme.ALERT 
-    # Access sensor_values using INFO_WIFI_STATUS etc. from config_module
-    wifi_status_data = sensor_values.get(config_module.INFO_WIFI_STATUS, {})
-    wifi_ssid_data = sensor_values.get(config_module.INFO_WIFI_SSID, {})
-    wifi_status_val = wifi_status_data.get("text", "N/A")
-    wifi_ssid_val = wifi_ssid_data.get("text", "N/A")
-    if wifi_status_val and wifi_status_val != "N/A":
-        wifi_status_text = f"Status: {wifi_status_val}"
-        if wifi_status_val.lower() == "online":
-            wifi_status_color = config_module.Theme.CONTENT_WIFI_ONLINE_STATUS
-    if wifi_ssid_val and wifi_ssid_val != "N/A":
-        wifi_ssid_text = f"SSID: {wifi_ssid_val}"
-
-    font_medium = fonts['medium']
-    status_surface = font_medium.render(wifi_status_text, True, wifi_status_color)
-    ssid_surface = font_medium.render(wifi_ssid_text, True, config_module.Theme.FOREGROUND)
-    status_rect = status_surface.get_rect(centerx=main_content_rect.centerx, y=wifi_text_y_start)
-    # Use UIScaler for responsive spacing between status lines
-    ssid_rect = ssid_surface.get_rect(centerx=main_content_rect.centerx, y=status_rect.bottom + ui_scaler.padding("small"))
-    screen.blit(status_surface, status_rect)
-    screen.blit(ssid_surface, ssid_rect)
+        
+        # Add multiple tricorder-style animations
+        _draw_tricorder_scanning_effect(screen, main_content_rect, logo_rect, current_time, config_module, ui_scaler)
+        _draw_data_stream_animation(screen, main_content_rect, current_time, config_module, ui_scaler)
+        _draw_corner_status_indicators(screen, main_content_rect, current_time, config_module, ui_scaler)
     
+def _draw_tricorder_scanning_effect(screen, main_content_rect, logo_rect, current_time, config_module, ui_scaler):
+    """
+    Draw subtle tricorder-style scanning lines animation.
+    
+    Args:
+        screen (pygame.Surface): The surface to draw on
+        main_content_rect (pygame.Rect): Rectangle for main content area
+        logo_rect (pygame.Rect): Rectangle of the logo
+        current_time (float): Current time for animation
+        config_module (module): Configuration module
+        ui_scaler (UIScaler): UI scaling system for responsive design
+    """
+    # Animation parameters
+    scan_speed = 2.0  # Speed of scanning animation
+    scan_height = 2   # Height of scanning lines
+    scan_spacing = 20 # Spacing between scan lines
+    
+    # Calculate scanning area below logo
+    scan_area_top = logo_rect.bottom + ui_scaler.margin("medium")
+    scan_area_bottom = main_content_rect.bottom - ui_scaler.margin("large")
+    scan_area_height = scan_area_bottom - scan_area_top
+    
+    if scan_area_height > 40:  # Only draw if we have enough space
+        # Calculate number of scan lines that fit
+        num_lines = max(1, scan_area_height // scan_spacing)
+        
+        for i in range(num_lines):
+            # Stagger the animation timing for each line
+            line_offset = i * 0.3
+            line_progress = (current_time * scan_speed + line_offset) % 4.0
+            
+            # Only draw line during certain phases of the animation
+            if line_progress < 2.0:  # Line is "active" for half the cycle
+                line_y = scan_area_top + (i * scan_spacing)
+                
+                # Calculate line width and position for scanning effect
+                max_width = main_content_rect.width * 0.6
+                if line_progress < 1.0:
+                    # Growing phase
+                    line_width = int(max_width * line_progress)
+                else:
+                    # Shrinking phase
+                    line_width = int(max_width * (2.0 - line_progress))
+                
+                if line_width > 4:  # Only draw if line is visible
+                    line_x = main_content_rect.centerx - line_width // 2
+                    line_rect = pygame.Rect(line_x, line_y, line_width, scan_height)
+                    
+                    # Use a dim green color for subtle effect
+                    scan_color = (0, 100, 30)  # Dim green
+                    pygame.draw.rect(screen, scan_color, line_rect)
+
+def _draw_data_stream_animation(screen, main_content_rect, current_time, config_module, ui_scaler):
+    """
+    Draw subtle data stream animation in corners - like tricorder data processing.
+    
+    Args:
+        screen (pygame.Surface): The surface to draw on
+        main_content_rect (pygame.Rect): Rectangle for main content area
+        current_time (float): Current time for animation
+        config_module (module): Configuration module
+        ui_scaler (UIScaler): UI scaling system for responsive design
+    """
+    # Only draw if we have enough space
+    if main_content_rect.width < 200 or main_content_rect.height < 150:
+        return
+    
+    # Animation parameters
+    stream_speed = 3.0
+    dot_size = 2
+    stream_length = 8
+    
+    # Top-right corner data stream
+    corner_margin = ui_scaler.margin("small")
+    start_x = main_content_rect.right - corner_margin - 60
+    start_y = main_content_rect.top + corner_margin
+    
+    for i in range(stream_length):
+        # Calculate position with flowing animation
+        flow_offset = (current_time * stream_speed + i * 0.5) % 6.0
+        
+        if flow_offset < 3.0:  # Dot is visible during first half of cycle
+            dot_x = start_x + int(flow_offset * 8)
+            dot_y = start_y + (i * 4)
+            
+            # Fade in/out effect
+            if flow_offset < 1.0:
+                alpha_factor = flow_offset
+            elif flow_offset > 2.0:
+                alpha_factor = 3.0 - flow_offset
+            else:
+                alpha_factor = 1.0
+            
+            # Dim green dots
+            dot_color = (0, int(80 * alpha_factor), int(20 * alpha_factor))
+            if dot_color[1] > 10:  # Only draw if visible
+                pygame.draw.circle(screen, dot_color, (dot_x, dot_y), dot_size)
+
+def _draw_corner_status_indicators(screen, main_content_rect, current_time, config_module, ui_scaler):
+    """
+    Draw subtle pulsing status indicators in corners - like system status lights.
+    
+    Args:
+        screen (pygame.Surface): The surface to draw on
+        main_content_rect (pygame.Rect): Rectangle for main content area
+        current_time (float): Current time for animation
+        config_module (module): Configuration module
+        ui_scaler (UIScaler): UI scaling system for responsive design
+    """
+    # Only draw if we have enough space
+    if main_content_rect.width < 150 or main_content_rect.height < 100:
+        return
+    
+    corner_margin = ui_scaler.margin("small")
+    indicator_size = 4
+    
+    # Bottom-left status indicator (slow pulse)
+    pulse_1 = (current_time * 0.8) % 2.0
+    if pulse_1 < 1.0:
+        pulse_alpha_1 = pulse_1
+    else:
+        pulse_alpha_1 = 2.0 - pulse_1
+    
+    indicator_1_pos = (main_content_rect.left + corner_margin, 
+                      main_content_rect.bottom - corner_margin - indicator_size)
+    indicator_1_color = (0, int(120 * pulse_alpha_1), int(40 * pulse_alpha_1))
+    if indicator_1_color[1] > 20:
+        pygame.draw.circle(screen, indicator_1_color, indicator_1_pos, indicator_size)
+    
+    # Bottom-right status indicator (faster pulse, offset timing)
+    pulse_2 = (current_time * 1.2 + 1.0) % 2.0
+    if pulse_2 < 1.0:
+        pulse_alpha_2 = pulse_2
+    else:
+        pulse_alpha_2 = 2.0 - pulse_2
+    
+    indicator_2_pos = (main_content_rect.right - corner_margin - indicator_size, 
+                      main_content_rect.bottom - corner_margin - indicator_size)
+    indicator_2_color = (int(100 * pulse_alpha_2), int(100 * pulse_alpha_2), 0)  # Amber
+    if indicator_2_color[0] > 20:
+        pygame.draw.circle(screen, indicator_2_color, indicator_2_pos, indicator_size)
+
 def _draw_secret_games_content(screen, main_content_rect, fonts, config_module, ui_scaler):
     """
     Draw secret games menu specific content with responsive scaling.

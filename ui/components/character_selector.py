@@ -9,10 +9,11 @@ logger = logging.getLogger(__name__)
 class CharacterSelector:
     """A character selection grid for password entry."""
     
-    def __init__(self, screen_rect, fonts, config_module):
+    def __init__(self, screen_rect, fonts, config_module, ui_scaler=None):
         """Initialize the character selector."""
         self.screen_rect = screen_rect
         self.config = config_module
+        self.ui_scaler = ui_scaler
         
         # Use fonts
         self._setup_fonts(fonts)
@@ -38,12 +39,34 @@ class CharacterSelector:
         
         logger.info(f"Character selector initialized for {screen_rect.width}x{screen_rect.height} with cursor at ({self.cursor_row}, {self.cursor_col})")
 
+    def set_ui_scaler(self, ui_scaler):
+        """Set the UI scaler for responsive design."""
+        self.ui_scaler = ui_scaler
+        self._calculate_layout()
+        if ui_scaler and ui_scaler.debug_mode:
+            logger.info(f"🎨 CharacterSelector: UIScaler set, scale_factor={ui_scaler.scale_factor:.2f}")
+
     def _setup_fonts(self, fonts):
-        """Setup fonts."""
+        """Setup fonts with responsive sizing."""
         try:
-            self.char_font = fonts.get('small', pygame.font.Font(None, 16)) if fonts else pygame.font.Font(None, 16)
-            self.title_font = fonts.get('medium', pygame.font.Font(None, 20)) if fonts else pygame.font.Font(None, 20)
-            self.footer_font = fonts.get('small', pygame.font.Font(None, 14)) if fonts else pygame.font.Font(None, 14)
+            if self.ui_scaler:
+                # Use UIScaler for responsive font sizing
+                char_font_size = self.ui_scaler.scale(16)
+                title_font_size = self.ui_scaler.scale(20)
+                footer_font_size = self.ui_scaler.scale(14)
+                
+                self.char_font = pygame.font.Font(None, char_font_size)
+                self.title_font = pygame.font.Font(None, title_font_size)
+                self.footer_font = pygame.font.Font(None, footer_font_size)
+                
+                if self.ui_scaler.debug_mode:
+                    logger.info(f"🎨 CharacterSelector: responsive fonts - char={char_font_size}px, title={title_font_size}px, footer={footer_font_size}px")
+            else:
+                # Fallback to original font selection
+                self.char_font = fonts.get('small', pygame.font.Font(None, 16)) if fonts else pygame.font.Font(None, 16)
+                self.title_font = fonts.get('medium', pygame.font.Font(None, 20)) if fonts else pygame.font.Font(None, 20)
+                self.footer_font = fonts.get('small', pygame.font.Font(None, 14)) if fonts else pygame.font.Font(None, 14)
+            
             self.fonts = fonts
             logger.info("Character selector fonts loaded")
                 
@@ -62,11 +85,23 @@ class CharacterSelector:
             logger.error(f"Font rendering test failed: {e}")
 
     def _calculate_layout(self):
-        """Calculate the layout dimensions."""
-        title_height = 30
-        password_field_height = 40
-        footer_height = 60
-        padding = 20
+        """Calculate the layout dimensions with responsive design."""
+        # Use UIScaler for responsive dimensions if available
+        if self.ui_scaler:
+            title_height = self.ui_scaler.scale(30)
+            password_field_height = self.ui_scaler.scale(40)
+            footer_height = self.ui_scaler.scale(60)
+            padding = self.ui_scaler.margin("medium")
+            
+            # Debug logging for character selector layout
+            if self.ui_scaler.debug_mode:
+                logger.info(f"🎨 CharacterSelector: screen={self.screen_rect.width}x{self.screen_rect.height}, title_h={title_height}px, padding={padding}px")
+        else:
+            # Fallback to original calculations
+            title_height = 30
+            password_field_height = 40
+            footer_height = 60
+            padding = 20
         
         # Available space for character grid
         available_height = (self.screen_rect.height - 
@@ -80,9 +115,13 @@ class CharacterSelector:
         self.cell_width = available_width // max_cols
         self.cell_height = available_height // num_rows
         
-        # Ensure minimum cell size
-        min_cell_width = 40
-        min_cell_height = 25
+        # Ensure minimum cell size with responsive scaling
+        if self.ui_scaler:
+            min_cell_width = self.ui_scaler.scale(40)
+            min_cell_height = self.ui_scaler.scale(25)
+        else:
+            min_cell_width = 40
+            min_cell_height = 25
             
         self.cell_width = max(self.cell_width, min_cell_width)
         self.cell_height = max(self.cell_height, min_cell_height)
@@ -198,9 +237,13 @@ class CharacterSelector:
             logger.error(f"Error drawing title: {e}")
 
     def _draw_password_field(self, screen, text, show_password):
-        """Draw the password input field."""
+        """Draw the password input field with responsive sizing."""
         try:
-            field_rect = pygame.Rect(20, self.password_y, self.screen_rect.width - 40, 30)
+            # Responsive field dimensions
+            field_margin = self.ui_scaler.margin("medium") if self.ui_scaler else 20
+            field_height = self.ui_scaler.scale(30) if self.ui_scaler else 30
+            
+            field_rect = pygame.Rect(field_margin, self.password_y, self.screen_rect.width - field_margin * 2, field_height)
             pygame.draw.rect(screen, self.config.Theme.MENU_SELECTED_BG, field_rect)
             pygame.draw.rect(screen, self.config.Theme.FOREGROUND, field_rect, 1)
             
@@ -228,9 +271,12 @@ class CharacterSelector:
             logger.error(f"Error drawing password field: {e}")
 
     def _draw_character_grid(self, screen):
-        """Draw the character selection grid."""
+        """Draw the character selection grid with responsive sizing."""
         try:
             chars_drawn = 0
+            # Responsive cell padding
+            cell_padding = self.ui_scaler.scale(2) if self.ui_scaler else 2
+            
             for row_idx, row in enumerate(self.characters):
                 for col_idx, char in enumerate(row):
                     # Calculate cell position
@@ -238,7 +284,6 @@ class CharacterSelector:
                     y = self.grid_y + row_idx * self.cell_height
                     
                     # Cell rectangle
-                    cell_padding = 2
                     cell_rect = pygame.Rect(x + cell_padding, y + cell_padding, 
                                           self.cell_width - cell_padding * 2, 
                                           self.cell_height - cell_padding * 2)
@@ -276,8 +321,11 @@ class CharacterSelector:
                             # Test if it fits, if not use a smaller font size
                             test_surface = font_to_use.render(display_char, True, text_color)
                             if test_surface.get_width() > cell_rect.width - 4:
-                                # Use a smaller font for long action names
-                                small_font_size = max(8, int(self.char_font.get_height() * 0.7))
+                                # Use a smaller font for long action names with responsive sizing
+                                base_font_height = self.char_font.get_height()
+                                small_font_size = max(8, int(base_font_height * 0.7))
+                                if self.ui_scaler:
+                                    small_font_size = max(self.ui_scaler.scale(8), small_font_size)
                                 font_to_use = pygame.font.Font(None, small_font_size)
                             
                         char_surface = font_to_use.render(display_char, True, text_color)
@@ -297,19 +345,22 @@ class CharacterSelector:
             logger.error(f"Error drawing character grid: {e}", exc_info=True)
 
     def _draw_footer(self, screen):
-        """Draw the footer with instructions."""
+        """Draw the footer with instructions and responsive spacing."""
         try:
             instructions = [
                 "A/D: Navigate | Joystick: Move cursor",
                 "ENTER: Select character | Hold A: Cancel"
             ]
             
+            # Responsive line spacing
+            line_spacing = self.ui_scaler.scale(20) if self.ui_scaler else 20
+            
             y_offset = self.footer_y
             for instruction in instructions:
                 instruction_surface = self.footer_font.render(instruction, True, self.config.Theme.FOREGROUND)
                 instruction_rect = instruction_surface.get_rect(centerx=self.screen_rect.centerx, y=y_offset)
                 screen.blit(instruction_surface, instruction_rect)
-                y_offset += 20
+                y_offset += line_spacing
                 
             logger.debug("Footer instructions drawn")
             

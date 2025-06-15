@@ -7,7 +7,7 @@ from ui.components.text_display import render_footer
 
 logger = logging.getLogger(__name__)
 
-def draw_schematics_menu_view(screen, app_state, fonts, config_module):
+def draw_schematics_menu_view(screen, app_state, fonts, config_module, ui_scaler=None):
     """
     Draw the schematics selection submenu view - simplified for small display.
     
@@ -16,6 +16,7 @@ def draw_schematics_menu_view(screen, app_state, fonts, config_module):
         app_state (AppState): The current application state
         fonts (dict): Dictionary of loaded fonts
         config_module (module): Configuration module
+        ui_scaler (UIScaler): The UI scaler
         
     Returns:
         None
@@ -27,9 +28,28 @@ def draw_schematics_menu_view(screen, app_state, fonts, config_module):
     font_large = fonts['large']
     font_medium = fonts['medium']
 
+    # Use UIScaler for responsive spacing if available
+    if ui_scaler:
+        title_y_offset = ui_scaler.scale(screen_height // 5)  # Responsive title position
+        item_spacing = ui_scaler.margin("medium")  # Responsive item spacing
+        item_width = ui_scaler.scale(300)  # Responsive item width
+        item_height_padding = ui_scaler.padding("medium")  # Responsive padding
+        instruction_spacing = ui_scaler.margin("medium")  # Responsive instruction spacing
+        
+        # Debug logging for schematics menu layout
+        if ui_scaler.debug_mode:
+            logger.info(f"🎨 SchematicsMenuView: screen={screen_width}x{screen_height}, item_width={item_width}px, spacing={item_spacing}px")
+    else:
+        # Fallback to original hardcoded values
+        title_y_offset = screen_height // 5
+        item_spacing = 15
+        item_width = 300
+        item_height_padding = 20
+        instruction_spacing = 20
+
     # Display the menu title
     title_surface = font_large.render("Schematics", True, config_module.Theme.ACCENT)
-    title_rect = title_surface.get_rect(center=(screen_width // 2, screen_height // 5))
+    title_rect = title_surface.get_rect(center=(screen_width // 2, title_y_offset))
     screen.blit(title_surface, title_rect)
 
     # Get menu items and selection
@@ -43,12 +63,11 @@ def draw_schematics_menu_view(screen, app_state, fonts, config_module):
     
     for i, item in enumerate(menu_items):
         text_color = config_module.Theme.FOREGROUND
-        item_width = 300  # Increased from 200 to accommodate longer schematics names
-        item_height = font_medium.get_height() + 20
+        item_height = font_medium.get_height() + item_height_padding
         
         item_display_rect = pygame.Rect(
             (screen_width // 2) - item_width // 2, 
-            y_offset + (i * (item_height + 15)),
+            y_offset + (i * (item_height + item_spacing)),
             item_width,
             item_height
         )
@@ -72,7 +91,7 @@ def draw_schematics_menu_view(screen, app_state, fonts, config_module):
             instruction_text = "Select to view 3D model"
             instruction_font = fonts.get('small', fonts.get('medium'))
             instruction_surface = instruction_font.render(instruction_text, True, config_module.Theme.FOREGROUND)
-            instruction_rect = instruction_surface.get_rect(center=(screen_width // 2, y_offset + len(menu_items) * (item_height + 15) + 20))
+            instruction_rect = instruction_surface.get_rect(center=(screen_width // 2, y_offset + len(menu_items) * (item_height + item_spacing) + instruction_spacing))
             screen.blit(instruction_surface, instruction_rect)
 
     # Footer hints

@@ -6,10 +6,15 @@ import logging
 from ui.components.horizontal_status_bar import HorizontalStatusBar
 from ui.components.text_display import render_footer
 import config as app_config # For theme colors and constants
+from datetime import datetime
+from ui.components.header import Header
 
 logger = logging.getLogger(__name__)
 
-def draw_system_info_view(screen, app_state, sensor_values, fonts, config_module, target_rect=None, draw_footer=False):
+# Module-level flag to prevent repeated layout logging
+_system_info_logged = False
+
+def draw_system_info_view(screen, app_state, sensor_values, fonts, config_module, target_rect=None, draw_footer=False, ui_scaler=None):
     """
     Draw the redesigned system information screen with horizontal status bars.
 
@@ -21,15 +26,30 @@ def draw_system_info_view(screen, app_state, sensor_values, fonts, config_module
         config_module (module): Configuration module (config package)
         target_rect (pygame.Rect, optional): The rectangle to draw within. Defaults to the full screen.
         draw_footer (bool): Whether to draw the footer. Defaults to False (disabled).
+        ui_scaler (UIScaler, optional): UI scaling system for responsive design
     """
     screen.fill(config_module.Theme.BACKGROUND)
     
     screen_width = screen.get_width()
     screen_height = screen.get_height()
     
-    # Header - use proportional spacing like list_menu_base.py
-    header_top_margin = screen_height // 20
-    header_height = config_module.HEADER_HEIGHT
+    # Use UIScaler for responsive dimensions if available
+    if ui_scaler:
+        header_height = ui_scaler.header_height()
+        header_top_margin = ui_scaler.header_top_margin()
+        content_margin = ui_scaler.content_margin()
+    else:
+        # Fallback to original calculations
+        header_height = config_module.HEADER_HEIGHT
+        header_top_margin = screen_height // 20
+        content_margin = max(8, screen_width // 30)  # 3-4% of screen width
+    
+    # Debug logging for system info view layout
+    global _system_info_logged
+    if ui_scaler and ui_scaler.debug_mode and not _system_info_logged:
+        logger.info(f"🎨 SystemInfoView: screen={screen_width}x{screen_height}, header={header_height}px, margin={content_margin}px")
+        _system_info_logged = True
+
     header_rect = pygame.Rect(0, header_top_margin, screen_width, header_height)
     pygame.draw.rect(screen, config_module.Theme.BACKGROUND, header_rect)
 
@@ -44,7 +64,6 @@ def draw_system_info_view(screen, app_state, sensor_values, fonts, config_module
     screen.blit(header_text, (header_rect.centerx - header_text.get_width() // 2, header_rect.centery - header_text.get_height() // 2))
 
     # Use proportional margins based on screen size
-    content_margin = max(8, screen_width // 30)  # 3-4% of screen width
     content_y = header_rect.bottom + content_margin
     
     # Section 1: Time and Date - fixed height like other views
@@ -184,7 +203,8 @@ def draw_system_info_view(screen, app_state, sensor_values, fonts, config_module
                     green_range=config_dict["green_range"],
                     yellow_range=config_dict["yellow_range"],
                     fonts=fonts,
-                    config_module=config_module
+                    config_module=config_module,
+                    ui_scaler=ui_scaler
                 )
                 status_bar.draw(config_dict["value"])
             except Exception as e:

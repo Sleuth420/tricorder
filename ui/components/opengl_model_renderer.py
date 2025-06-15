@@ -21,11 +21,12 @@ logger = logging.getLogger(__name__)
 class OpenGLModelRenderer:
     """OpenGL renderer for OBJ models that extends the basic OpenGL renderer functionality."""
     
-    def __init__(self, screen_width, screen_height, config_module):
+    def __init__(self, screen_width, screen_height, config_module, ui_scaler=None):
         """Initialize the model renderer."""
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.config = config_module
+        self.ui_scaler = ui_scaler
         self.initialized = False
         
         # Model data
@@ -41,6 +42,10 @@ class OpenGLModelRenderer:
         if not OPENGL_AVAILABLE:
             logger.error("PyOpenGL not available for model rendering")
             return
+            
+        # Debug logging for OpenGL model renderer with UIScaler
+        if ui_scaler and ui_scaler.debug_mode:
+            logger.info(f"🎨 OpenGLModelRenderer: screen={screen_width}x{screen_height}, scale_factor={ui_scaler.scale_factor:.2f}")
             
         logger.info("OpenGL model renderer created")
         

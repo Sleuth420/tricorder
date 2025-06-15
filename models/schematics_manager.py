@@ -81,6 +81,7 @@ class SchematicsManager:
         self.config = config_module
         self.screen_width = screen_width
         self.screen_height = screen_height
+        self.ui_scaler = None  # Will be set later by display manager
         
         # Current rotation values (in degrees)
         self.pitch = 0.0
@@ -126,6 +127,8 @@ class SchematicsManager:
         self.prev_raw_yaw = None
         
         logger.info(f"Schematics manager initialized with sensor smoothing: factor={self.smoothing_factor}, deadzone={self.deadzone}°, sensitivity={self.sensitivity}")
+    
+    # UIScaler removed - UI concerns handled by display_manager.py
     
     def _generate_test_cube(self):
         """Generate a simple wireframe cube for testing."""
@@ -193,8 +196,9 @@ class SchematicsManager:
                         if not self.model_renderer:
                             from ui.components.opengl_model_renderer import OpenGLModelRenderer
                             self.model_renderer = OpenGLModelRenderer(
-                                self.screen_width, self.screen_height, self.config
+                                self.screen_width, self.screen_height, self.config, self.ui_scaler
                             )
+                            logger.info("OpenGL model renderer created")
                         
                         loading_operation.step("Loading model into renderer...")
                         self._refresh_loading_display(loading_operation)
@@ -465,7 +469,7 @@ class SchematicsManager:
             # Create OpenGL renderer if needed  
             if not self.opengl_renderer:
                 self.opengl_renderer = OpenGLRenderer(
-                    self.screen_width, self.screen_height, self.config
+                    self.screen_width, self.screen_height, self.config, self.ui_scaler
                 )
                 logger.info("PyOpenGL renderer created")
             
@@ -515,7 +519,7 @@ class SchematicsManager:
             # Create model renderer if needed  
             if not self.model_renderer:
                 self.model_renderer = OpenGLModelRenderer(
-                    self.screen_width, self.screen_height, self.config
+                    self.screen_width, self.screen_height, self.config, self.ui_scaler
                 )
                 logger.info("OpenGL model renderer created")
             

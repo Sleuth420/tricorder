@@ -19,7 +19,7 @@ class VerticalBarGraph:
     """
     def __init__(self, screen, rect, title, units, min_val, max_val, normal_range, fonts, config_module, 
                  critical_low=None, critical_high=None, num_ticks=11, 
-                 dynamic_range=False, zoom_factor=0.3, min_zoom_range=None, stability_threshold=2.0):
+                 dynamic_range=False, zoom_factor=0.3, min_zoom_range=None, stability_threshold=2.0, ui_scaler=None):
         """
         Initializes the VerticalBarGraph.
 
@@ -40,6 +40,7 @@ class VerticalBarGraph:
             zoom_factor (float): Proportion of full range to show (0.3 = 30% of full range).
             min_zoom_range (float): Minimum range to show (prevents over-zooming).
             stability_threshold (float): Minimum change needed to adjust scale range (prevents jumpiness).
+            ui_scaler (UIScaler, optional): The UI scaler for scaling calculations.
         """
         self.screen = screen
         self.rect = rect
@@ -52,6 +53,7 @@ class VerticalBarGraph:
         self.num_ticks = num_ticks
         self.fonts = fonts
         self.config = config_module
+        self.ui_scaler = ui_scaler
         
         # Dynamic range features
         self.dynamic_range = dynamic_range
@@ -75,7 +77,28 @@ class VerticalBarGraph:
         self._calculate_layout()
 
     def _calculate_layout(self):
-        """Calculates positions for drawing elements with improved spacing."""
+        """Calculates positions for drawing elements with improved spacing using UIScaler for responsive design."""
+        if self.ui_scaler:
+            # Use UIScaler for responsive spacing and dimensions
+            padding = self.ui_scaler.margin("medium")
+            self.tick_length = self.ui_scaler.scale(20)  # Responsive tick length
+            self.label_offset_x = self.ui_scaler.scale(35)  # Responsive label offset
+            self.pointer_width = self.ui_scaler.scale(35)  # Responsive pointer width
+            self.pointer_height = self.ui_scaler.scale(20)  # Responsive pointer height
+            self.zone_width = self.ui_scaler.scale(8)  # Responsive zone width
+            
+            # Debug logging for vertical bar graph layout
+            if self.ui_scaler.debug_mode:
+                logger.info(f"🎨 VerticalBarGraph({self.units}): rect={self.rect.width}x{self.rect.height}, tick_len={self.tick_length}px, pointer={self.pointer_width}x{self.pointer_height}px")
+        else:
+            # Fallback to original hardcoded calculations
+            padding = 15
+            self.tick_length = 20
+            self.label_offset_x = 35
+            self.pointer_width = 35
+            self.pointer_height = 20
+            self.zone_width = 8
+        
         # Use full rect height for scale since we don't need title space anymore
         self.scale_rect = pygame.Rect(
             self.rect.left,
@@ -84,14 +107,9 @@ class VerticalBarGraph:
             self.rect.height
         )
         self.scale_line_x = self.scale_rect.centerx
-        self.scale_top_y = self.scale_rect.top + 15  # Increased padding
-        self.scale_bottom_y = self.scale_rect.bottom - 15  # Increased padding
+        self.scale_top_y = self.scale_rect.top + padding
+        self.scale_bottom_y = self.scale_rect.bottom - padding
         self.scale_height = self.scale_bottom_y - self.scale_top_y
-        self.tick_length = 20  # Increased for better visibility
-        self.label_offset_x = 35  # Increased for better spacing
-        self.pointer_width = 35  # Increased for better visibility
-        self.pointer_height = 20  # Increased for better visibility
-        self.zone_width = 8  # Reduced back to reasonable size
 
     def _calculate_stable_dynamic_range(self, current_value):
         """Calculate range - initialize with correct range, switch when within threshold of edge."""

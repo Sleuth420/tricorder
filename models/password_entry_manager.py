@@ -29,6 +29,8 @@ class PasswordEntryManager:
         
         logger.info(f"Password entry manager initialized with screen rect {screen_rect}")
         
+    # UIScaler removed - UI concerns handled by display_manager.py
+        
     def set_target_network(self, network):
         """Set the network to connect to."""
         self.target_network = network

@@ -7,7 +7,7 @@ from ui.components.text_display import render_footer
 
 logger = logging.getLogger(__name__)
 
-def draw_schematics_view(screen, app_state, fonts, config_module):
+def draw_schematics_view(screen, app_state, fonts, config_module, ui_scaler=None):
     """
     Draw the 3D schematics viewer screen.
     
@@ -16,6 +16,7 @@ def draw_schematics_view(screen, app_state, fonts, config_module):
         app_state (AppState): The current application state
         fonts (dict): Dictionary of loaded fonts
         config_module (module): Configuration module
+        ui_scaler (function or None): Scaling function or None
         
     Returns:
         None

@@ -8,7 +8,7 @@ import config as app_config # For action names
 
 logger = logging.getLogger(__name__)
 
-def draw_controls_view(screen, app_state, fonts, config_module):
+def draw_controls_view(screen, app_state, fonts, config_module, ui_scaler=None):
     """
     Draw the controls settings screen content with scrollable interface.
 
@@ -17,13 +17,34 @@ def draw_controls_view(screen, app_state, fonts, config_module):
         app_state (AppState): The current application state
         fonts (dict): Dictionary of loaded fonts
         config_module (module): Configuration module (config package)
+        ui_scaler (UIScaler, optional): UI scaling system for responsive design
     """
     screen.fill(config_module.Theme.BACKGROUND)
     screen_width = screen.get_width()
     screen_height = screen.get_height()
     rect = pygame.Rect(0, 0, screen_width, screen_height)
 
-    header_height = config_module.HEADER_HEIGHT
+    # Use UIScaler for responsive dimensions if available
+    if ui_scaler:
+        header_height = ui_scaler.header_height()
+        header_margin = ui_scaler.margin("medium")
+        content_spacing = ui_scaler.margin("large")
+        item_height = ui_scaler.scale(35)
+        footer_space = ui_scaler.scale(80)
+        section_spacing = ui_scaler.scale(15)
+        
+        # Debug logging for controls view layout
+        if ui_scaler.debug_mode:
+            logger.info(f"🎨 ControlsView: screen={screen_width}x{screen_height}, header={header_height}px, item_height={item_height}px")
+    else:
+        # Fallback to original calculations
+        header_height = config_module.HEADER_HEIGHT
+        header_margin = 20
+        content_spacing = 20
+        item_height = 35
+        footer_space = 80
+        section_spacing = 15
+
     header_rect = pygame.Rect(rect.left, rect.top, rect.width, header_height)
     pygame.draw.rect(screen, config_module.Theme.BACKGROUND, header_rect)
 
@@ -31,9 +52,9 @@ def draw_controls_view(screen, app_state, fonts, config_module):
     header_text_str = "Controls"
     header_text_color = config_module.Theme.ACCENT
     header_text = font_small.render(header_text_str, True, header_text_color)
-    screen.blit(header_text, (rect.left + 20, header_rect.centery - header_text.get_height() // 2))
+    screen.blit(header_text, (rect.left + header_margin, header_rect.centery - header_text.get_height() // 2))
 
-    content_y = rect.top + header_height + 20
+    content_y = rect.top + header_height + content_spacing
     
     # Update key names in controls manager before rendering
     app_state.controls_manager.update_key_names(config_module)
@@ -47,8 +68,7 @@ def draw_controls_view(screen, app_state, fonts, config_module):
     font_large = fonts['large']
     
     # Calculate how many items can fit on screen
-    available_height = screen_height - content_y - 80  # Leave space for footer
-    item_height = 35  # Fixed height per item for consistency
+    available_height = screen_height - content_y - footer_space
     max_visible_items = available_height // item_height
     
     # Only count selectable items (controls, not sections/spacers) for navigation
@@ -67,7 +87,7 @@ def draw_controls_view(screen, app_state, fonts, config_module):
                           len(controls_items) - max_visible_items)
     
     # Render visible items
-    y_offset = content_y + 20
+    y_offset = content_y + content_spacing
     visible_start = max(0, scroll_offset)
     visible_end = min(len(controls_items), visible_start + max_visible_items)
     
@@ -78,7 +98,7 @@ def draw_controls_view(screen, app_state, fonts, config_module):
         
         # Skip spacers
         if item_type == "spacer":
-            y_offset += 15
+            y_offset += section_spacing
             continue
         
         # Choose styling based on item type
@@ -87,7 +107,7 @@ def draw_controls_view(screen, app_state, fonts, config_module):
             font = font_large
             text_color = config_module.Theme.ACCENT
             text_surface = font.render(item_text, True, text_color)
-            text_rect = text_surface.get_rect(center=(screen_width // 2, y_offset + 15))
+            text_rect = text_surface.get_rect(center=(screen_width // 2, y_offset + (item_height // 2)))
             screen.blit(text_surface, text_rect)
             y_offset += item_height
             
@@ -108,41 +128,46 @@ def draw_controls_view(screen, app_state, fonts, config_module):
                 text_color = config_module.Theme.MENU_SELECTED_TEXT
                 bg_color_selected = config_module.Theme.MENU_SELECTED_BG
                 
+                # Responsive selection background
+                selection_padding = ui_scaler.padding("large") if ui_scaler else 30
                 selection_bg_rect = pygame.Rect(
-                    rect.left + 30,
+                    rect.left + selection_padding,
                     y_offset + 5,
-                    rect.width - 60,
+                    rect.width - (selection_padding * 2),
                     item_height - 10
                 )
                 pygame.draw.rect(screen, bg_color_selected, selection_bg_rect, border_radius=8)
             
-            # Render control text with nice left alignment and padding
+            # Render control text with responsive alignment and padding
+            text_padding = ui_scaler.padding("large") + ui_scaler.margin("medium") if ui_scaler else 50
             text_surface = font.render(item_text, True, text_color)
             text_rect = text_surface.get_rect(
-                left=rect.left + 50,
+                left=rect.left + text_padding,
                 centery=y_offset + item_height // 2
             )
             screen.blit(text_surface, text_rect)
             y_offset += item_height
         
         # Stop if we're running out of space
-        if y_offset >= screen_height - 80:
+        if y_offset >= screen_height - footer_space:
             break
     
     # Show scroll indicators if there are more items
     if visible_start > 0:
         up_text = "▲ More above"
         up_surface = font_small.render(up_text, True, config_module.Theme.ACCENT)
-        up_rect = up_surface.get_rect(center=(screen_width // 2, content_y + 5))
+        up_y = content_y + (ui_scaler.scale(5) if ui_scaler else 5)
+        up_rect = up_surface.get_rect(center=(screen_width // 2, up_y))
         screen.blit(up_surface, up_rect)
     
     if visible_end < len(controls_items):
         down_text = "▼ More below"
         down_surface = font_small.render(down_text, True, config_module.Theme.ACCENT)
-        down_rect = down_surface.get_rect(center=(screen_width // 2, screen_height - 75))
+        down_y = screen_height - (ui_scaler.scale(75) if ui_scaler else 75)
+        down_rect = down_surface.get_rect(center=(screen_width // 2, down_y))
         screen.blit(down_surface, down_rect)
 
-    # Footer hints
+    # Footer hints with responsive positioning
     key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
     key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
     

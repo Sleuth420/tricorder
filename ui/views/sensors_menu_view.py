@@ -8,7 +8,7 @@ from ui.components.text_display import render_footer
 
 logger = logging.getLogger(__name__)
 
-def draw_sensors_menu_view(screen, app_state, sensor_values, sensor_history, fonts, config_module):
+def draw_sensors_menu_view(screen, app_state, sensor_values, sensor_history, fonts, config_module, ui_scaler=None):
     """
     Draw the sensors submenu view with enhanced main content area.
     
@@ -19,31 +19,47 @@ def draw_sensors_menu_view(screen, app_state, sensor_values, sensor_history, fon
         sensor_history (ReadingHistory): Sensor reading history
         fonts (dict): Dictionary of loaded fonts
         config_module (module): Configuration module
+        ui_scaler (UIScaler): UI scaler for scaling the UI
         
     Returns:
         None
     """
     # Use shared menu base layout
-    layout = draw_menu_base_layout(screen, app_state, fonts, config_module)
+    layout = draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler)
     main_content_rect = layout['main_content_rect']
     screen_width = layout['screen_width']
     screen_height = layout['screen_height']
     
+    # Debug logging for sensors menu view layout
+    if ui_scaler and ui_scaler.debug_mode:
+        logger.info(f"🎨 SensorsMenuView: screen={screen_width}x{screen_height}, main_content={main_content_rect.width}x{main_content_rect.height}")
+    
     # Enhanced main content area for sensors menu
-    _draw_sensors_main_content(screen, main_content_rect, app_state, sensor_values, fonts, config_module)
+    _draw_sensors_main_content(screen, main_content_rect, app_state, sensor_values, fonts, config_module, ui_scaler)
     
     # Draw footer
     # _draw_sensors_footer(screen, main_content_rect, fonts, config_module, screen_height)
 
-def _draw_sensors_main_content(screen, main_content_rect, app_state, sensor_values, fonts, config_module):
+def _draw_sensors_main_content(screen, main_content_rect, app_state, sensor_values, fonts, config_module, ui_scaler):
     """
     Draw enhanced main content area for sensors menu.
     """
+    # Use UIScaler for responsive spacing if available
+    if ui_scaler:
+        title_spacing = ui_scaler.margin("medium")
+        content_spacing = ui_scaler.margin("large")
+        preview_spacing = ui_scaler.margin("medium")
+    else:
+        # Fallback to original hardcoded values
+        title_spacing = 20
+        content_spacing = 30
+        preview_spacing = 20
+    
     # Title
     title_font = fonts['large']
     title_text = "Environmental Sensors"
     title_surface = title_font.render(title_text, True, config_module.Theme.ACCENT)
-    title_rect = title_surface.get_rect(centerx=main_content_rect.centerx, y=main_content_rect.top + 20)
+    title_rect = title_surface.get_rect(centerx=main_content_rect.centerx, y=main_content_rect.top + title_spacing)
     screen.blit(title_surface, title_rect)
     
     # Get currently selected sensor info
@@ -60,18 +76,18 @@ def _draw_sensors_main_content(screen, main_content_rect, app_state, sensor_valu
         
         # Display preview of selected sensor
         if sensor_key and sensor_key in sensor_values:
-            _draw_sensor_preview(screen, main_content_rect, title_rect, sensor_key, sensor_values[sensor_key], fonts, config_module)
+            _draw_sensor_preview(screen, main_content_rect, title_rect, sensor_key, sensor_values[sensor_key], fonts, config_module, ui_scaler, preview_spacing)
         else:
             # Fallback: general instructions
-            _draw_general_instructions(screen, main_content_rect, title_rect, fonts, config_module)
+            _draw_general_instructions(screen, main_content_rect, title_rect, fonts, config_module, ui_scaler, content_spacing)
     else:
         # Fallback: general instructions
-        _draw_general_instructions(screen, main_content_rect, title_rect, fonts, config_module)
+        _draw_general_instructions(screen, main_content_rect, title_rect, fonts, config_module, ui_scaler, content_spacing)
     
     # Show sensor status summary at bottom of content area
-    _draw_sensor_status_summary(screen, main_content_rect, sensor_values, fonts, config_module)
+    _draw_sensor_status_summary(screen, main_content_rect, sensor_values, fonts, config_module, ui_scaler)
 
-def _draw_sensor_preview(screen, main_content_rect, title_rect, sensor_key, sensor_data, fonts, config_module):
+def _draw_sensor_preview(screen, main_content_rect, title_rect, sensor_key, sensor_data, fonts, config_module, ui_scaler, preview_spacing):
     """
     Draw a preview of the currently selected sensor.
     """
@@ -83,7 +99,7 @@ def _draw_sensor_preview(screen, main_content_rect, title_rect, sensor_key, sens
     name_font = fonts['medium']
     name_text = display_name
     name_surface = name_font.render(name_text, True, config_module.Theme.FOREGROUND)
-    name_rect = name_surface.get_rect(centerx=main_content_rect.centerx, y=title_rect.bottom + 30)
+    name_rect = name_surface.get_rect(centerx=main_content_rect.centerx, y=title_rect.bottom + preview_spacing)
     screen.blit(name_surface, name_rect)
     
     # Current value (large display)
@@ -92,7 +108,7 @@ def _draw_sensor_preview(screen, main_content_rect, title_rect, sensor_key, sens
     unit = sensor_data.get("unit", "")
     value_text = f"{text_val} {unit}".strip()
     value_surface = value_font.render(value_text, True, config_module.Theme.ACCENT)
-    value_rect = value_surface.get_rect(centerx=main_content_rect.centerx, y=name_rect.bottom + 20)
+    value_rect = value_surface.get_rect(centerx=main_content_rect.centerx, y=name_rect.bottom + (preview_spacing // 2))
     screen.blit(value_surface, value_rect)
     
     # Note/additional info if available
@@ -100,7 +116,7 @@ def _draw_sensor_preview(screen, main_content_rect, title_rect, sensor_key, sens
     if note:
         note_font = fonts['small']
         note_surface = note_font.render(note, True, config_module.Theme.FOREGROUND)
-        note_rect = note_surface.get_rect(centerx=main_content_rect.centerx, y=value_rect.bottom + 10)
+        note_rect = note_surface.get_rect(centerx=main_content_rect.centerx, y=value_rect.bottom + (preview_spacing // 3))
         screen.blit(note_surface, note_rect)
     
     # Graph type indicator - commented out to reduce UI clutter
@@ -113,27 +129,37 @@ def _draw_sensor_preview(screen, main_content_rect, title_rect, sensor_key, sens
     #                                       y=(note_rect.bottom + 15) if note else (value_rect.bottom + 25))
     #     screen.blit(graph_surface, graph_rect)
 
-def _draw_general_instructions(screen, main_content_rect, title_rect, fonts, config_module):
+def _draw_general_instructions(screen, main_content_rect, title_rect, fonts, config_module, ui_scaler, content_spacing):
     """
     Draw general instructions when no specific sensor is selected.
     """
     instruction_font = fonts['medium']
     instruction_text = "Select a sensor to view details"
     instruction_surface = instruction_font.render(instruction_text, True, config_module.Theme.FOREGROUND)
-    instruction_rect = instruction_surface.get_rect(centerx=main_content_rect.centerx, y=title_rect.bottom + 40)
+    instruction_rect = instruction_surface.get_rect(centerx=main_content_rect.centerx, y=title_rect.bottom + content_spacing)
     screen.blit(instruction_surface, instruction_rect)
     
     # Navigation hint
+    hint_spacing = content_spacing // 2 if ui_scaler else 20
     hint_font = fonts['small']
     hint_text = "Use UP/DOWN or A/D to browse sensors"
     hint_surface = hint_font.render(hint_text, True, config_module.Theme.FOREGROUND)
-    hint_rect = hint_surface.get_rect(centerx=main_content_rect.centerx, y=instruction_rect.bottom + 20)
+    hint_rect = hint_surface.get_rect(centerx=main_content_rect.centerx, y=instruction_rect.bottom + hint_spacing)
     screen.blit(hint_surface, hint_rect)
 
-def _draw_sensor_status_summary(screen, main_content_rect, sensor_values, fonts, config_module):
+def _draw_sensor_status_summary(screen, main_content_rect, sensor_values, fonts, config_module, ui_scaler):
     """
     Draw a summary of sensor statuses at the bottom of the main content area.
     """
+    # Use UIScaler for responsive spacing if available
+    if ui_scaler:
+        bottom_margin = ui_scaler.margin("large")
+        status_spacing = ui_scaler.margin("small")
+    else:
+        # Fallback to original hardcoded values
+        bottom_margin = 60
+        status_spacing = 5
+    
     summary_font = fonts['small']
     
     # Count working vs error sensors
@@ -159,7 +185,7 @@ def _draw_sensor_status_summary(screen, main_content_rect, sensor_values, fonts,
     
     # Position at bottom of main content area
     status_rect = status_surface.get_rect(centerx=main_content_rect.centerx, 
-                                        y=main_content_rect.bottom - 60)
+                                        y=main_content_rect.bottom - bottom_margin)
     screen.blit(status_surface, status_rect)
     
     # Error details if any
@@ -167,7 +193,7 @@ def _draw_sensor_status_summary(screen, main_content_rect, sensor_values, fonts,
         error_text = f"({error_sensors} sensors offline)"
         error_surface = summary_font.render(error_text, True, config_module.Theme.ALERT)
         error_rect = error_surface.get_rect(centerx=main_content_rect.centerx, 
-                                          y=status_rect.bottom + 5)
+                                          y=status_rect.bottom + status_spacing)
         screen.blit(error_surface, error_rect)
 
 def _draw_sensors_footer(screen, main_content_rect, fonts, config_module, screen_height):

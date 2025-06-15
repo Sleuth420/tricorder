@@ -19,7 +19,7 @@ DEVICE_ACTION_ITEMS = [
     {"name": "<- Back to Main Menu", "action": app_config.ACTION_GO_TO_MAIN_MENU} # Updated item with simpler arrow
 ]
 
-def draw_device_settings_view(screen, app_state, fonts, config_module):
+def draw_device_settings_view(screen, app_state, fonts, config_module, ui_scaler=None):
     """
     Draw the device settings screen content using the shared list menu component.
 
@@ -28,6 +28,7 @@ def draw_device_settings_view(screen, app_state, fonts, config_module):
         app_state (AppState): The current application state
         fonts (dict): Dictionary of loaded fonts
         config_module (module): Configuration module (config package)
+        ui_scaler (UIScaler, optional): UI scaling system for responsive design
     """
     # Get current selection index from app_state
     current_selection_idx = getattr(app_state, 'device_settings_option_index', 0)
@@ -43,5 +44,6 @@ def draw_device_settings_view(screen, app_state, fonts, config_module):
         selected_index=current_selection_idx,
         fonts=fonts,
         config_module=config_module,
-        footer_hint=None  # No footer for this view
+        footer_hint=None,  # No footer for this view
+        ui_scaler=ui_scaler
     ) 

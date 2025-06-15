@@ -7,31 +7,52 @@ from config import CLASSIFIED_TEXT
 
 logger = logging.getLogger(__name__)
 
-def draw_menu_base_layout(screen, app_state, fonts, config_module, base_sidebar_width=None):
+# Module-level flag to prevent repeated layout logging
+_layout_logged = False
+
+def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, base_sidebar_width=None):
     """
-    Draw the shared menu base layout (header, sidebar, arrow indicator).
+    Draw the shared menu base layout (header, sidebar, arrow indicator) with responsive scaling.
     
     Args:
         screen (pygame.Surface): The surface to draw on
         app_state (AppState): The current application state
         fonts (dict): Dictionary of loaded fonts
         config_module (module): Configuration module
+        ui_scaler (UIScaler): UI scaling system for responsive design
         base_sidebar_width (int, optional): Override default sidebar width
         
     Returns:
         dict: Layout information for the main content area
     """
+    global _layout_logged
+    
     screen.fill(config_module.Theme.BACKGROUND)
     
     screen_width = screen.get_width()
     screen_height = screen.get_height()
     
-    # Layout calculations with arrow indicator area
+    # Layout calculations with arrow indicator area using UIScaler
     if base_sidebar_width is None:
-        base_sidebar_width = min(screen_width // 2, 180)  # Consistent with main menu
-    arrow_indicator_width = config_module.ARROW_INDICATOR_WIDTH
+        # Revert to original-style proportional calculations
+        if ui_scaler.is_small_screen():
+            # For small screens (Pi), use original proportion: ~30% of screen width
+            base_sidebar_width = max(90, screen_width // 3)  # ~33% of width, minimum 90px
+        else:
+            # For larger screens, use original proportion: ~25% of screen width  
+            base_sidebar_width = max(120, min(screen_width // 4, 200))  # 25% of width, max 200px
+
+    arrow_indicator_width = ui_scaler.scale(config_module.ARROW_INDICATOR_WIDTH)
+    header_height = ui_scaler.header_height()
     
-    header_height = config_module.HEADER_HEIGHT
+    # Debug logging for layout calculations - only log once
+    if ui_scaler.debug_mode and not _layout_logged:
+        total_sidebar_width = base_sidebar_width + arrow_indicator_width
+        main_content_width = screen_width - total_sidebar_width
+        main_content_height = screen_height - header_height
+        logger.info(f"🎨 MenuBase Layout: screen={screen_width}x{screen_height}, header={header_height}px, sidebar={base_sidebar_width}px, arrow={arrow_indicator_width}px, main_content={main_content_width}x{main_content_height}px")
+        _layout_logged = True
+
     header_color = config_module.Theme.HEADER_CORNER_FILL 
     corner_color = config_module.Theme.HEADER_CORNER_FILL
     curve_radius = config_module.Theme.CORNER_CURVE_RADIUS
@@ -88,14 +109,16 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, base_sidebar_
             # Draw border outline for item
             pygame.draw.rect(screen, config_module.COLOR_BORDER, item_rect, width=config_module.Theme.BORDER_WIDTH)
 
-            # Draw the category name
+            # Draw the category name with responsive text positioning
             font = fonts['medium']
             if item.name == "SECRET GAMES": # Special handling for "SECRET GAMES"
                 title_text = CLASSIFIED_TEXT
             else:
                 title_text = item.name # Use item.name
             text_surface = font.render(title_text, True, config_module.Palette.BLACK) 
-            text_pos = (item_rect.left + 10, item_rect.centery - text_surface.get_height() // 2)
+            # Use UIScaler for responsive text padding
+            text_padding = ui_scaler.padding("medium")
+            text_pos = (item_rect.left + text_padding, item_rect.centery - text_surface.get_height() // 2)
             screen.blit(text_surface, text_pos)
 
             # Store selected item info for arrow indicator
@@ -113,7 +136,7 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, base_sidebar_
     
     # Draw arrow indicator if we have a selected item
     if selected_item_rect:
-        _draw_arrow_indicator(screen, arrow_area_rect, selected_item_rect, selected_item_color, config_module)
+        _draw_arrow_indicator(screen, arrow_area_rect, selected_item_rect, selected_item_color, config_module, ui_scaler)
 
     # --- Part 5: Calculate Main Content Area ---
     total_sidebar_width = base_sidebar_width + arrow_indicator_width
@@ -136,9 +159,9 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, base_sidebar_
         'screen_height': screen_height
     }
 
-def _draw_arrow_indicator(screen, arrow_area_rect, selected_item_rect, item_color, config_module):
+def _draw_arrow_indicator(screen, arrow_area_rect, selected_item_rect, item_color, config_module, ui_scaler):
     """
-    Draw a simple arrow indicator pointing left toward the selected menu item.
+    Draw a simple arrow indicator pointing left toward the selected menu item with responsive sizing.
     
     Args:
         screen (pygame.Surface): The surface to draw on
@@ -146,6 +169,7 @@ def _draw_arrow_indicator(screen, arrow_area_rect, selected_item_rect, item_colo
         selected_item_rect (pygame.Rect): Rectangle of the selected menu item
         item_color (tuple): RGB color of the selected menu item
         config_module (module): Configuration module for colors
+        ui_scaler (UIScaler): UI scaling system for responsive design
     """
     # Clear the arrow area
     pygame.draw.rect(screen, config_module.Theme.BACKGROUND, arrow_area_rect)
@@ -160,8 +184,8 @@ def _draw_arrow_indicator(screen, arrow_area_rect, selected_item_rect, item_colo
     else:
         arrow_color = config_module.Palette.RED_ALERT  # Red as requested
     
-    # Create arrow triangle pointing left
-    arrow_size = config_module.ARROW_INDICATOR_SIZE
+    # Create arrow triangle pointing left with responsive sizing
+    arrow_size = ui_scaler.scale(config_module.ARROW_INDICATOR_SIZE)
     arrow_points = [
         (arrow_center_x - arrow_size // 2, arrow_center_y),  # Left point (tip)
         (arrow_center_x + arrow_size // 2, arrow_center_y - arrow_size // 2),  # Top right

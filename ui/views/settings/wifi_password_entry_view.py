@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def draw_wifi_password_entry_view(screen, app_state, fonts, config_module):
+def draw_wifi_password_entry_view(screen, app_state, fonts, config_module, ui_scaler=None):
     """
     Draw the WiFi password entry screen with character selector optimized for screen size.
 
@@ -15,6 +15,7 @@ def draw_wifi_password_entry_view(screen, app_state, fonts, config_module):
         app_state (AppState): The current application state
         fonts (dict): Dictionary of loaded fonts
         config_module (module): Configuration module
+        ui_scaler (UIScaler, optional): UI scaling system for responsive design
     """
     try:
         # Get the password entry manager
@@ -37,6 +38,12 @@ def draw_wifi_password_entry_view(screen, app_state, fonts, config_module):
             not hasattr(password_manager.character_selector, '_fonts_initialized')):
             password_manager.character_selector.set_fonts(fonts)
             password_manager.character_selector._fonts_initialized = True
+
+        # Set UIScaler on character selector UI component directly
+        # (UI concerns handled in UI layer, not in models)
+        if ui_scaler and hasattr(password_manager, 'character_selector') and password_manager.character_selector:
+            if hasattr(password_manager.character_selector, 'set_ui_scaler'):
+                password_manager.character_selector.set_ui_scaler(ui_scaler)
 
         # Use the character selector's draw method which now handles small screen optimization
         password_manager.draw(screen)

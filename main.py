@@ -50,7 +50,7 @@ def main():
     logger.info(f"Available sensor modes: {', '.join(config.SENSOR_MODES)}")
 
     # Critical Initialization: Display
-    screen, clock, fonts = init_display()
+    screen, clock, fonts, ui_scaler = init_display()
     if not screen:
         logger.critical("Fatal Error: Could not initialize display. Application cannot continue.")
         sys.exit(1) # Exit if display fails - app is unusable
@@ -63,7 +63,7 @@ def main():
 
     # Initialize Models using the new modular architecture
     app_state = AppState(config, actual_screen_width, actual_screen_height)
-    reading_history = ReadingHistory(config.SENSOR_MODES, config.GRAPH_HISTORY_SIZE)
+    reading_history = ReadingHistory(config.ALL_SENSOR_MODES, config.GRAPH_HISTORY_SIZE)
     logger.info("Application state and reading history initialized.")
 
     exit_code = 0
@@ -106,7 +106,7 @@ def main():
                 # If loading is complete and minimum time has passed
                 if complete and elapsed_time >= minimum_loading_time:
                     progress = 1.0
-                    draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage)
+                    draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage, ui_scaler)
                     time.sleep(0.5)  # Brief pause to show 100%
                     break
                 elif complete:
@@ -117,7 +117,7 @@ def main():
                     progress = time_progress * 0.9  # Max 90% until actually complete
                 
                 # Draw the loading screen
-                draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage)
+                draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage, ui_scaler)
                 
                 # Handle quit events during loading
                 for event in pygame.event.get():
@@ -193,7 +193,7 @@ def main():
                         update_all_data(sensor_values, reading_history, config)
                 
                 # 4. Update Display
-                update_display(screen, app_state, sensor_values, reading_history, fonts, config)
+                update_display(screen, app_state, sensor_values, reading_history, fonts, config, ui_scaler)
                 
                 # 5. Control Frame Rate
                 clock.tick(config.FPS)
@@ -206,7 +206,7 @@ def main():
                     "Returning to main menu.",
                     "Check logs for full details."
                 ]
-                display_critical_error_on_screen(screen, fonts, config, error_messages)
+                display_critical_error_on_screen(screen, fonts, config, error_messages, ui_scaler)
                 
                 # Reset to a safe state (main menu) and continue running
                 app_state.state_manager.transition_to(STATE_MENU)
@@ -229,7 +229,7 @@ def main():
             "Application will now exit.",
             "Check logs for details."
         ]
-        display_critical_error_on_screen(screen, fonts, config, error_messages)
+        display_critical_error_on_screen(screen, fonts, config, error_messages, ui_scaler)
         exit_code = 1 # Indicate an error exit
     finally:
         logger.info("Performing application cleanup...")

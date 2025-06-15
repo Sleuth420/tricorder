@@ -9,7 +9,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def draw_graph(screen, history, rect, color, min_val=None, max_val=None, sensor_name="Data", config_module=None):
+def draw_graph(screen, history, rect, color, min_val=None, max_val=None, sensor_name="Data", config_module=None, ui_scaler=None):
     """
     Draws a time-series line graph for the given history.
 
@@ -22,6 +22,7 @@ def draw_graph(screen, history, rect, color, min_val=None, max_val=None, sensor_
         max_val (float, optional): Maximum value for the Y-axis. Auto-scales if None.
         sensor_name (str): Name of the sensor/data, used for logging.
         config_module (module): The main configuration module. This is now MANDATORY.
+        ui_scaler (UIScaler, optional): The UI scaler for scaling values.
     """
     if not config_module:
         logger.error(f"Graph for '{sensor_name}' cannot be drawn: config_module is mandatory but was not provided.")
@@ -35,8 +36,19 @@ def draw_graph(screen, history, rect, color, min_val=None, max_val=None, sensor_
     color_grid = config_module.Theme.GRAPH_GRID
     color_border = config_module.Theme.GRAPH_BORDER
     color_axis = config_module.Theme.GRAPH_AXIS # New theme color for axes
-    point_size = config_module.GRAPH_POINT_SIZE
-    line_width = config_module.GRAPH_LINE_WIDTH
+    
+    # Use UIScaler for responsive dimensions if available
+    if ui_scaler:
+        point_size = ui_scaler.scale(config_module.GRAPH_POINT_SIZE)
+        line_width = max(1, ui_scaler.scale(config_module.GRAPH_LINE_WIDTH))
+        
+        # Debug logging for graph layout
+        if ui_scaler.debug_mode:
+            logger.info(f"🎨 Graph({sensor_name}): rect={rect.width}x{rect.height}, point_size={point_size}px, line_width={line_width}px")
+    else:
+        # Fallback to original values
+        point_size = config_module.GRAPH_POINT_SIZE
+        line_width = config_module.GRAPH_LINE_WIDTH
 
     # Filter out None values for min/max calculation and actual plotting
     valid_history = [v for v in history if v is not None]

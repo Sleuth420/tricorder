@@ -27,14 +27,42 @@ def _get_background_image(selected_game, config):
     
     return loaded_images.get(image_path_abs)
 
-def draw_secret_games_view(screen, app_state, fonts, config):
+def draw_secret_games_view(screen, app_state, fonts, config, ui_scaler=None):
     """
-    Simple secret games menu similar to pong pause menu with background images.
+    Simple secret games menu similar to pong pause menu with background images and responsive design.
+    
+    Args:
+        screen (pygame.Surface): The surface to draw on
+        app_state (AppState): The current application state
+        fonts (dict): Dictionary of loaded fonts
+        config (module): Configuration module
+        ui_scaler (UIScaler, optional): UI scaling system for responsive design
     """
     logger.debug(f"Drawing secret games view - items: {len(app_state.secret_menu_items)}, index: {app_state.secret_menu_index}")
     
     screen_width = screen.get_width()
     screen_height = screen.get_height()
+    
+    # Use UIScaler for responsive dimensions if available
+    if ui_scaler:
+        margin = ui_scaler.margin("medium")
+        title_y_offset = ui_scaler.scale(10)
+        item_height = ui_scaler.scale(35)
+        menu_padding = ui_scaler.scale(15)
+        menu_border_width = ui_scaler.scale(2)
+        controls_y_offset = ui_scaler.scale(30)
+        
+        # Debug logging for secret games layout
+        if ui_scaler.debug_mode:
+            logger.info(f"🎨 SecretGamesView: screen={screen_width}x{screen_height}, item_height={item_height}px, margin={margin}px")
+    else:
+        # Fallback to original calculations
+        margin = 20
+        title_y_offset = 10
+        item_height = 35
+        menu_padding = 15
+        menu_border_width = 2
+        controls_y_offset = 30
     
     # Get selected game and background image
     selected_game = app_state.secret_menu_items[app_state.secret_menu_index]
@@ -70,32 +98,31 @@ def draw_secret_games_view(screen, app_state, fonts, config):
     overlay.fill(config.Theme.BACKGROUND)
     screen.blit(overlay, (0, 0))
     
-    # Add spacing around edges (20px margin)
-    margin = 20
+    # Add responsive spacing around edges
     content_rect = pygame.Rect(margin, margin, screen_width - 2*margin, screen_height - 2*margin)
     
-    # Draw title at top
+    # Draw title at top with responsive positioning
     title_font = fonts.get('large', fonts.get('medium'))
     title_text = title_font.render("SECRET GAMES", True, config.Theme.ACCENT)
     title_x = content_rect.centerx - title_text.get_width() // 2
-    title_y = content_rect.top + 10
+    title_y = content_rect.top + title_y_offset
     screen.blit(title_text, (title_x, title_y))
     
-    # Calculate menu area (centered, similar to pong pause menu)
+    # Calculate menu area (centered, similar to pong pause menu) with responsive sizing
     menu_items = app_state.secret_menu_items
-    item_height = 35  # Larger height for better readability
     menu_height = len(menu_items) * item_height
-    menu_width = max(150, content_rect.width // 2)  # Bigger menu for text to fit
+    menu_width = max(150, content_rect.width // 2)  # Responsive menu width
     
     menu_x = content_rect.centerx - menu_width // 2
     menu_y = content_rect.centery - menu_height // 2
     
-    # Draw menu background
-    menu_bg_rect = pygame.Rect(menu_x - 15, menu_y - 10, menu_width + 30, menu_height + 20)
+    # Draw menu background with responsive padding and border
+    menu_bg_rect = pygame.Rect(menu_x - menu_padding, menu_y - menu_padding//2, 
+                              menu_width + menu_padding * 2, menu_height + menu_padding)
     pygame.draw.rect(screen, config.Palette.DARK_GREY, menu_bg_rect)
-    pygame.draw.rect(screen, config.Theme.ACCENT, menu_bg_rect, 2)
+    pygame.draw.rect(screen, config.Theme.ACCENT, menu_bg_rect, menu_border_width)
     
-    # Draw menu items
+    # Draw menu items with responsive sizing
     for i, item in enumerate(menu_items):
         item_rect = pygame.Rect(menu_x, menu_y + i * item_height, menu_width, item_height)
         
@@ -113,8 +140,8 @@ def draw_secret_games_view(screen, app_state, fonts, config):
         text_y = item_rect.centery - text_surface.get_height() // 2
         screen.blit(text_surface, (text_x, text_y))
     
-    # Draw controls at bottom
-    controls_y = content_rect.bottom - 30
+    # Draw controls at bottom with responsive positioning
+    controls_y = content_rect.bottom - controls_y_offset
     key_prev_name = pygame.key.name(config.KEY_PREV).upper()
     key_next_name = pygame.key.name(config.KEY_NEXT).upper()
     key_select_name = pygame.key.name(config.KEY_SELECT).upper()

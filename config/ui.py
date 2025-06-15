@@ -29,3 +29,16 @@ SECRET_COMBO_DURATION_OPTIONS = [2.0, 3.0, 5.0, 7.0, 10.0] # Seconds
 
 # -- List Menu Settings --
 LIST_MENU_MAX_VISIBLE_ITEMS = 4  # Maximum items visible before scrolling
+
+# -- UI Scaling Settings --
+# Base resolution for scaling calculations (Pi target resolution)
+UI_BASE_WIDTH = 320
+UI_BASE_HEIGHT = 240
+
+# Responsive breakpoints
+UI_BREAKPOINT_SMALL = 320   # Pi and similar small screens
+UI_BREAKPOINT_MEDIUM = 800  # Development screens
+UI_BREAKPOINT_LARGE = 1200  # Large development screens
+
+# Debug Configuration
+UI_DEBUG_DRAWING = True    # Enable detailed drawing/layout logging (shows dimensions, positions, etc.)

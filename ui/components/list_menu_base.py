@@ -8,7 +8,7 @@ from ui.components.text_display import render_footer
 logger = logging.getLogger(__name__)
 
 def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, config_module, 
-                             footer_hint="", item_style="simple"):
+                             footer_hint="", item_style="simple", ui_scaler=None):
     """
     Draw a scrollable list menu with consistent header/footer layout.
     
@@ -21,6 +21,7 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
         config_module (module): Configuration module
         footer_hint (str): Custom footer hint text (optional)
         item_style (str): "simple", "button", or "detailed"
+        ui_scaler (UIScaler): UI scaler for scaling calculations
         
     Returns:
         dict: Layout information including visible item range
@@ -29,10 +30,24 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
     screen_width = screen.get_width()
     screen_height = screen.get_height()
     
+    # Use UIScaler for responsive dimensions if available
+    if ui_scaler:
+        header_top_margin = ui_scaler.header_top_margin()
+        header_height = ui_scaler.header_height() + ui_scaler.scale(20)  # Taller header
+        content_spacing = ui_scaler.margin("large")
+        item_height_padding = ui_scaler.padding("medium")
+        
+        # Debug logging for list menu layout
+        if ui_scaler.debug_mode:
+            logger.info(f"🎨 ListMenuBase: screen={screen_width}x{screen_height}, header={header_height}px, spacing={content_spacing}px")
+    else:
+        # Fallback to original calculations
+        header_top_margin = screen_height // 20  # Reduced top spacing
+        header_height = config_module.HEADER_HEIGHT + 20  # Taller header for better spacing
+        content_spacing = screen_height // 10  # Increased spacing
+        item_height_padding = 20
+    
     # === HEADER SECTION ===
-    # Less spacing from top for more content space
-    header_top_margin = screen_height // 20  # Reduced top spacing
-    header_height = config_module.HEADER_HEIGHT + 20  # Taller header for better spacing
     header_rect = pygame.Rect(0, header_top_margin, screen_width, header_height)
     pygame.draw.rect(screen, config_module.Theme.BACKGROUND, header_rect)
     
@@ -43,14 +58,12 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
     screen.blit(header_text, header_text_rect)
     
     # === CONTENT SECTION ===
-    # More spacing between header and content
-    content_y = header_rect.bottom + (screen_height // 10)  # Increased spacing
+    content_y = header_rect.bottom + content_spacing
     footer_height = config_module.FONT_SIZE_SMALL * 3  # Approximate footer space
     available_height = screen_height - content_y - footer_height - 20
     
     # Calculate item dimensions
     font_medium = fonts['medium']
-    item_height_padding = 20
     item_text_height = font_medium.get_height()
     effective_item_height = item_text_height + item_height_padding
     
@@ -177,7 +190,7 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
         "scroll_offset": scroll_offset
     }
 
-def draw_simple_list_menu(screen, title, menu_items, selected_index, fonts, config_module, footer_hint="", show_footer=False):
+def draw_simple_list_menu(screen, title, menu_items, selected_index, fonts, config_module, footer_hint="", show_footer=False, ui_scaler=None):
     """
     Convenience function for simple list menus without scrolling complexity.
     
@@ -190,16 +203,17 @@ def draw_simple_list_menu(screen, title, menu_items, selected_index, fonts, conf
         config_module (module): Configuration module
         footer_hint (str): Custom footer hint text (optional)
         show_footer (bool): Whether to show footer (default False for settings-style menus)
+        ui_scaler (UIScaler, optional): UI scaling system for responsive design
         
     Returns:
         dict: Layout information
     """
     return draw_scrollable_list_menu(
         screen, title, menu_items, selected_index, fonts, config_module,
-        footer_hint=footer_hint if show_footer else None, item_style="simple"
+        footer_hint=footer_hint if show_footer else None, item_style="simple", ui_scaler=ui_scaler
     )
 
-def draw_button_list_menu(screen, title, menu_items, selected_index, fonts, config_module, footer_hint=""):
+def draw_button_list_menu(screen, title, menu_items, selected_index, fonts, config_module, footer_hint="", ui_scaler=None):
     """
     Convenience function for button-style list menus.
     
@@ -211,11 +225,12 @@ def draw_button_list_menu(screen, title, menu_items, selected_index, fonts, conf
         fonts (dict): Dictionary of loaded fonts
         config_module (module): Configuration module
         footer_hint (str): Custom footer hint text (optional)
+        ui_scaler (UIScaler, optional): UI scaling system for responsive design
         
     Returns:
         dict: Layout information
     """
     return draw_scrollable_list_menu(
         screen, title, menu_items, selected_index, fonts, config_module,
-        footer_hint=footer_hint, item_style="button"
+        footer_hint=footer_hint, item_style="button", ui_scaler=ui_scaler
     ) 

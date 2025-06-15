@@ -21,6 +21,9 @@ from ui.views.settings.wifi_password_entry_view import draw_wifi_password_entry_
 from ui.views.settings.update_view import draw_update_view
 from ui.views.schematics_menu_view import draw_schematics_menu_view
 
+# Import UIScaler for centralized scaling
+from utils.ui_scaler import UIScaler
+
 # Temporary placeholder function until schematics_view.py is created
 # def draw_schematics_view(screen, app_state, fonts, config_module):
 #     logger.info("Placeholder for draw_schematics_view called.")
@@ -30,17 +33,19 @@ from ui.views.schematics_menu_view import draw_schematics_menu_view
 
 logger = logging.getLogger(__name__)
 
-# Global variables to track display mode
+# Global variables to track display mode and UIScaler
 current_display_mode = "NORMAL"  # "NORMAL" or "OPENGL"
 opengl_screen = None
+ui_scaler = None  # Global UIScaler instance
 
 def init_display():
     """
-    Initializes Pygame and the display window. Loads fonts.
+    Initializes Pygame and the display window. Loads fonts and creates UIScaler.
 
     Returns:
-        tuple: (screen_surface, clock_object, loaded_fonts_dict) or (None, None, None) on failure.
+        tuple: (screen_surface, clock_object, loaded_fonts_dict, ui_scaler_instance) or (None, None, None, None) on failure.
     """
+    global ui_scaler
     fonts = {}
     try:
         pygame.init()
@@ -50,6 +55,12 @@ def init_display():
         
         # Start with normal display mode
         screen = _init_normal_display(config)
+        
+        # Create UIScaler with actual screen dimensions
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
+        ui_scaler = UIScaler(screen_width, screen_height, config)
+        logger.info(f"UIScaler created: {screen_width}x{screen_height}, scale_factor={ui_scaler.scale_factor:.2f}")
         
         # Hide mouse cursor for kiosk mode (both fullscreen and windowed)
         pygame.mouse.set_visible(False)
@@ -72,12 +83,12 @@ def init_display():
 
         clock = pygame.time.Clock()
         logger.info("Pygame display and clock initialized.")
-        return screen, clock, fonts
+        return screen, clock, fonts, ui_scaler
 
     except Exception as e:
         logger.error(f"Error initializing display: {e}", exc_info=True)
         pygame.quit()
-        return None, None, None
+        return None, None, None, None
 
 def _init_normal_display(config):
     """Initialize normal pygame display mode."""
@@ -95,7 +106,7 @@ def _init_normal_display(config):
 
 def _init_opengl_display(config):
     """Initialize OpenGL display mode."""
-    global current_display_mode, opengl_screen
+    global current_display_mode, opengl_screen, ui_scaler
     
     try:
         # Import OpenGL to check availability
@@ -115,6 +126,14 @@ def _init_opengl_display(config):
         
         # Set up OpenGL viewport
         gl.glViewport(0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT)
+        
+        # Update UIScaler if screen dimensions changed
+        if ui_scaler:
+            screen_width = opengl_screen.get_width()
+            screen_height = opengl_screen.get_height()
+            if screen_width != ui_scaler.screen_width or screen_height != ui_scaler.screen_height:
+                ui_scaler = UIScaler(screen_width, screen_height, config)
+                logger.info(f"UIScaler updated for OpenGL mode: {screen_width}x{screen_height}")
         
         current_display_mode = "OPENGL"
         logger.info("OpenGL display mode initialized")
@@ -145,7 +164,7 @@ def _needs_opengl_mode(app_state):
 
 def _switch_display_mode_if_needed(app_state):
     """Switch display mode if needed for current state."""
-    global current_display_mode
+    global current_display_mode, ui_scaler
     
     needs_opengl = _needs_opengl_mode(app_state)
     
@@ -170,13 +189,20 @@ def _switch_display_mode_if_needed(app_state):
         # Switch back to normal mode
         import config
         screen = _init_normal_display(config)
+        # Update UIScaler for normal mode
+        if ui_scaler:
+            screen_width = screen.get_width()
+            screen_height = screen.get_height()
+            if screen_width != ui_scaler.screen_width or screen_height != ui_scaler.screen_height:
+                ui_scaler = UIScaler(screen_width, screen_height, config)
+                logger.info(f"UIScaler updated for normal mode: {screen_width}x{screen_height}")
         logger.info("Switched back to normal display mode")
         return screen
     
     # No mode change needed
     return pygame.display.get_surface()
 
-def update_display(screen, app_state, sensor_values, sensor_history, fonts, config_module):
+def update_display(screen, app_state, sensor_values, sensor_history, fonts, config_module, ui_scaler_instance=None):
     """
     Updates the display based on the current application state.
     
@@ -187,13 +213,26 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         sensor_history (ReadingHistory): Sensor reading history
         fonts (dict): Dictionary of loaded fonts
         config_module (module): Configuration module (config package)
+        ui_scaler_instance (UIScaler, optional): UI scaling system instance
         
     Returns:
         None
     """
+    global ui_scaler
+    
     if not screen or not fonts:
         logger.error("Screen or fonts not initialized for drawing.")
         return
+    
+    # Use provided UIScaler or fall back to global instance
+    current_ui_scaler = ui_scaler_instance or ui_scaler
+    if not current_ui_scaler:
+        logger.warning("No UIScaler available, creating temporary instance")
+        current_ui_scaler = UIScaler(screen.get_width(), screen.get_height(), config_module)
+    
+    # Handle UI component setup for managers that need UI components
+    # Note: We handle UI components here in display_manager, not in the models themselves
+    # This keeps models pure (data/business logic only) and UI concerns in UI layer
     
     # Check if we need to switch display modes
     screen = _switch_display_mode_if_needed(app_state)
@@ -204,33 +243,33 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
     # Draw the appropriate view based on app state
     if app_state.current_state == STATE_MENU:
         # Menu state shows sidebar with system info in main content
-        draw_menu_screen(screen, app_state, fonts, config_module, sensor_values)
+        draw_menu_screen(screen, app_state, fonts, config_module, sensor_values, current_ui_scaler)
     elif app_state.current_state == STATE_DASHBOARD:
         # Use the merged sensor view for the dashboard
-        draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config_module)
+        draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_SENSOR_VIEW:
         # For all sensors, use the standard sensor_view
-        draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config_module)
+        draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_SYSTEM_INFO:
         # System info state shows system info full screen using the new view
-        draw_system_info_view(screen, app_state, sensor_values, fonts, config_module)
+        draw_system_info_view(screen, app_state, sensor_values, fonts, config_module, ui_scaler=current_ui_scaler)
     elif app_state.current_state == STATE_SETTINGS:
         # Settings state shows settings full screen using the new view
-        draw_settings_view(screen, app_state, fonts, config_module)
+        draw_settings_view(screen, app_state, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_SCHEMATICS:
         # Schematics state will show the 3D model viewer
         if current_display_mode == "OPENGL":
             # For OpenGL mode, we need special handling
-            _render_opengl_schematics(screen, app_state, fonts, config_module)
+            _render_opengl_schematics(screen, app_state, fonts, config_module, current_ui_scaler)
         else:
             # Normal mode rendering
-            draw_schematics_view(screen, app_state, fonts, config_module)
+            draw_schematics_view(screen, app_state, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_SCHEMATICS_MENU:
         # Schematics selection menu
-        draw_schematics_menu_view(screen, app_state, fonts, config_module)
+        draw_schematics_menu_view(screen, app_state, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_SECRET_GAMES:
         # Draw the secret games menu
-        draw_secret_games_view(screen, app_state, fonts, config_module)
+        draw_secret_games_view(screen, app_state, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_PONG_ACTIVE:
         # Draw the active Pong game
         if app_state.active_pong_game:
@@ -269,36 +308,39 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
             screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
     elif app_state.current_state == STATE_SENSORS_MENU:
         # Draw the sensors menu
-        draw_sensors_menu_view(screen, app_state, sensor_values, sensor_history, fonts, config_module)
+        draw_sensors_menu_view(screen, app_state, sensor_values, sensor_history, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_SETTINGS_DISPLAY:
-        draw_display_settings_view(screen, app_state, fonts, config_module)
+        draw_display_settings_view(screen, app_state, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_SETTINGS_DEVICE:
-        draw_device_settings_view(screen, app_state, fonts, config_module)
+        draw_device_settings_view(screen, app_state, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_SETTINGS_CONTROLS:
-        draw_controls_view(screen, app_state, fonts, config_module)
+        draw_controls_view(screen, app_state, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_SETTINGS_UPDATE:
-        draw_update_view(screen, app_state, fonts, config_module)
+        draw_update_view(screen, app_state, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_CONFIRM_REBOOT:
-        draw_confirmation_view(screen, app_state, fonts, config_module, message="Reboot Device?")
+        draw_confirmation_view(screen, app_state, fonts, config_module, message="Reboot Device?", ui_scaler=current_ui_scaler)
     elif app_state.current_state == STATE_CONFIRM_SHUTDOWN:
-        draw_confirmation_view(screen, app_state, fonts, config_module, message="Shutdown Device?")
+        draw_confirmation_view(screen, app_state, fonts, config_module, message="Shutdown Device?", ui_scaler=current_ui_scaler)
     elif app_state.current_state == STATE_CONFIRM_RESTART_APP:
-        draw_confirmation_view(screen, app_state, fonts, config_module, message="Restart Application?")
+        draw_confirmation_view(screen, app_state, fonts, config_module, message="Restart Application?", ui_scaler=current_ui_scaler)
     elif app_state.current_state == STATE_SELECT_COMBO_DURATION:
-        draw_select_combo_duration_view(screen, app_state, fonts, config_module)
+        draw_select_combo_duration_view(screen, app_state, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_SETTINGS_WIFI:
-        draw_wifi_settings_view(screen, app_state, fonts, config_module)
+        draw_wifi_settings_view(screen, app_state, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_SETTINGS_WIFI_NETWORKS:
-        draw_wifi_networks_view(screen, app_state, fonts, config_module)
+        draw_wifi_networks_view(screen, app_state, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_WIFI_PASSWORD_ENTRY:
         # Set fonts for password entry manager if not already set
         if not app_state.password_entry_manager.character_selector.fonts:
             app_state.password_entry_manager.character_selector.fonts = fonts
-        draw_wifi_password_entry_view(screen, app_state, fonts, config_module)
+        draw_wifi_password_entry_view(screen, app_state, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_LOADING:
-        # Draw loading screen
+        # Draw loading screen - handle UI component setup here in display layer
         loading_screen = app_state.get_loading_screen()
         if loading_screen:
+            # Set UIScaler on loading screen UI component directly
+            if current_ui_scaler and hasattr(loading_screen, 'set_ui_scaler'):
+                loading_screen.set_ui_scaler(current_ui_scaler)
             loading_screen.draw(screen, fonts)
         else:
             # Fallback if no loading screen
@@ -315,7 +357,7 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
     # Update the display
     pygame.display.flip()
 
-def _render_opengl_schematics(screen, app_state, fonts, config_module):
+def _render_opengl_schematics(screen, app_state, fonts, config_module, ui_scaler):
     """Handle OpenGL rendering for schematics view with full UI controls."""
     # Import here to avoid circular imports
     from ui.views.schematics_3d_viewer import draw_schematics_view
@@ -323,4 +365,4 @@ def _render_opengl_schematics(screen, app_state, fonts, config_module):
     # Use the normal schematics view which handles all controls,
     # but the schematics manager will automatically use OpenGL rendering
     # when the current model is 'worf' or 'apollo_1570'
-    draw_schematics_view(screen, app_state, fonts, config_module)
+    draw_schematics_view(screen, app_state, fonts, config_module, ui_scaler)

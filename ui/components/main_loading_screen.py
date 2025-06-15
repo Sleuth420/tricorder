@@ -9,19 +9,53 @@ from utils.loc import count_python_lines
 
 logger = logging.getLogger(__name__)
 
-def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage_text):
-    """Draw the loading screen with splash logo, progress bar, and line count."""
+def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage_text, ui_scaler=None):
+    """
+    Draw the loading screen with splash logo, progress bar, and line count using responsive design.
+    
+    Args:
+        screen (pygame.Surface): The surface to draw on
+        fonts (dict): Dictionary of loaded fonts
+        logo_splash (pygame.Surface): The logo surface
+        logo_rect (pygame.Rect): Rectangle for logo positioning
+        progress (float): Progress value from 0.0 to 1.0
+        current_lines (int): Current line count
+        total_lines (int): Total line count
+        stage_text (str): Current stage description
+        ui_scaler (UIScaler, optional): UI scaling system for responsive design
+    """
     screen.fill(config.Theme.BACKGROUND)
     
     # Draw the splash logo
     screen.blit(logo_splash, logo_rect)
     
-    # Loading bar dimensions
-    bar_width = int(screen.get_width() * 0.6)
-    bar_height = 20
-    bar_x = (screen.get_width() - bar_width) // 2
-    bar_y = logo_rect.bottom + 35  # Increased from 30 to 35
+    # Use UIScaler for responsive dimensions if available
+    if ui_scaler:
+        # Revert to original proportional thickness for loading bar
+        bar_width = int(screen.get_width() * 0.6)
+        bar_height = max(8, screen.get_height() // 30)  # ~3.3% of screen height, minimum 8px
+        spacing_after_logo = ui_scaler.margin("large")
+        text_spacing = ui_scaler.margin("medium")
+        progress_spacing = ui_scaler.margin("medium")
+        stage_spacing = ui_scaler.margin("small")
+        lines_spacing = ui_scaler.margin("small")
+    else:
+        # Fallback to original proportional calculations
+        bar_width = int(screen.get_width() * 0.6)
+        bar_height = max(8, screen.get_height() // 30)  # Original proportional height
+        spacing_after_logo = 35
+        text_spacing = 25
+        progress_spacing = 25
+        stage_spacing = 18
+        lines_spacing = 15
     
+    bar_x = (screen.get_width() - bar_width) // 2
+    bar_y = logo_rect.bottom + spacing_after_logo
+    
+    # Debug logging for loading screen layout - only log once at start
+    if ui_scaler and ui_scaler.debug_mode and progress <= 0.01:  # Only log at very beginning
+        logger.info(f"🎨 LoadingScreen: screen={screen.get_width()}x{screen.get_height()}, logo_rect={logo_rect}, bar={bar_width}x{bar_height}px at ({bar_x}, {bar_y})")
+
     # Draw loading bar background
     bar_bg_rect = pygame.Rect(bar_x - 2, bar_y - 2, bar_width + 4, bar_height + 4)
     pygame.draw.rect(screen, config.Theme.FOREGROUND, bar_bg_rect)
@@ -41,19 +75,19 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
     
     progress_text = f"{int(progress * 100)}%"
     progress_surface = progress_font.render(progress_text, True, config.Theme.FOREGROUND)
-    progress_rect = progress_surface.get_rect(center=(screen.get_width() // 2, bar_y + bar_height + 25))  # Increased from 20 to 25
+    progress_rect = progress_surface.get_rect(center=(screen.get_width() // 2, bar_y + bar_height + progress_spacing))
     screen.blit(progress_surface, progress_rect)
     
     # Draw current stage text
     stage_surface = progress_font.render(stage_text, True, config.Theme.FOREGROUND)
-    stage_rect = stage_surface.get_rect(center=(screen.get_width() // 2, progress_rect.bottom + 18))  # Increased from 15 to 18
+    stage_rect = stage_surface.get_rect(center=(screen.get_width() // 2, progress_rect.bottom + stage_spacing))
     screen.blit(stage_surface, stage_rect)
     
     # Draw line count if available
     if total_lines > 0:
         lines_text = f"Python Lines: {current_lines:,} / {total_lines:,}"
         lines_surface = progress_font.render(lines_text, True, config.Theme.ACCENT)
-        lines_rect = lines_surface.get_rect(center=(screen.get_width() // 2, stage_rect.bottom + 15))  # Increased from 10 to 15
+        lines_rect = lines_surface.get_rect(center=(screen.get_width() // 2, stage_rect.bottom + lines_spacing))
         screen.blit(lines_surface, lines_rect)
     
     pygame.display.flip()

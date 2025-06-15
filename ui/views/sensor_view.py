@@ -14,7 +14,7 @@ import config as app_config # Use an alias
 
 logger = logging.getLogger(__name__)
 
-def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config_module):
+def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, config_module, ui_scaler=None):
     """
     Draw the individual sensor view screen.
     
@@ -25,11 +25,27 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
         sensor_history (ReadingHistory): The history of sensor readings
         fonts (dict): Dictionary of loaded fonts
         config_module (module): Configuration module (config package)
+        ui_scaler (UIScaler): The UI scaler for scaling the graph
     """
     screen.fill(config_module.Theme.BACKGROUND)
     
     screen_width = screen.get_width()
     screen_height = screen.get_height()
+    
+    # Use UIScaler for responsive spacing if available
+    if ui_scaler:
+        title_margin = ui_scaler.margin("small")
+        value_spacing = ui_scaler.margin("medium")
+        graph_margin = ui_scaler.margin("medium")
+        
+        # Debug logging for sensor view layout
+        if ui_scaler.debug_mode:
+            logger.info(f"🎨 SensorView: screen={screen_width}x{screen_height}, margins={title_margin}px/{graph_margin}px")
+    else:
+        # Fallback to original hardcoded values
+        title_margin = 10
+        value_spacing = 15
+        graph_margin = 15
     
     current_sensor_key = app_state.current_sensor
     if not current_sensor_key:
@@ -53,26 +69,26 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
     # Draw sensor name in top left
     title_font = fonts['medium']
     title_surface = title_font.render(display_name, True, config_module.Theme.ACCENT)
-    title_rect = title_surface.get_rect(topleft=(10, 10))
+    title_rect = title_surface.get_rect(topleft=(title_margin, title_margin))
     screen.blit(title_surface, title_rect)
     
     # Draw frozen indicator if needed (moved to top right)
     if app_state.is_frozen:
         frozen_font = fonts['medium']
         frozen_surface = frozen_font.render("[FROZEN]", True, config_module.Theme.FROZEN_INDICATOR)
-        frozen_rect = frozen_surface.get_rect(topright=(screen_width - 10, 10))
+        frozen_rect = frozen_surface.get_rect(topright=(screen_width - title_margin, title_margin))
         screen.blit(frozen_surface, frozen_rect)
     
     # Draw current value below the title
     value_font = fonts['large']
     value_text = f"{text_val} {unit}".strip()
     value_surface = value_font.render(value_text, True, config_module.Theme.FOREGROUND)
-    value_rect = value_surface.get_rect(midleft=(10, title_rect.bottom + 15))
+    value_rect = value_surface.get_rect(midleft=(title_margin, title_rect.bottom + value_spacing))
     screen.blit(value_surface, value_rect)
     
     # Draw note in middle right if present
     if note:
-        note_x_pos = screen_width - 10  # Right side of screen  
+        note_x_pos = screen_width - title_margin  # Right side of screen  
         note_y_pos = screen_height // 2  # Middle of screen
         render_text(
             screen, note, 
@@ -86,7 +102,6 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
 
     if graph_type == "LINE":
         history_data = sensor_history.get_history(current_sensor_key)
-        graph_margin = 15 
         graph_height = screen_height - title_rect.bottom - graph_margin*2 - config_module.FONT_SIZE_SMALL*2 
         graph_width = screen_width - graph_margin*2
         graph_rect = pygame.Rect(
@@ -104,7 +119,8 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
                 config_module.Theme.FOREGROUND, 
                 min_val_cfg, max_val_cfg, 
                 current_sensor_key,
-                config_module
+                config_module,
+                ui_scaler
             )
             time_font = fonts.get('small', fonts['medium'])
             time_text = f"Time ({config_module.GRAPH_HISTORY_SIZE} seconds →)"
@@ -117,14 +133,21 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
     elif graph_type == "VERTICAL_BAR":
         vbar_config = display_props.get("vertical_graph_config")
         if vbar_config:
-            # Calculate graph dimensions to maximize available space
-            graph_width = 120  # Width of the graph
-            # Maximize vertical space by using fixed margins from top and bottom
-            graph_margin_top = 20  # Fixed margin from top of screen
-            graph_margin_bottom = 20  # Fixed margin from bottom of screen
+            # Calculate graph dimensions to maximize available space using UIScaler
+            if ui_scaler:
+                graph_width = ui_scaler.scale(120)  # Responsive graph width
+                graph_margin_top = ui_scaler.margin("medium")  # Responsive top margin
+                graph_margin_bottom = ui_scaler.margin("medium")  # Responsive bottom margin
+            else:
+                # Fallback to original hardcoded values
+                graph_width = 120
+                graph_margin_top = 20
+                graph_margin_bottom = 20
+                
+            # Maximize vertical space by using margins from top and bottom
             graph_height = screen_height - graph_margin_top - graph_margin_bottom  # Use all available space between margins
             graph_x = (screen_width - graph_width) // 2
-            graph_y = graph_margin_top  # Start from fixed top margin
+            graph_y = graph_margin_top  # Start from top margin
             graph_rect = pygame.Rect(graph_x, graph_y, graph_width, graph_height)
             
             try:
@@ -143,7 +166,8 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
                     dynamic_range=vbar_config.get("dynamic_range", False),
                     zoom_factor=vbar_config.get("zoom_factor", 0.3),
                     min_zoom_range=vbar_config.get("min_zoom_range"),
-                    stability_threshold=vbar_config.get("stability_threshold", 2.0)
+                    stability_threshold=vbar_config.get("stability_threshold", 2.0),
+                    ui_scaler=ui_scaler
                 )
                 vertical_graph.draw(numeric_val, arrow_text)
             except KeyError as e:

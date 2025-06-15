@@ -9,9 +9,16 @@ from ui.components.text_display import render_footer, render_title # render_text
 
 logger = logging.getLogger(__name__)
 
-def draw_select_combo_duration_view(screen, app_state, fonts, config_module):
+def draw_select_combo_duration_view(screen, app_state, fonts, config_module, ui_scaler=None):
     """
     Draws the screen for selecting the secret combo hold duration using the shared list menu component.
+    
+    Args:
+        screen (pygame.Surface): The surface to draw on
+        app_state (AppState): The current application state
+        fonts (dict): Dictionary of loaded fonts
+        config_module (module): Configuration module (config package)
+        ui_scaler (UIScaler, optional): UI scaling system for responsive design
     """
     # Get current selection index from app_state
     current_selection_idx = getattr(app_state, 'combo_duration_selection_index', 0)
@@ -28,5 +35,6 @@ def draw_select_combo_duration_view(screen, app_state, fonts, config_module):
         selected_index=current_selection_idx,
         fonts=fonts,
         config_module=config_module,
-        footer_hint=None  # No footer for this view
+        footer_hint=None,  # No footer for this view
+        ui_scaler=ui_scaler
     ) 

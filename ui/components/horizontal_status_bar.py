@@ -13,7 +13,7 @@ class HorizontalStatusBar:
     """
     
     def __init__(self, screen, rect, label, units, min_val, max_val, 
-                 green_range, yellow_range, fonts, config_module):
+                 green_range, yellow_range, fonts, config_module, ui_scaler=None):
         """
         Initialize the horizontal status bar.
         
@@ -28,6 +28,7 @@ class HorizontalStatusBar:
             yellow_range (tuple): (min, max) for yellow zone (warning)
             fonts (dict): Dictionary of pre-loaded fonts
             config_module (module): Configuration module for colors
+            ui_scaler (UIScaler): UI scaler for scaling calculations
         """
         self.screen = screen
         self.rect = rect
@@ -39,24 +40,36 @@ class HorizontalStatusBar:
         self.yellow_range = yellow_range
         self.fonts = fonts
         self.config = config_module
+        self.ui_scaler = ui_scaler
+        self._layout_logged = False  # Flag to prevent repeated layout logging
         
         # Calculate layout
         self._calculate_layout()
         
     def _calculate_layout(self):
-        """Calculate positions for drawing elements using proportional spacing like other views."""
-        # Use proportional spacing based on rect width like other views
-        margin = max(5, self.rect.width // 40)  # Proportional margin
-        
-        # Reserve proportional space for label and value
-        self.label_width = max(50, self.rect.width // 5)  # 20% of width for label
-        self.value_width = max(40, self.rect.width // 6)  # ~17% of width for value
+        """Calculate positions for drawing elements using UIScaler for responsive design."""
+        if self.ui_scaler:
+            # Use UIScaler for responsive spacing and dimensions
+            margin = self.ui_scaler.margin("small")
+            self.label_width = max(50, self.ui_scaler.scale(60))  # Responsive label width
+            self.value_width = max(40, self.ui_scaler.scale(50))  # Responsive value width
+            self.bar_height = self.ui_scaler.scale(12)  # Responsive bar height
+            
+            # Debug logging for horizontal status bar layout
+            if self.ui_scaler.debug_mode and not self._layout_logged:
+                logger.info(f"🎨 HorizontalStatusBar({self.label}): rect={self.rect.width}x{self.rect.height}, bar_h={self.bar_height}px, label_w={self.label_width}px, value_w={self.value_width}px")
+                self._layout_logged = True
+        else:
+            # Fallback to original proportional calculations
+            margin = max(5, self.rect.width // 40)  # Proportional margin
+            self.label_width = max(50, self.rect.width // 5)  # 20% of width for label
+            self.value_width = max(40, self.rect.width // 6)  # ~17% of width for value
+            self.bar_height = 12
         
         # Bar dimensions - proportional spacing and size
         self.bar_x = self.rect.left + self.label_width + margin
-        self.bar_y = self.rect.centery - 6  # Center vertically, bar height = 12
+        self.bar_y = self.rect.centery - (self.bar_height // 2)  # Center vertically using responsive height
         self.bar_width = self.rect.width - self.label_width - self.value_width - (margin * 3)  # Use remaining space
-        self.bar_height = 12
         
         # Value text position
         self.value_x = self.bar_x + self.bar_width + margin

@@ -87,8 +87,8 @@ def update_all_data(sensor_values, reading_history, app_config):
         app_config.SENSOR_BATTERY: lambda: system_info.get_battery_info()[0], # Only need percent
     }
 
-    # Iterate through SENSOR_MODES defined in config
-    for sensor_key in app_config.SENSOR_MODES:
+    # Update sensor values for all sensor modes
+    for sensor_key in app_config.ALL_SENSOR_MODES:
         raw_value = None
         display_props = app_config.SENSOR_DISPLAY_PROPERTIES.get(sensor_key, {})
         

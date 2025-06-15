@@ -19,16 +19,21 @@ except ImportError:
     logger.error("PyOpenGL not available")
 
 class OpenGLRenderer:
-    def __init__(self, screen_width, screen_height, config_module):
+    def __init__(self, screen_width, screen_height, config_module, ui_scaler=None):
         """Initialize OpenGL renderer for direct rendering."""
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.config = config_module
+        self.ui_scaler = ui_scaler
         self.initialized = False
         
         if not OPENGL_AVAILABLE:
             logger.error("PyOpenGL not available")
             return
+            
+        # Debug logging for OpenGL renderer with UIScaler
+        if ui_scaler and ui_scaler.debug_mode:
+            logger.info(f"🎨 OpenGLRenderer: screen={screen_width}x{screen_height}, scale_factor={ui_scaler.scale_factor:.2f}")
             
         logger.info("OpenGL renderer created (deferred initialization)")
         

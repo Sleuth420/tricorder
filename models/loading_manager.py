@@ -13,6 +13,7 @@ class LoadingManager:
         self.config = config_module
         self.screen_width = screen_width
         self.screen_height = screen_height
+        self.ui_scaler = None
         
         # Loading state
         self.loading_screen = None
@@ -21,6 +22,8 @@ class LoadingManager:
         self.pending_model_load = None
         
         logger.info("Loading manager initialized")
+    
+    # UIScaler removed - UI concerns handled by display_manager.py
     
     def start_loading_operation(self, target_state, operation_name="Loading", total_steps=3):
         """
@@ -41,7 +44,8 @@ class LoadingManager:
             self.loading_screen = LoadingScreen(
                 self.screen_width, 
                 self.screen_height, 
-                self.config
+                self.config,
+                self.ui_scaler
             )
         
         # Set up loading state

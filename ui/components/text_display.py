@@ -1,14 +1,14 @@
 # --- ui/components/text_display.py ---
-# Reusable text display components
+# Reusable text display components with responsive design
 
 import pygame
 import logging
 
 logger = logging.getLogger(__name__)
 
-def render_text(screen, text, font, color, position, align="center"):
+def render_text(screen, text, font, color, position, align="center", ui_scaler=None):
     """
-    Render text on the screen with various alignment options.
+    Render text on the screen with various alignment options and responsive design.
     
     Args:
         screen (pygame.Surface): The surface to draw on
@@ -17,6 +17,7 @@ def render_text(screen, text, font, color, position, align="center"):
         color (tuple): RGB color tuple
         position (tuple): (x, y) position for text
         align (str): Alignment - "left", "center", or "right"
+        ui_scaler (UIScaler, optional): UI scaling system for responsive design
     
     Returns:
         pygame.Rect: The rectangle of the rendered text
@@ -39,9 +40,9 @@ def render_text(screen, text, font, color, position, align="center"):
         logger.error(f"Error rendering text '{text}': {e}", exc_info=True)
         return pygame.Rect(0, 0, 0, 0)
 
-def render_title(screen, text, fonts, color, y_pos, width, is_frozen=False, frozen_color=None):
+def render_title(screen, text, fonts, color, y_pos, width, is_frozen=False, frozen_color=None, ui_scaler=None):
     """
-    Render a title at the top of the screen.
+    Render a title at the top of the screen with responsive positioning.
     
     Args:
         screen (pygame.Surface): The surface to draw on
@@ -52,6 +53,7 @@ def render_title(screen, text, fonts, color, y_pos, width, is_frozen=False, froz
         width (int): Screen width for centering
         is_frozen (bool): Whether display is in frozen state
         frozen_color (tuple): Color to use if frozen (optional)
+        ui_scaler (UIScaler, optional): UI scaling system for responsive design
     
     Returns:
         pygame.Rect: The rectangle of the rendered text
@@ -68,12 +70,13 @@ def render_title(screen, text, fonts, color, y_pos, width, is_frozen=False, froz
         display_text, 
         fonts['medium'] if 'medium' in fonts else fonts['default'], 
         text_color, 
-        (width // 2, y_pos)
+        (width // 2, y_pos),
+        ui_scaler=ui_scaler
     )
 
-def render_value(screen, value, unit, fonts, color, position, align="center"):
+def render_value(screen, value, unit, fonts, color, position, align="center", ui_scaler=None):
     """
-    Render a sensor value with its unit.
+    Render a sensor value with its unit using responsive design.
     
     Args:
         screen (pygame.Surface): The surface to draw on
@@ -83,6 +86,7 @@ def render_value(screen, value, unit, fonts, color, position, align="center"):
         color (tuple): RGB color tuple
         position (tuple): (x, y) position for text
         align (str): Alignment - "left", "center", or "right"
+        ui_scaler (UIScaler, optional): UI scaling system for responsive design
     
     Returns:
         pygame.Rect: The rectangle of the rendered text
@@ -94,12 +98,13 @@ def render_value(screen, value, unit, fonts, color, position, align="center"):
         fonts['large'] if 'large' in fonts else fonts['default'],
         color, 
         position,
-        align
+        align,
+        ui_scaler=ui_scaler
     )
 
-def render_note(screen, note, fonts, color, position):
+def render_note(screen, note, fonts, color, position, ui_scaler=None):
     """
-    Render a note or additional information.
+    Render a note or additional information with responsive design.
     
     Args:
         screen (pygame.Surface): The surface to draw on
@@ -107,6 +112,7 @@ def render_note(screen, note, fonts, color, position):
         fonts (dict): Dictionary of loaded fonts
         color (tuple): RGB color tuple
         position (tuple): (x, y) position for text
+        ui_scaler (UIScaler, optional): UI scaling system for responsive design
     
     Returns:
         pygame.Rect: The rectangle of the rendered text
@@ -119,12 +125,13 @@ def render_note(screen, note, fonts, color, position):
         note, 
         fonts['small'] if 'small' in fonts else fonts['default'],
         color, 
-        position
+        position,
+        ui_scaler=ui_scaler
     )
 
-def render_footer(screen, text, fonts, color, width, height, sidebar_width=0):
+def render_footer(screen, text, fonts, color, width, height, sidebar_width=0, ui_scaler=None):
     """
-    Render footer text at the bottom of the screen.
+    Render footer text at the bottom of the screen with responsive positioning.
     
     Args:
         screen (pygame.Surface): The surface to draw on
@@ -134,14 +141,20 @@ def render_footer(screen, text, fonts, color, width, height, sidebar_width=0):
         width (int): Screen width for centering
         height (int): Screen height for positioning
         sidebar_width (int): Width of the sidebar, if any
+        ui_scaler (UIScaler, optional): UI scaling system for responsive design
     
     Returns:
         pygame.Rect: The rectangle of the rendered text
     """
     font = fonts['small'] if 'small' in fonts else fonts['default']
     
-    # Position near the bottom of the screen
-    footer_y = height - (font.get_height() * 1.5)
+    # Use UIScaler for responsive footer positioning if available
+    if ui_scaler:
+        footer_margin = ui_scaler.margin("small")
+        footer_y = height - (font.get_height() * 1.5) - footer_margin
+    else:
+        # Fallback to original positioning
+        footer_y = height - (font.get_height() * 1.5)
     
     # Calculate center position relative to main content area
     main_content_center = sidebar_width + (width - sidebar_width) // 2
@@ -151,5 +164,6 @@ def render_footer(screen, text, fonts, color, width, height, sidebar_width=0):
         text, 
         font,
         color, 
-        (main_content_center, footer_y)
+        (main_content_center, footer_y),
+        ui_scaler=ui_scaler
     ) 

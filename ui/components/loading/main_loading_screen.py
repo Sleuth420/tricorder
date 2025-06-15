@@ -2,6 +2,7 @@ import pygame
 import logging
 import time
 import threading
+import random
 
 import config
 from data import sensors
@@ -9,7 +10,7 @@ from utils.loc import count_python_lines
 
 logger = logging.getLogger(__name__)
 
-def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage_text, ui_scaler=None):
+def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage_text, ui_scaler=None, scan_progress=0.0):
     """
     Draw the loading screen with splash logo, progress bar, and line count using responsive design.
     
@@ -23,6 +24,7 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
         total_lines (int): Total line count
         stage_text (str): Current stage description
         ui_scaler (UIScaler, optional): UI scaling system for responsive design
+        scan_progress (float): Progress of the scanning animation (0.0 to 1.0)
     """
     screen.fill(config.Theme.BACKGROUND)
     
@@ -73,7 +75,8 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
     
     lines_surface = None
     if total_lines > 0:
-        lines_text = f"Python Lines: {current_lines:,} / {total_lines:,}"
+        # Star Trek themed line count display
+        lines_text = f"Code Matrices: {current_lines:,} / {total_lines:,}"
         lines_surface = progress_font.render(lines_text, True, config.Theme.ACCENT)
     
     # Calculate total content height to check if it fits well
@@ -98,16 +101,38 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
         logger.info(f"🎨 LoadingScreen: screen={screen.get_width()}x{screen.get_height()}, logo_rect={logo_rect}")
         logger.info(f"🎨 LoadingScreen: bar={bar_width}x{bar_height}px at ({bar_x}, {bar_y}), content_height={content_height}px, bottom_space={bottom_space}px")
 
-    # Draw loading bar background
+    # Draw loading bar with improved design
+    # Outer border (green)
     bar_bg_rect = pygame.Rect(bar_x - 2, bar_y - 2, bar_width + 4, bar_height + 4)
     pygame.draw.rect(screen, config.Theme.FOREGROUND, bar_bg_rect)
-    pygame.draw.rect(screen, config.Theme.BACKGROUND, pygame.Rect(bar_x, bar_y, bar_width, bar_height))
     
-    # Draw loading bar fill
+    # Inner background (dark grey instead of pure black for better contrast)
+    bar_inner_rect = pygame.Rect(bar_x, bar_y, bar_width, bar_height)
+    pygame.draw.rect(screen, (20, 20, 20), bar_inner_rect)
+    
+    # Progress fill with softer green tone
     fill_width = int(bar_width * progress)
     if fill_width > 0:
         fill_rect = pygame.Rect(bar_x, bar_y, fill_width, bar_height)
-        pygame.draw.rect(screen, config.Theme.ACCENT, fill_rect)
+        # Use a softer green that complements the border
+        progress_color = (0, 180, 50)  # Softer green instead of harsh yellow
+        pygame.draw.rect(screen, progress_color, fill_rect)
+        
+        # More visible scanning effect
+        if scan_progress > 0 and progress < 1.0 and fill_width > 8:
+            scan_width = max(3, min(12, fill_width // 6))  # Wider scanning beam
+            scan_x = bar_x + max(0, min(fill_width - scan_width, int(fill_width * scan_progress)))
+            scan_rect = pygame.Rect(scan_x, bar_y, scan_width, bar_height)
+            # Bright white scanning beam for visibility
+            pygame.draw.rect(screen, (255, 255, 255), scan_rect)
+            
+            # Add a subtle glow effect around the scanning beam
+            if scan_width >= 6:
+                glow_rect = pygame.Rect(scan_x - 1, bar_y, scan_width + 2, bar_height)
+                glow_color = (120, 255, 120)  # Light green glow
+                pygame.draw.rect(screen, glow_color, glow_rect)
+                # Draw the white beam on top
+                pygame.draw.rect(screen, (255, 255, 255), scan_rect)
     
     # Draw progress percentage
     progress_rect = progress_surface.get_rect(center=(screen.get_width() // 2, bar_y + bar_height + progress_spacing))
@@ -129,11 +154,12 @@ class LoadingProgress:
     def __init__(self):
         self.current_lines = 0
         self.total_lines = 0
-        self.stage = "Initializing..."
+        self.stage = "Initializing tricorder systems..."
         self.complete = False
+        self.scan_progress = 0.0
         self.lock = threading.Lock()
     
-    def update(self, current_lines=None, total_lines=None, stage=None, complete=None):
+    def update(self, current_lines=None, total_lines=None, stage=None, complete=None, scan_progress=None):
         with self.lock:
             if current_lines is not None:
                 self.current_lines = current_lines
@@ -143,32 +169,74 @@ class LoadingProgress:
                 self.stage = stage
             if complete is not None:
                 self.complete = complete
+            if scan_progress is not None:
+                self.scan_progress = scan_progress
     
     def get_status(self):
         with self.lock:
-            return self.current_lines, self.total_lines, self.stage, self.complete
+            return self.current_lines, self.total_lines, self.stage, self.complete, self.scan_progress
 
 def loading_worker(progress_tracker):
-    """Background worker that performs the actual loading tasks."""
+    """Background worker that performs the actual loading tasks with Star Trek theming."""
     try:
-        # Stage 1: Count Python lines
-        progress_tracker.update(stage="Counting Python files...")
-        time.sleep(0.5)  # Small delay to show the stage
+        # Stage 1: Initialize tricorder systems
+        progress_tracker.update(stage="Initializing tricorder systems...")
+        time.sleep(0.8)
         
+        # Stage 2: Scanning subroutines (progressive line counting)
+        progress_tracker.update(stage="Scanning subroutines...")
+        time.sleep(0.3)
+        
+        # Get total lines first (quickly)
         total_lines, python_files = count_python_lines()
-        progress_tracker.update(total_lines=total_lines, current_lines=total_lines)
+        progress_tracker.update(total_lines=total_lines, current_lines=0)
         
-        # Stage 2: Initialize sensors (if not already done)
-        progress_tracker.update(stage="Initializing sensors...")
-        time.sleep(0.5)
+        # Simulate progressive scanning with realistic timing
+        scan_duration = 3.0  # Total time for scanning animation (slightly longer)
+        scan_start_time = time.time()
         
-        # Stage 3: Preparing system
-        progress_tracker.update(stage="Preparing system...")
-        time.sleep(0.5)
+        while True:
+            elapsed = time.time() - scan_start_time
+            if elapsed >= scan_duration:
+                break
+                
+            # Calculate progress through the scan
+            scan_progress = elapsed / scan_duration
+            
+            # Progressive line counting with some randomness for realism
+            if scan_progress < 0.85:  # Don't reach 100% until near the end
+                current_lines = int(total_lines * scan_progress * (0.7 + 0.3 * random.random()))
+            else:
+                current_lines = total_lines
+            
+            # Update with scanning beam animation (slower, more visible)
+            beam_progress = (scan_progress * 2.5) % 1.0  # Slower beam for better visibility
+            progress_tracker.update(
+                current_lines=current_lines, 
+                scan_progress=beam_progress,
+                stage="Analyzing code matrices..."
+            )
+            
+            time.sleep(0.08)  # Slightly faster updates for smoother animation
         
-        # Stage 4: Loading complete
-        progress_tracker.update(stage="Loading complete! Scanning the Galaxy...", complete=True)
+        # Ensure we end with full count
+        progress_tracker.update(current_lines=total_lines, scan_progress=0.0)
+        
+        # Stage 3: Initialize sensors
+        progress_tracker.update(stage="Calibrating sensor array...")
+        time.sleep(0.7)
+        
+        # Stage 4: Preparing system
+        progress_tracker.update(stage="Establishing subspace link...")
+        time.sleep(0.6)
+        
+        # Stage 5: Final preparation
+        progress_tracker.update(stage="Tricorder ready. Scanning the Galaxy...")
+        time.sleep(0.4)
+        
+        # Stage 6: Loading complete
+        progress_tracker.update(stage="All systems operational. Engage!", complete=True)
         
     except Exception as e:
         logger.error(f"Error in loading worker: {e}", exc_info=True)
-        progress_tracker.update(stage="Loading completed with errors", complete=True) 
+        progress_tracker.update(stage="System initialization completed with errors", complete=True) 

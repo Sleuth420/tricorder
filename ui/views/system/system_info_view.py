@@ -330,67 +330,84 @@ def _draw_tricorder_data_analysis(screen, animation_rect, sensor_values, fonts, 
     _draw_system_readout_text(screen, animation_rect, sensor_values, fonts, config_module, current_time)
 
 def _draw_data_stream_grid(screen, rect, current_time, config_module):
-    """Draw a grid of flowing data points like tricorder analysis."""
-    grid_spacing = 25
-    dot_size = 2
+    """Draw a grid of flowing data points like tricorder analysis - more prominent like other dots."""
+    grid_spacing = 20  # Tighter spacing for more dots
+    dot_size = 4  # Larger dots like in sensor view
     
     cols = rect.width // grid_spacing
-    rows = min(4, rect.height // grid_spacing)  # Limit rows to keep it subtle
+    rows = min(6, rect.height // grid_spacing)  # More rows for better coverage
     
     for row in range(rows):
         for col in range(cols):
-            # Stagger animation timing
-            offset = (row * cols + col) * 0.2
-            flow_progress = (current_time * 2.0 + offset) % 3.0
+            # Stagger animation timing with more variation
+            offset = (row * cols + col) * 0.3
+            flow_progress = (current_time * 1.8 + offset) % 4.0
             
-            if flow_progress < 1.5:  # Dot visible for half the cycle
+            if flow_progress < 2.5:  # Dot visible for longer duration
                 dot_x = rect.left + col * grid_spacing + 10
                 dot_y = rect.top + row * grid_spacing + 10
                 
-                # Fade in/out
-                if flow_progress < 0.5:
-                    alpha = flow_progress / 0.5
-                elif flow_progress > 1.0:
-                    alpha = (1.5 - flow_progress) / 0.5
+                # Improved fade in/out with flickering effect like sensor view
+                if flow_progress < 0.8:
+                    # Fade in
+                    alpha = flow_progress / 0.8
+                elif flow_progress < 1.8:
+                    # Stay bright with slight flicker
+                    base_alpha = 1.0
+                    flicker = 0.1 * (0.5 + 0.5 * pygame.math.Vector2(1, 0).rotate(current_time * 300 + offset * 100).x)
+                    alpha = base_alpha - flicker
                 else:
-                    alpha = 1.0
+                    # Fade out
+                    alpha = (2.5 - flow_progress) / 0.7
                 
-                dot_color = (0, int(60 * alpha), int(20 * alpha))
-                if dot_color[1] > 10:
+                # Use viking blue color like sensor view for consistency
+                viking_blue = config_module.Palette.VIKING_BLUE
+                dot_color = tuple(min(255, int(c * alpha)) for c in viking_blue)
+                
+                # Only draw if visible enough
+                if alpha > 0.15:
                     pygame.draw.circle(screen, dot_color, (dot_x, dot_y), dot_size)
 
 def _draw_system_readout_text(screen, rect, sensor_values, fonts, config_module, current_time):
-    """Draw rotating system readout information."""
+    """Draw rotating system readout information with enhanced visibility."""
     if rect.height < 80:
         return
     
     font_small = fonts['small']
     
-    # Rotate through different system info every 3 seconds
-    readout_interval = 3.0
-    readout_index = int(current_time / readout_interval) % 3
+    # Rotate through different system info every 4 seconds for better readability
+    readout_interval = 4.0
+    readout_index = int(current_time / readout_interval) % 4
     
     readout_texts = [
         "System Analysis: Nominal",
         "Data Processing: Active", 
-        "Sensor Array: Online"
+        "Sensor Array: Online",
+        "Tricorder Ready"
     ]
     
-    # Draw readout text with subtle glow
+    # Draw readout text with enhanced visibility
     readout_text = readout_texts[readout_index]
-    text_y = rect.bottom - 30
+    text_y = rect.bottom - 25  # Moved up slightly for better positioning
     
-    # Transition effect
+    # Smoother transition effect with longer stable period
     transition_progress = (current_time % readout_interval) / readout_interval
-    if transition_progress > 0.85:
-        alpha = (1.0 - transition_progress) / 0.15
-    elif transition_progress < 0.15:
-        alpha = transition_progress / 0.15
+    if transition_progress > 0.9:
+        # Fade out
+        alpha = (1.0 - transition_progress) / 0.1
+    elif transition_progress < 0.1:
+        # Fade in
+        alpha = transition_progress / 0.1
     else:
-        alpha = 1.0
+        # Stable with subtle pulsing
+        base_alpha = 1.0
+        pulse = 0.1 * (0.5 + 0.5 * pygame.math.Vector2(1, 0).rotate(current_time * 120).x)
+        alpha = base_alpha - pulse
     
     if alpha > 0.1:
-        text_color = tuple(int(c * alpha) for c in config_module.Theme.ACCENT)
+        # Use viking blue for consistency with dots
+        viking_blue = config_module.Palette.VIKING_BLUE
+        text_color = tuple(int(c * alpha) for c in viking_blue)
         text_surface = font_small.render(readout_text, True, text_color)
         text_x = rect.centerx - text_surface.get_width() // 2
         screen.blit(text_surface, (text_x, text_y)) 

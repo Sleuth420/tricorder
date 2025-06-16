@@ -337,14 +337,14 @@ class VerticalBarGraph:
                              (self.scale_line_x + self.tick_length, pointer_y),
                              6)
             
-            # Draw much smaller pointer triangle
-            pointer_base_x = self.scale_line_x + self.tick_length + 15  # Reduced from 20 to 15
-            triangle_size = max(8, self.pointer_height - 8)  # Much smaller (minimum 8px)
-            arrow_width = max(15, self.pointer_width - 15)  # Much narrower arrow
+            # Draw smaller arrow pointer - smaller than original but still an arrow
+            pointer_base_x = self.scale_line_x + self.tick_length + 10
+            triangle_size = 10  # Smaller than original but still visible
+            arrow_width = 20  # Smaller than original but still functional
             points = [
-                (pointer_base_x, pointer_y),
-                (pointer_base_x + arrow_width, pointer_y - triangle_size // 2),
-                (pointer_base_x + arrow_width, pointer_y + triangle_size // 2)
+                (pointer_base_x, pointer_y),  # Left point (tip)
+                (pointer_base_x + arrow_width, pointer_y - triangle_size // 2),  # Top right
+                (pointer_base_x + arrow_width, pointer_y + triangle_size // 2)   # Bottom right
             ]
             # Fill arrow with temperature zone color
             pygame.draw.polygon(self.screen, pointer_color, points)
@@ -354,12 +354,12 @@ class VerticalBarGraph:
                 max(0, pointer_color[1] - 40), 
                 max(0, pointer_color[2] - 40)
             ) if len(pointer_color) >= 3 else pointer_color
-            pygame.draw.polygon(self.screen, border_color, points, 3)
+            pygame.draw.polygon(self.screen, border_color, points, 2)
             
             # Draw moving current temperature number next to the arrow
             temp_text = formatted_text if formatted_text else f"{current_value:.1f}"
             temp_surface = self.font_medium.render(temp_text, True, self.config.Theme.WHITE)
-            temp_rect = temp_surface.get_rect(midleft=(pointer_base_x + arrow_width + 10, pointer_y))
+            temp_rect = temp_surface.get_rect(midleft=(pointer_base_x + arrow_width + 8, pointer_y))
             self.screen.blit(temp_surface, temp_rect)
 
         # Debug: Draw bounding box

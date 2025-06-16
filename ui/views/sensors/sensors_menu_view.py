@@ -46,12 +46,12 @@ def _draw_enhanced_sensors_content(screen, main_content_rect, app_state, sensor_
     """
     # Use UIScaler for responsive spacing if available
     if ui_scaler:
-        title_spacing = ui_scaler.margin("medium")
+        title_spacing = ui_scaler.margin("large")
         content_spacing = ui_scaler.margin("large")
         section_spacing = ui_scaler.margin("medium")
     else:
         # Fallback to proportional values
-        title_spacing = max(15, main_content_rect.height // 20)
+        title_spacing = max(25, main_content_rect.height // 15)
         content_spacing = max(25, main_content_rect.height // 15)
         section_spacing = max(20, main_content_rect.height // 18)
     
@@ -80,10 +80,6 @@ def _draw_enhanced_sensors_content(screen, main_content_rect, app_state, sensor_
         if sensor_key and sensor_key in sensor_values:
             _draw_enhanced_sensor_preview(screen, main_content_rect, content_start_y, sensor_key, 
                                         sensor_values[sensor_key], fonts, config_module, ui_scaler, current_time)
-        else:
-            _draw_animated_instructions(screen, main_content_rect, content_start_y, fonts, config_module, ui_scaler, current_time)
-    else:
-        _draw_animated_instructions(screen, main_content_rect, content_start_y, fonts, config_module, ui_scaler, current_time)
     
     # Enhanced sensor status with animations
     _draw_enhanced_sensor_status(screen, main_content_rect, sensor_values, fonts, config_module, ui_scaler, current_time)
@@ -188,7 +184,7 @@ def _draw_sensor_data_visualization(screen, value_rect, sensor_data, current_tim
     # Draw animated data bars on sides of value
     bar_count = 5
     bar_width = 3
-    bar_spacing = 6
+    bar_spacing = 12
     bar_height_base = 8
     
     for i in range(bar_count):
@@ -349,8 +345,8 @@ def _draw_sensor_data_streams(screen, main_content_rect, current_time, config_mo
     stream_length = 6
     dot_size = 2
     
-    # Top-left corner stream
-    start_x = main_content_rect.left + corner_margin
+    # Top-right corner stream
+    start_x = main_content_rect.right - corner_margin - 30
     start_y = main_content_rect.top + corner_margin + 40  # Below title area
     
     for i in range(stream_length):

@@ -107,12 +107,27 @@ def draw_graph(screen, history, rect, color, min_val=None, max_val=None, sensor_
         pygame.draw.line(screen, color_grid, (rect.left, y), (rect.right, y), 1)
     
     # Vertical grid lines (time divisions)
-    time_divisions = 4 # Number of vertical divisions
-    if num_points > 1 and time_divisions > 0:
-        spacing_x_grid = rect.width / time_divisions
-        for i in range(1, time_divisions):
-            x = rect.left + i * spacing_x_grid
-            pygame.draw.line(screen, color_grid, (x, rect.top), (x, rect.bottom), 1)
+    # Base time divisions on GRAPH_HISTORY_SIZE for meaningful time markers
+    history_size = config_module.GRAPH_HISTORY_SIZE
+    if history_size <= 10:
+        time_interval = 2  # Every 2 seconds for short histories
+    elif history_size <= 30:
+        time_interval = 5  # Every 5 seconds for 30s history
+    elif history_size <= 60:
+        time_interval = 10  # Every 10 seconds for 60s history
+    else:
+        time_interval = 15  # Every 15 seconds for longer histories
+    
+    # Calculate how many grid lines we need based on time intervals
+    num_time_markers = history_size // time_interval
+    if num_time_markers > 0 and num_points > 1:
+        for i in range(1, num_time_markers + 1):
+            # Calculate x position based on time, not equal divisions
+            time_position = i * time_interval
+            x_ratio = time_position / history_size
+            x = rect.left + x_ratio * rect.width
+            if x < rect.right:  # Don't draw on the right border
+                pygame.draw.line(screen, color_grid, (x, rect.top), (x, rect.bottom), 1)
 
     # Draw Y-axis (simple line on the left)
     pygame.draw.line(screen, color_axis, (rect.left, rect.top), (rect.left, rect.bottom), 1)

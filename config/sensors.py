@@ -23,10 +23,10 @@ INFO_BLUETOOTH_STATUS = "BLUETOOTH_STATUS"
 INFO_BLUETOOTH_DEVICE = "BLUETOOTH_DEVICE"
 
 # -- Sensor Modes --
-# Environmental sensors for the sensors menu (user can cycle through these)
+# Environmental/physical sensors for the sensors menu and sweep (user can cycle through these)
+# These are actual sensor readings from the Sense HAT only
 SENSOR_MODES = [
-    SENSOR_TEMPERATURE, SENSOR_HUMIDITY, SENSOR_PRESSURE, SENSOR_ORIENTATION, SENSOR_ACCELERATION, 
-    SENSOR_CLOCK, SENSOR_CPU_USAGE, SENSOR_MEMORY_USAGE, SENSOR_DISK_USAGE
+    SENSOR_TEMPERATURE, SENSOR_HUMIDITY, SENSOR_PRESSURE, SENSOR_ORIENTATION, SENSOR_ACCELERATION
 ]
 
 # System sensors for the systems view (displayed as status bars)
@@ -40,8 +40,12 @@ ALL_SENSOR_MODES = [
     SENSOR_CLOCK, SENSOR_CPU_USAGE, SENSOR_MEMORY_USAGE, SENSOR_DISK_USAGE, SENSOR_VOLTAGE, SENSOR_BATTERY
 ]
 
+# -- Sensor Update Frequencies --
+# Default update interval for sensors (seconds)
+DEFAULT_SENSOR_UPDATE_INTERVAL = 1.0
+
 # -- Sensor Display Properties (New consolidated structure) --
-# Defines display name, units, graph type, and specific graph config for each sensor mode
+# Defines display name, units, graph type, specific graph config, and update frequency for each sensor mode
 # This will drive data_updater.py formatting and ui/views/sensor_view.py graph choices
 SENSOR_DISPLAY_PROPERTIES = {
     SENSOR_TEMPERATURE: {
@@ -49,6 +53,7 @@ SENSOR_DISPLAY_PROPERTIES = {
         "units": "°C", # Changed from C
         "graph_type": "VERTICAL_BAR", # "LINE", "VERTICAL_BAR", "NONE"
         "color_key": "SIDEBAR_HUMID", # For AppState MenuItem color
+        "update_interval": 0.5,  # Update every 0.5 seconds for responsive vertical bar
         "vertical_graph_config": {
             "min_val": 0,
             "max_val": 50,
@@ -67,6 +72,7 @@ SENSOR_DISPLAY_PROPERTIES = {
         "units": "%",
         "graph_type": "VERTICAL_BAR",
         "color_key": "SIDEBAR_TEMP",
+        "update_interval": 0.5,  # Update every 0.5 seconds for responsive vertical bar
         "vertical_graph_config": {
             "min_val": 0,
         "max_val": 100,
@@ -88,6 +94,7 @@ SENSOR_DISPLAY_PROPERTIES = {
         "units": "mbar", # Changed from hPa for consistency if preferred
         "graph_type": "VERTICAL_BAR",
         "color_key": "SIDEBAR_PRESS",
+        "update_interval": 0.5,  # Update every 0.5 seconds for responsive vertical bar
         "vertical_graph_config": {
         "min_val": 950,
         "max_val": 1050,
@@ -109,6 +116,7 @@ SENSOR_DISPLAY_PROPERTIES = {
         "units": "deg", # Pitch/Roll/Yaw in degrees
         "graph_type": "LINE", # Use line graph for orientation (e.g., pitch)
         "color_key": "SIDEBAR_ORIENT",
+        "update_interval": 1.0,  # Update every 1 second for line graph data
         # No vertical_graph_config needed if graph_type is LINE
         "range_override": (-180, 180), # Example range for pitch/roll for line graph
         "component_to_graph": "pitch",
@@ -120,6 +128,7 @@ SENSOR_DISPLAY_PROPERTIES = {
         "graph_type": "LINE", # Using line graph for Z component over time
         "component_to_graph": "z", # Using Z component for inertia
         "color_key": "SIDEBAR_ACCEL",
+        "update_interval": 1.0,  # Update every 1 second for line graph data
         "range_override": (-2, 2), # For line graph of Z component
         "precision": 2
     },
@@ -128,6 +137,7 @@ SENSOR_DISPLAY_PROPERTIES = {
         "units": "",
         "graph_type": "NONE",
         "color_key": "SIDEBAR_ALL", # Example color
+        "update_interval": 1.0,  # Update every 1 second for clock display
         "range_override": None,
         "precision": 0
     },
@@ -136,6 +146,7 @@ SENSOR_DISPLAY_PROPERTIES = {
         "units": "%",
         "graph_type": "VERTICAL_BAR", # Changed from LINE to VERTICAL_BAR
         "color_key": "SIDEBAR_SYSTEM", # Example color
+        "update_interval": 0.5,  # Update every 0.5 seconds for responsive system monitoring
         "vertical_graph_config": {
              "min_val": 0, "max_val": 100, 
              "normal_range": (0, 75),      # Normal CPU usage (GREEN zone)
@@ -155,6 +166,7 @@ SENSOR_DISPLAY_PROPERTIES = {
         "units": "%",
         "graph_type": "VERTICAL_BAR", # Changed from LINE to VERTICAL_BAR
         "color_key": "SIDEBAR_SYSTEM", # Example color
+        "update_interval": 0.5,  # Update every 0.5 seconds for responsive system monitoring
          "vertical_graph_config": {
              "min_val": 0, "max_val": 100, 
              "normal_range": (0, 75),      # Normal memory usage (GREEN zone)
@@ -174,6 +186,7 @@ SENSOR_DISPLAY_PROPERTIES = {
         "units": "%",
         "graph_type": "VERTICAL_BAR", # Changed from LINE to VERTICAL_BAR
         "color_key": "SIDEBAR_SYSTEM", # Example color
+        "update_interval": 2.0,  # Update every 2 seconds (disk usage changes slowly)
          "vertical_graph_config": {
              "min_val": 0, "max_val": 100, 
              "normal_range": (0, 80),      # Normal disk usage (GREEN zone)
@@ -193,6 +206,7 @@ SENSOR_DISPLAY_PROPERTIES = {
         "units": "V",
         "graph_type": "NONE", # Don't graph voltage, just display
         "color_key": "SIDEBAR_SYSTEM",
+        "update_interval": 2.0,  # Update every 2 seconds (voltage changes slowly)
         "range_override": None,
         "precision": 2
     },
@@ -201,6 +215,7 @@ SENSOR_DISPLAY_PROPERTIES = {
         "units": "%",
         "graph_type": "NONE", # Don't graph battery, just display
         "color_key": "SIDEBAR_SYSTEM",
+        "update_interval": 5.0,  # Update every 5 seconds (battery changes very slowly)
         "range_override": None,
         "precision": 0
     }

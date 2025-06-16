@@ -171,19 +171,21 @@ def _draw_main_menu_content(screen, main_content_rect, sensor_values, fonts, con
     if logo_surface:
         logo_rect = logo_surface.get_rect(centerx=main_content_rect.centerx, y=logo_display_y)
         
-        # Add subtle fade transition effect during logo changes
-        fade_duration = 1.0  # 1 second fade
+        # Improved fade transition effect with smoother timing
+        fade_duration = 1.5  # Longer, smoother fade duration
         cycle_progress = (current_time % logo_cycle_interval) / logo_cycle_interval
         
-        # Fade out in last second, fade in during first second
+        # Smoother fade curve using sine function
         if cycle_progress > (1.0 - fade_duration / logo_cycle_interval):
-            # Fading out
+            # Fading out with smooth curve
             fade_progress = (cycle_progress - (1.0 - fade_duration / logo_cycle_interval)) / (fade_duration / logo_cycle_interval)
-            alpha = int(255 * (1.0 - fade_progress))
+            # Use sine curve for smoother fade
+            alpha = int(255 * (0.5 + 0.5 * pygame.math.Vector2(1, 0).rotate((1.0 - fade_progress) * 90).x))
         elif cycle_progress < (fade_duration / logo_cycle_interval):
-            # Fading in
+            # Fading in with smooth curve
             fade_progress = cycle_progress / (fade_duration / logo_cycle_interval)
-            alpha = int(255 * fade_progress)
+            # Use sine curve for smoother fade
+            alpha = int(255 * (0.5 + 0.5 * pygame.math.Vector2(1, 0).rotate(fade_progress * 90).x))
         else:
             alpha = 255
         
@@ -192,12 +194,14 @@ def _draw_main_menu_content(screen, main_content_rect, sensor_values, fonts, con
             logo_surface = logo_surface.copy()
             logo_surface.set_alpha(alpha)
         
-        # Add subtle "breathing" scale effect
-        breathing_cycle = 8.0  # 8 second breathing cycle
+        # Improved breathing effect with smoother, less frequent scaling
+        breathing_cycle = 12.0  # Slower, more relaxed breathing cycle
         breathing_progress = (current_time % breathing_cycle) / breathing_cycle
-        breathing_scale = 1.0 + (0.02 * (0.5 + 0.5 * pygame.math.Vector2(1, 0).rotate(breathing_progress * 360).x))
+        # Reduced scale range and smoother curve
+        breathing_scale = 1.0 + (0.015 * (0.5 + 0.5 * pygame.math.Vector2(1, 0).rotate(breathing_progress * 360).x))
         
-        if breathing_scale != 1.0:
+        # Only apply breathing when not fading to avoid compound scaling issues
+        if alpha >= 240 and breathing_scale != 1.0:
             # Scale the logo slightly for breathing effect
             new_width = int(logo_surface.get_width() * breathing_scale)
             new_height = int(logo_surface.get_height() * breathing_scale)

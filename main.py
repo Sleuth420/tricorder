@@ -24,7 +24,7 @@ from models.reading_history import ReadingHistory
 from data import sensors
 from data import system_info
 # Import the new data updater function
-from data.data_updater import update_all_data
+from data.data_updater import update_all_data, update_sensors_by_schedule
 from ui.display_manager import init_display, update_display
 from input.input_handler import process_input, init_joystick
 from utils.error_handling import display_critical_error_on_screen
@@ -151,6 +151,19 @@ def main():
 
         sensor_values = {}
         running = True
+        last_sensor_update_times = {}  # Track when we last updated each sensor
+        # Initialize last update times for all sensors
+        for sensor_key in config.ALL_SENSOR_MODES:
+            last_sensor_update_times[sensor_key] = 0
+        
+        # Log sensor update intervals for debugging
+        logger.info("Sensor update intervals:")
+        for sensor_key in config.ALL_SENSOR_MODES:
+            display_props = config.SENSOR_DISPLAY_PROPERTIES.get(sensor_key, {})
+            interval = display_props.get("update_interval", config.DEFAULT_SENSOR_UPDATE_INTERVAL)
+            graph_type = display_props.get("graph_type", "NONE")
+            logger.info(f"  {sensor_key}: {interval}s ({graph_type})")
+        
         logger.info("Entering main event loop...")
 
         # Main Application Loop
@@ -185,12 +198,16 @@ def main():
                 elif app_state.current_state == STATE_SNAKE_ACTIVE and app_state.active_snake_game:
                     app_state.game_manager.update_snake(app_state.keys_held)
 
-                # 3. Read Sensor Data
+                # 3. Read Sensor Data (per-sensor scheduled updates)
                 if app_state.current_state not in [STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE]:
                     # Only update sensors if not frozen
                     if not app_state.is_frozen:
-                        app_state.last_reading_time = current_time
-                        update_all_data(sensor_values, reading_history, config)
+                        updated_sensors = update_sensors_by_schedule(
+                            sensor_values, reading_history, config, 
+                            current_time, last_sensor_update_times
+                        )
+                        if updated_sensors:
+                            app_state.last_reading_time = current_time
                 
                 # 4. Update Display
                 update_display(screen, app_state, sensor_values, reading_history, fonts, config, ui_scaler)

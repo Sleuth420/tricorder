@@ -59,6 +59,123 @@ def _format_sensor_value(sensor_key, raw_value, display_props):
 
     return {"text": text_val, "unit": unit, "note": note, "value": numeric_val}
 
+def update_sensors_by_schedule(sensor_values, reading_history, app_config, current_time, last_update_times):
+    """
+    Fetches data from sensors based on their individual update schedules.
+    Only updates sensors whose update interval has elapsed.
+
+    Args:
+        sensor_values (dict): Dictionary to store current formatted sensor values.
+        reading_history (ReadingHistory): Object to store historical readings.
+        app_config (module): Configuration module (passed as `config` from main).
+        current_time (float): Current timestamp.
+        last_update_times (dict): Dictionary tracking last update time for each sensor.
+    
+    Returns:
+        list: List of sensor keys that were updated.
+    """
+    updated_sensors = []
+    
+    # Data fetching functions map (Sensor Key -> Function to call)
+    data_fetch_map = {
+        app_config.SENSOR_TEMPERATURE: sensors.get_temperature,
+        app_config.SENSOR_HUMIDITY: sensors.get_humidity,
+        app_config.SENSOR_PRESSURE: sensors.get_pressure,
+        app_config.SENSOR_ORIENTATION: sensors.get_orientation,
+        app_config.SENSOR_ACCELERATION: sensors.get_acceleration,
+        app_config.SENSOR_CLOCK: system_info.get_current_time,
+        app_config.SENSOR_CPU_USAGE: lambda: system_info.get_cpu_usage()[0],
+        app_config.SENSOR_MEMORY_USAGE: lambda: system_info.get_memory_usage()[0],
+        app_config.SENSOR_DISK_USAGE: lambda: system_info.get_disk_usage()[0],
+        app_config.SENSOR_VOLTAGE: system_info.get_voltage_info,
+        app_config.SENSOR_BATTERY: lambda: system_info.get_battery_info()[0],
+    }
+
+    # Check each sensor's update schedule
+    for sensor_key in app_config.ALL_SENSOR_MODES:
+        display_props = app_config.SENSOR_DISPLAY_PROPERTIES.get(sensor_key, {})
+        update_interval = display_props.get("update_interval", app_config.DEFAULT_SENSOR_UPDATE_INTERVAL)
+        
+        # Check if enough time has passed for this sensor
+        if (current_time - last_update_times[sensor_key]) >= update_interval:
+            raw_value = None
+            fetch_func = data_fetch_map.get(sensor_key)
+            
+            if fetch_func:
+                try:
+                    raw_value = fetch_func()
+                    last_update_times[sensor_key] = current_time
+                    updated_sensors.append(sensor_key)
+                except Exception as e:
+                    logger.error(f"Error fetching data for {sensor_key}: {e}", exc_info=True)
+                    raw_value = None
+            else:
+                logger.warning(f"No data fetch function defined for sensor mode: {sensor_key}")
+
+            # Format the value and update sensor_values dict
+            formatted_data = _format_sensor_value(sensor_key, raw_value, display_props)
+            sensor_values[sensor_key] = formatted_data
+            
+            # Add to reading history
+            history_val_to_add = formatted_data['value']
+            if sensor_key == app_config.SENSOR_ACCELERATION and isinstance(raw_value, dict):
+                history_val_to_add = raw_value
+            
+            reading_history.add_reading(sensor_key, history_val_to_add)
+
+    # Update network information (always update these as they're not part of the scheduled sensors)
+    _update_network_info(sensor_values, app_config)
+    
+    # Update special notes for system sensors that were updated
+    _update_sensor_notes(sensor_values, app_config, updated_sensors)
+    
+    if updated_sensors:
+        logger.debug(f"Updated sensors: {updated_sensors}")
+    
+    return updated_sensors
+
+def _update_network_info(sensor_values, app_config):
+    """Update network information (WiFi, Bluetooth)."""
+    # WiFi Info
+    wifi_status_val, wifi_ssid_val = system_info.get_wifi_info()
+    sensor_values[app_config.INFO_WIFI_STATUS] = {"text": wifi_status_val, "unit": "", "note": "", "value": None}
+    sensor_values[app_config.INFO_WIFI_SSID] = {"text": wifi_ssid_val, "unit": "", "note": "", "value": None}
+
+    # Bluetooth Info
+    bluetooth_status_val, bluetooth_device_val = system_info.get_bluetooth_info()
+    sensor_values[app_config.INFO_BLUETOOTH_STATUS] = {"text": bluetooth_status_val, "unit": "", "note": "", "value": None}
+    sensor_values[app_config.INFO_BLUETOOTH_DEVICE] = {"text": bluetooth_device_val, "unit": "", "note": "", "value": None}
+
+def _update_sensor_notes(sensor_values, app_config, updated_sensors):
+    """Update special notes for sensors that were just updated."""
+    # CPU temperature note
+    if app_config.SENSOR_CPU_USAGE in updated_sensors and app_config.SENSOR_CPU_USAGE in sensor_values:
+        _, cpu_info_details = system_info.get_cpu_usage()
+        if cpu_info_details:
+            info_type, info_value = cpu_info_details
+            if info_type == "temperature":
+                sensor_values[app_config.SENSOR_CPU_USAGE]["note"] = f"Temp: {info_value:.1f}°C"
+            elif info_type == "cores":
+                sensor_values[app_config.SENSOR_CPU_USAGE]["note"] = f"Cores: {info_value}"
+
+    # Memory usage note
+    if app_config.SENSOR_MEMORY_USAGE in updated_sensors and app_config.SENSOR_MEMORY_USAGE in sensor_values:
+        _, mem_used, mem_total = system_info.get_memory_usage()
+        if mem_used is not None and mem_total is not None:
+            sensor_values[app_config.SENSOR_MEMORY_USAGE]["note"] = f"{mem_used:.0f}MB/{mem_total:.0f}MB"
+    
+    # Disk usage note
+    if app_config.SENSOR_DISK_USAGE in updated_sensors and app_config.SENSOR_DISK_USAGE in sensor_values:
+        _, disk_used, disk_total = system_info.get_disk_usage()
+        if disk_used is not None and disk_total is not None:
+            sensor_values[app_config.SENSOR_DISK_USAGE]["note"] = f"{disk_used:.1f}GB/{disk_total:.1f}GB"
+
+    # Battery status note
+    if app_config.SENSOR_BATTERY in updated_sensors and app_config.SENSOR_BATTERY in sensor_values:
+        _, battery_status = system_info.get_battery_info()
+        if battery_status:
+            sensor_values[app_config.SENSOR_BATTERY]["note"] = battery_status
+
 def update_all_data(sensor_values, reading_history, app_config):
     """
     Fetches data from all configured sources and updates

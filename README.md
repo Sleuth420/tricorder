@@ -369,3 +369,6 @@ If you encounter Sense HAT import errors after following the setup:
 ### General
 - **Import errors**: Ensure virtual environment is activated and dependencies are installed
 - **Performance issues**: Check system resources and close unnecessary applications
+
+### Licenses
+All licenses and attributions are in the LICENSE.txt file.

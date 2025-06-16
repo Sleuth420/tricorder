@@ -92,15 +92,22 @@ class SchematicsManager:
         self.auto_rotation_mode = True
         self.manual_rotation_speed = 5.0  # Degrees per keypress
         
+        # Zoom settings
+        self.zoom_level = config_module.SCHEMATICS_ZOOM_DEFAULT
+        self.zoom_min = config_module.SCHEMATICS_ZOOM_MIN
+        self.zoom_max = config_module.SCHEMATICS_ZOOM_MAX
+        self.zoom_step = config_module.SCHEMATICS_ZOOM_STEP
+        self.zoom_fast_step = config_module.SCHEMATICS_ZOOM_FAST_STEP
+        
         # Available schematics models
         self.schematics_models = {
-            'test_cube': self._generate_test_cube(),
             'worf': self._generate_worf_model(),
-            'apollo_1570': self._generate_apollo_model()
+            'apollo_1570': self._generate_apollo_model(),
+            'apollo_1701_refit': self._generate_apollo_1701_refit_model()
         }
         
         # Current active model
-        self.current_schematics_model = 'test_cube'
+        self.current_schematics_model = 'worf'
         
         # Initialize renderers
         self.wireframe_renderer = Simple3DRenderer(screen_width, screen_height)
@@ -130,23 +137,6 @@ class SchematicsManager:
     
     # UIScaler removed - UI concerns handled by display_manager.py
     
-    def _generate_test_cube(self):
-        """Generate a simple wireframe cube for testing."""
-        return {
-            "name": "Test Cube",
-            "type": "wireframe",
-            "vertices": [
-                (-1, -1, -1), (1, -1, -1), (1, 1, -1), (-1, 1, -1),  # Back face
-                (-1, -1, 1), (1, -1, 1), (1, 1, 1), (-1, 1, 1)   # Front face
-            ],
-            "edges": [
-                (0, 1), (1, 2), (2, 3), (3, 0),  # Back face
-                (4, 5), (5, 6), (6, 7), (7, 4),  # Front face
-                (0, 4), (1, 5), (2, 6), (3, 7)   # Connecting edges
-            ],
-            "description": "Wireframe test cube"
-        }
-    
     def _generate_worf_model(self):
         """Generate Worf 3D model definition."""
         return {
@@ -171,6 +161,19 @@ class SchematicsManager:
             "vertices": [],  # Will be loaded from OBJ file
             "edges": [],
             "description": "Apollo-class light cruiser from Star Trek"
+        }
+    
+    def _generate_apollo_1701_refit_model(self):
+        """Generate Apollo NCC-1701 Refit OpenGL model definition."""
+        return {
+            "name": "Apollo NCC-1701 Refit",
+            "type": "opengl_model",
+            "model_key": "apollo_1701_refit",
+            "file_path": "assets/apollo_nc1701_refit/Untitled.obj",
+            "implemented": True,
+            "vertices": [],  # Will be loaded from OBJ file
+            "edges": [],
+            "description": "Apollo NCC-1701 Refit from Star Trek"
         }
     
     def set_schematics_model(self, schematics_model_key, loading_operation=None):
@@ -394,6 +397,27 @@ class SchematicsManager:
         self.roll = self.roll % 360
         self.yaw = self.yaw % 360
     
+    def zoom_in(self, fast=False):
+        """Zoom in on the 3D model."""
+        step = self.zoom_fast_step if fast else self.zoom_step
+        self.zoom_level = min(self.zoom_max, self.zoom_level + step)
+        logger.debug(f"Zoom in: level={self.zoom_level:.2f}")
+    
+    def zoom_out(self, fast=False):
+        """Zoom out from the 3D model."""
+        step = self.zoom_fast_step if fast else self.zoom_step
+        self.zoom_level = max(self.zoom_min, self.zoom_level - step)
+        logger.debug(f"Zoom out: level={self.zoom_level:.2f}")
+    
+    def reset_zoom(self):
+        """Reset zoom to default level."""
+        self.zoom_level = self.config.SCHEMATICS_ZOOM_DEFAULT
+        logger.debug(f"Zoom reset to default: {self.zoom_level}")
+    
+    def get_zoom_level(self):
+        """Get current zoom level."""
+        return self.zoom_level
+    
     def render_schematics(self, screen, fonts, config_module, pause_menu_active=False, pause_menu_index=0):
         """Render the current schematics model to the screen."""
         if self.current_schematics_model not in self.schematics_models:
@@ -412,9 +436,11 @@ class SchematicsManager:
                 self._render_model_file(screen, schematics_model, fonts, config_module)
             else:
                 self._render_not_implemented(screen, schematics_model, fonts, config_module)
-        else:
-            # Default wireframe rendering for test_cube
+        elif schematics_model.get('type') == 'wireframe':
             self._render_wireframe_model(screen, schematics_model, fonts, config_module)
+        else:
+            # Unknown model type
+            self._render_not_implemented(screen, schematics_model, fonts, config_module)
     
     def _render_wireframe_model(self, screen, schematics_model, fonts, config_module):
         """Render wireframe model (test_cube)."""
@@ -534,7 +560,8 @@ class SchematicsManager:
             # Render the model with text overlay and pause menu
             success = self.model_renderer.render(
                 self.pitch, self.roll, self.yaw, fonts, schematics_model,
-                pause_menu_active, pause_menu_index, self.auto_rotation_mode
+                pause_menu_active, pause_menu_index, self.auto_rotation_mode,
+                zoom_level=self.zoom_level
             )
             
             if not success:
@@ -624,6 +651,11 @@ class SchematicsManager:
         rotation_text = f"Pitch: {self.pitch:.1f}° Roll: {self.roll:.1f}° Yaw: {self.yaw:.1f}°"
         rotation_surface = info_font.render(rotation_text, True, config_module.Theme.FOREGROUND)
         screen.blit(rotation_surface, (10, screen.get_height() - 50))
+        
+        # Zoom info
+        zoom_text = f"Zoom: {self.zoom_level:.1f}x"
+        zoom_surface = info_font.render(zoom_text, True, config_module.Theme.ACCENT)
+        screen.blit(zoom_surface, (10, screen.get_height() - 70))
         
         # Mode info
         mode_text = f"Mode: {'Auto (Sensor)' if self.auto_rotation_mode else 'Manual'}"

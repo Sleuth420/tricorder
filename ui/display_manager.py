@@ -157,8 +157,8 @@ def _needs_opengl_mode(app_state):
         current_schematics_info = app_state.schematics_manager.get_current_schematics_info()
         if current_schematics_info:
             model_key = current_schematics_info.get('model_key')
-                    # OpenGL models need OpenGL mode
-        if model_key in ['worf', 'apollo_1570']:
+            # OpenGL models need OpenGL mode
+            if model_key in ['worf', 'apollo_1570', 'apollo_1701_refit']:
                 return True
     return False
 
@@ -364,5 +364,5 @@ def _render_opengl_schematics(screen, app_state, fonts, config_module, ui_scaler
     
     # Use the normal schematics view which handles all controls,
     # but the schematics manager will automatically use OpenGL rendering
-    # when the current model is 'worf' or 'apollo_1570'
+    # when the current model is 'worf', 'apollo_1570', or 'apollo_1701_refit'
     draw_schematics_view(screen, app_state, fonts, config_module, ui_scaler)

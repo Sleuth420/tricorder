@@ -236,9 +236,9 @@ class OpenGLModelRenderer:
                 pass
         self.loaded_textures.clear()
     
-    def render(self, pitch, roll, yaw, fonts=None, schematics_info=None, pause_menu_active=False, pause_menu_index=0, auto_rotation_mode=True):
+    def render(self, pitch, roll, yaw, fonts=None, schematics_info=None, pause_menu_active=False, pause_menu_index=0, auto_rotation_mode=True, zoom_level=1.0):
         """
-        Render the loaded model with given rotation.
+        Render the loaded model with given rotation and zoom.
         
         Args:
             pitch, roll, yaw: Rotation angles in degrees
@@ -247,6 +247,7 @@ class OpenGLModelRenderer:
             pause_menu_active: Whether pause menu is shown
             pause_menu_index: Selected pause menu index
             auto_rotation_mode: Whether in auto or manual rotation mode
+            zoom_level: Zoom level (1.0 = normal, >1.0 = zoomed in, <1.0 = zoomed out)
             
         Returns:
             bool: True if rendering successful
@@ -269,12 +270,12 @@ class OpenGLModelRenderer:
                 self._draw_pause_menu_overlay(fonts, pause_menu_index, pitch, roll, yaw, auto_rotation_mode)
             else:
                 # Draw the 3D model
-                self._render_model(pitch, roll, yaw)
+                self._render_model(pitch, roll, yaw, zoom_level)
                 
                 # Draw overlays
                 if fonts:
                     if schematics_info:
-                        self._draw_text_overlay(fonts, schematics_info, pitch, roll, yaw)
+                        self._draw_text_overlay(fonts, schematics_info, pitch, roll, yaw, zoom_level)
                     self._draw_footer_controls(fonts)
             
             return True
@@ -284,8 +285,8 @@ class OpenGLModelRenderer:
             self.initialized = False
             return False
     
-    def _render_model(self, pitch, roll, yaw):
-        """Render the actual 3D model."""
+    def _render_model(self, pitch, roll, yaw, zoom_level=1.0):
+        """Render the actual 3D model with zoom."""
         if not self.loaded_model:
             return
             
@@ -297,8 +298,10 @@ class OpenGLModelRenderer:
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         
-        # Move camera back
-        glTranslatef(0.0, 0.0, -5.0)
+        # Move camera back - adjust distance based on zoom level
+        # Higher zoom = closer camera (smaller distance)
+        camera_distance = 5.0 / zoom_level
+        glTranslatef(0.0, 0.0, -camera_distance)
         
         # Apply rotations (pitch, roll, yaw are already in degrees)
         glRotatef(pitch, 1.0, 0.0, 0.0)
@@ -312,7 +315,18 @@ class OpenGLModelRenderer:
         
         # Render the model
         if self.display_list:
-            glCallList(self.display_list)
+            try:
+                glCallList(self.display_list)
+            except Exception as e:
+                logger.warning(f"Display list failed, falling back to immediate mode: {e}")
+                # Delete the broken display list
+                try:
+                    glDeleteLists(self.display_list, 1)
+                except:
+                    pass
+                self.display_list = None
+                # Render using immediate mode instead
+                self._render_immediate_mode()
         else:
             self._render_immediate_mode()
     
@@ -321,13 +335,24 @@ class OpenGLModelRenderer:
         if not self.loaded_model:
             return
             
-        self.display_list = glGenLists(1)
-        glNewList(self.display_list, GL_COMPILE)
-        
-        self._render_immediate_mode()
-        
-        glEndList()
-        logger.info("Display list created for model")
+        try:
+            self.display_list = glGenLists(1)
+            glNewList(self.display_list, GL_COMPILE)
+            
+            self._render_immediate_mode()
+            
+            glEndList()
+            logger.info("Display list created for model")
+        except Exception as e:
+            logger.warning(f"Failed to create display list (model too complex): {e}")
+            logger.info("Falling back to immediate mode rendering")
+            # Clean up any partial display list
+            if self.display_list:
+                try:
+                    glDeleteLists(self.display_list, 1)
+                except:
+                    pass
+                self.display_list = None
     
     def _render_immediate_mode(self):
         """Render model using immediate mode OpenGL."""
@@ -386,12 +411,12 @@ class OpenGLModelRenderer:
                         new_texture_id = self.loaded_textures[face_material]
                     else:
                         # Try to load texture now (OpenGL context is active)
-                        logger.info(f"Loading texture for material: {face_material}")
+                        logger.debug(f"Loading texture for material: {face_material}")
                         new_texture_id = self._load_material_texture(face_material, mat)
                         if new_texture_id:
                             self.loaded_textures[face_material] = new_texture_id
                             texture_load_count += 1
-                            logger.info(f"Texture loaded ({texture_load_count}/{total_materials}): {face_material}")
+                            logger.debug(f"Texture loaded ({texture_load_count}/{total_materials}): {face_material}")
                 
                 if new_texture_id != current_texture_id:
                     current_texture_id = new_texture_id
@@ -452,9 +477,11 @@ class OpenGLModelRenderer:
             glMaterialfv(GL_FRONT, GL_SPECULAR, specular)
         
         if 'shininess' in material:
-            glMaterialf(GL_FRONT, GL_SHININESS, material['shininess'])
+            # Clamp shininess to valid OpenGL range (0.0 to 128.0)
+            shininess = max(0.0, min(128.0, material['shininess']))
+            glMaterialf(GL_FRONT, GL_SHININESS, shininess)
     
-    def _draw_text_overlay(self, fonts, schematics_info, pitch, roll, yaw):
+    def _draw_text_overlay(self, fonts, schematics_info, pitch, roll, yaw, zoom_level):
         """Draw text overlay (reusing implementation from base renderer)."""
         # Save matrices
         glMatrixMode(GL_PROJECTION)
@@ -482,15 +509,20 @@ class OpenGLModelRenderer:
             # Rotation info (pitch, roll, yaw are already in degrees)
             rotation_text = f"Pitch: {pitch:.1f}° Roll: {roll:.1f}° Yaw: {yaw:.1f}°"
             
+            # Zoom info
+            zoom_text = f"Zoom: {zoom_level:.1f}x"
+            
             # Render surfaces
             name_surface = info_font.render(name_text, True, (0, 255, 70))
             desc_surface = info_font.render(desc_text, True, (255, 255, 255))
             rotation_surface = info_font.render(rotation_text, True, (255, 200, 0))
+            zoom_surface = info_font.render(zoom_text, True, (0, 200, 255))
             
             # Draw them
             self._draw_text_surface(name_surface, 10, self.screen_height - 30)
             self._draw_text_surface(desc_surface, 10, self.screen_height - 50)
             self._draw_text_surface(rotation_surface, 10, 50)
+            self._draw_text_surface(zoom_surface, 10, 70)
             
         except Exception as e:
             logger.error(f"Error drawing text overlay: {e}")
@@ -574,7 +606,7 @@ class OpenGLModelRenderer:
             
             # Menu options
             current_mode = "Auto" if auto_rotation_mode else "Manual"
-            options = [f"Toggle Mode ({current_mode})", "Back to Schematics", "Resume"]
+            options = [f"Toggle Mode ({current_mode})", "Zoom In", "Zoom Out", "Reset Zoom", "Back to Schematics", "Resume"]
             menu_font = fonts.get('medium', fonts.get('small'))
             start_y = 150
             item_height = 40

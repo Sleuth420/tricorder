@@ -126,21 +126,21 @@ class MenuManager:
         """Generates the schematics selection menu items."""
         items = [
             MenuItem(
-                name="Test Cube", 
-                target_state=STATE_SCHEMATICS,
-                data={"schematics_model": "test_cube", "schematics_id": 1},
-                color_key="SIDEBAR_SCHEMATICS"
-            ),
-            MenuItem(
                 name="Worf", 
                 target_state=STATE_SCHEMATICS,
-                data={"schematics_model": "worf", "schematics_id": 2},
+                data={"schematics_model": "worf", "schematics_id": 1},
                 color_key="SIDEBAR_SCHEMATICS"
             ),
             MenuItem(
                 name="Apollo NCC-1570", 
                 target_state=STATE_SCHEMATICS,
-                data={"schematics_model": "apollo_1570", "schematics_id": 3},
+                data={"schematics_model": "apollo_1570", "schematics_id": 2},
+                color_key="SIDEBAR_SCHEMATICS"
+            ),
+            MenuItem(
+                name="Apollo NCC-1701 Refit", 
+                target_state=STATE_SCHEMATICS,
+                data={"schematics_model": "apollo_1701_refit", "schematics_id": 3},
                 color_key="SIDEBAR_SCHEMATICS"
             ),
             MenuItem(

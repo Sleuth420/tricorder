@@ -24,4 +24,11 @@ GRAPH_POINT_SIZE = 2     # Size of the data points in pixels
 # -- Splash Screen --
 SPLASH_LOGO_PATH = "assets/images/logo.png"
 SPLASH_DURATION_MS = 3000  # Original splash duration (not used in loading screen)
-LOADING_SCREEN_MIN_DURATION = 5.0  # Minimum loading screen duration in seconds 
+LOADING_SCREEN_MIN_DURATION = 5.0  # Minimum loading screen duration in seconds
+
+# -- 3D Schematics Zoom Settings --
+SCHEMATICS_ZOOM_DEFAULT = 1.0      # Default zoom level (1.0 = normal size)
+SCHEMATICS_ZOOM_MIN = 0.2          # Minimum zoom level (0.2 = 20% of normal size)
+SCHEMATICS_ZOOM_MAX = 5.0          # Maximum zoom level (5.0 = 500% of normal size)
+SCHEMATICS_ZOOM_STEP = 0.1         # Zoom step size for each zoom in/out action
+SCHEMATICS_ZOOM_FAST_STEP = 0.3    # Faster zoom step for held actions 

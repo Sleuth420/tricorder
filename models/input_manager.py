@@ -26,6 +26,10 @@ class InputManager:
         self.key_next_press_start_time = None  # For 3D viewer pause menu
         self.joystick_middle_press_start_time = None
         
+        # Zoom combo timing (to prevent accidental menu activation)
+        self.last_zoom_combo_time = None
+        self.zoom_combo_cooldown = 0.3  # 300ms cooldown after zoom combo ends
+        
         # Secret combo configuration
         self.settings_menu_index = -1  # Will be set by menu manager
         
@@ -231,4 +235,42 @@ class InputManager:
         
     def reset_joystick_timer(self):
         """Reset the joystick press timer."""
-        self.joystick_middle_press_start_time = None 
+        self.joystick_middle_press_start_time = None
+    
+    def check_zoom_in_combo(self):
+        """
+        Check if Return+D combo is being held for zoom in.
+        
+        Returns:
+            bool: True if zoom in combo is active
+        """
+        is_active = {self.config.KEY_SELECT, self.config.KEY_NEXT}.issubset(self.keys_held)
+        if is_active:
+            self.last_zoom_combo_time = time.time()
+        return is_active
+    
+    def check_zoom_out_combo(self):
+        """
+        Check if Return+A combo is being held for zoom out.
+        
+        Returns:
+            bool: True if zoom out combo is active
+        """
+        is_active = {self.config.KEY_SELECT, self.config.KEY_PREV}.issubset(self.keys_held)
+        if is_active:
+            self.last_zoom_combo_time = time.time()
+        return is_active
+    
+    def is_zoom_combo_recently_active(self):
+        """
+        Check if a zoom combo was recently active (within cooldown period).
+        This prevents accidental menu activation when releasing combo keys.
+        
+        Returns:
+            bool: True if zoom combo was recently active
+        """
+        if not self.last_zoom_combo_time:
+            return False
+        
+        time_since_combo = time.time() - self.last_zoom_combo_time
+        return time_since_combo < self.zoom_combo_cooldown 

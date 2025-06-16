@@ -34,7 +34,7 @@ def draw_schematics_view(screen, app_state, fonts, config_module, ui_scaler=None
     # Check if we're using OpenGL mode
     current_schematics_info = app_state.schematics_manager.get_current_schematics_info()
     is_opengl_mode = (current_schematics_info and 
-                     current_schematics_info.get('model_key') in ['worf', 'apollo_1570'])
+                     current_schematics_info.get('model_key') in ['worf', 'apollo_1570', 'apollo_1701_refit'])
     
     # Update rotation from sensors only if in auto mode
     if app_state.schematics_manager.auto_rotation_mode:
@@ -80,7 +80,7 @@ def _draw_pause_menu(screen, app_state, fonts, config_module):
     screen.blit(title_surface, title_rect)
 
     # Menu options
-    options = ["Toggle Mode", "Back to Schematics", "Resume"]
+    options = ["Toggle Mode", "Zoom In", "Zoom Out", "Reset Zoom", "Back to Schematics", "Resume"]
     current_selection_idx = app_state.schematics_pause_menu_index
 
     y_offset = title_rect.bottom + 40

@@ -288,6 +288,10 @@ class AppState:
                     self.game_manager.handle_breakout_input(app_config.INPUT_ACTION_PREV)
                 elif self.current_state == STATE_SNAKE_ACTIVE:
                     self.game_manager.handle_snake_input(app_config.INPUT_ACTION_PREV)
+                elif self.current_state == STATE_SCHEMATICS and not self.schematics_pause_menu_active:
+                    # Joystick UP held = Zoom In
+                    self.schematics_manager.zoom_in(fast=True)
+                    state_changed_by_action = True
             
             elif event_type == 'JOYSTICK_DOWN_HELD':
                 if self.current_state == STATE_PONG_ACTIVE:
@@ -296,6 +300,10 @@ class AppState:
                     self.game_manager.handle_breakout_input(app_config.INPUT_ACTION_NEXT)
                 elif self.current_state == STATE_SNAKE_ACTIVE:
                     self.game_manager.handle_snake_input(app_config.INPUT_ACTION_NEXT)
+                elif self.current_state == STATE_SCHEMATICS and not self.schematics_pause_menu_active:
+                    # Joystick DOWN held = Zoom Out
+                    self.schematics_manager.zoom_out(fast=True)
+                    state_changed_by_action = True
 
             elif event_type == 'JOYSTICK_MIDDLE_PRESS':
                 self.input_manager.handle_joystick_press()
@@ -544,6 +552,18 @@ class AppState:
             if handled:
                 state_changed = True
             self.input_manager.reset_next_key_timer()
+        
+        # Check zoom combos for schematics view (Return+A/D)
+        if (self.current_state == STATE_SCHEMATICS and 
+            not self.schematics_pause_menu_active):
+            if self.input_manager.check_zoom_in_combo():
+                # Return+D = Zoom In
+                self.schematics_manager.zoom_in(fast=True)
+                state_changed = True
+            elif self.input_manager.check_zoom_out_combo():
+                # Return+A = Zoom Out
+                self.schematics_manager.zoom_out(fast=True)
+                state_changed = True
 
         return state_changed
     

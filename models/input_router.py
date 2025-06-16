@@ -472,7 +472,10 @@ class InputRouter:
                 self.app_state.schematics_manager.apply_manual_rotation('RIGHT')
                 return True
             elif action == app_config.INPUT_ACTION_SELECT:
-                # Toggle pause menu (middle press)
+                # Toggle pause menu (middle press) - but check for recent zoom combo activity
+                if self.app_state.input_manager.is_zoom_combo_recently_active():
+                    logger.debug("Manual mode: SELECT ignored due to recent zoom combo activity")
+                    return True
                 logger.info("Manual mode: SELECT (Enter) key - activating pause menu")
                 self.app_state.schematics_pause_menu_active = True
                 self.app_state.schematics_pause_menu_index = 0
@@ -496,7 +499,10 @@ class InputRouter:
                 logger.debug("Schematics: NEXT action in auto mode (ignored)")
                 return True
             elif action == app_config.INPUT_ACTION_SELECT:
-                # Toggle pause menu (middle press)
+                # Toggle pause menu (middle press) - but check for recent zoom combo activity
+                if self.app_state.input_manager.is_zoom_combo_recently_active():
+                    logger.debug("Auto mode: SELECT ignored due to recent zoom combo activity")
+                    return True
                 self.app_state.schematics_pause_menu_active = True
                 self.app_state.schematics_pause_menu_index = 0
                 logger.debug("Schematics: Pause menu activated")
@@ -513,11 +519,11 @@ class InputRouter:
         """Handle input when the schematics pause menu is active."""
         if action == app_config.INPUT_ACTION_PREV:
             # Navigate up in pause menu
-            self.app_state.schematics_pause_menu_index = (self.app_state.schematics_pause_menu_index - 1) % 3
+            self.app_state.schematics_pause_menu_index = (self.app_state.schematics_pause_menu_index - 1) % 6
             return True
         elif action == app_config.INPUT_ACTION_NEXT:
             # Navigate down in pause menu
-            self.app_state.schematics_pause_menu_index = (self.app_state.schematics_pause_menu_index + 1) % 3
+            self.app_state.schematics_pause_menu_index = (self.app_state.schematics_pause_menu_index + 1) % 6
             return True
         elif action == app_config.INPUT_ACTION_SELECT:
             # Select pause menu option
@@ -540,12 +546,27 @@ class InputRouter:
             logger.debug("Schematics: Rotation mode toggled, pause menu closed")
             return True
         elif selected_index == 1:
+            # Zoom In
+            self.app_state.schematics_manager.zoom_in()
+            logger.debug("Schematics: Zoom in from pause menu")
+            return True
+        elif selected_index == 2:
+            # Zoom Out
+            self.app_state.schematics_manager.zoom_out()
+            logger.debug("Schematics: Zoom out from pause menu")
+            return True
+        elif selected_index == 3:
+            # Reset Zoom
+            self.app_state.schematics_manager.reset_zoom()
+            logger.debug("Schematics: Zoom reset from pause menu")
+            return True
+        elif selected_index == 4:
             # Back to schematics menu
             self.app_state.schematics_pause_menu_active = False
             self.app_state.state_manager.transition_to(STATE_SCHEMATICS_MENU)
             logger.debug("Schematics: Returning to schematics menu")
             return True
-        elif selected_index == 2:
+        elif selected_index == 5:
             # Resume/Close menu
             self.app_state.schematics_pause_menu_active = False
             logger.debug("Schematics: Pause menu closed, resuming")

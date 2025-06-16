@@ -185,7 +185,7 @@ def _draw_arrow_indicator(screen, arrow_area_rect, selected_item_rect, item_colo
         arrow_color = config_module.Palette.RED_ALERT  # Red as requested
     
     # Create arrow triangle pointing left with responsive sizing
-    arrow_size = ui_scaler.scale(config_module.ARROW_INDICATOR_SIZE)
+    arrow_size = ui_scaler.scale(config_module.ARROW_INDICATOR_SIZE) // 2
     arrow_points = [
         (arrow_center_x - arrow_size // 2, arrow_center_y),  # Left point (tip)
         (arrow_center_x + arrow_size // 2, arrow_center_y - arrow_size // 2),  # Top right

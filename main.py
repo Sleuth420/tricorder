@@ -106,7 +106,7 @@ def main():
                 # If loading is complete and minimum time has passed
                 if complete and elapsed_time >= minimum_loading_time:
                     progress = 1.0
-                    draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage, ui_scaler, scan_progress)
+                    draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage, ui_scaler, scan_progress, elapsed_time)
                     time.sleep(0.5)  # Brief pause to show 100%
                     break
                 elif complete:
@@ -117,7 +117,7 @@ def main():
                     progress = time_progress * 0.9  # Max 90% until actually complete
                 
                 # Draw the loading screen
-                draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage, ui_scaler, scan_progress)
+                draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage, ui_scaler, scan_progress, elapsed_time)
                 
                 # Handle quit events during loading
                 for event in pygame.event.get():

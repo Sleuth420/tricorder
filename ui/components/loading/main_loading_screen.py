@@ -3,6 +3,7 @@ import logging
 import time
 import threading
 import random
+import math
 
 import config
 from data import sensors
@@ -10,7 +11,111 @@ from utils.loc import count_python_lines
 
 logger = logging.getLogger(__name__)
 
-def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage_text, ui_scaler=None, scan_progress=0.0):
+def draw_tricorder_animations(screen, logo_rect, animation_time, progress, ui_scaler=None):
+    """
+    Draw subtle Star Trek tricorder-themed animations around the logo.
+    
+    Args:
+        screen (pygame.Surface): The surface to draw on
+        logo_rect (pygame.Rect): Rectangle of the logo for positioning
+        animation_time (float): Time in seconds for animations
+        progress (float): Loading progress (0.0 to 1.0)
+        ui_scaler (UIScaler, optional): UI scaling system
+    """
+    # Calculate responsive sizing
+    if ui_scaler:
+        base_size = ui_scaler.scale(2)
+        margin = ui_scaler.margin("medium")
+    else:
+        base_size = max(2, screen.get_height() // 120)  # Scale with screen size
+        margin = max(15, screen.get_width() // 20)
+    
+    # Animation parameters
+    pulse_speed = 2.0  # Pulses per second
+    scan_speed = 1.5   # Scan cycles per second
+    
+    # Left side: Pulsing status indicators (like tricorder readouts)
+    left_x = logo_rect.left - margin
+    indicator_count = 4
+    indicator_spacing = logo_rect.height // (indicator_count + 1)
+    
+    for i in range(indicator_count):
+        y = logo_rect.top + indicator_spacing * (i + 1)
+        
+        # Staggered pulsing effect
+        phase_offset = i * 0.3
+        pulse_intensity = (1 + math.sin((animation_time * pulse_speed + phase_offset) * 2 * math.pi)) / 2
+        
+        # Color based on progress and pulse
+        if progress > i * 0.25:  # Activate indicators as progress increases
+            alpha = int(100 + 155 * pulse_intensity)
+            color = (0, alpha, 0)  # Green pulse
+        else:
+            alpha = int(30 + 20 * pulse_intensity)
+            color = (alpha, alpha, alpha)  # Dim grey pulse
+        
+        # Draw small rectangular indicator
+        indicator_rect = pygame.Rect(left_x - base_size * 3, y - base_size, base_size * 6, base_size * 2)
+        pygame.draw.rect(screen, color, indicator_rect)
+        
+        # Add a subtle border
+        border_color = (min(255, color[1] + 50), min(255, color[1] + 50), min(255, color[1] + 50))
+        pygame.draw.rect(screen, border_color, indicator_rect, 1)
+    
+    # Right side: Scanning beam effect (like tricorder sensor sweep)
+    right_x = logo_rect.right + margin
+    scan_height = logo_rect.height
+    scan_width = base_size * 2
+    
+    # Vertical scanning beam that moves up and down
+    scan_cycle = (animation_time * scan_speed) % 2.0  # 2-second cycle
+    if scan_cycle < 1.0:
+        # Moving down
+        scan_progress_local = scan_cycle
+    else:
+        # Moving up
+        scan_progress_local = 2.0 - scan_cycle
+    
+    scan_y = logo_rect.top + int(scan_height * scan_progress_local)
+    
+    # Draw scanning beam with gradient effect
+    beam_length = base_size * 8
+    for j in range(beam_length):
+        beam_x = right_x + j
+        # Fade out as we move away from the logo
+        fade = max(0, 1.0 - (j / beam_length))
+        intensity = int(255 * fade * (0.3 + 0.7 * progress))  # Brighter as loading progresses
+        
+        beam_color = (0, intensity, intensity // 2)  # Cyan-ish beam
+        if intensity > 10:  # Only draw if visible
+            pygame.draw.circle(screen, beam_color, (beam_x, scan_y), base_size)
+    
+    # Add subtle corner brackets (like tricorder display frame)
+    bracket_size = base_size * 4
+    bracket_thickness = max(1, base_size)
+    bracket_color = (0, 100 + int(50 * progress), 50)  # Subtle green
+    
+    # Top-left bracket
+    tl_x, tl_y = logo_rect.left - base_size * 2, logo_rect.top - base_size * 2
+    pygame.draw.line(screen, bracket_color, (tl_x, tl_y), (tl_x + bracket_size, tl_y), bracket_thickness)
+    pygame.draw.line(screen, bracket_color, (tl_x, tl_y), (tl_x, tl_y + bracket_size), bracket_thickness)
+    
+    # Top-right bracket
+    tr_x, tr_y = logo_rect.right + base_size * 2, logo_rect.top - base_size * 2
+    pygame.draw.line(screen, bracket_color, (tr_x, tr_y), (tr_x - bracket_size, tr_y), bracket_thickness)
+    pygame.draw.line(screen, bracket_color, (tr_x, tr_y), (tr_x, tr_y + bracket_size), bracket_thickness)
+    
+    # Bottom-left bracket
+    bl_x, bl_y = logo_rect.left - base_size * 2, logo_rect.bottom + base_size * 2
+    pygame.draw.line(screen, bracket_color, (bl_x, bl_y), (bl_x + bracket_size, bl_y), bracket_thickness)
+    pygame.draw.line(screen, bracket_color, (bl_x, bl_y), (bl_x, bl_y - bracket_size), bracket_thickness)
+    
+    # Bottom-right bracket
+    br_x, br_y = logo_rect.right + base_size * 2, logo_rect.bottom + base_size * 2
+    pygame.draw.line(screen, bracket_color, (br_x, br_y), (br_x - bracket_size, br_y), bracket_thickness)
+    pygame.draw.line(screen, bracket_color, (br_x, br_y), (br_x, br_y - bracket_size), bracket_thickness)
+
+def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current_lines, total_lines, stage_text, ui_scaler=None, scan_progress=0.0, animation_time=0.0):
     """
     Draw the loading screen with splash logo, progress bar, and line count using responsive design.
     
@@ -25,11 +130,15 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
         stage_text (str): Current stage description
         ui_scaler (UIScaler, optional): UI scaling system for responsive design
         scan_progress (float): Progress of the scanning animation (0.0 to 1.0)
+        animation_time (float): Time in seconds for animations
     """
     screen.fill(config.Theme.BACKGROUND)
     
     # Draw the splash logo
     screen.blit(logo_splash, logo_rect)
+    
+    # Draw subtle tricorder-themed animations around the logo
+    draw_tricorder_animations(screen, logo_rect, animation_time, progress, ui_scaler)
     
     # Calculate available space below logo for balanced layout
     available_space_below_logo = screen.get_height() - logo_rect.bottom
@@ -71,13 +180,13 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
     progress_text = f"{int(progress * 100)}%"
     progress_surface = progress_font.render(progress_text, True, config.Theme.FOREGROUND)
     
-    stage_surface = progress_font.render(stage_text, True, config.Theme.FOREGROUND)
+    stage_surface = progress_font.render(stage_text, True, config.Theme.ACCENT)
     
     lines_surface = None
     if total_lines > 0:
         # Star Trek themed line count display
-        lines_text = f"Code Matrices: {current_lines:,} / {total_lines:,}"
-        lines_surface = progress_font.render(lines_text, True, config.Theme.ACCENT)
+        lines_text = f"Analyzing code matrices: {current_lines:,} / {total_lines:,}"
+        lines_surface = progress_font.render(lines_text, True, config.Theme.FOREGROUND)
     
     # Calculate total content height to check if it fits well
     content_height = (bar_height + progress_spacing + progress_surface.get_height() + 

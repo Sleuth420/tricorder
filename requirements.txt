@@ -19,7 +19,7 @@ PyGLM==2.8.2        # OpenGL Mathematics library for 3D transformations
 pygltflib==1.16.4   # GLTF file format support for 3D models
 
 # Image processing
-Pillow==11.2.1      # Python Imaging Library
+Pillow==11.3.0      # Python Imaging Library
 
 # Optional utilities
 matplotlib==3.10.3

@@ -2,25 +2,25 @@
 
 # Core dependencies
 pygame==2.6.1
-numpy==2.3.0
+numpy==2.3.3
 
 # Raspberry Pi specific libraries
 sense-hat==2.6.0    # For Sense HAT sensor access
 
 # System monitoring
-psutil==7.0.0
+psutil==7.1.0
 
 # 3D Graphics and OpenGL rendering
-PyOpenGL==3.1.9     # OpenGL bindings for Python
+PyOpenGL==3.1.10
 #PyOpenGL-accelerate==3.1.9  # Accelerated OpenGL operations (optional but recommended)
 PyGLM==2.8.2        # OpenGL Mathematics library for 3D transformations
 
 # 3D Model support
-pygltflib==1.16.4   # GLTF file format support for 3D models
+pygltflib==1.16.5
 
 # Image processing
-Pillow==11.2.1      # Python Imaging Library
+Pillow==11.3.0
 
 # Optional utilities
-matplotlib==3.10.3
-python-dotenv==1.1.0
+matplotlib==3.10.6
+python-dotenv==1.1.1

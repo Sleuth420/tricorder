@@ -325,6 +325,28 @@ class AppState:
                         logger.info("State already changed in this input cycle. Skipping SELECT action.")
                     else:
                         state_changed_by_action = self._route_action(app_config.INPUT_ACTION_SELECT) or state_changed_by_action
+
+            elif event_type == 'MOUSEDOWN':
+                button = result.get('button')
+                self.input_manager.handle_mousedown(button)
+                
+                # Check for secret combo start (on main menu settings item) - same as keyboard
+                if (self.current_state == STATE_MENU and
+                    not self.input_manager.secret_combo_start_time and
+                    self.input_manager.check_secret_combo_conditions(
+                        self.current_state, 
+                        self.menu_manager.get_current_menu_index(STATE_MENU)
+                    )):
+                    self.input_manager.start_secret_combo_timer()
+                    
+            elif event_type == 'MOUSEUP':
+                button = result.get('button')
+                self.input_manager.handle_mouseup(button)
+                
+                if not self.input_manager.secret_combo_start_time:
+                    action_name = result.get('action')
+                    if action_name:
+                        state_changed_by_action = self._route_action(action_name) or state_changed_by_action
                 
         return state_changed_by_action
         
@@ -564,6 +586,48 @@ class AppState:
                 # Return+A = Zoom Out
                 self.schematics_manager.zoom_out(fast=True)
                 state_changed = True
+
+        # Check mouse left button long press for back action
+        if self.input_manager.check_mouse_left_long_press():
+            if self.input_manager.secret_combo_start_time is None:
+                # Special handling for schematics view based on rotation mode
+                if self.current_state == STATE_SCHEMATICS and not self.schematics_pause_menu_active:
+                    handled = self._handle_schematics_long_press('PREV')
+                    if handled:
+                        state_changed = True
+                    self.input_manager.reset_mouse_left_timer()
+                else:
+                    logger.info(f"Mouse left long press detected in {self.current_state}.")
+                    handled_by_back_action = self._route_action(app_config.INPUT_ACTION_BACK)
+                    if not handled_by_back_action:
+                        if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SECRET_GAMES]:
+                            logger.info(f"Mouse left long press in view state {self.current_state}, returning to previous or menu.")
+                            state_changed = self.state_manager.return_to_previous()
+                            if not state_changed or not self.state_manager.previous_state:
+                                state_changed = self.state_manager.return_to_menu()
+                    else:
+                        state_changed = True
+                    self.input_manager.reset_mouse_left_timer()
+                    
+        # Check mouse right button long press for 3D viewer pause menu
+        if (self.current_state == STATE_SCHEMATICS and 
+            not self.schematics_pause_menu_active and 
+            self.input_manager.check_mouse_right_long_press()):
+            logger.info("Mouse right long press detected in schematics view - activating pause menu")
+            self.schematics_pause_menu_active = True
+            self.schematics_pause_menu_index = 0
+            self.input_manager.reset_mouse_right_timer()
+            state_changed = True
+            
+        # Check mouse middle button long press for secret menu (only from main menu on settings item)
+        if (self.current_state == STATE_MENU and 
+            self.menu_manager.get_current_menu_index(STATE_MENU) == self.menu_manager.get_settings_main_menu_idx() and
+            self.input_manager.check_mouse_middle_long_press(self.current_state)):
+            logger.info("Mouse middle long press on Settings item detected! Activating secret games menu")
+            state_changed = self.state_manager.transition_to(STATE_SECRET_GAMES)
+            self.input_manager.reset_mouse_middle_timer()
+            # Reset long press timer to prevent immediate exit
+            self.input_manager.reset_long_press_timer()
 
         return state_changed
     

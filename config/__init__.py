@@ -7,6 +7,7 @@ from .display import *
 from .ui import *
 from .input import *
 from .sensors import *
+from .schematics import *
 from .network import *
 from .update import *
 
@@ -65,6 +66,9 @@ __all__ = [
     'SENSOR_VOLTAGE', 'SENSOR_BATTERY',
     'INFO_WIFI_STATUS', 'INFO_WIFI_SSID', 'INFO_BLUETOOTH_STATUS', 'INFO_BLUETOOTH_DEVICE',
     'SENSOR_MODES', 'SENSOR_DISPLAY_PROPERTIES',
+    
+    # From schematics.py
+    'SCHEMATICS_CONFIG', 'SENSOR_3D_CONFIG', 'get_model_config', 'get_initial_rotations',
     
     # From network.py
     'AUTO_REPORT_EMAIL', 'AUTO_REPORT_PASS', 'AUTO_REPORT_TARGET',

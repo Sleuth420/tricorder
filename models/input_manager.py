@@ -26,6 +26,11 @@ class InputManager:
         self.key_next_press_start_time = None  # For 3D viewer pause menu
         self.joystick_middle_press_start_time = None
         
+        # Mouse long press tracking
+        self.mouse_left_press_start_time = None
+        self.mouse_right_press_start_time = None
+        self.mouse_middle_press_start_time = None
+        
         # Zoom combo timing (to prevent accidental menu activation)
         self.last_zoom_combo_time = None
         self.zoom_combo_cooldown = 0.3  # 300ms cooldown after zoom combo ends
@@ -273,4 +278,116 @@ class InputManager:
             return False
         
         time_since_combo = time.time() - self.last_zoom_combo_time
-        return time_since_combo < self.zoom_combo_cooldown 
+        return time_since_combo < self.zoom_combo_cooldown
+    
+    def handle_mousedown(self, button):
+        """
+        Handle mouse button down events.
+        
+        Args:
+            button: The mouse button that was pressed
+            
+        Returns:
+            dict: Input event data
+        """
+        logger.debug(f"MOUSEDOWN: button={button}")
+        
+        # Start timing for mouse long press detection
+        if button == self.config.MOUSE_LEFT and self.mouse_left_press_start_time is None:
+            self.mouse_left_press_start_time = time.time()
+            logger.debug("Mouse left press timer started.")
+        elif button == self.config.MOUSE_RIGHT and self.mouse_right_press_start_time is None:
+            self.mouse_right_press_start_time = time.time()
+            logger.debug("Mouse right press timer started.")
+        elif button == self.config.MOUSE_MIDDLE and self.mouse_middle_press_start_time is None:
+            self.mouse_middle_press_start_time = time.time()
+            logger.debug("Mouse middle press timer started.")
+            
+        return {
+            'type': 'MOUSEDOWN',
+            'button': button
+        }
+        
+    def handle_mouseup(self, button):
+        """
+        Handle mouse button up events.
+        
+        Args:
+            button: The mouse button that was released
+            
+        Returns:
+            dict: Input event data
+        """
+        logger.debug(f"MOUSEUP: button={button}")
+        
+        # Reset timing for mouse long press detection
+        if button == self.config.MOUSE_LEFT:
+            self.mouse_left_press_start_time = None
+            logger.debug("Mouse left press timer reset.")
+        elif button == self.config.MOUSE_RIGHT:
+            self.mouse_right_press_start_time = None
+            logger.debug("Mouse right press timer reset.")
+        elif button == self.config.MOUSE_MIDDLE:
+            self.mouse_middle_press_start_time = None
+            logger.debug("Mouse middle press timer reset.")
+            
+        return {
+            'type': 'MOUSEUP',
+            'button': button
+        }
+    
+    def check_mouse_left_long_press(self):
+        """
+        Check if mouse left button has been held long enough for back action.
+        
+        Returns:
+            bool: True if long press duration is met
+        """
+        if not self.mouse_left_press_start_time:
+            return False
+            
+        hold_duration = time.time() - self.mouse_left_press_start_time
+        return hold_duration >= self.config.INPUT_LONG_PRESS_DURATION
+        
+    def check_mouse_right_long_press(self):
+        """
+        Check if mouse right button has been held long enough for 3D viewer pause menu.
+        
+        Returns:
+            bool: True if long press duration is met
+        """
+        if not self.mouse_right_press_start_time:
+            return False
+            
+        hold_duration = time.time() - self.mouse_right_press_start_time
+        return hold_duration >= self.config.INPUT_LONG_PRESS_DURATION
+        
+    def check_mouse_middle_long_press(self, current_state):
+        """
+        Check if mouse middle button has been held long enough for secret menu.
+        
+        Args:
+            current_state (str): Current application state
+            
+        Returns:
+            bool: True if mouse middle long press conditions are met
+        """
+        if (self.mouse_middle_press_start_time is None or 
+            current_state != "MENU"):
+            return False
+            
+        current_time = time.time()
+        duration = current_time - self.mouse_middle_press_start_time
+        return duration >= self.config.CURRENT_SECRET_COMBO_DURATION
+        
+    def reset_mouse_left_timer(self):
+        """Reset the mouse left press timer."""
+        self.mouse_left_press_start_time = None
+        
+    def reset_mouse_right_timer(self):
+        """Reset the mouse right press timer."""
+        self.mouse_right_press_start_time = None
+        
+    def reset_mouse_middle_timer(self):
+        """Reset the mouse middle press timer."""
+        self.mouse_middle_press_start_time = None 

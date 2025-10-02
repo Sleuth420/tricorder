@@ -7,9 +7,13 @@ import platform
 import random
 import time
 import math
+from config import sensors as sensor_config
 
 # Get a logger for this module
 logger = logging.getLogger(__name__)
+
+# Debug flag for detailed sensor logging (set to False to disable)
+SENSOR_DEBUG_LOGGING = True
 
 # Attempt to import SenseHat, handle potential errors if library not installed
 try:
@@ -56,6 +60,16 @@ class MockSensorData:
         return self.base_pressure + variation + noise
         
     def get_orientation(self):
+        # Check if dynamic mock data is enabled
+        if not sensor_config.ENABLE_MOCK_SENSOR_DYNAMICS:
+            # Return static values for testing
+            orientation = {
+                'pitch': 0.0,
+                'roll': 0.0,
+                'yaw': 0.0
+            }
+            return orientation
+        
         # Simulate more stable orientation with smaller variations (mimics real SenseHat noise)
         elapsed = time.time() - self.start_time
         
@@ -76,11 +90,17 @@ class MockSensorData:
         roll_drift = drift_scale * math.cos(elapsed / 25.0)   # 25 second cycle
         yaw_drift = (elapsed * 0.5) % 360  # Very slow rotation
         
-        return {
+        orientation = {
             'pitch': (base_pitch + pitch_drift + pitch_noise) % 360,
             'roll': (base_roll + roll_drift + roll_noise) % 360,
             'yaw': (base_yaw + yaw_drift + yaw_noise) % 360
         }
+        
+        # Debug logging for mock sensor data
+        if SENSOR_DEBUG_LOGGING:
+            logger.info(f"MOCK ORIENTATION: pitch={orientation['pitch']:.2f}°, roll={orientation['roll']:.2f}°, yaw={orientation['yaw']:.2f}°")
+        
+        return orientation
         
     def get_acceleration(self):
         # Simulate small vibrations around gravity
@@ -189,7 +209,13 @@ def get_orientation():
         return None
         
     try:
-        return sense.get_orientation_degrees()
+        orientation = sense.get_orientation_degrees()
+        
+        # Debug logging for real sensor data
+        if SENSOR_DEBUG_LOGGING and orientation:
+            logger.info(f"REAL ORIENTATION: pitch={orientation.get('pitch', 'N/A'):.2f}°, roll={orientation.get('roll', 'N/A'):.2f}°, yaw={orientation.get('yaw', 'N/A'):.2f}°")
+        
+        return orientation
     except Exception as e:
         logger.error(f"Error reading orientation: {e}", exc_info=True)
         return None

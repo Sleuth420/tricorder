@@ -18,6 +18,11 @@ JOY_LEFT = 1002
 JOY_RIGHT = 1003
 JOY_PRESS = 1004 # Press of the joystick (middle button)
 
+# Mouse button constants (using Pygame mouse button constants)
+MOUSE_LEFT = 1    # Left mouse button
+MOUSE_RIGHT = 3   # Right mouse button  
+MOUSE_MIDDLE = 2  # Middle mouse button (scroll wheel click)
+
 # Abstract Input Action Names (used by AppState and InputHandler)
 # These are the actions the application understands, regardless of input source.
 INPUT_ACTION_PREV = "PREV"
@@ -44,6 +49,14 @@ KEY_ACTION_MAP = {
     JOY_LEFT: INPUT_ACTION_BACK,   # LEFT = Back (unchanged)
     JOY_RIGHT: INPUT_ACTION_NEXT,  # RIGHT = Next (alternative)
     JOY_PRESS: INPUT_ACTION_SELECT # Press = Select (unchanged)
+}
+
+# Mouse button to action mapping
+# Mouse controls replicate keyboard controls exactly
+MOUSE_ACTION_MAP = {
+    MOUSE_LEFT: INPUT_ACTION_PREV,    # Left click = Previous (like A key)
+    MOUSE_RIGHT: INPUT_ACTION_NEXT,   # Right click = Next (like D key)
+    MOUSE_MIDDLE: INPUT_ACTION_SELECT # Middle click = Select (like Enter key)
 }
 
 # Input related timing

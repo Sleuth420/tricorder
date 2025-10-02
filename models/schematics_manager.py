@@ -6,6 +6,7 @@ import math
 import logging
 import os
 from data import sensors
+from config import schematics
 
 # OpenGL imports (optional - will be checked for availability)
 try:
@@ -88,6 +89,11 @@ class SchematicsManager:
         self.roll = 0.0
         self.yaw = 0.0
         
+        # Initial model-specific rotations (applied once when model loads)
+        self.initial_pitch = 0.0
+        self.initial_roll = 0.0
+        self.initial_yaw = 0.0
+        
         # Rotation mode (True = auto/sensor, False = manual)
         self.auto_rotation_mode = True
         self.manual_rotation_speed = 5.0  # Degrees per keypress
@@ -117,11 +123,8 @@ class SchematicsManager:
         # Loaded OBJ models cache
         self.loaded_obj_models = {}  # Cache for loaded OBJ models
         
-        # Sensor smoothing for noise reduction
+        # Sensor smoothing for noise reduction (parameters now come from config)
         self.smoothing_enabled = True
-        self.smoothing_factor = 0.08  # How much new reading affects result (0.1 = very smooth, 0.5 = responsive)
-        self.deadzone = 5.0  # Ignore changes smaller than this (degrees)
-        self.sensitivity = 0.4  # Overall sensitivity multiplier (0.5 = half sensitivity)
         
         # Smoothed sensor values (moving average)
         self.smoothed_pitch = 0.0
@@ -133,7 +136,7 @@ class SchematicsManager:
         self.prev_raw_roll = None  
         self.prev_raw_yaw = None
         
-        logger.info(f"Schematics manager initialized with sensor smoothing: factor={self.smoothing_factor}, deadzone={self.deadzone}°, sensitivity={self.sensitivity}")
+        logger.info("Schematics manager initialized with config-based sensor smoothing")
     
     # UIScaler removed - UI concerns handled by display_manager.py
     
@@ -181,6 +184,9 @@ class SchematicsManager:
         if schematics_model_key in self.schematics_models:
             self.current_schematics_model = schematics_model_key
             logger.info(f"Schematics model set to: {schematics_model_key}")
+            
+            # Apply model-specific initial rotations
+            self._set_initial_rotations(schematics_model_key)
             
             # If this is an OBJ model, preload it with progress tracking
             schematics_model = self.schematics_models[schematics_model_key]
@@ -280,7 +286,7 @@ class SchematicsManager:
         return obj_model
     
     def update_rotation_from_sensors(self):
-        """Update rotation values from sensehat tilt sensors with smoothing and filtering."""
+        """Update rotation values from sensehat tilt sensors with simplified axis mapping."""
         # Only update from sensors if in auto mode
         if not self.auto_rotation_mode:
             return False
@@ -293,39 +299,50 @@ class SchematicsManager:
                 raw_roll = orientation.get('roll', 0.0) 
                 raw_yaw = orientation.get('yaw', 0.0)
                 
+                # CORRECTED AXIS MAPPING: Fix "up and to the left" rotation issue
+                # User tilts device UP/DOWN (shows as roll changes) → 3D model rotates UP/DOWN (pitch around X-axis)
+                # User tilts device LEFT/RIGHT (shows as pitch changes) → 3D model rotates LEFT/RIGHT (roll around Z-axis)  
+                # User rotates device (shows as yaw changes) → 3D model rotates around (yaw)
+                sensor_pitch = raw_roll   # User's up/down tilt → model pitch rotation  
+                sensor_roll = raw_pitch   # User's left/right tilt → model roll rotation
+                sensor_yaw = raw_yaw      # User's rotation → model yaw rotation
+                
+                # Get smoothing config
+                config = schematics.SENSOR_3D_CONFIG
+                
                 # Apply smoothing filter if enabled
                 if self.smoothing_enabled:
                     # Initialize smoothed values on first reading
                     if self.prev_raw_pitch is None:
-                        self.smoothed_pitch = raw_pitch
-                        self.smoothed_roll = raw_roll
-                        self.smoothed_yaw = raw_yaw
+                        self.smoothed_pitch = sensor_pitch
+                        self.smoothed_roll = sensor_roll
+                        self.smoothed_yaw = sensor_yaw
                         self.prev_raw_pitch = raw_pitch
                         self.prev_raw_roll = raw_roll
                         self.prev_raw_yaw = raw_yaw
-                        logger.debug("Initialized sensor smoothing with first readings")
+                        logger.info("Initialized 3D sensor smoothing with simplified axis mapping")
                     else:
-                        # Apply moving average filter (low-pass filter)
-                        self.smoothed_pitch = self._smooth_angle(self.smoothed_pitch, raw_pitch)
-                        self.smoothed_roll = self._smooth_angle(self.smoothed_roll, raw_roll)
-                        self.smoothed_yaw = self._smooth_angle(self.smoothed_yaw, raw_yaw)
+                        # Apply strong smoothing using config value
+                        self.smoothed_pitch = self._smooth_angle_strong(self.smoothed_pitch, sensor_pitch, config['smoothing_factor'])
+                        self.smoothed_roll = self._smooth_angle_strong(self.smoothed_roll, sensor_roll, config['smoothing_factor'])
+                        self.smoothed_yaw = self._smooth_angle_strong(self.smoothed_yaw, sensor_yaw, config['smoothing_factor'])
                     
-                    # Apply deadzone and sensitivity
-                    filtered_pitch = self._apply_deadzone_and_sensitivity(self.pitch, self.smoothed_pitch)
-                    filtered_roll = self._apply_deadzone_and_sensitivity(self.roll, self.smoothed_roll)
-                    filtered_yaw = self._apply_deadzone_and_sensitivity(self.yaw, self.smoothed_yaw)
+                    # Apply intelligent noise filtering with 3D-specific settings
+                    filtered_pitch = self._apply_3d_filtering(self.pitch, self.smoothed_pitch, 'primary')
+                    filtered_roll = self._apply_3d_filtering(self.roll, self.smoothed_roll, 'secondary')
+                    filtered_yaw = self._apply_3d_filtering(self.yaw, self.smoothed_yaw, 'tertiary')
                     
                     # Update rotation values
                     self.pitch = filtered_pitch
                     self.roll = filtered_roll
                     self.yaw = filtered_yaw
                 else:
-                    # No smoothing - direct assignment
-                    self.pitch = raw_pitch * self.sensitivity
-                    self.roll = raw_roll * self.sensitivity
-                    self.yaw = raw_yaw * self.sensitivity
+                    # No smoothing - direct assignment with simplified mapping
+                    self.pitch = sensor_pitch * config['primary_sensitivity']
+                    self.roll = sensor_roll * config['secondary_sensitivity']
+                    self.yaw = sensor_yaw * config['tertiary_sensitivity']
                 
-                # Store previous readings
+                # Store previous readings (original sensor values for debugging)
                 self.prev_raw_pitch = raw_pitch
                 self.prev_raw_roll = raw_roll
                 self.prev_raw_yaw = raw_yaw
@@ -335,8 +352,8 @@ class SchematicsManager:
             logger.debug(f"Could not read sensor orientation: {e}")
         return False
     
-    def _smooth_angle(self, current_smooth, new_raw):
-        """Apply exponential moving average to an angle, handling 360-degree wraparound."""
+    def _smooth_angle_strong(self, current_smooth, new_raw, smoothing_factor):
+        """Apply strong exponential moving average to an angle, handling 360-degree wraparound."""
         # Handle angle wraparound (e.g., 359° to 1°)
         diff = new_raw - current_smooth
         if diff > 180:
@@ -344,8 +361,8 @@ class SchematicsManager:
         elif diff < -180:
             diff += 360
         
-        # Apply smoothing factor
-        smoothed = current_smooth + (diff * self.smoothing_factor)
+        # Apply smoothing factor (lower = more smoothing)
+        smoothed = current_smooth + (diff * smoothing_factor)
         
         # Normalize to 0-360 range
         return smoothed % 360
@@ -373,6 +390,66 @@ class SchematicsManager:
         
         # Normalize to 0-360 range
         return new_value % 360
+    
+    def _apply_3d_filtering(self, current_value, target_value, axis_priority):
+        """Apply intelligent 3D-specific filtering that preserves diagonal movements."""
+        config = schematics.SENSOR_3D_CONFIG
+        
+        # Calculate the change
+        change = target_value - current_value
+        
+        # Handle angle wraparound
+        if change > 180:
+            change -= 360
+        elif change < -180:
+            change += 360
+        
+        # Get deadzone based on axis priority
+        if axis_priority == 'primary':
+            deadzone = config['primary_deadzone']
+            sensitivity = config['primary_sensitivity']
+        elif axis_priority == 'secondary':
+            deadzone = config['secondary_deadzone']
+            sensitivity = config['secondary_sensitivity']
+        else:  # tertiary
+            deadzone = config['secondary_deadzone']  # Use secondary deadzone for tertiary
+            sensitivity = config['tertiary_sensitivity']
+        
+        # Large movements are always allowed (diagonal detection)
+        if abs(change) >= config['diagonal_threshold']:
+            scaled_change = change * sensitivity
+            new_value = current_value + scaled_change
+            return new_value % 360
+        
+        # Apply deadzone for smaller movements
+        if abs(change) < deadzone:
+            return current_value
+        
+        # Apply sensitivity scaling
+        scaled_change = change * sensitivity
+        new_value = current_value + scaled_change
+        
+        return new_value % 360
+    
+    def _set_initial_rotations(self, model_key):
+        """Set initial model-specific rotations for standardized orientations."""
+        initial_rotations = schematics.get_initial_rotations(model_key)
+        model_config = schematics.get_model_config(model_key)
+        
+        self.initial_pitch = initial_rotations['pitch']
+        self.initial_roll = initial_rotations['roll']
+        self.initial_yaw = initial_rotations['yaw']
+        
+        logger.info(f"Applied initial rotations for {model_config['name']} ({model_config['type']}): "
+                   f"pitch={self.initial_pitch:.1f}°, roll={self.initial_roll:.1f}°, yaw={self.initial_yaw:.1f}°")
+    
+    def get_total_rotations(self):
+        """Get combined initial + sensor rotations for rendering."""
+        return {
+            'pitch': (self.initial_pitch + self.pitch) % 360,
+            'roll': (self.initial_roll + self.roll) % 360,
+            'yaw': (self.initial_yaw + self.yaw) % 360
+        }
         
     def toggle_rotation_mode(self):
         """Toggle between auto (sensor) and manual rotation modes."""
@@ -454,9 +531,10 @@ class SchematicsManager:
         projected_vertices = []
         for vertex in vertices:
             x, y, z = vertex
-            # Apply rotation
+            # Apply rotation (use combined initial + sensor rotations)
+            total_rotations = self.get_total_rotations()
             rotated_x, rotated_y, rotated_z = self.wireframe_renderer.rotate_point(
-                x, y, z, self.pitch, self.roll, self.yaw
+                x, y, z, total_rotations['pitch'], total_rotations['roll'], total_rotations['yaw']
             )
             # Project to 2D
             screen_x, screen_y = self.wireframe_renderer.project_3d_to_2d(
@@ -499,10 +577,11 @@ class SchematicsManager:
                 )
                 logger.info("PyOpenGL renderer created")
             
-            # Render the cube with text overlay and pause menu
+            # Render the cube with text overlay and pause menu (use combined rotations)
+            total_rotations = self.get_total_rotations()
             success = self.opengl_renderer.render(
-                self.pitch, self.roll, self.yaw, fonts, schematics_model,
-                pause_menu_active, pause_menu_index, self.auto_rotation_mode
+                total_rotations['pitch'], total_rotations['roll'], total_rotations['yaw'], 
+                fonts, schematics_model, pause_menu_active, pause_menu_index, self.auto_rotation_mode
             )
             
             if not success:
@@ -557,10 +636,11 @@ class SchematicsManager:
                     self._render_obj_fallback(screen, schematics_model, fonts, config_module)
                     return
             
-            # Render the model with text overlay and pause menu
+            # Render the model with text overlay and pause menu (use combined rotations)
+            total_rotations = self.get_total_rotations()
             success = self.model_renderer.render(
-                self.pitch, self.roll, self.yaw, fonts, schematics_model,
-                pause_menu_active, pause_menu_index, self.auto_rotation_mode,
+                total_rotations['pitch'], total_rotations['roll'], total_rotations['yaw'], 
+                fonts, schematics_model, pause_menu_active, pause_menu_index, self.auto_rotation_mode,
                 zoom_level=self.zoom_level
             )
             

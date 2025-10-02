@@ -28,6 +28,9 @@ KEY_ACTION_MAP = {
     # Joystick actions are now mapped in config/input.py as well, but we'll use a more direct approach here for clarity
 }
 
+# Mouse button to action mapping (imported from config)
+MOUSE_ACTION_MAP = app_config.MOUSE_ACTION_MAP
+
 # Mapping from Sense HAT joystick event directions to our "key" constants
 SENSE_HAT_DIRECTION_TO_KEY = {
     "up": app_config.JOY_UP,
@@ -82,7 +85,7 @@ def process_input(events, config_module): # config_module is the actual config p
     global sense  # Declare global at start of function
     results = [] # Store processed input events/actions
 
-    # Process Pygame keyboard events first
+    # Process Pygame keyboard and mouse events first
     for event in events:
         if event.type == pygame.QUIT:
             logger.info("pygame.QUIT event detected by input_handler.")
@@ -103,6 +106,24 @@ def process_input(events, config_module): # config_module is the actual config p
                 'action': action
             })
             logger.debug(f"KEYUP event: key={event.key}, mapped_action={action}")
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            action = MOUSE_ACTION_MAP.get(event.button) # Get action if mouse button is mapped
+            results.append({
+                'type': 'MOUSEDOWN',
+                'button': event.button,
+                'action': action,
+                'pos': event.pos
+            })
+            logger.debug(f"MOUSEDOWN event: button={event.button}, mapped_action={action}, pos={event.pos}")
+        elif event.type == pygame.MOUSEBUTTONUP:
+            action = MOUSE_ACTION_MAP.get(event.button) # Get action if mouse button is mapped
+            results.append({
+                'type': 'MOUSEUP',
+                'button': event.button,
+                'action': action,
+                'pos': event.pos
+            })
+            logger.debug(f"MOUSEUP event: button={event.button}, mapped_action={action}, pos={event.pos}")
 
     # Process Sense HAT joystick events if available
     if sense:

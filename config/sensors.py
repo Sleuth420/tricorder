@@ -1,6 +1,11 @@
 # --- config/sensors.py ---
 # Sensor configurations and display properties for the tricorder application
 
+# -- Mock Sensor Control --
+# Controls whether mock sensors provide dynamic data (drift/noise) or static values
+# Set to False for testing when you want stable readings
+ENABLE_MOCK_SENSOR_DYNAMICS = False
+
 # -- Sensor Mode Constants --
 SENSOR_TEMPERATURE = "TEMPERATURE"
 SENSOR_HUMIDITY = "HUMIDITY"

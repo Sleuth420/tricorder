@@ -124,9 +124,10 @@ class OpenGLRenderer:
                 glTranslatef(0.0, 0.0, -5.0)
                 
                 # Apply rotation from sensor data (pitch, roll, yaw are already in degrees)
-                glRotatef(pitch, 1.0, 0.0, 0.0)
-                glRotatef(roll, 0.0, 0.0, 1.0)
-                glRotatef(yaw, 0.0, 1.0, 0.0)
+                # These values include both initial model orientation + sensor rotation from schematics_manager
+                glRotatef(pitch, 1.0, 0.0, 0.0)  # X-axis rotation (pitch)
+                glRotatef(roll, 0.0, 0.0, 1.0)   # Z-axis rotation (roll) 
+                glRotatef(yaw, 0.0, 1.0, 0.0)    # Y-axis rotation (yaw)
                 
                 # Draw a colored cube
                 self._draw_cube()

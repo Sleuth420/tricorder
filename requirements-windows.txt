@@ -2,21 +2,21 @@
 
 # Core dependencies
 pygame==2.6.1
-numpy==2.3.0
+numpy==2.3.3
 
 # System monitoring
-psutil==7.0.0
+psutil==7.1.0
 
 # Graphics and rendering
-matplotlib==3.10.3
-PyOpenGL==3.1.9     # OpenGL bindings for Python
-PyOpenGL-accelerate==3.1.9  # Accelerated OpenGL operations
-pygltflib==1.16.4   # GLTF file format support
+matplotlib==3.10.6
+PyOpenGL==3.1.10
+PyOpenGL-accelerate==3.1.10
+pygltflib==1.16.5
 PyGLM==2.8.2        # OpenGL Mathematics library
-Pillow==11.2.1      # Python Imaging Library
+Pillow==11.3.0
 
 # Environment configuration
-python-dotenv==1.1.0
+python-dotenv==1.1.1
 
 # Note: sense-hat is excluded as it's Raspberry Pi specific
 # Mock sensor data is provided for Windows development 

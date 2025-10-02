@@ -304,9 +304,10 @@ class OpenGLModelRenderer:
         glTranslatef(0.0, 0.0, -camera_distance)
         
         # Apply rotations (pitch, roll, yaw are already in degrees)
-        glRotatef(pitch, 1.0, 0.0, 0.0)
-        glRotatef(roll, 0.0, 0.0, 1.0)
-        glRotatef(yaw, 0.0, 1.0, 0.0)
+        # Combined rotations from schematics_manager: initial model orientation + sensor input
+        glRotatef(pitch, 1.0, 0.0, 0.0)  # X-axis rotation (pitch)
+        glRotatef(roll, 0.0, 0.0, 1.0)   # Z-axis rotation (roll)
+        glRotatef(yaw, 0.0, 1.0, 0.0)    # Y-axis rotation (yaw)
         
         # Scale and center the model
         glScalef(self.model_scale, self.model_scale, self.model_scale)

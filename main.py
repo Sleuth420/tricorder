@@ -85,6 +85,7 @@ def main():
             
             # Create progress tracker and start loading worker
             progress_tracker = LoadingProgress()
+            progress_tracker.app_state = app_state  # Pass app_state for update check
             loading_thread = threading.Thread(target=loading_worker, args=(progress_tracker,))
             loading_thread.daemon = True
             loading_thread.start()
@@ -204,7 +205,7 @@ def main():
                     if not app_state.is_frozen:
                         updated_sensors = update_sensors_by_schedule(
                             sensor_values, reading_history, config, 
-                            current_time, last_sensor_update_times
+                            current_time, last_sensor_update_times, app_state.network_manager, app_state.system_info_manager
                         )
                         if updated_sensors:
                             app_state.last_reading_time = current_time

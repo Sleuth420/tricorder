@@ -17,6 +17,9 @@ from .wifi_manager import WifiManager, WIFI_ACTION_TOGGLE, WIFI_ACTION_BACK_TO_S
 from .password_entry_manager import PasswordEntryManager
 from .input_router import InputRouter
 from .update_manager import UpdateManager
+from .audio_manager import AudioManager
+from .network_manager import NetworkManager
+from .system_info_manager import SystemInfoManager
 import config as app_config
 
 # Application state constants
@@ -41,6 +44,9 @@ STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
 STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
 STATE_SETTINGS_CONTROLS = "SETTINGS_CONTROLS"
 STATE_SETTINGS_UPDATE = "SETTINGS_UPDATE"
+STATE_SETTINGS_SOUND_TEST = "SETTINGS_SOUND_TEST"
+STATE_SETTINGS_DEBUG_OVERLAY = "SETTINGS_DEBUG_OVERLAY"
+STATE_SETTINGS_LOG_VIEWER = "SETTINGS_LOG_VIEWER"
 STATE_SELECT_COMBO_DURATION = "SELECT_COMBO_DURATION" # New state for selecting combo duration
 
 # WiFi Sub-States
@@ -81,6 +87,10 @@ class AppState:
         self.state_manager = StateManager(config_module)
         self.input_manager = InputManager(config_module)
         
+        # Update status tracking
+        self.update_available = False
+        self.commits_behind = 0
+        
         # Schematics selection data for 3D viewer
         self.selected_schematics_data = None  # Data from schematics menu selection
         
@@ -96,6 +106,14 @@ class AppState:
         self.loading_manager = LoadingManager(config_module, screen_width, screen_height)
         self.wifi_manager = WifiManager(config_module) # Instantiate WifiManager (no command func needed)
         self.update_manager = UpdateManager(config_module) # Instantiate UpdateManager
+        self.audio_manager = AudioManager(config_module) # Instantiate AudioManager
+        self.network_manager = NetworkManager() # Instantiate NetworkManager
+        self.system_info_manager = SystemInfoManager() # Instantiate SystemInfoManager
+        
+        # Debug overlay - initialized with screen dimensions
+        from ui.components.debug import DebugOverlay
+        self.debug_overlay = DebugOverlay(screen_width, screen_height)
+        
         # Password entry manager - initialized with screen dimensions
         import pygame
         screen_rect = pygame.Rect(0, 0, screen_width, screen_height)
@@ -243,6 +261,10 @@ class AppState:
             elif event_type == 'KEYDOWN':
                 self.input_manager.handle_keydown(key)
                 
+                # Track input for debug overlay
+                if hasattr(self, 'debug_overlay'):
+                    self.debug_overlay.add_input_event('KEYDOWN', key)
+                
                 # Check for secret combo start (on main menu settings item)
                 if (self.current_state == STATE_MENU and
                     not self.input_manager.secret_combo_start_time and
@@ -255,10 +277,18 @@ class AppState:
             elif event_type == 'KEYUP':
                 key_event = self.input_manager.handle_keyup(key)
                 
+                # Track input for debug overlay
+                if hasattr(self, 'debug_overlay'):
+                    self.debug_overlay.add_input_event('KEYUP', key)
+                
                 if not self.input_manager.secret_combo_start_time:
                     state_changed_by_action = self._handle_key_release(key, action_name) or state_changed_by_action
             
             elif event_type == 'JOYSTICK':
+                # Track input for debug overlay
+                if hasattr(self, 'debug_overlay'):
+                    self.debug_overlay.add_input_event('JOYSTICK', action_name)
+                
                 if action_name:
                     if self.current_state == STATE_PONG_ACTIVE:
                         state_changed_by_action = self._handle_pong_joystick_input(action_name) or state_changed_by_action

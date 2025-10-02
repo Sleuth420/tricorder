@@ -2,6 +2,7 @@
 # Routes input actions to appropriate managers based on current state
 
 import logging
+import time
 import config as app_config
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,9 @@ STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
 STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
 STATE_SETTINGS_CONTROLS = "SETTINGS_CONTROLS"
 STATE_SETTINGS_UPDATE = "SETTINGS_UPDATE"
+STATE_SETTINGS_SOUND_TEST = "SETTINGS_SOUND_TEST"
+STATE_SETTINGS_DEBUG_OVERLAY = "SETTINGS_DEBUG_OVERLAY"
+STATE_SETTINGS_LOG_VIEWER = "SETTINGS_LOG_VIEWER"
 STATE_SELECT_COMBO_DURATION = "SELECT_COMBO_DURATION"
 STATE_SETTINGS_WIFI_NETWORKS = "SETTINGS_WIFI_NETWORKS"
 STATE_WIFI_PASSWORD_ENTRY = "WIFI_PASSWORD_ENTRY"
@@ -73,6 +77,12 @@ class InputRouter:
             return self._handle_controls_settings_input(action)
         elif current_state == STATE_SETTINGS_UPDATE:
             return self._handle_update_settings_input(action)
+        elif current_state == STATE_SETTINGS_SOUND_TEST:
+            return self._handle_sound_test_input(action)
+        elif current_state == STATE_SETTINGS_DEBUG_OVERLAY:
+            return self._handle_debug_overlay_input(action)
+        elif current_state == STATE_SETTINGS_LOG_VIEWER:
+            return self._handle_log_viewer_input(action)
         elif current_state == STATE_SELECT_COMBO_DURATION:
             return self._handle_select_combo_duration_input(action)
         elif current_state in [STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP]:
@@ -333,6 +343,144 @@ class InputRouter:
             elif result == "START_SYSTEM_UPDATE":
                 return self._start_system_update()
         return result
+    
+    def _handle_sound_test_input(self, action):
+        """Handle input for the Sound Test view."""
+        # Check if we're in the dedicated audio test screen
+        if hasattr(self.app_state, 'show_audio_test_screen') and self.app_state.show_audio_test_screen:
+            return self._handle_audio_test_screen_input(action)
+        
+        # Handle the main sound test menu
+        if action == app_config.INPUT_ACTION_NEXT:
+            # Navigate down in sound test menu
+            if not hasattr(self.app_state, 'sound_test_option_index'):
+                self.app_state.sound_test_option_index = 0
+            self.app_state.sound_test_option_index = (self.app_state.sound_test_option_index + 1) % 4
+            return True
+        elif action == app_config.INPUT_ACTION_PREV:
+            # Navigate up in sound test menu
+            if not hasattr(self.app_state, 'sound_test_option_index'):
+                self.app_state.sound_test_option_index = 0
+            self.app_state.sound_test_option_index = (self.app_state.sound_test_option_index - 1) % 4
+            return True
+        elif action == app_config.INPUT_ACTION_SELECT:
+            # Handle sound test selection
+            if not hasattr(self.app_state, 'sound_test_option_index'):
+                self.app_state.sound_test_option_index = 0
+            
+            if self.app_state.sound_test_option_index == 0:  # Advanced Audio Test
+                self.app_state.show_audio_test_screen = True
+                logger.info("Entering advanced audio test screen")
+                return True
+            elif self.app_state.sound_test_option_index == 1:  # Quick Test Sound
+                if self.app_state.audio_manager:
+                    self.app_state.audio_manager.play_sound('test_sound')
+                    logger.info("Playing quick test sound")
+                return True
+            elif self.app_state.sound_test_option_index == 2:  # Stop Music
+                if self.app_state.audio_manager:
+                    self.app_state.audio_manager.stop_music()
+                    logger.info("Stopped music")
+                return True
+            elif self.app_state.sound_test_option_index == 3:  # Back to Settings
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS)
+        return False
+    
+    def _handle_audio_test_screen_input(self, action):
+        """Handle input for the dedicated audio test screen."""
+        if not hasattr(self.app_state, 'audio_test_screen'):
+            return False
+            
+        audio_test = self.app_state.audio_test_screen
+        
+        if action == app_config.INPUT_ACTION_NEXT:
+            # Navigate down in audio test screen
+            audio_test.selected_option = (audio_test.selected_option + 1) % 4
+            return True
+        elif action == app_config.INPUT_ACTION_PREV:
+            # Navigate up in audio test screen
+            audio_test.selected_option = (audio_test.selected_option - 1) % 4
+            return True
+        elif action == app_config.INPUT_ACTION_SELECT:
+            # Handle audio test screen selection
+            if audio_test.selected_option == 0:  # Play/Stop Test
+                if audio_test.is_playing:
+                    audio_test.stop_test()
+                    if self.app_state.audio_manager:
+                        self.app_state.audio_manager.stop_music()
+                    logger.info("Stopped audio test")
+                else:
+                    audio_test.start_test()
+                    if self.app_state.audio_manager:
+                        self.app_state.audio_manager.play_sound('test_sound')
+                        self.app_state.audio_manager.set_volume(audio_test.volume)
+                    logger.info("Started audio test")
+                return True
+            elif audio_test.selected_option == 1:  # Volume Up
+                audio_test.volume = min(1.0, audio_test.volume + 0.1)
+                if self.app_state.audio_manager:
+                    self.app_state.audio_manager.set_volume(audio_test.volume)
+                logger.info(f"Volume increased to {int(audio_test.volume * 100)}%")
+                return True
+            elif audio_test.selected_option == 2:  # Volume Down
+                audio_test.volume = max(0.0, audio_test.volume - 0.1)
+                if self.app_state.audio_manager:
+                    self.app_state.audio_manager.set_volume(audio_test.volume)
+                logger.info(f"Volume decreased to {int(audio_test.volume * 100)}%")
+                return True
+            elif audio_test.selected_option == 3:  # Back to Sound Test Menu
+                audio_test.stop_test()
+                self.app_state.show_audio_test_screen = False
+                logger.info("Returned to sound test menu")
+                return True
+        return False
+    
+    def _handle_debug_overlay_input(self, action):
+        """Handle input for the Debug Overlay settings view."""
+        if action == app_config.INPUT_ACTION_NEXT:
+            # Navigate down in debug overlay menu
+            if not hasattr(self.app_state, 'debug_overlay_option_index'):
+                self.app_state.debug_overlay_option_index = 0
+            self.app_state.debug_overlay_option_index = (self.app_state.debug_overlay_option_index + 1) % 3
+            return True
+        elif action == app_config.INPUT_ACTION_PREV:
+            # Navigate up in debug overlay menu
+            if not hasattr(self.app_state, 'debug_overlay_option_index'):
+                self.app_state.debug_overlay_option_index = 0
+            self.app_state.debug_overlay_option_index = (self.app_state.debug_overlay_option_index - 1) % 3
+            return True
+        elif action == app_config.INPUT_ACTION_SELECT:
+            # Handle debug overlay selection
+            if not hasattr(self.app_state, 'debug_overlay_option_index'):
+                self.app_state.debug_overlay_option_index = 0
+            
+            if self.app_state.debug_overlay_option_index == 0:  # Toggle Debug Overlay
+                # Toggle debug overlay state
+                self.app_state.debug_overlay.set_enabled(not self.app_state.debug_overlay.enabled)
+                logger.info(f"Debug overlay {'enabled' if self.app_state.debug_overlay.enabled else 'disabled'}")
+                return True
+            elif self.app_state.debug_overlay_option_index == 1:  # Back to Settings
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS)
+        return False
+    
+    def _handle_log_viewer_input(self, action):
+        """Handle input for the Log Viewer."""
+        if action == app_config.INPUT_ACTION_NEXT:
+            # Scroll down in log viewer
+            if not hasattr(self.app_state, 'log_viewer_scroll_index'):
+                self.app_state.log_viewer_scroll_index = 0
+            self.app_state.log_viewer_scroll_index += 1
+            return True
+        elif action == app_config.INPUT_ACTION_PREV:
+            # Scroll up in log viewer
+            if not hasattr(self.app_state, 'log_viewer_scroll_index'):
+                self.app_state.log_viewer_scroll_index = 0
+            self.app_state.log_viewer_scroll_index = max(0, self.app_state.log_viewer_scroll_index - 1)
+            return True
+        elif action == app_config.INPUT_ACTION_BACK:
+            # Go back to settings
+            return self.app_state.state_manager.transition_to(STATE_SETTINGS)
+        return False
     
     def _start_app_update(self):
         """Start the application update process with loading screen."""

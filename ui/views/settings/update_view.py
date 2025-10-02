@@ -34,12 +34,29 @@ def draw_update_view(screen, app_state, fonts, config_module, ui_scaler=None):
     screen_width = screen.get_width()
     screen_height = screen.get_height()
     
+    # Add update available header if needed
+    if hasattr(app_state, 'update_available') and app_state.update_available:
+        header_text = "[UPDATE AVAILABLE]"
+        header_surface = fonts['medium'].render(header_text, True, config_module.Theme.ALERT)
+        screen.blit(header_surface, (20, 20))
+        
+        # Show commit count
+        commit_text = f"{app_state.commits_behind} commits behind"
+        commit_surface = fonts['small'].render(commit_text, True, config_module.Theme.FOREGROUND)
+        screen.blit(commit_surface, (20, 45))
+        
+        # Adjust other content down
+        info_y = 70
+    else:
+        info_y = 20
+    
     # Display system information at the top
     font_small = fonts['small']
     
     # Use UIScaler for responsive spacing if available
     if ui_scaler:
-        info_y = ui_scaler.margin("medium")
+        if not (hasattr(app_state, 'update_available') and app_state.update_available):
+            info_y = ui_scaler.margin("medium")
         line_spacing = ui_scaler.margin("small")
         section_spacing = ui_scaler.margin("large")
         
@@ -48,7 +65,8 @@ def draw_update_view(screen, app_state, fonts, config_module, ui_scaler=None):
             logger.info(f"🎨 UpdateView: screen={screen_width}x{screen_height}, info_y={info_y}px, spacing={line_spacing}px")
     else:
         # Fallback to original calculations
-        info_y = 20
+        if not (hasattr(app_state, 'update_available') and app_state.update_available):
+            info_y = 20
         line_spacing = 3
         section_spacing = 15
     

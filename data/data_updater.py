@@ -38,6 +38,13 @@ def _format_sensor_value(sensor_key, raw_value, display_props):
                 note = raw_value.strftime("%a %d %b %Y")
                 numeric_val = None # Clock is not numeric for graphing
 
+            elif sensor_key == config.SENSOR_BATTERY and isinstance(raw_value, tuple):
+                # Battery returns (percent, status) tuple
+                percent, status = raw_value
+                numeric_val = float(percent)
+                text_val = f"{percent:.0f}%"
+                note = status
+                
             else: # General numeric processing
                 numeric_val = float(raw_value) # Convert to float for history
                 # Format text value based on precision (can be added to SENSOR_DISPLAY_PROPERTIES)
@@ -59,7 +66,7 @@ def _format_sensor_value(sensor_key, raw_value, display_props):
 
     return {"text": text_val, "unit": unit, "note": note, "value": numeric_val}
 
-def update_sensors_by_schedule(sensor_values, reading_history, app_config, current_time, last_update_times):
+def update_sensors_by_schedule(sensor_values, reading_history, app_config, current_time, last_update_times, network_manager=None, system_info_manager=None):
     """
     Fetches data from sensors based on their individual update schedules.
     Only updates sensors whose update interval has elapsed.
@@ -77,18 +84,19 @@ def update_sensors_by_schedule(sensor_values, reading_history, app_config, curre
     updated_sensors = []
     
     # Data fetching functions map (Sensor Key -> Function to call)
+    # Use cached versions for system info, direct calls for Sense HAT sensors
     data_fetch_map = {
-        app_config.SENSOR_TEMPERATURE: sensors.get_temperature,
-        app_config.SENSOR_HUMIDITY: sensors.get_humidity,
-        app_config.SENSOR_PRESSURE: sensors.get_pressure,
-        app_config.SENSOR_ORIENTATION: sensors.get_orientation,
-        app_config.SENSOR_ACCELERATION: sensors.get_acceleration,
-        app_config.SENSOR_CLOCK: system_info.get_current_time,
-        app_config.SENSOR_CPU_USAGE: lambda: system_info.get_cpu_usage()[0],
-        app_config.SENSOR_MEMORY_USAGE: lambda: system_info.get_memory_usage()[0],
-        app_config.SENSOR_DISK_USAGE: lambda: system_info.get_disk_usage()[0],
-        app_config.SENSOR_VOLTAGE: system_info.get_voltage_info,
-        app_config.SENSOR_BATTERY: lambda: system_info.get_battery_info()[0],
+        app_config.SENSOR_TEMPERATURE: sensors.get_temperature,  # Sense HAT - real-time
+        app_config.SENSOR_HUMIDITY: sensors.get_humidity,        # Sense HAT - real-time
+        app_config.SENSOR_PRESSURE: sensors.get_pressure,        # Sense HAT - real-time
+        app_config.SENSOR_ORIENTATION: sensors.get_orientation,  # Sense HAT - real-time
+        app_config.SENSOR_ACCELERATION: sensors.get_acceleration, # Sense HAT - real-time
+        app_config.SENSOR_CLOCK: system_info.get_current_time,   # System - can be cached
+        app_config.SENSOR_CPU_USAGE: lambda: (system_info_manager.get_cpu_info_cached()[0] if system_info_manager else system_info.get_cpu_usage()[0]),
+        app_config.SENSOR_MEMORY_USAGE: lambda: (system_info_manager.get_memory_info_cached()[0] if system_info_manager else system_info.get_memory_usage()[0]),
+        app_config.SENSOR_DISK_USAGE: lambda: (system_info_manager.get_disk_info_cached()[0] if system_info_manager else system_info.get_disk_usage()[0]),
+        app_config.SENSOR_VOLTAGE: lambda: (system_info_manager.get_voltage_info_cached() if system_info_manager else system_info.get_voltage_info()),
+        app_config.SENSOR_BATTERY: lambda: (system_info_manager.get_battery_info_cached() if system_info_manager else system_info.get_battery_info()),
     }
 
     # Check each sensor's update schedule
@@ -124,7 +132,7 @@ def update_sensors_by_schedule(sensor_values, reading_history, app_config, curre
             reading_history.add_reading(sensor_key, history_val_to_add)
 
     # Update network information (always update these as they're not part of the scheduled sensors)
-    _update_network_info(sensor_values, app_config)
+    _update_network_info(sensor_values, app_config, network_manager)
     
     # Update special notes for system sensors that were updated
     _update_sensor_notes(sensor_values, app_config, updated_sensors)
@@ -134,15 +142,21 @@ def update_sensors_by_schedule(sensor_values, reading_history, app_config, curre
     
     return updated_sensors
 
-def _update_network_info(sensor_values, app_config):
-    """Update network information (WiFi, Bluetooth)."""
+def _update_network_info(sensor_values, app_config, network_manager=None):
+    """Update network information (WiFi, Bluetooth) with optional caching."""
     # WiFi Info
-    wifi_status_val, wifi_ssid_val = system_info.get_wifi_info()
+    if network_manager:
+        wifi_status_val, wifi_ssid_val = network_manager.get_wifi_info_cached()
+    else:
+        wifi_status_val, wifi_ssid_val = system_info.get_wifi_info()
     sensor_values[app_config.INFO_WIFI_STATUS] = {"text": wifi_status_val, "unit": "", "note": "", "value": None}
     sensor_values[app_config.INFO_WIFI_SSID] = {"text": wifi_ssid_val, "unit": "", "note": "", "value": None}
 
     # Bluetooth Info
-    bluetooth_status_val, bluetooth_device_val = system_info.get_bluetooth_info()
+    if network_manager:
+        bluetooth_status_val, bluetooth_device_val = network_manager.get_bluetooth_info_cached()
+    else:
+        bluetooth_status_val, bluetooth_device_val = system_info.get_bluetooth_info()
     sensor_values[app_config.INFO_BLUETOOTH_STATUS] = {"text": bluetooth_status_val, "unit": "", "note": "", "value": None}
     sensor_values[app_config.INFO_BLUETOOTH_DEVICE] = {"text": bluetooth_device_val, "unit": "", "note": "", "value": None}
 
@@ -170,11 +184,7 @@ def _update_sensor_notes(sensor_values, app_config, updated_sensors):
         if disk_used is not None and disk_total is not None:
             sensor_values[app_config.SENSOR_DISK_USAGE]["note"] = f"{disk_used:.1f}GB/{disk_total:.1f}GB"
 
-    # Battery status note
-    if app_config.SENSOR_BATTERY in updated_sensors and app_config.SENSOR_BATTERY in sensor_values:
-        _, battery_status = system_info.get_battery_info()
-        if battery_status:
-            sensor_values[app_config.SENSOR_BATTERY]["note"] = battery_status
+    # Battery status note is now handled in _format_sensor_value
 
 def update_all_data(sensor_values, reading_history, app_config):
     """
@@ -275,10 +285,6 @@ def update_all_data(sensor_values, reading_history, app_config):
         if disk_used is not None and disk_total is not None:
              sensor_values[app_config.SENSOR_DISK_USAGE]["note"] = f"{disk_used:.1f}GB/{disk_total:.1f}GB"
 
-    # --- Special case for Battery to include status as note ---
-    if app_config.SENSOR_BATTERY in sensor_values:
-        _percent, battery_status = system_info.get_battery_info()
-        if battery_status:
-            sensor_values[app_config.SENSOR_BATTERY]["note"] = battery_status
+    # Battery status note is now handled in _format_sensor_value
 
     logger.debug("Data update complete.") 

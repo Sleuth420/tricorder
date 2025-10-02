@@ -3,7 +3,7 @@
 
 import pygame
 import logging
-from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SCHEMATICS, STATE_SCHEMATICS_MENU, STATE_SENSORS_MENU, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_DEVICE, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY, STATE_LOADING
+from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SCHEMATICS, STATE_SCHEMATICS_MENU, STATE_SENSORS_MENU, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_DEVICE, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY, STATE_LOADING
 from ui.menu import draw_menu_screen
 from ui.views.sensors.sensor_view import draw_sensor_view
 from ui.views.system.system_info_view import draw_system_info_view
@@ -19,6 +19,9 @@ from ui.views.settings.select_combo_duration_view import draw_select_combo_durat
 from ui.views.settings.wifi_settings_view import draw_wifi_settings_view, draw_wifi_networks_view
 from ui.views.settings.wifi_password_entry_view import draw_wifi_password_entry_view
 from ui.views.settings.update_view import draw_update_view
+from ui.views.settings.sound_test_view import draw_sound_test_view
+from ui.views.settings.debug_overlay_view import draw_debug_overlay_view
+from ui.views.settings.log_viewer_view import draw_log_viewer_view
 from ui.views.schematics.schematics_menu_view import draw_schematics_menu_view
 
 # Import UIScaler for centralized scaling
@@ -51,6 +54,21 @@ def init_display():
         pygame.init()
         pygame.display.set_caption("Tricorder")
         
+        # Initialize audio subsystem
+        try:
+            import config
+            pygame.mixer.init(
+                frequency=config.AUDIO_FREQUENCY,
+                size=-16,  # 16-bit signed
+                channels=2,  # Stereo
+                buffer=config.AUDIO_BUFFER_SIZE
+            )
+            logger.info("Pygame audio initialized successfully")
+        except pygame.error as e:
+            logger.warning(f"Could not initialize pygame audio: {e}")
+        except Exception as e:
+            logger.warning(f"Audio initialization error: {e}")
+        
         import config  # Import here to avoid circular imports
         
         # Start with normal display mode
@@ -71,12 +89,14 @@ def init_display():
             fonts['large'] = pygame.font.Font(config.FONT_PRIMARY_PATH, config.FONT_SIZE_LARGE)
             fonts['medium'] = pygame.font.Font(config.FONT_PRIMARY_PATH, config.FONT_SIZE_MEDIUM)
             fonts['small'] = pygame.font.Font(config.FONT_PRIMARY_PATH, config.FONT_SIZE_SMALL)
+            fonts['tiny'] = pygame.font.Font(config.FONT_PRIMARY_PATH, config.FONT_SIZE_TINY)
             logger.info(f"Custom font '{config.FONT_PRIMARY_PATH}' loaded successfully.")
         except Exception as e:
             logger.warning(f"Could not load custom font ('{config.FONT_PRIMARY_PATH}'): {e}. Using default font.")
             fonts['large'] = pygame.font.SysFont(None, config.FONT_SIZE_LARGE)
             fonts['medium'] = pygame.font.SysFont(None, config.FONT_SIZE_MEDIUM)
             fonts['small'] = pygame.font.SysFont(None, config.FONT_SIZE_SMALL)
+            fonts['tiny'] = pygame.font.SysFont(None, config.FONT_SIZE_TINY)
             
         # Make sure there's a default font for fallback
         fonts['default'] = fonts['medium']
@@ -317,6 +337,12 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         draw_controls_view(screen, app_state, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_SETTINGS_UPDATE:
         draw_update_view(screen, app_state, fonts, config_module, current_ui_scaler)
+    elif app_state.current_state == STATE_SETTINGS_SOUND_TEST:
+        draw_sound_test_view(screen, app_state, fonts, config_module, current_ui_scaler)
+    elif app_state.current_state == STATE_SETTINGS_DEBUG_OVERLAY:
+        draw_debug_overlay_view(screen, app_state, fonts, config_module, current_ui_scaler)
+    elif app_state.current_state == STATE_SETTINGS_LOG_VIEWER:
+        draw_log_viewer_view(screen, app_state, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_CONFIRM_REBOOT:
         draw_confirmation_view(screen, app_state, fonts, config_module, message="Reboot Device?", ui_scaler=current_ui_scaler)
     elif app_state.current_state == STATE_CONFIRM_SHUTDOWN:
@@ -353,6 +379,11 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         screen.fill(config_module.Theme.BACKGROUND)
         error_text = fonts['medium'].render("Error: Unknown state", True, config_module.Theme.ALERT)
         screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
+    
+    # Update and draw debug overlay if enabled
+    if hasattr(app_state, 'debug_overlay') and app_state.debug_overlay.enabled:
+        app_state.debug_overlay.update()
+        app_state.debug_overlay.draw(screen, fonts, config_module)
         
     # Update the display
     pygame.display.flip()

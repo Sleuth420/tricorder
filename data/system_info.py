@@ -35,7 +35,7 @@ def get_cpu_usage():
         return None, None  # Usage percent, additional info
         
     try:
-        cpu_percent = psutil.cpu_percent(interval=0.1)
+        cpu_percent = psutil.cpu_percent()  # Non-blocking call
         
         # Get CPU temperature if available (Raspberry Pi specific)
         additional_info = None

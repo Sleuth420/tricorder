@@ -335,7 +335,20 @@ def loading_worker(progress_tracker):
         progress_tracker.update(stage="Calibrating sensor array...")
         time.sleep(0.7)
         
-        # Stage 4: Preparing system
+        # Stage 4: Check for updates if WiFi available
+        progress_tracker.update(stage="Checking for updates...")
+        try:
+            from data import system_info
+            wifi_status, _ = system_info.get_wifi_info()
+            if wifi_status in ["Connected", "Online"] and hasattr(progress_tracker, 'app_state') and progress_tracker.app_state:
+                if progress_tracker.app_state.update_manager._check_network_connectivity():
+                    progress_tracker.app_state.update_manager._check_for_updates()
+                    progress_tracker.app_state.update_available = progress_tracker.app_state.update_manager.update_available
+                    progress_tracker.app_state.commits_behind = progress_tracker.app_state.update_manager.remote_version.get('commits_behind', 0) if progress_tracker.app_state.update_manager.remote_version else 0
+        except Exception as e:
+            logger.debug(f"Update check failed: {e}")
+        
+        # Stage 5: Preparing system
         progress_tracker.update(stage="Establishing subspace link...")
         time.sleep(0.6)
         

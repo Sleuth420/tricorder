@@ -21,6 +21,9 @@ STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
 STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
 STATE_SETTINGS_CONTROLS = "SETTINGS_CONTROLS"
 STATE_SETTINGS_UPDATE = "SETTINGS_UPDATE"
+STATE_SETTINGS_SOUND_TEST = "SETTINGS_SOUND_TEST"
+STATE_SETTINGS_DEBUG_OVERLAY = "SETTINGS_DEBUG_OVERLAY"
+STATE_SETTINGS_LOG_VIEWER = "SETTINGS_LOG_VIEWER"
 
 import config as app_config
 
@@ -212,6 +215,21 @@ class MenuManager:
             MenuItem(
                 name="System Updates", # New Update menu item
                 target_state=STATE_SETTINGS_UPDATE,
+                color_key="SIDEBAR_SYSTEM" # Example color
+            ),
+            MenuItem(
+                name="Sound Test", # New Sound Test menu item
+                target_state=STATE_SETTINGS_SOUND_TEST,
+                color_key="SIDEBAR_SYSTEM" # Example color
+            ),
+            MenuItem(
+                name="Debug Overlay", # New Debug Overlay menu item
+                target_state=STATE_SETTINGS_DEBUG_OVERLAY,
+                color_key="SIDEBAR_SYSTEM" # Example color
+            ),
+            MenuItem(
+                name="View Logs", # New Log Viewer menu item
+                target_state=STATE_SETTINGS_LOG_VIEWER,
                 color_key="SIDEBAR_SYSTEM" # Example color
             ),
             MenuItem(

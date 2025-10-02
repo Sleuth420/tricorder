@@ -120,6 +120,12 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
             text_padding = ui_scaler.padding("medium")
             text_pos = (item_rect.left + text_padding, item_rect.centery - text_surface.get_height() // 2)
             screen.blit(text_surface, text_pos)
+            
+            # Draw exclamation mark badge for Settings if update available
+            if (item.name == "Settings" and 
+                hasattr(app_state, 'update_available') and 
+                app_state.update_available):
+                _draw_exclamation_badge(screen, item_rect, config_module, fonts)
 
             # Store selected item info for arrow indicator
             if i == selected_index:
@@ -196,4 +202,20 @@ def _draw_arrow_indicator(screen, arrow_area_rect, selected_item_rect, item_colo
     pygame.draw.polygon(screen, arrow_color, arrow_points)
     
     # Optional: Add a subtle border to the arrow
-    pygame.draw.polygon(screen, config_module.Palette.BLACK, arrow_points, 1) 
+    pygame.draw.polygon(screen, config_module.Palette.BLACK, arrow_points, 1)
+
+def _draw_exclamation_badge(screen, item_rect, config_module, fonts):
+    """Draw a red circle with exclamation mark badge."""
+    # Badge size and position
+    badge_size = 16
+    badge_x = item_rect.right - badge_size - 8
+    badge_y = item_rect.top + 8
+    
+    # Draw red circle
+    badge_rect = pygame.Rect(badge_x, badge_y, badge_size, badge_size)
+    pygame.draw.circle(screen, config_module.Theme.ALERT, badge_rect.center, badge_size // 2)
+    
+    # Draw white exclamation mark
+    exclamation_surface = fonts['tiny'].render("!", True, config_module.Theme.WHITE)
+    exclamation_rect = exclamation_surface.get_rect(center=badge_rect.center)
+    screen.blit(exclamation_surface, exclamation_rect) 

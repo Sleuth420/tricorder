@@ -36,3 +36,6 @@ hdmi_force_hotplug=0
 #overscan_right=20
 #overscan_top=20
 #overscan_bottom=20
+
+dtparam=audio=on
+audio_pwm_mode=2

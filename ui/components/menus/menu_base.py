@@ -61,7 +61,18 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
     selected_index = app_state.get_current_menu_index()
 
     # --- Part 1: Draw Corner Rectangle (Distinct block, Orange) ---
-    corner_rect = pygame.Rect(0, 0, base_sidebar_width, header_height)
+    # Respect safe area margins for corner rectangle
+    if ui_scaler and ui_scaler.safe_area_enabled:
+        safe_margins = ui_scaler.get_safe_area_margins()
+        corner_rect = pygame.Rect(
+            safe_margins['left'], 
+            safe_margins['top'], 
+            base_sidebar_width - safe_margins['left'], 
+            header_height - safe_margins['top']
+        )
+    else:
+        corner_rect = pygame.Rect(0, 0, base_sidebar_width, header_height)
+    
     # Apply rounding only to the top-left corner
     pygame.draw.rect(screen, corner_color, corner_rect, border_top_left_radius=curve_radius)
     # Draw border outline (should respect rounding)
@@ -69,7 +80,18 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
 
     # --- Part 2: Draw Header Bar (Starts AFTER base sidebar width, Orange) ---
     # Header should span from base_sidebar_width to screen_width (no gap for arrow area)
-    header_rect = pygame.Rect(base_sidebar_width, 0, screen_width - base_sidebar_width, header_height)
+    # Respect safe area margins for header bar
+    if ui_scaler and ui_scaler.safe_area_enabled:
+        safe_margins = ui_scaler.get_safe_area_margins()
+        header_rect = pygame.Rect(
+            base_sidebar_width, 
+            safe_margins['top'], 
+            screen_width - base_sidebar_width - safe_margins['right'], 
+            header_height - safe_margins['top']
+        )
+    else:
+        header_rect = pygame.Rect(base_sidebar_width, 0, screen_width - base_sidebar_width, header_height)
+    
     pygame.draw.rect(screen, header_color, header_rect)
     # Draw border outline
     pygame.draw.rect(screen, config_module.COLOR_BORDER, header_rect, width=config_module.Theme.BORDER_WIDTH)
@@ -77,7 +99,18 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
     # --- Part 3: Draw Sidebar Items (Starts BELOW header height) ---
     sidebar_content_y_start = header_height # Items start below the header/corner
     sidebar_content_height = screen_height - header_height
-    sidebar_items_area = pygame.Rect(0, sidebar_content_y_start, base_sidebar_width, sidebar_content_height)
+    
+    # Respect safe area margins for sidebar items
+    if ui_scaler and ui_scaler.safe_area_enabled:
+        safe_margins = ui_scaler.get_safe_area_margins()
+        sidebar_items_area = pygame.Rect(
+            safe_margins['left'], 
+            sidebar_content_y_start + safe_margins['top'], 
+            base_sidebar_width - safe_margins['left'], 
+            sidebar_content_height - safe_margins['top'] - safe_margins['bottom']
+        )
+    else:
+        sidebar_items_area = pygame.Rect(0, sidebar_content_y_start, base_sidebar_width, sidebar_content_height)
 
     selected_item_rect = None
     selected_item_color = config_module.Theme.ACCENT

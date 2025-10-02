@@ -13,7 +13,7 @@ from config import sensors as sensor_config
 logger = logging.getLogger(__name__)
 
 # Debug flag for detailed sensor logging (set to False to disable)
-SENSOR_DEBUG_LOGGING = True
+SENSOR_DEBUG_LOGGING = False
 
 # Attempt to import SenseHat, handle potential errors if library not installed
 try:

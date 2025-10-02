@@ -260,6 +260,9 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         logger.error("Failed to get valid display surface")
         return
         
+    # Normal background fill
+    screen.fill(config_module.Theme.BACKGROUND)
+
     # Draw the appropriate view based on app state
     if app_state.current_state == STATE_MENU:
         # Menu state shows sidebar with system info in main content
@@ -384,6 +387,19 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
     if hasattr(app_state, 'debug_overlay') and app_state.debug_overlay.enabled:
         app_state.debug_overlay.update()
         app_state.debug_overlay.draw(screen, fonts, config_module)
+    
+    # Apply rounded corner clipping to match curved screen protector
+    if current_ui_scaler and current_ui_scaler.safe_area_enabled:
+        # Create a mask surface for rounded corners
+        mask_surface = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
+        mask_surface.fill((0, 0, 0, 0))  # Transparent
+        
+        # Draw rounded rectangle in white (visible area)
+        safe_rect = current_ui_scaler.get_safe_area_rect()
+        pygame.draw.rect(mask_surface, (255, 255, 255, 255), safe_rect, border_radius=25)
+        
+        # Apply the mask to clip content to rounded corners
+        screen.blit(mask_surface, (0, 0), special_flags=pygame.BLEND_MULT)
         
     # Update the display
     pygame.display.flip()

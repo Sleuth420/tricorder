@@ -37,10 +37,10 @@ SCHEMATICS_ZOOM_FAST_STEP = 0.3    # Faster zoom step for held actions
 # These values define the safe area where content should be placed to avoid
 # being cut off by curved screen covers or bezels
 SAFE_AREA_ENABLED = True           # Enable/disable safe area system
-SAFE_AREA_TOP = 8                  # Pixels to avoid at top (for curved top edge)
-SAFE_AREA_BOTTOM = 8               # Pixels to avoid at bottom (for curved bottom edge)
-SAFE_AREA_LEFT = 8                 # Pixels to avoid at left (for curved left edge)
-SAFE_AREA_RIGHT = 8                # Pixels to avoid at right (for curved right edge)
+SAFE_AREA_TOP = 15                 # Pixels to avoid at top (for curved top edge)
+SAFE_AREA_BOTTOM = 15              # Pixels to avoid at bottom (for curved bottom edge)
+SAFE_AREA_LEFT = 20                # Pixels to avoid at left (for curved left edge)
+SAFE_AREA_RIGHT = 20               # Pixels to avoid at right (for curved right edge)
 
 # Corner radius for rounded safe area (0 = rectangular safe area)
 SAFE_AREA_CORNER_RADIUS = 12       # Pixels - adjust based on your cover's curve

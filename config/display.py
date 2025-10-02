@@ -31,4 +31,22 @@ SCHEMATICS_ZOOM_DEFAULT = 1.0      # Default zoom level (1.0 = normal size)
 SCHEMATICS_ZOOM_MIN = 0.2          # Minimum zoom level (0.2 = 20% of normal size)
 SCHEMATICS_ZOOM_MAX = 5.0          # Maximum zoom level (5.0 = 500% of normal size)
 SCHEMATICS_ZOOM_STEP = 0.1         # Zoom step size for each zoom in/out action
-SCHEMATICS_ZOOM_FAST_STEP = 0.3    # Faster zoom step for held actions 
+SCHEMATICS_ZOOM_FAST_STEP = 0.3    # Faster zoom step for held actions
+
+# -- Safe Area Settings for Physical Screen Covers --
+# These values define the safe area where content should be placed to avoid
+# being cut off by curved screen covers or bezels
+SAFE_AREA_ENABLED = True           # Enable/disable safe area system
+SAFE_AREA_TOP = 8                  # Pixels to avoid at top (for curved top edge)
+SAFE_AREA_BOTTOM = 8               # Pixels to avoid at bottom (for curved bottom edge)
+SAFE_AREA_LEFT = 8                 # Pixels to avoid at left (for curved left edge)
+SAFE_AREA_RIGHT = 8                # Pixels to avoid at right (for curved right edge)
+
+# Corner radius for rounded safe area (0 = rectangular safe area)
+SAFE_AREA_CORNER_RADIUS = 12       # Pixels - adjust based on your cover's curve
+
+# Alternative: Percentage-based safe areas (overrides pixel values if > 0)
+SAFE_AREA_TOP_PERCENT = 0          # 0 = use pixel value, >0 = percentage of screen height
+SAFE_AREA_BOTTOM_PERCENT = 0       # 0 = use pixel value, >0 = percentage of screen height
+SAFE_AREA_LEFT_PERCENT = 0         # 0 = use pixel value, >0 = percentage of screen width
+SAFE_AREA_RIGHT_PERCENT = 0        # 0 = use pixel value, >0 = percentage of screen width 

@@ -2,6 +2,7 @@
 # Centralized UI scaling system for consistent responsive design
 
 import logging
+import pygame
 
 logger = logging.getLogger(__name__)
 
@@ -46,11 +47,123 @@ class UIScaler:
         # Set debug mode from config
         self.debug_mode = getattr(config_module, 'UI_DEBUG_DRAWING', False) if config_module else False
         
+        # Initialize safe area settings
+        self._init_safe_area()
+        
         # Basic initialization logging
         logger.debug(f"UIScaler initialized: {screen_width}x{screen_height}, scale={self.scale_factor:.2f}")
         
         if self.debug_mode:
             logger.info(f"🎨 UIScaler DEBUG MODE: {screen_width}x{screen_height}, scale_factor={self.scale_factor:.2f}")
+            if self.safe_area_enabled:
+                logger.info(f"🎨 Safe Area: top={self.safe_area_top}, bottom={self.safe_area_bottom}, left={self.safe_area_left}, right={self.safe_area_right}")
+    
+    def _init_safe_area(self):
+        """Initialize safe area settings from config."""
+        if not self.config:
+            # No config available, disable safe area
+            self.safe_area_enabled = False
+            self.safe_area_top = 0
+            self.safe_area_bottom = 0
+            self.safe_area_left = 0
+            self.safe_area_right = 0
+            self.safe_area_corner_radius = 0
+            return
+        
+        # Check if safe area is enabled
+        self.safe_area_enabled = getattr(self.config, 'SAFE_AREA_ENABLED', False)
+        
+        if not self.safe_area_enabled:
+            self.safe_area_top = 0
+            self.safe_area_bottom = 0
+            self.safe_area_left = 0
+            self.safe_area_right = 0
+            self.safe_area_corner_radius = 0
+            return
+        
+        # Get percentage-based values first
+        top_percent = getattr(self.config, 'SAFE_AREA_TOP_PERCENT', 0)
+        bottom_percent = getattr(self.config, 'SAFE_AREA_BOTTOM_PERCENT', 0)
+        left_percent = getattr(self.config, 'SAFE_AREA_LEFT_PERCENT', 0)
+        right_percent = getattr(self.config, 'SAFE_AREA_RIGHT_PERCENT', 0)
+        
+        # Use percentage values if > 0, otherwise use pixel values
+        if top_percent > 0:
+            self.safe_area_top = int(self.screen_height * top_percent / 100)
+        else:
+            self.safe_area_top = getattr(self.config, 'SAFE_AREA_TOP', 0)
+            
+        if bottom_percent > 0:
+            self.safe_area_bottom = int(self.screen_height * bottom_percent / 100)
+        else:
+            self.safe_area_bottom = getattr(self.config, 'SAFE_AREA_BOTTOM', 0)
+            
+        if left_percent > 0:
+            self.safe_area_left = int(self.screen_width * left_percent / 100)
+        else:
+            self.safe_area_left = getattr(self.config, 'SAFE_AREA_LEFT', 0)
+            
+        if right_percent > 0:
+            self.safe_area_right = int(self.screen_width * right_percent / 100)
+        else:
+            self.safe_area_right = getattr(self.config, 'SAFE_AREA_RIGHT', 0)
+        
+        # Get corner radius
+        self.safe_area_corner_radius = getattr(self.config, 'SAFE_AREA_CORNER_RADIUS', 0)
+        
+        # Ensure safe areas don't exceed screen dimensions
+        self.safe_area_top = min(self.safe_area_top, self.screen_height // 2)
+        self.safe_area_bottom = min(self.safe_area_bottom, self.screen_height // 2)
+        self.safe_area_left = min(self.safe_area_left, self.screen_width // 2)
+        self.safe_area_right = min(self.safe_area_right, self.screen_width // 2)
+    
+    def get_safe_area_rect(self):
+        """
+        Get the safe area rectangle where content should be placed.
+        
+        Returns:
+            pygame.Rect: Safe area rectangle
+        """
+        if not self.safe_area_enabled:
+            return pygame.Rect(0, 0, self.screen_width, self.screen_height)
+        
+        return pygame.Rect(
+            self.safe_area_left,
+            self.safe_area_top,
+            self.screen_width - self.safe_area_left - self.safe_area_right,
+            self.screen_height - self.safe_area_top - self.safe_area_bottom
+        )
+    
+    def get_safe_area_margins(self):
+        """
+        Get safe area margins as a dictionary.
+        
+        Returns:
+            dict: Dictionary with 'top', 'bottom', 'left', 'right' margins
+        """
+        return {
+            'top': self.safe_area_top,
+            'bottom': self.safe_area_bottom,
+            'left': self.safe_area_left,
+            'right': self.safe_area_right
+        }
+    
+    def is_point_in_safe_area(self, x, y):
+        """
+        Check if a point is within the safe area.
+        
+        Args:
+            x (int): X coordinate
+            y (int): Y coordinate
+            
+        Returns:
+            bool: True if point is in safe area
+        """
+        if not self.safe_area_enabled:
+            return True
+        
+        safe_rect = self.get_safe_area_rect()
+        return safe_rect.collidepoint(x, y)
     
     def scale(self, base_value):
         """
@@ -157,12 +270,21 @@ class UIScaler:
         """
         Get standardized content margin.
         Replaces: max(8, screen_width // 30)
+        Now respects safe area margins.
         
         Returns:
             int: Content margin in pixels
         """
         # Use original proportional calculation
-        result = max(8, self.screen_width // 30)
+        base_margin = max(8, self.screen_width // 30)
+        
+        # Add safe area margin if enabled
+        if self.safe_area_enabled:
+            safe_margins = self.get_safe_area_margins()
+            # Use the larger of base margin or safe area margin
+            result = max(base_margin, max(safe_margins['left'], safe_margins['right']))
+        else:
+            result = base_margin
         
         if self.debug_mode:
             logger.info(f"🎨 UIScaler.content_margin: {result}px ({result/self.screen_width*100:.1f}% of {self.screen_width}px)")
@@ -324,6 +446,46 @@ class UIScaler:
         """
         return self.screen_width <= 400
     
+    def get_safe_content_rect(self):
+        """
+        Get a rectangle for content that respects safe areas.
+        
+        Returns:
+            pygame.Rect: Content rectangle within safe area
+        """
+        if not self.safe_area_enabled:
+            return pygame.Rect(0, 0, self.screen_width, self.screen_height)
+        
+        safe_rect = self.get_safe_area_rect()
+        # Add some padding within the safe area
+        padding = self.margin("medium")
+        return pygame.Rect(
+            safe_rect.left + padding,
+            safe_rect.top + padding,
+            safe_rect.width - 2 * padding,
+            safe_rect.height - 2 * padding
+        )
+    
+    def get_safe_header_rect(self):
+        """
+        Get a rectangle for header content that respects safe areas.
+        
+        Returns:
+            pygame.Rect: Header rectangle within safe area
+        """
+        if not self.safe_area_enabled:
+            header_height = self.header_height()
+            return pygame.Rect(0, 0, self.screen_width, header_height)
+        
+        safe_rect = self.get_safe_area_rect()
+        header_height = self.header_height()
+        return pygame.Rect(
+            safe_rect.left,
+            safe_rect.top,
+            safe_rect.width,
+            min(header_height, safe_rect.height)
+        )
+    
     def debug_info(self):
         """
         Get debug information about current scaling.
@@ -331,7 +493,7 @@ class UIScaler:
         Returns:
             dict: Debug information
         """
-        return {
+        info = {
             "screen_size": f"{self.screen_width}x{self.screen_height}",
             "scale_factor": round(self.scale_factor, 2),
             "breakpoint": self.get_responsive_breakpoint(),
@@ -339,4 +501,17 @@ class UIScaler:
             "sample_margin": self.margin("medium"),
             "sample_padding": self.padding("medium"),
             "header_height": self.header_height()
-        } 
+        }
+        
+        # Add safe area info if enabled
+        if self.safe_area_enabled:
+            safe_rect = self.get_safe_area_rect()
+            info.update({
+                "safe_area_enabled": True,
+                "safe_area_rect": f"{safe_rect.left},{safe_rect.top},{safe_rect.width}x{safe_rect.height}",
+                "safe_area_margins": self.get_safe_area_margins()
+            })
+        else:
+            info["safe_area_enabled"] = False
+        
+        return info 

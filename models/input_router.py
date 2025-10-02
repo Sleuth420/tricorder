@@ -113,7 +113,7 @@ class InputRouter:
             return self._handle_schematics_menu_back()
         elif current_state == STATE_SETTINGS:
             return self._handle_settings_main_menu_back()
-        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY]:
+        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY]:
             logger.info(f"BACK from {current_state}, returning to appropriate parent")
             if current_state == STATE_SELECT_COMBO_DURATION:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_DEVICE)
@@ -350,18 +350,22 @@ class InputRouter:
         if hasattr(self.app_state, 'show_audio_test_screen') and self.app_state.show_audio_test_screen:
             return self._handle_audio_test_screen_input(action)
         
+        # Check if we're in the audio diagnostics screen
+        if hasattr(self.app_state, 'show_audio_diagnostics_screen') and self.app_state.show_audio_diagnostics_screen:
+            return self._handle_audio_diagnostics_screen_input(action)
+        
         # Handle the main sound test menu
         if action == app_config.INPUT_ACTION_NEXT:
             # Navigate down in sound test menu
             if not hasattr(self.app_state, 'sound_test_option_index'):
                 self.app_state.sound_test_option_index = 0
-            self.app_state.sound_test_option_index = (self.app_state.sound_test_option_index + 1) % 4
+            self.app_state.sound_test_option_index = (self.app_state.sound_test_option_index + 1) % 5
             return True
         elif action == app_config.INPUT_ACTION_PREV:
             # Navigate up in sound test menu
             if not hasattr(self.app_state, 'sound_test_option_index'):
                 self.app_state.sound_test_option_index = 0
-            self.app_state.sound_test_option_index = (self.app_state.sound_test_option_index - 1) % 4
+            self.app_state.sound_test_option_index = (self.app_state.sound_test_option_index - 1) % 5
             return True
         elif action == app_config.INPUT_ACTION_SELECT:
             # Handle sound test selection
@@ -377,13 +381,31 @@ class InputRouter:
                     self.app_state.audio_manager.play_sound('test_sound')
                     logger.info("Playing quick test sound")
                 return True
-            elif self.app_state.sound_test_option_index == 2:  # Stop Music
+            elif self.app_state.sound_test_option_index == 2:  # Audio Status Info
+                self.app_state.show_audio_diagnostics_screen = True
+                logger.info("Entering audio diagnostics screen")
+                return True
+            elif self.app_state.sound_test_option_index == 3:  # Stop Music
                 if self.app_state.audio_manager:
                     self.app_state.audio_manager.stop_music()
                     logger.info("Stopped music")
                 return True
-            elif self.app_state.sound_test_option_index == 3:  # Back to Settings
+            elif self.app_state.sound_test_option_index == 4:  # Back to Settings
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS)
+        return False
+    
+    def _handle_audio_diagnostics_screen_input(self, action):
+        """Handle input for the audio diagnostics screen."""
+        if action == app_config.INPUT_ACTION_BACK:
+            # Return to sound test menu
+            self.app_state.show_audio_diagnostics_screen = False
+            logger.info("Returning to sound test menu from diagnostics")
+            return True
+        elif action == app_config.INPUT_ACTION_SELECT:
+            # Also handle SELECT as back for consistency
+            self.app_state.show_audio_diagnostics_screen = False
+            logger.info("Returning to sound test menu from diagnostics (SELECT)")
+            return True
         return False
     
     def _handle_audio_test_screen_input(self, action):
@@ -393,7 +415,13 @@ class InputRouter:
             
         audio_test = self.app_state.audio_test_screen
         
-        if action == app_config.INPUT_ACTION_NEXT:
+        if action == app_config.INPUT_ACTION_BACK:
+            # Return to sound test menu
+            audio_test.stop_test()
+            self.app_state.show_audio_test_screen = False
+            logger.info("Returned to sound test menu (BACK)")
+            return True
+        elif action == app_config.INPUT_ACTION_NEXT:
             # Navigate down in audio test screen
             audio_test.selected_option = (audio_test.selected_option + 1) % 4
             return True
@@ -431,7 +459,7 @@ class InputRouter:
             elif audio_test.selected_option == 3:  # Back to Sound Test Menu
                 audio_test.stop_test()
                 self.app_state.show_audio_test_screen = False
-                logger.info("Returned to sound test menu")
+                logger.info("Returned to sound test menu (SELECT)")
                 return True
         return False
     

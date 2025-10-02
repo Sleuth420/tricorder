@@ -6,6 +6,7 @@ import logging
 from ui.components.menus.list_menu_base import draw_simple_list_menu
 from ui.components.text.text_display import render_footer, render_text
 from ui.views.settings.audio_test_screen import draw_audio_test_screen
+from ui.views.settings.audio_diagnostics_screen import draw_audio_diagnostics_screen
 import config as app_config
 
 logger = logging.getLogger(__name__)
@@ -39,6 +40,11 @@ def draw_sound_test_view(screen, app_state, fonts, config_module, ui_scaler=None
     if hasattr(app_state, 'show_audio_test_screen') and app_state.show_audio_test_screen:
         draw_audio_test_screen(screen, app_state, fonts, config_module, ui_scaler)
         return
+    
+    # Check if we should show the diagnostics screen
+    if hasattr(app_state, 'show_audio_diagnostics_screen') and app_state.show_audio_diagnostics_screen:
+        draw_audio_diagnostics_screen(screen, app_state, fonts, config_module, ui_scaler)
+        return
 
     # Get current selection index from app_state
     current_selection_idx = getattr(app_state, 'sound_test_option_index', 0)
@@ -47,6 +53,7 @@ def draw_sound_test_view(screen, app_state, fonts, config_module, ui_scaler=None
     sound_test_items = [
         "Advanced Audio Test",
         "Quick Test Sound",
+        "Audio Status Info",
         "Stop Music", 
         "<- Back to Settings"
     ]

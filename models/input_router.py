@@ -89,6 +89,12 @@ class InputRouter:
             return self._handle_confirmation_input(action)
         elif current_state == STATE_SECRET_GAMES:
             return self._handle_secret_games_input(action)
+        elif current_state == STATE_PONG_ACTIVE:
+            return self._handle_pong_input(action)
+        elif current_state == STATE_BREAKOUT_ACTIVE:
+            return self._handle_breakout_input(action)
+        elif current_state == STATE_SNAKE_ACTIVE:
+            return self._handle_snake_input(action)
         elif current_state in [STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO]:
             return self._handle_view_input(action)
         elif current_state == STATE_SCHEMATICS:
@@ -859,3 +865,39 @@ class InputRouter:
                 return False
         
         return password_manager_result 
+
+    def _handle_pong_input(self, action):
+        """Handle input for the Pong game."""
+        if not self.app_state.active_pong_game:
+            return False
+            
+        game_result = self.app_state.game_manager.handle_pong_input(action)
+        if game_result == "QUIT_TO_MENU":
+            return self.app_state.state_manager.return_to_menu()
+        elif game_result:
+            return True
+        return False
+
+    def _handle_breakout_input(self, action):
+        """Handle input for the Breakout game."""
+        if not self.app_state.active_breakout_game:
+            return False
+            
+        game_result = self.app_state.game_manager.handle_breakout_input(action)
+        if game_result == "QUIT_TO_MENU":
+            return self.app_state.state_manager.return_to_menu()
+        elif game_result:
+            return True
+        return False
+
+    def _handle_snake_input(self, action):
+        """Handle input for the Snake game."""
+        if not self.app_state.active_snake_game:
+            return False
+            
+        game_result = self.app_state.game_manager.handle_snake_input(action)
+        if game_result == "QUIT_TO_MENU":
+            return self.app_state.state_manager.return_to_menu()
+        elif game_result:
+            return True
+        return False

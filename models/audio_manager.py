@@ -33,6 +33,8 @@ class AudioManager:
         if self.enabled:
             self._init_audio()
             self._load_sounds()
+            # Set default volume at startup (for hardwired speakers with no volume control)
+            self._initialize_system_volume()
     
     def _log_system_audio_info(self):
         """Log comprehensive system audio information for debugging."""
@@ -84,6 +86,29 @@ class AudioManager:
                             logger.info(f"  {line.strip()}")
                 else:
                     logger.warning("⚠ No ALSA devices found")
+                
+                # Get ALSA volume levels
+                try:
+                    result = subprocess.run(['amixer', 'get', 'Master'], 
+                                          capture_output=True, text=True, timeout=3)
+                    if result.returncode == 0:
+                        for line in result.stdout.split('\n'):
+                            if '[' in line and '%' in line and 'Playback' in line:
+                                logger.info(f"ALSA Master: {line.strip()}")
+                except:
+                    pass
+                    
+                # Also check PCM volume
+                try:
+                    result = subprocess.run(['amixer', 'get', 'PCM'], 
+                                          capture_output=True, text=True, timeout=3)
+                    if result.returncode == 0:
+                        for line in result.stdout.split('\n'):
+                            if '[' in line and '%' in line and 'Playback' in line:
+                                logger.info(f"ALSA PCM: {line.strip()}")
+                except:
+                    pass
+                    
             except (subprocess.TimeoutExpired, FileNotFoundError):
                 logger.warning("⚠ ALSA aplay command not found")
             
@@ -110,6 +135,13 @@ class AudioManager:
                                   capture_output=True, text=True, timeout=5)
             if result.returncode == 0:
                 logger.info(f"Default audio sink: {result.stdout.strip()}")
+            
+            # Get current volume level
+            system_vol = self._get_system_volume()
+            if system_vol is not None:
+                logger.info(f"System volume: {int(system_vol * 100)}%")
+            else:
+                logger.warning("⚠ Could not determine system volume level")
                 
         except Exception as e:
             logger.warning(f"Could not get PulseAudio info: {e}")
@@ -203,6 +235,42 @@ class AudioManager:
         except Exception as e:
             logger.warning(f"Audio system test failed: {e}")
             logger.warning("Audio may still work, but test verification failed")
+    
+    def _initialize_system_volume(self):
+        """
+        Initialize system volume at startup for hardwired speakers.
+        
+        This is critical for speakers with no volume knobs - the system volume
+        is the only way to control output level. Sets volume to a reasonable
+        default if current volume is too low.
+        """
+        if platform.system() != "Linux":
+            return  # Only needed on Linux/Raspberry Pi
+        
+        try:
+            # Check current system volume
+            current_vol = self._get_system_volume()
+            default_volume = 0.85  # 85% - good default for hardwired speakers
+            
+            if current_vol is None:
+                # Can't read volume, set to default anyway
+                logger.info("Could not read system volume - setting to default 85%")
+                self.set_volume(default_volume)
+            elif current_vol < 0.70:  # If volume is below 70%
+                logger.info(f"System volume is low ({int(current_vol * 100)}%) - setting to {int(default_volume * 100)}%")
+                self.set_volume(default_volume)
+            else:
+                # Volume is already reasonable, just sync Pygame mixer
+                logger.info(f"System volume is {int(current_vol * 100)}% - keeping current level")
+                pygame.mixer.music.set_volume(current_vol)
+                
+        except Exception as e:
+            logger.warning(f"Could not initialize system volume: {e}")
+            # Try to set a default anyway
+            try:
+                self.set_volume(0.85)
+            except:
+                pass
     
     def _load_sounds(self):
         """Load sound effects from the assets directory with enhanced logging."""
@@ -324,14 +392,144 @@ class AudioManager:
     
     def set_volume(self, volume):
         """
-        Set master volume.
+        Set master volume for both Pygame and system-level audio.
+        
+        This sets volume for:
+        - Pygame mixer music
+        - All loaded sound effects
+        - System-level volume (ALSA/PulseAudio) on Linux
         
         Args:
             volume (float): Volume level (0.0 to 1.0)
         """
         if self.enabled:
+            # Set Pygame mixer music volume
             pygame.mixer.music.set_volume(volume)
-            logger.debug(f"Set volume to: {volume}")
+            
+            # Set volume for all loaded sound effects
+            for sound_name, sound in self.sounds.items():
+                try:
+                    sound.set_volume(volume)
+                except Exception as e:
+                    logger.debug(f"Could not set volume for {sound_name}: {e}")
+            
+            # Also set system-level volume on Linux/Raspberry Pi
+            # This is critical for hardwired speakers with no volume knobs
+            if platform.system() == "Linux":
+                self._set_system_volume(volume)
+            
+            logger.debug(f"Set volume to: {int(volume * 100)}% (Pygame + System)")
+    
+    def _set_system_volume(self, volume):
+        """
+        Set system-level audio volume using ALSA or PulseAudio.
+        
+        Args:
+            volume (float): Volume level (0.0 to 1.0)
+        """
+        try:
+            # Try PulseAudio first (more common on modern Raspberry Pi OS)
+            try:
+                # Convert 0.0-1.0 to 0-100% for PulseAudio
+                volume_percent = int(volume * 100)
+                result = subprocess.run(
+                    ['pactl', 'set-sink-volume', '@DEFAULT_SINK@', f'{volume_percent}%'],
+                    capture_output=True, text=True, timeout=3
+                )
+                if result.returncode == 0:
+                    logger.debug(f"Set PulseAudio volume to {volume_percent}%")
+                    return
+            except (subprocess.TimeoutExpired, FileNotFoundError):
+                pass
+            
+            # Fallback to ALSA (for older systems or direct ALSA)
+            try:
+                # Find the audio card (usually 0 for built-in audio)
+                # Try to set Master volume
+                volume_percent = int(volume * 100)
+                result = subprocess.run(
+                    ['amixer', 'set', 'Master', f'{volume_percent}%'],
+                    capture_output=True, text=True, timeout=3
+                )
+                if result.returncode == 0:
+                    logger.debug(f"Set ALSA Master volume to {volume_percent}%")
+                    return
+            except (subprocess.TimeoutExpired, FileNotFoundError):
+                pass
+            
+            # Try PCM volume as fallback
+            try:
+                volume_percent = int(volume * 100)
+                result = subprocess.run(
+                    ['amixer', 'set', 'PCM', f'{volume_percent}%'],
+                    capture_output=True, text=True, timeout=3
+                )
+                if result.returncode == 0:
+                    logger.debug(f"Set ALSA PCM volume to {volume_percent}%")
+            except (subprocess.TimeoutExpired, FileNotFoundError):
+                logger.debug("Could not set system volume - amixer/pactl not available")
+                
+        except Exception as e:
+            logger.warning(f"Could not set system volume: {e}")
+    
+    def _get_system_volume(self):
+        """
+        Get current system-level audio volume.
+        
+        Returns:
+            float: Volume level (0.0 to 1.0) or None if unavailable
+        """
+        try:
+            # Try PulseAudio first
+            try:
+                result = subprocess.run(
+                    ['pactl', 'get-sink-volume', '@DEFAULT_SINK@'],
+                    capture_output=True, text=True, timeout=3
+                )
+                if result.returncode == 0:
+                    # Parse output like "Volume: front-left: 32768 /  50% / -18.06 dB"
+                    output = result.stdout
+                    for line in output.split('\n'):
+                        if 'Volume:' in line and '%' in line:
+                            # Extract percentage
+                            parts = line.split('%')
+                            if parts:
+                                vol_str = parts[0].split()[-1]
+                                try:
+                                    vol_percent = int(vol_str)
+                                    return vol_percent / 100.0
+                                except ValueError:
+                                    pass
+            except (subprocess.TimeoutExpired, FileNotFoundError):
+                pass
+            
+            # Fallback to ALSA
+            try:
+                result = subprocess.run(
+                    ['amixer', 'get', 'Master'],
+                    capture_output=True, text=True, timeout=3
+                )
+                if result.returncode == 0:
+                    # Parse output like "[50%]"
+                    for line in result.stdout.split('\n'):
+                        if '[' in line and '%' in line:
+                            # Extract percentage
+                            start = line.find('[') + 1
+                            end = line.find('%', start)
+                            if end > start:
+                                vol_str = line[start:end]
+                                try:
+                                    vol_percent = int(vol_str)
+                                    return vol_percent / 100.0
+                                except ValueError:
+                                    pass
+            except (subprocess.TimeoutExpired, FileNotFoundError):
+                pass
+                
+        except Exception as e:
+            logger.debug(f"Could not get system volume: {e}")
+        
+        return None
     
     def get_audio_status(self):
         """Get comprehensive audio system status for debugging."""
@@ -354,6 +552,13 @@ class AudioManager:
                     status['channels'] = init_info[2]
             except:
                 status['mixer_initialized'] = False
+            
+            # Get system volume level
+            if platform.system() == "Linux":
+                system_vol = self._get_system_volume()
+                if system_vol is not None:
+                    status['system_volume'] = system_vol
+                    status['system_volume_percent'] = int(system_vol * 100)
         
         return status
     
@@ -371,6 +576,12 @@ class AudioManager:
             logger.info(f"Frequency: {status.get('frequency', 'Unknown')} Hz")
             logger.info(f"Format: {status.get('format', 'Unknown')}")
             logger.info(f"Channels: {status.get('channels', 'Unknown')}")
+        
+        # Log system volume if available
+        if 'system_volume_percent' in status:
+            logger.info(f"System volume: {status['system_volume_percent']}%")
+            if status['system_volume_percent'] < 50:
+                logger.warning("⚠ System volume is low - this may cause quiet audio output")
         
         logger.info("=== END AUDIO STATUS ===")
     

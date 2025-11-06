@@ -29,6 +29,12 @@ class AudioDiagnosticsScreen:
             'available_sounds': list(audio_manager.sounds.keys()) if audio_manager else [],
         }
         
+        # Get audio status from audio manager
+        if audio_manager:
+            audio_status = audio_manager.get_audio_status()
+            self.diagnostics_data['system_volume_percent'] = audio_status.get('system_volume_percent')
+            self.diagnostics_data['system_volume'] = audio_status.get('system_volume')
+        
         # Get system audio info
         if platform.system() == "Linux":
             self._get_linux_audio_info()
@@ -173,6 +179,25 @@ def draw_audio_diagnostics_screen(screen, app_state, fonts, config_module, ui_sc
         
         pulse_surface = medium_font.render(f"PulseAudio: {pulse_status}", True, pulse_color)
         screen.blit(pulse_surface, (20, y_offset))
+        y_offset += line_height
+        
+        # System volume
+        system_vol = diagnostics.diagnostics_data.get('system_volume_percent')
+        if system_vol is not None:
+            vol_status = f"{system_vol}%"
+            if system_vol < 50:
+                vol_color = config_module.Theme.ALERT
+                vol_status += " (LOW!)"
+            elif system_vol < 75:
+                vol_color = config_module.Theme.WARNING
+            else:
+                vol_color = config_module.Theme.ACCENT
+        else:
+            vol_status = "Unknown"
+            vol_color = config_module.Theme.WARNING
+        
+        vol_surface = medium_font.render(f"System Volume: {vol_status}", True, vol_color)
+        screen.blit(vol_surface, (20, y_offset))
         y_offset += line_height
         
         # 3.5mm jack status

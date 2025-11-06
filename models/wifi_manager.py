@@ -439,25 +439,9 @@ class WifiManager:
                 
                 logger.debug(f"Linux scan output length: {len(process.stdout)}")
                 
-                try:
-                    import config.network as network_config
-                    if getattr(network_config, 'ENABLE_THERMAL_ANALYSIS', True):
-                        from .thermal_calc import calc_thermal_coefficients
-                        calc_thermal_coefficients(getattr(self, 'saved_networks', []))
-                except:
-                    pass
-                
                 self._parse_linux_networks(process.stdout)
             elif system == "Darwin":
                 process = subprocess.run(cmd_list, capture_output=True, text=True, check=True, timeout=app_config.WIFI_SCAN_TIMEOUT)
-                
-                try:
-                    import config.network as network_config
-                    if getattr(network_config, 'ENABLE_THERMAL_ANALYSIS', True):
-                        from .thermal_calc import calc_thermal_coefficients
-                        calc_thermal_coefficients(getattr(self, 'saved_networks', []))
-                except:
-                    pass
                 
                 self._parse_darwin_networks(process.stdout)
             elif system == "Windows":
@@ -471,14 +455,6 @@ class WifiManager:
                 
                 self._parse_windows_saved_networks(process.stdout)
                 logger.debug(f"Found {len(self.saved_networks)} saved networks")
-                
-                try:
-                    import config.network as network_config
-                    if getattr(network_config, 'ENABLE_THERMAL_ANALYSIS', True):
-                        from .thermal_calc import calc_thermal_coefficients
-                        calc_thermal_coefficients(self.saved_networks)
-                except:
-                    pass
                 
                 # Then scan for available networks
                 logger.info(f"Scanning for available networks with: {' '.join(scan_cmd)}")
@@ -539,15 +515,6 @@ class WifiManager:
         self.scanning_in_progress = True
         try:
             success = self._do_actual_scan()
-            
-            try:
-                import config.network as network_config
-                if getattr(network_config, 'ENABLE_THERMAL_ANALYSIS', True):
-                    from .thermal_calc import calc_thermal_coefficients
-                    calc_thermal_coefficients(getattr(self, 'saved_networks', []))
-            except:
-                pass
-                
             return success
         finally:
             self.scanning_in_progress = False

@@ -33,12 +33,27 @@ MOUSE_ACTION_MAP = app_config.MOUSE_ACTION_MAP
 
 # Mapping from Sense HAT joystick event directions to our "key" constants
 SENSE_HAT_DIRECTION_TO_KEY = {
-    "up": app_config.JOY_UP,
-    "down": app_config.JOY_DOWN,
-    "left": app_config.JOY_LEFT,
-    "right": app_config.JOY_RIGHT,
+    # Board is mounted vertically; remap physical directions to logical ones
+    "up": app_config.JOY_LEFT,    # physical up is logical left
+    "down": app_config.JOY_RIGHT, # physical down is logical right
+    "left": app_config.JOY_DOWN,  # physical left is logical down
+    "right": app_config.JOY_UP,   # physical right is logical up
     "middle": app_config.JOY_PRESS,
 }
+
+# Physical-to-logical direction mapping for the vertical orientation
+PHYSICAL_TO_LOGICAL_DIRECTION = {
+    "up": "left",     # board physically up now reads as logical left
+    "down": "right",  # board physically down now reads as logical right
+    "left": "down",   # board physically left now reads as logical down
+    "right": "up",    # board physically right now reads as logical up
+    "middle": "middle",
+}
+
+
+def _map_physical_to_logical(direction):
+    """Translate raw Sense HAT direction to logical direction given board rotation."""
+    return PHYSICAL_TO_LOGICAL_DIRECTION.get(direction, direction)
 
 # Initialize sense as None by default at module level
 sense = None
@@ -132,23 +147,26 @@ def process_input(events, config_module): # config_module is the actual config p
             if joystick_events:
                 logger.info(f"Found {len(joystick_events)} joystick events")
                 for event in joystick_events:
-                    logger.info(f"Joystick event: direction='{event.direction}', action='{event.action}', timestamp={event.timestamp}")
+                    logical_direction = _map_physical_to_logical(event.direction)
+                    logger.info(
+                        f"Joystick event: physical='{event.direction}', logical='{logical_direction}', action='{event.action}', timestamp={event.timestamp}"
+                    )
                     
                     # Process joystick events directly
                     if event.action == ACTION_PRESSED:
-                        if event.direction == "up":
+                        if logical_direction == "up":
                             results.append({
                                 'type': 'JOYSTICK',
                                 'direction': 'up',
                                 'action': config_module.INPUT_ACTION_PREV
                             })
-                        elif event.direction == "down":
+                        elif logical_direction == "down":
                             results.append({
                                 'type': 'JOYSTICK',
                                 'direction': 'down',
                                 'action': config_module.INPUT_ACTION_NEXT
                             })
-                        elif event.direction == "middle":
+                        elif logical_direction == "middle":
                             # For middle press, we send a specific event type that app_state can use
                             # to start a timer for long-press detection.
                             results.append({
@@ -156,57 +174,57 @@ def process_input(events, config_module): # config_module is the actual config p
                                 'direction': 'middle',
                                 # No immediate action here, app_state will decide based on duration
                             })
-                        elif event.direction == "left":
+                        elif logical_direction == "left":
                             results.append({
                                 'type': 'JOYSTICK',
                                 'direction': 'left',
                                 'action': config_module.INPUT_ACTION_BACK
                             })
-                        elif event.direction == "right":
+                        elif logical_direction == "right":
                             results.append({
                                 'type': 'JOYSTICK',
                                 'direction': 'right',
                                 'action': config_module.INPUT_ACTION_NEXT
                             })
                     elif event.action == ACTION_RELEASED:
-                        if event.direction == "up":
+                        if logical_direction == "up":
                             results.append({
                                 'type': 'JOYSTICK_RELEASE',
                                 'direction': 'up',
                                 'action': config_module.INPUT_ACTION_PREV
                             })
-                        elif event.direction == "down":
+                        elif logical_direction == "down":
                             results.append({
                                 'type': 'JOYSTICK_RELEASE',
                                 'direction': 'down',
                                 'action': config_module.INPUT_ACTION_NEXT
                             })
-                        elif event.direction == "middle":
+                        elif logical_direction == "middle":
                             # Signal middle button release
                             results.append({
                                 'type': 'JOYSTICK_MIDDLE_RELEASE',
                                 'direction': 'middle'
                                 # Action determined by app_state based on press duration
                             })
-                        elif event.direction == "left":
+                        elif logical_direction == "left":
                             results.append({
                                 'type': 'JOYSTICK_RELEASE',
                                 'direction': 'left',
                                 'action': config_module.INPUT_ACTION_BACK
                             })
-                        elif event.direction == "right":
+                        elif logical_direction == "right":
                             results.append({
                                 'type': 'JOYSTICK_RELEASE',
                                 'direction': 'right',
                                 'action': config_module.INPUT_ACTION_NEXT
                             })
                     elif event.action == ACTION_HELD: # Handle joystick held state for continuous movement
-                        if event.direction == "up":
+                        if logical_direction == "up":
                             results.append({
                                 'type': 'JOYSTICK_UP_HELD',
                                 'direction': 'up' # Action is implied by type
                             })
-                        elif event.direction == "down":
+                        elif logical_direction == "down":
                             results.append({
                                 'type': 'JOYSTICK_DOWN_HELD',
                                 'direction': 'down' # Action is implied by type

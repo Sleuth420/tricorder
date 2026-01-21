@@ -276,6 +276,9 @@ class AppState:
                     
             elif event_type == 'KEYUP':
                 key_event = self.input_manager.handle_keyup(key)
+                if key_event.get('suppressed_release'):
+                    logger.debug("Key release suppressed after secret combo activation.")
+                    continue
                 
                 # Track input for debug overlay
                 if hasattr(self, 'debug_overlay'):
@@ -551,6 +554,8 @@ class AppState:
             )):
             logger.info("Secret combo detected! Activating secret games menu")
             state_changed = self.state_manager.transition_to(STATE_SECRET_GAMES)
+            # Ignore the follow-up key releases from the combo
+            self.input_manager.suppress_combo_keyups()
             self.input_manager.reset_secret_combo()
             # Reset long press timer to prevent immediate exit
             self.input_manager.reset_long_press_timer()

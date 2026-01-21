@@ -25,6 +25,9 @@ class InputManager:
         self.key_prev_press_start_time = None
         self.key_next_press_start_time = None  # For 3D viewer pause menu
         self.joystick_middle_press_start_time = None
+        # Used to suppress combo key releases after secret menu activation
+        self.suppress_keyup_actions = False
+        self.suppressed_keys_pending = set()
         
         # Mouse long press tracking
         self.mouse_left_press_start_time = None
@@ -81,6 +84,19 @@ class InputManager:
         Returns:
             dict: Input event data
         """
+        # Ignore the release once when coming from a secret combo activation
+        suppressed_release = False
+        if self.suppress_keyup_actions and key in self.suppressed_keys_pending:
+            suppressed_release = True
+            self.suppressed_keys_pending.discard(key)
+            # Clear any timers tied to this key to avoid stray long-press triggers
+            if key == self.config.KEY_PREV:
+                self.key_prev_press_start_time = None
+            if key == self.config.KEY_NEXT:
+                self.key_next_press_start_time = None
+            if not self.suppressed_keys_pending:
+                self.suppress_keyup_actions = False
+
         if key in self.keys_held:
             self.keys_held.remove(key)
         logger.debug(f"KEYUP: key={key}. keys_held={self.keys_held}")
@@ -109,7 +125,8 @@ class InputManager:
             'key': key,
             'press_duration': press_duration,
             'next_press_duration': next_press_duration,
-            'keys_held': self.keys_held.copy()
+            'keys_held': self.keys_held.copy(),
+            'suppressed_release': suppressed_release
         }
         
     def handle_joystick_press(self):
@@ -185,6 +202,13 @@ class InputManager:
     def reset_secret_combo(self):
         """Reset the secret combo timer."""
         self.secret_combo_start_time = None
+
+    def suppress_combo_keyups(self):
+        """Suppress the next KEYUPs for combo keys after activating secret menu."""
+        self.suppress_keyup_actions = True
+        self.suppressed_keys_pending = {self.config.KEY_PREV, self.config.KEY_NEXT}
+        # Clear held keys so downstream checks don't see stale state
+        self.keys_held.clear()
         
     def check_long_press_duration(self):
         """

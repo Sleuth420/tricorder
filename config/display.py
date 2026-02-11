@@ -26,6 +26,10 @@ SPLASH_LOGO_PATH = "assets/images/logo.png"
 SPLASH_DURATION_MS = 3000  # Original splash duration (not used in loading screen)
 LOADING_SCREEN_MIN_DURATION = 5.0  # Minimum loading screen duration in seconds
 
+# -- Media Player (VLC in separate window; UI and navigation in Pygame) --
+MEDIA_FOLDER = "assets/media"  # Folder scanned for media files
+MEDIA_EXTENSIONS = (".mp3", ".wav", ".ogg", ".mp4", ".avi", ".mov")  # Audio and video (VLC must be installed)
+
 # -- 3D Schematics Zoom Settings --
 SCHEMATICS_ZOOM_DEFAULT = 1.0      # Default zoom level (1.0 = normal size)
 SCHEMATICS_ZOOM_MIN = 0.2          # Minimum zoom level (0.2 = 20% of normal size)

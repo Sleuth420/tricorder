@@ -68,6 +68,13 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
     
     # Prepare text for vertical bar graph arrow display
     arrow_text = text_val  # Default to main text (inertia no longer uses vertical bar graph)
+    # UI-only: show temperature as K (convert at draw time; data stays in Celsius)
+    if current_sensor_key == config_module.SENSOR_TEMPERATURE and numeric_val is not None:
+        k_val = numeric_val + 273.15
+        value_text_display = f"{k_val:.1f} K"
+        arrow_text = f"{k_val:.1f}"
+    else:
+        value_text_display = f"{text_val} {unit}".strip()
     
     # Draw sensor name in top left with subtle glow effect
     title_font = fonts['medium']
@@ -83,12 +90,14 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
         frozen_rect = frozen_surface.get_rect(topright=(screen_width - title_margin, title_margin))
         screen.blit(frozen_surface, frozen_rect)
     
-    # Draw current value below the title - remove breathing effect for small screen
+    # Draw current value below the title (temperature: omit so only small ticks show)
     value_font = fonts['large']
-    value_text = f"{text_val} {unit}".strip()
-    value_surface = value_font.render(value_text, True, config_module.Theme.FOREGROUND)
+    value_surface = value_font.render(value_text_display, True, config_module.Theme.FOREGROUND)
     value_rect = value_surface.get_rect(midleft=(title_margin, title_rect.bottom + value_spacing))
-    screen.blit(value_surface, value_rect)
+    if current_sensor_key != config_module.SENSOR_TEMPERATURE:
+        screen.blit(value_surface, value_rect)
+    else:
+        value_rect = pygame.Rect(title_rect.x, title_rect.y, title_rect.width, title_rect.height + value_spacing)
     
     # Draw note in middle right if present
     if note:
@@ -157,26 +166,49 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
             graph_y = graph_margin_top  # Start from top margin
             graph_rect = pygame.Rect(graph_x, graph_y, graph_width, graph_height)
             
+            # UI-only: temperature graph shows K scale 0–1701 (convert at draw time; data unchanged)
+            if current_sensor_key == config_module.SENSOR_TEMPERATURE:
+                vbar_units = "K"
+                vbar_min = 0
+                vbar_max = 1701
+                vbar_normal = (291, 301)
+                vbar_critical_low = 283
+                vbar_critical_high = 308
+                graph_val = (numeric_val + 273.15) if numeric_val is not None else None
+                graph_arrow_text = arrow_text  # already set to Kelvin string above
+            else:
+                vbar_units = display_props.get("units", unit)
+                vbar_min = vbar_config["min_val"]
+                vbar_max = vbar_config["max_val"]
+                vbar_normal = vbar_config["normal_range"]
+                vbar_critical_low = vbar_config.get("critical_low")
+                vbar_critical_high = vbar_config.get("critical_high")
+                graph_val = numeric_val
+                graph_arrow_text = arrow_text
+            
             try:
+                # Temperature uses full 0–1701 K scale; no dynamic zoom
+                use_dynamic_range = vbar_config.get("dynamic_range", False) if current_sensor_key != config_module.SENSOR_TEMPERATURE else False
                 vertical_graph = VerticalBarGraph(
                     screen=screen, rect=graph_rect,
-                    title="",  # Remove title since we show it at top
-                    units=display_props.get("units", unit),
-                    min_val=vbar_config["min_val"],
-                    max_val=vbar_config["max_val"],
-                    normal_range=vbar_config["normal_range"],
+                    title="",
+                    units=vbar_units,
+                    min_val=vbar_min,
+                    max_val=vbar_max,
+                    normal_range=vbar_normal,
                     fonts=fonts,
                     config_module=config_module,
-                    critical_low=vbar_config.get("critical_low"),
-                    critical_high=vbar_config.get("critical_high"),
+                    critical_low=vbar_critical_low,
+                    critical_high=vbar_critical_high,
                     num_ticks=vbar_config.get("num_ticks", 11),
-                    dynamic_range=vbar_config.get("dynamic_range", False),
+                    dynamic_range=use_dynamic_range,
                     zoom_factor=vbar_config.get("zoom_factor", 0.3),
                     min_zoom_range=vbar_config.get("min_zoom_range"),
                     stability_threshold=vbar_config.get("stability_threshold", 2.0),
                     ui_scaler=ui_scaler
                 )
-                vertical_graph.draw(numeric_val, arrow_text)
+                show_pointer_label = current_sensor_key != config_module.SENSOR_TEMPERATURE
+                vertical_graph.draw(graph_val, graph_arrow_text, show_pointer_label=show_pointer_label)
             except KeyError as e:
                  logger.error(f"Missing key in VERTICAL_GRAPH_CONFIG for {current_sensor_key}: {e}", exc_info=True)
             except Exception as e:

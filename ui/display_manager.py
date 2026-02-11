@@ -3,7 +3,7 @@
 
 import pygame
 import logging
-from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SCHEMATICS, STATE_SCHEMATICS_MENU, STATE_SENSORS_MENU, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_DEVICE, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY, STATE_LOADING
+from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SCHEMATICS, STATE_SCHEMATICS_MENU, STATE_SCHEMATICS_CATEGORY, STATE_MEDIA_PLAYER, STATE_SENSORS_MENU, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_DEVICE, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY, STATE_LOADING
 from ui.menu import draw_menu_screen
 from ui.views.sensors.sensor_view import draw_sensor_view
 from ui.views.system.system_info_view import draw_system_info_view
@@ -23,6 +23,8 @@ from ui.views.settings.sound_test_view import draw_sound_test_view
 from ui.views.settings.debug_overlay_view import draw_debug_overlay_view
 from ui.views.settings.log_viewer_view import draw_log_viewer_view
 from ui.views.schematics.schematics_menu_view import draw_schematics_menu_view
+from ui.views.schematics.schematics_category_view import draw_schematics_category_view
+from ui.views.schematics.media_player_view import draw_media_player_view
 
 # Import UIScaler for centralized scaling
 from utils.ui_scaler import UIScaler
@@ -290,6 +292,19 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
     elif app_state.current_state == STATE_SCHEMATICS_MENU:
         # Schematics selection menu
         draw_schematics_menu_view(screen, app_state, fonts, config_module, current_ui_scaler)
+    elif app_state.current_state == STATE_SCHEMATICS_CATEGORY:
+        # Schematics category: Schematics | Media Player
+        draw_schematics_category_view(screen, app_state, fonts, config_module, current_ui_scaler)
+    elif app_state.current_state == STATE_MEDIA_PLAYER:
+        # Media player: embed VLC in our window (same as 3D schematics)
+        try:
+            wm_info = pygame.display.get_wm_info()
+            hwnd = wm_info.get("window")
+            if hwnd is not None and hasattr(app_state, "media_player_manager") and app_state.media_player_manager:
+                app_state.media_player_manager.set_window_handle(hwnd)
+        except Exception:
+            pass
+        draw_media_player_view(screen, app_state, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_SECRET_GAMES:
         # Draw the secret games menu
         draw_secret_games_view(screen, app_state, fonts, config_module, current_ui_scaler)

@@ -116,15 +116,15 @@ class VerticalBarGraph:
         if not self.dynamic_range or current_value is None:
             return self.min_val, self.max_val
         
-        # Define ranges for temperature
-        if self.units == "°C":
+        # Define ranges (K = Kelvin, passed from UI for temp display only)
+        if self.units == "K":
             ranges = [
-                (-10, 20),
-                (0, 30),
-                (10, 40),
-                (20, 50),
-                (30, 60),
-                (40, 70)
+                (263, 293),
+                (273, 303),
+                (283, 313),
+                (293, 323),
+                (303, 333),
+                (313, 343)
             ]
             threshold = 3.0
             required_consecutive = 10
@@ -228,12 +228,13 @@ class VerticalBarGraph:
         else:
             return self.config.Theme.WARNING # Use Theme
 
-    def draw(self, current_value, formatted_text=None):
+    def draw(self, current_value, formatted_text=None, show_pointer_label=True):
         """
         Draws the vertical bar graph with the current value using stable dynamic range.
         Args:
             current_value (float): The value to display on the graph.
             formatted_text (str): Pre-formatted text to display next to arrow.
+            show_pointer_label (bool): If True, draw the value next to the pointer (False for temperature view).
         """
         # Calculate stable dynamic range if enabled
         if self.dynamic_range:
@@ -250,10 +251,13 @@ class VerticalBarGraph:
                          (self.scale_line_x, self.scale_bottom_y), 5)  # Increased thickness
 
         # Draw many small colored ticks along the main bar (LCARS style)
-        # Create small ticks between major intervals (8 ticks between each major mark)
-        if self.units == "°C":  # Temperature - 1 degree per tick
-            small_interval = 1
-            major_interval = 10
+        if self.units == "K":
+            if self.min_val == 0 and self.max_val == 1701:
+                small_interval = 100
+                major_interval = 500
+            else:
+                small_interval = 2
+                major_interval = 10
         elif self.units == "%":  # Humidity - ~3% per tick (8 ticks in 25% span)
             small_interval = 3
             major_interval = 25
@@ -282,8 +286,11 @@ class VerticalBarGraph:
             current_tick += small_interval
 
         # Draw exactly 4 major ticks using the predefined ranges
-        if self.units == "°C":  # Temperature
-            major_ticks = [10, 20, 30, 40]  # Normal range ticks
+        if self.units == "K":
+            if self.min_val == 0 and self.max_val == 1701:
+                major_ticks = [0, 500, 1000, 1701]
+            else:
+                major_ticks = [283, 293, 303, 313]
         elif self.units == "%":  # Humidity
             major_ticks = [30, 45, 60, 75]  # Normal range ticks
         elif self.units == "mbar":  # Pressure
@@ -326,7 +333,7 @@ class VerticalBarGraph:
             pointer_y = self._value_to_y(current_value, display_min, display_max)
             pointer_color = self._get_zone_color(current_value)
             
-            # Draw special tick mark at exact current temperature position
+            # Draw special tick mark at exact current value position
             pygame.draw.line(self.screen, pointer_color,
                            (self.scale_line_x - self.tick_length // 2, pointer_y),
                            (self.scale_line_x + self.tick_length // 2, pointer_y), 3)
@@ -346,7 +353,7 @@ class VerticalBarGraph:
                 (pointer_base_x + arrow_width, pointer_y - triangle_size // 2),  # Top right
                 (pointer_base_x + arrow_width, pointer_y + triangle_size // 2)   # Bottom right
             ]
-            # Fill arrow with temperature zone color
+            # Fill arrow with zone color
             pygame.draw.polygon(self.screen, pointer_color, points)
             # Add darker border for definition
             border_color = (
@@ -356,11 +363,11 @@ class VerticalBarGraph:
             ) if len(pointer_color) >= 3 else pointer_color
             pygame.draw.polygon(self.screen, border_color, points, 2)
             
-            # Draw moving current temperature number next to the arrow
-            temp_text = formatted_text if formatted_text else f"{current_value:.1f}"
-            temp_surface = self.font_medium.render(temp_text, True, self.config.Theme.WHITE)
-            temp_rect = temp_surface.get_rect(midleft=(pointer_base_x + arrow_width + 8, pointer_y))
-            self.screen.blit(temp_surface, temp_rect)
+            if show_pointer_label:
+                temp_text = formatted_text if formatted_text else f"{current_value:.1f}"
+                temp_surface = self.font_medium.render(temp_text, True, self.config.Theme.WHITE)
+                temp_rect = temp_surface.get_rect(midleft=(pointer_base_x + arrow_width + 8, pointer_y))
+                self.screen.blit(temp_surface, temp_rect)
 
         # Debug: Draw bounding box
         # pygame.draw.rect(self.screen, (0, 0, 255), self.rect, 1)

@@ -20,6 +20,7 @@ from .update_manager import UpdateManager
 from .audio_manager import AudioManager
 from .network_manager import NetworkManager
 from .system_info_manager import SystemInfoManager
+from .media_player_manager import MediaPlayerManager
 import config as app_config
 
 # Application state constants
@@ -35,6 +36,8 @@ STATE_BREAKOUT_ACTIVE = "BREAKOUT_ACTIVE" # Breakout game
 STATE_SNAKE_ACTIVE = "SNAKE_ACTIVE" # Snake game
 STATE_SCHEMATICS = "SCHEMATICS" # Schematics viewer
 STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU" # Schematics selection menu
+STATE_SCHEMATICS_CATEGORY = "SCHEMATICS_CATEGORY" # Schematics submenu: Schematics | Media Player
+STATE_MEDIA_PLAYER = "MEDIA_PLAYER" # Media player view
 STATE_LOADING = "LOADING"     # Loading screen
 
 # New Settings Sub-View States
@@ -109,6 +112,7 @@ class AppState:
         self.audio_manager = AudioManager(config_module) # Instantiate AudioManager
         self.network_manager = NetworkManager() # Instantiate NetworkManager
         self.system_info_manager = SystemInfoManager() # Instantiate SystemInfoManager
+        self.media_player_manager = MediaPlayerManager(config_module) # Instantiate MediaPlayerManager
         
         # Debug overlay - initialized with screen dimensions
         from ui.components.debug import DebugOverlay
@@ -285,7 +289,7 @@ class AppState:
                     self.debug_overlay.add_input_event('KEYUP', key)
                 
                 if not self.input_manager.secret_combo_start_time:
-                    state_changed_by_action = self._handle_key_release(key, action_name) or state_changed_by_action
+                    state_changed_by_action = self._handle_key_release(key, action_name, key_event) or state_changed_by_action
             
             elif event_type == 'JOYSTICK':
                 # Track input for debug overlay
@@ -383,10 +387,21 @@ class AppState:
                 
         return state_changed_by_action
         
-    def _handle_key_release(self, key, action_name):
-        """Handle key release events."""
+    def _handle_key_release(self, key, action_name, key_event=None):
+        """Handle key release events. key_event may contain press_duration, next_press_duration."""
         state_changed = False
-        
+        key_event = key_event or {}
+
+        # Long-press D (KEY_NEXT) in media player: show file info overlay; don't navigate on release
+        if self.current_state == STATE_MEDIA_PLAYER and (
+            key == self.config.KEY_NEXT or action_name == app_config.INPUT_ACTION_NEXT
+        ):
+            next_dur = key_event.get("next_press_duration")
+            if next_dur is not None and next_dur >= getattr(self.config, "INPUT_LONG_PRESS_DURATION", 2.0):
+                if hasattr(self, "media_player_manager") and self.media_player_manager:
+                    self.media_player_manager.set_show_file_info(6.0)
+                return True
+
         if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game:
             if self.active_pong_game.game_over and key == self.config.KEY_PREV:
                 state_changed = self._quit_pong_to_menu()
@@ -423,7 +438,7 @@ class AppState:
         
         # General key releases for menu navigation or back action
         elif action_name == app_config.INPUT_ACTION_BACK:
-            if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SECRET_GAMES, STATE_SENSORS_MENU, STATE_SETTINGS]:
+            if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SECRET_GAMES, STATE_SENSORS_MENU, STATE_SETTINGS, STATE_SCHEMATICS_CATEGORY, STATE_MEDIA_PLAYER]:
                 state_changed = self.state_manager.return_to_previous()
                 if not state_changed or not self.state_manager.previous_state:
                     state_changed = self.state_manager.return_to_menu()
@@ -600,15 +615,19 @@ class AppState:
                         state_changed = True
                     self.input_manager.reset_long_press_timer() # Reset only if processed or intended to be processed
                 
-        # Check D key long press for 3D viewer  
-        if (self.current_state == STATE_SCHEMATICS and 
-            not self.schematics_pause_menu_active and
-            self.input_manager.check_next_key_long_press()):
-            # Handle based on rotation mode
-            handled = self._handle_schematics_long_press('NEXT')
-            if handled:
+        # Check D key long press: media player = file info overlay, 3D viewer = pause menu
+        if self.input_manager.check_next_key_long_press():
+            if self.current_state == STATE_MEDIA_PLAYER:
+                if hasattr(self, "media_player_manager") and self.media_player_manager:
+                    self.media_player_manager.set_show_file_info(6.0)
+                # Don't reset timer here so KEYUP still gets duration and we don't navigate on release
                 state_changed = True
-            self.input_manager.reset_next_key_timer()
+            elif (self.current_state == STATE_SCHEMATICS and 
+                not self.schematics_pause_menu_active):
+                handled = self._handle_schematics_long_press('NEXT')
+                if handled:
+                    state_changed = True
+                self.input_manager.reset_next_key_timer()
         
         # Check zoom combos for schematics view (Return+A/D)
         if (self.current_state == STATE_SCHEMATICS and 

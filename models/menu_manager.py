@@ -13,6 +13,8 @@ STATE_SETTINGS = "SETTINGS"
 STATE_SECRET_GAMES = "SECRET_GAMES"
 STATE_SCHEMATICS = "SCHEMATICS"
 STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU"
+STATE_SCHEMATICS_CATEGORY = "SCHEMATICS_CATEGORY"
+STATE_MEDIA_PLAYER = "MEDIA_PLAYER"
 
 # Import new settings states
 STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
@@ -50,6 +52,7 @@ class MenuManager:
         self.sensors_menu_items = self._generate_sensors_menu_items()
         self.secret_menu_items = self._generate_secret_menu_items()
         self.settings_menu_items = self._generate_settings_menu_items() # New settings menu
+        self.schematics_category_menu_items = self._generate_schematics_category_menu_items()
         
         # Menu navigation stack for hierarchical menus
         # Each element is a tuple: (list_of_menu_items, current_index_in_that_list)
@@ -85,7 +88,7 @@ class MenuManager:
         ))
         items.append(MenuItem(
             name="Schematics", 
-            target_state=STATE_SCHEMATICS_MENU, 
+            target_state=STATE_SCHEMATICS_CATEGORY, 
             color_key="EAST_SIDE_PURPLE"
         ))
         items.append(MenuItem(
@@ -153,6 +156,26 @@ class MenuManager:
             )
         ]
         return items
+
+    def _generate_schematics_category_menu_items(self):
+        """Generates the schematics category menu: Schematics (3D) | Media Player."""
+        return [
+            MenuItem(
+                name="Schematics",
+                target_state=STATE_SCHEMATICS_MENU,
+                color_key="SIDEBAR_SCHEMATICS"
+            ),
+            MenuItem(
+                name="Media Player",
+                target_state=STATE_MEDIA_PLAYER,
+                color_key="SIDEBAR_SYSTEM"
+            ),
+            MenuItem(
+                name="<- Back",
+                target_state=STATE_MENU,
+                color_key="SIDEBAR_SETTINGS"
+            )
+        ]
         
     def _generate_secret_menu_items(self):
         """Generates the secret games menu items."""
@@ -349,6 +372,8 @@ class MenuManager:
         elif current_state == STATE_SCHEMATICS_MENU:
             # Schematics menu should use the submenu stack like sensors and settings
             # If we're in STATE_SCHEMATICS_MENU, it should be managed by the stack
+            return self.current_menu_definition
+        elif current_state == STATE_SCHEMATICS_CATEGORY:
             return self.current_menu_definition
         elif current_state == STATE_SECRET_GAMES:
             return self.secret_menu_items # Secret games menu is directly managed

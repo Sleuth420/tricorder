@@ -55,7 +55,7 @@ DEFAULT_SENSOR_UPDATE_INTERVAL = 1.0
 SENSOR_DISPLAY_PROPERTIES = {
     SENSOR_TEMPERATURE: {
         "display_name": "Env: Temp",
-        "units": "°C", # Changed from C
+        "units": "°C",
         "graph_type": "VERTICAL_BAR", # "LINE", "VERTICAL_BAR", "NONE"
         "color_key": "SIDEBAR_HUMID", # For AppState MenuItem color
         "update_interval": 0.5,  # Update every 0.5 seconds for responsive vertical bar
@@ -69,7 +69,7 @@ SENSOR_DISPLAY_PROPERTIES = {
             "precision": 1,
             "dynamic_range": True
         },
-        "range_override": (0, 50), # For line graph if ever used, or general reference
+        "range_override": (0, 50),
         "precision": 1
     },
     SENSOR_HUMIDITY: {

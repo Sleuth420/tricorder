@@ -20,6 +20,8 @@ STATE_BREAKOUT_ACTIVE = "BREAKOUT_ACTIVE"
 STATE_SNAKE_ACTIVE = "SNAKE_ACTIVE"
 STATE_SCHEMATICS = "SCHEMATICS"
 STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU"
+STATE_SCHEMATICS_CATEGORY = "SCHEMATICS_CATEGORY"
+STATE_MEDIA_PLAYER = "MEDIA_PLAYER"
 STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
 STATE_SETTINGS_BLUETOOTH = "SETTINGS_BLUETOOTH"
 STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
@@ -67,6 +69,10 @@ class InputRouter:
             return self._handle_sensors_menu_input(action)
         elif current_state == STATE_SCHEMATICS_MENU:
             return self._handle_schematics_menu_input(action)
+        elif current_state == STATE_SCHEMATICS_CATEGORY:
+            return self._handle_schematics_category_input(action)
+        elif current_state == STATE_MEDIA_PLAYER:
+            return self._handle_media_player_input(action)
         elif current_state == STATE_SETTINGS:
             return self._handle_settings_main_menu_input(action)
         elif current_state == STATE_SETTINGS_DISPLAY:
@@ -117,6 +123,13 @@ class InputRouter:
             return self._handle_sensors_menu_back()
         elif current_state == STATE_SCHEMATICS_MENU:
             return self._handle_schematics_menu_back()
+        elif current_state == STATE_SCHEMATICS_CATEGORY:
+            return self._handle_schematics_category_back()
+        elif current_state == STATE_MEDIA_PLAYER:
+            if hasattr(self.app_state, 'media_player_manager') and self.app_state.media_player_manager:
+                self.app_state.media_player_manager.on_exit_view()
+            return (self.app_state.state_manager.return_to_previous() or
+                    self.app_state.state_manager.return_to_menu())
         elif current_state == STATE_SETTINGS:
             return self._handle_settings_main_menu_back()
         elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY]:
@@ -161,12 +174,11 @@ class InputRouter:
             self.app_state.menu_manager.enter_submenu(
                 self.app_state.menu_manager.settings_menu_items, STATE_MENU, STATE_SETTINGS)
             return self.app_state.state_manager.transition_to(STATE_SETTINGS)
-        elif selected_item.target_state == STATE_SCHEMATICS_MENU:
-            # Schematics menu is also a submenu that needs proper initialization
-            schematics_menu_items = self.app_state.menu_manager._generate_schematics_menu_items()
+        elif selected_item.target_state == STATE_SCHEMATICS_CATEGORY:
+            # Schematics category: Schematics (3D) | Media Player
             self.app_state.menu_manager.enter_submenu(
-                schematics_menu_items, STATE_MENU, STATE_SCHEMATICS_MENU)
-            return self.app_state.state_manager.transition_to(STATE_SCHEMATICS_MENU)
+                self.app_state.menu_manager.schematics_category_menu_items, STATE_MENU, STATE_SCHEMATICS_CATEGORY)
+            return self.app_state.state_manager.transition_to(STATE_SCHEMATICS_CATEGORY)
         elif selected_item.target_state:
             if selected_item.target_state == STATE_SENSOR_VIEW and selected_item.data:
                 self.app_state.current_sensor = selected_item.data["sensor_type"]
@@ -273,6 +285,63 @@ class InputRouter:
         if previous_menu_state_name:
             return self.app_state.state_manager.transition_to(previous_menu_state_name)
         return self.app_state.state_manager.return_to_menu()
+
+    def _handle_schematics_category_input(self, action):
+        """Handle input for the schematics category menu (Schematics | Media Player)."""
+        if action == app_config.INPUT_ACTION_NEXT:
+            return self.app_state.menu_manager.navigate_next(STATE_SCHEMATICS_CATEGORY)
+        elif action == app_config.INPUT_ACTION_PREV:
+            return self.app_state.menu_manager.navigate_prev(STATE_SCHEMATICS_CATEGORY)
+        elif action == app_config.INPUT_ACTION_SELECT:
+            return self._handle_schematics_category_select()
+        return False
+
+    def _handle_schematics_category_select(self):
+        """Handle selection in the schematics category menu."""
+        selected_item = self.app_state.menu_manager.get_selected_item(STATE_SCHEMATICS_CATEGORY)
+        if not selected_item:
+            return False
+        if selected_item.target_state == STATE_MENU:
+            previous_menu_state_name = self.app_state.menu_manager.exit_submenu()
+            if previous_menu_state_name:
+                return self.app_state.state_manager.transition_to(previous_menu_state_name)
+            return self.app_state.state_manager.return_to_menu()
+        elif selected_item.target_state == STATE_SCHEMATICS_MENU:
+            schematics_menu_items = self.app_state.menu_manager._generate_schematics_menu_items()
+            self.app_state.menu_manager.enter_submenu(
+                schematics_menu_items, STATE_SCHEMATICS_CATEGORY, STATE_SCHEMATICS_MENU)
+            return self.app_state.state_manager.transition_to(STATE_SCHEMATICS_MENU)
+        elif selected_item.target_state == STATE_MEDIA_PLAYER:
+            if hasattr(self.app_state, 'media_player_manager') and self.app_state.media_player_manager:
+                self.app_state.media_player_manager.on_enter_view()
+            return self.app_state.state_manager.transition_to(STATE_MEDIA_PLAYER)
+        return False
+
+    def _handle_schematics_category_back(self):
+        """Handle back from schematics category menu."""
+        previous_menu_state_name = self.app_state.menu_manager.exit_submenu()
+        if previous_menu_state_name:
+            return self.app_state.state_manager.transition_to(previous_menu_state_name)
+        return self.app_state.state_manager.return_to_menu()
+
+    def _handle_media_player_input(self, action):
+        """Handle input for the media player view. PREV/NEXT = scroll list, SELECT = play/pause."""
+        mgr = getattr(self.app_state, 'media_player_manager', None)
+        if not mgr:
+            return False
+        if action == app_config.INPUT_ACTION_BACK:
+            # Handled in _handle_back_action
+            return False
+        if action == app_config.INPUT_ACTION_PREV:
+            mgr.navigate_prev()
+            return True
+        if action == app_config.INPUT_ACTION_NEXT:
+            mgr.navigate_next()
+            return True
+        if action == app_config.INPUT_ACTION_SELECT:
+            mgr.toggle_play_pause()
+            return True
+        return False
 
     def _handle_settings_main_menu_input(self, action):
         """Handle input for the main settings category menu."""

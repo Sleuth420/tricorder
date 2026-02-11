@@ -13,6 +13,7 @@ A Star Trek inspired tricorder simulation using a Raspberry Pi, Sense HAT, and a
 * Clock display
 * Configurable controls (supports 3-button operation: Up/Back, Down, Select/Action)
 * Secret Games Menu (Pong implemented)
+* Media Player (Main menu → Schematics → Media Player): audio (.mp3, .wav, .ogg) and video (.mp4) via VLC in a separate window
 * Cross-platform development support (Windows with mock sensor data)
 
 ## Project Structure
@@ -96,6 +97,7 @@ The application follows a modular architecture with clear separation of concerns
 * Pygame
 * Sense Hat library (Raspberry Pi only)
 * psutil for system monitoring
+* **Media Player**: `python-vlc` and the **VLC application** must be installed (for audio and video playback). Install VLC from [videolan.org](https://www.videolan.org/); on Raspberry Pi: `sudo apt install vlc`. Place media files in `assets/media/` (.mp3, .wav, .ogg, .mp4).
 * Other dependencies listed in `requirements.txt`
 
 ## Installation

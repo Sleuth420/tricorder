@@ -247,6 +247,6 @@ class LoadingOperation:
     
     def set_detail(self, detail: str):
         """Update the detail text without advancing step."""
-        progress = self.current_step / self.total_steps if self.total_steps > 0 else self.progress
+        progress = self.current_step / self.total_steps if self.total_steps > 0 else 0.0
         current_status = f"{self.operation_name} ({self.current_step}/{self.total_steps})" if self.total_steps > 0 else self.operation_name
         self.loading_screen.update_progress(progress, current_status, detail) 

@@ -325,7 +325,7 @@ class InputRouter:
         return self.app_state.state_manager.return_to_menu()
 
     def _handle_media_player_input(self, action):
-        """Handle input for the media player view. PREV/NEXT = scroll list, SELECT = play/pause."""
+        """Handle input for the media player view. PREV/NEXT = scroll list, SELECT = play selected track (or pause)."""
         mgr = getattr(self.app_state, 'media_player_manager', None)
         if not mgr:
             return False
@@ -333,13 +333,17 @@ class InputRouter:
             # Handled in _handle_back_action
             return False
         if action == app_config.INPUT_ACTION_PREV:
-            mgr.navigate_prev()
-            return True
+            return mgr.navigate_prev()
         if action == app_config.INPUT_ACTION_NEXT:
-            mgr.navigate_next()
-            return True
+            return mgr.navigate_next()
         if action == app_config.INPUT_ACTION_SELECT:
-            mgr.toggle_play_pause()
+            # Play selected track; if that track is already playing, toggle pause
+            idx = mgr.get_current_index()
+            if mgr.is_playing() and idx == mgr.get_playing_index():
+                mgr.toggle_play_pause()
+            else:
+                mgr.select_track(idx)
+                mgr.play()
             return True
         return False
 
@@ -591,7 +595,7 @@ class InputRouter:
         loading_operation = self.app_state.start_loading_operation(
             STATE_SETTINGS_UPDATE, 
             "Updating Application",
-            total_steps=5
+            total_steps=7
         )
         
         # Run the update in the background
@@ -622,7 +626,7 @@ class InputRouter:
         loading_operation = self.app_state.start_loading_operation(
             STATE_SETTINGS_UPDATE, 
             "Updating System",
-            total_steps=8
+            total_steps=6
         )
         
         # Run the update in the background

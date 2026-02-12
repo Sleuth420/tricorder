@@ -67,19 +67,21 @@ class ControlsManager:
     def navigate_next(self):
         """Navigate to the next selectable control item (skip sections/spacers)."""
         selectable_items = [i for i, item in enumerate(self.controls_items) if item["type"] == "control"]
-        if selectable_items:
-            current_selectable_index = self.controls_index % len(selectable_items)
-            self.controls_index = (current_selectable_index + 1) % len(selectable_items)
-            logger.debug(f"Controls NEXT: selectable index={self.controls_index}")
+        if not selectable_items:
+            return False
+        current_selectable_index = self.controls_index % len(selectable_items)
+        self.controls_index = (current_selectable_index + 1) % len(selectable_items)
+        logger.debug(f"Controls NEXT: selectable index={self.controls_index}")
         return True
-        
+
     def navigate_prev(self):
         """Navigate to the previous selectable control item (skip sections/spacers)."""
         selectable_items = [i for i, item in enumerate(self.controls_items) if item["type"] == "control"]
-        if selectable_items:
-            current_selectable_index = self.controls_index % len(selectable_items)
-            self.controls_index = (current_selectable_index - 1 + len(selectable_items)) % len(selectable_items)
-            logger.debug(f"Controls PREV: selectable index={self.controls_index}")
+        if not selectable_items:
+            return False
+        current_selectable_index = self.controls_index % len(selectable_items)
+        self.controls_index = (current_selectable_index - 1 + len(selectable_items)) % len(selectable_items)
+        logger.debug(f"Controls PREV: selectable index={self.controls_index}")
         return True
         
     def get_controls_items(self):

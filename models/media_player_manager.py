@@ -34,6 +34,7 @@ class MediaPlayerManager:
         )
         self.track_list = []  # List of (display_name, full_path)
         self.current_index = 0
+        self._playing_index = -1  # Index of track currently loaded in VLC (playing or paused); -1 when none
         self.playing = False
         self.paused = False
         self._end_reached = False  # Set by VLC callback (may be from another thread)
@@ -41,6 +42,7 @@ class MediaPlayerManager:
         self._player = None
         self._current_media = None
         self._window_handle = None  # HWND (Windows) or X11 window ID (Linux) for embedding
+        self._is_attached = False  # True when VLC is currently drawing into our window (avoid per-frame set_xwindow on Linux)
         self.show_file_info_until = 0.0  # Time until which to show file info overlay (long-press D)
         self._lock = threading.Lock()
         self._vlc_init_failed = False  # Avoid repeated failed inits
@@ -119,6 +121,10 @@ class MediaPlayerManager:
     def get_current_index(self):
         return self.current_index
 
+    def get_playing_index(self):
+        """Index of the track currently loaded in VLC (playing or paused). Returns -1 when nothing loaded."""
+        return self._playing_index
+
     def get_current_track_name(self):
         if not self.track_list or self.current_index < 0 or self.current_index >= len(self.track_list):
             return None
@@ -133,6 +139,7 @@ class MediaPlayerManager:
         """Set the window handle so VLC draws into the Tricorder window (like 3D schematics)."""
         if handle is not None and handle != self._window_handle:
             self._window_handle = handle
+            self._is_attached = False  # Force re-attach with new handle on next update
             logger.debug("Media player: window handle set for embedding.")
 
     def _apply_window_handle(self):
@@ -151,19 +158,33 @@ class MediaPlayerManager:
 
     def detach_from_window(self):
         """Detach VLC from our window so Pygame UI (pause menu, overlay) can be drawn on top."""
-        if not self._player:
+        if not self._player or not self._is_attached:
             return
         try:
             if sys.platform == "win32":
                 self._player.set_hwnd(0)
             else:
                 self._player.set_xwindow(0)
+            self._is_attached = False
         except Exception as e:
             logger.warning("Media player: could not detach from window: %s", e)
 
     def attach_to_window(self):
         """Re-attach VLC to our window (e.g. when resuming from pause)."""
+        if self._is_attached:
+            return
         self._apply_window_handle()
+        self._is_attached = True
+
+    def update_window_attachment(self, show_video):
+        """
+        Attach or detach VLC from the window only when the desired state changes.
+        Calling set_xwindow/set_hwnd every frame on Linux causes flicker; only transition when needed.
+        """
+        if show_video and not self._is_attached:
+            self.attach_to_window()
+        elif not show_video and self._is_attached:
+            self.detach_from_window()
 
     def is_playing(self):
         return self.playing
@@ -198,6 +219,7 @@ class MediaPlayerManager:
             self._player.play()
             self.playing = True
             self.paused = False
+            self._playing_index = self.current_index
             logger.info("Media player: playing %s", self.get_current_track_name())
             return True
         except Exception as e:
@@ -205,13 +227,14 @@ class MediaPlayerManager:
             return False
 
     def pause(self):
-        """Pause playback."""
+        """Pause playback and detach VLC so the track list (pause menu) is visible immediately."""
         if not self.playing or not self._player:
             return
         try:
             self._player.set_pause(1)
             self.playing = False
             self.paused = True
+            self.detach_from_window()  # Show Pygame menu immediately; avoid VLC staying on top
             logger.info("Media player: paused %s", self.get_current_track_name())
         except Exception as e:
             logger.warning("Media player: pause failed: %s", e)
@@ -224,15 +247,17 @@ class MediaPlayerManager:
             self.play()
 
     def stop(self):
-        """Stop playback and release current media."""
+        """Stop playback and release current media. Detach VLC so menu is visible."""
         try:
             if self._player:
                 self._player.stop()
             self.playing = False
             self.paused = False
+            self._playing_index = -1
             self._current_media = None
             with self._lock:
                 self._end_reached = False
+            self.detach_from_window()  # Ensure menu is visible when stopped
             logger.info("Media player: stopped.")
         except Exception as e:
             logger.warning("Media player: stop failed: %s", e)

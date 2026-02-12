@@ -1,8 +1,9 @@
 # --- ui/views/schematics/media_player_view.py ---
-# Media player UI: track list, play/pause, prev/next. Long-press D = file info. Tricorder overlay.
+# Media player UI: track list via shared submenu template. Long-press D = file info.
 
 import pygame
 import logging
+from ui.components.menus.list_menu_base import draw_scrollable_list_menu
 
 logger = logging.getLogger(__name__)
 
@@ -25,34 +26,6 @@ def _format_size(bytes_size):
     if bytes_size < 1024 * 1024:
         return f"{bytes_size / 1024:.1f} KB"
     return f"{bytes_size / (1024 * 1024):.2f} MB"
-
-
-def _draw_tricorder_overlay(screen, config_module, ui_scaler):
-    """Draw a tricorder-style frame around the content (visible border + corner brackets)."""
-    w, h = screen.get_width(), screen.get_height()
-    margin = ui_scaler.margin("small") if ui_scaler else 8
-    if w < 2 * margin or h < 2 * margin:
-        return
-    radius = getattr(config_module.Theme, "CORNER_CURVE_RADIUS", 15)
-    accent = config_module.Theme.ACCENT
-    rect = pygame.Rect(margin, margin, w - 2 * margin, h - 2 * margin)
-    # Outer frame (accent color so it's visible)
-    try:
-        pygame.draw.rect(screen, accent, rect, 2, border_radius=radius)
-    except TypeError:
-        pygame.draw.rect(screen, accent, rect, 2)
-    # Corner brackets (tricorder-style)
-    bracket_len = min(25, rect.width // 8, rect.height // 8)
-    if bracket_len < 4:
-        bracket_len = 4
-    for (cx, cy, dx, dy) in [
-        (rect.left, rect.top, 1, 1),
-        (rect.right, rect.top, -1, 1),
-        (rect.right, rect.bottom, -1, -1),
-        (rect.left, rect.bottom, 1, -1),
-    ]:
-        pygame.draw.line(screen, accent, (cx, cy), (cx + dx * bracket_len, cy), 2)
-        pygame.draw.line(screen, accent, (cx, cy), (cx, cy + dy * bracket_len), 2)
 
 
 def _draw_file_info_overlay(screen, mgr, fonts, config_module, ui_scaler):
@@ -87,8 +60,8 @@ def _draw_file_info_overlay(screen, mgr, fonts, config_module, ui_scaler):
 
 def draw_media_player_view(screen, app_state, fonts, config_module, ui_scaler=None):
     """
-    Draw the media player: title, current track, play state, position/length, track list.
-    Playback is handled by VLC in a separate window; this view only shows status and controls.
+    Draw the media player using the shared submenu list (same as Schematics / Settings sub-menus).
+    Track list, selection, and footer; VLC handles playback in the same window when playing.
     """
     mgr = getattr(app_state, "media_player_manager", None)
     if not mgr:
@@ -103,109 +76,39 @@ def draw_media_player_view(screen, app_state, fonts, config_module, ui_scaler=No
 
     # When we need to show Pygame UI (paused or file info overlay), detach VLC from the window
     # so our draw isn't covered. When playing and no overlay, attach so VLC draws video.
-    if mgr.is_paused() or mgr.is_showing_file_info() or not mgr.is_playing():
-        mgr.detach_from_window()
-    else:
-        mgr.attach_to_window()
+    show_video = mgr.is_playing() and not mgr.is_paused() and not mgr.is_showing_file_info()
+    mgr.update_window_attachment(show_video)
 
-    screen.fill(config_module.Theme.BACKGROUND)
-    screen_width = screen.get_width()
-    screen_height = screen.get_height()
-
-    if ui_scaler:
-        margin_l = ui_scaler.margin("large")
-        margin_s = ui_scaler.margin("small")
-    else:
-        margin_l = 20
-        margin_s = 10
-
-    font_large = fonts["large"]
-    font_medium = fonts["medium"]
-    font_small = fonts["small"]
-
-    # Header
-    title = "Media Player"
-    title_surf = font_large.render(title, True, config_module.Theme.ACCENT)
-    title_rect = title_surf.get_rect(centerx=screen_width // 2, y=margin_l)
-    screen.blit(title_surf, title_rect)
-
-    y = title_rect.bottom + margin_s
-
-    # VLC unavailable message
-    if not mgr.vlc_available:
-        msg = "VLC not available. Install python-vlc and VLC app."
-        msg_surf = font_small.render(msg, True, config_module.Theme.ALERT)
-        screen.blit(msg_surf, msg_surf.get_rect(centerx=screen_width // 2, y=y))
-        y += msg_surf.get_height() + margin_s
-        hint = "pip install python-vlc  (and install VLC)"
-        hint_surf = font_small.render(hint, True, config_module.Theme.FOREGROUND)
-        screen.blit(hint_surf, hint_surf.get_rect(centerx=screen_width // 2, y=y))
-        y += hint_surf.get_height() + margin_l
-
-    # Current track and state
-    track_name = mgr.get_current_track_name() or "No track"
-    short_name = track_name[:36] + ("..." if len(track_name) > 36 else "")
-    state_text = "Playing" if mgr.is_playing() else ("Paused" if mgr.is_paused() else "Stopped")
-    state_color = config_module.Theme.ACCENT if mgr.is_playing() else config_module.Theme.FOREGROUND
-    track_surf = font_medium.render(short_name, True, config_module.Theme.FOREGROUND)
-    track_rect = track_surf.get_rect(centerx=screen_width // 2, y=y)
-    screen.blit(track_surf, track_rect)
-    y = track_rect.bottom + 4
-    state_surf = font_small.render(state_text, True, state_color)
-    state_rect = state_surf.get_rect(centerx=screen_width // 2, y=y)
-    screen.blit(state_surf, state_rect)
-    y = state_rect.bottom + margin_s
-
-    # Position / length (when we have a player)
-    pos_sec = mgr.get_position_sec()
-    len_sec = mgr.get_length_sec()
-    time_str = f"{_format_time(pos_sec)} / {_format_time(len_sec) if len_sec > 0 else '--:--'}"
-    time_surf = font_small.render(time_str, True, config_module.Theme.FOREGROUND)
-    time_rect = time_surf.get_rect(centerx=screen_width // 2, y=y)
-    screen.blit(time_surf, time_rect)
-    y = time_rect.bottom + margin_s
-
-    # Hint: playback in this window (embedded like 3D schematics)
-    if mgr.vlc_available and mgr.track_list:
-        vlc_hint = "Playback in this window"
-        vlc_surf = font_small.render(vlc_hint, True, config_module.Theme.FOREGROUND)
-        screen.blit(vlc_surf, vlc_surf.get_rect(centerx=screen_width // 2, y=y))
-        y += vlc_surf.get_height() + margin_l
-
-    # Track list (names around current)
+    # Build menu items like other sub-menus: list of track names (or placeholder)
     track_list = mgr.get_track_list()
-    current_idx = mgr.get_current_index()
     if track_list:
-        list_y = y
-        max_visible = 4
-        start = max(0, current_idx - 1)
-        end = min(len(track_list), start + max_visible)
-        if end - start < max_visible:
-            start = max(0, end - max_visible)
-        for i in range(start, end):
-            name, _ = track_list[i]
-            short = (name[:26] + "..") if len(name) > 28 else name
-            is_current = i == current_idx
-            color = config_module.Theme.MENU_SELECTED_TEXT if is_current else config_module.Theme.FOREGROUND
-            surf = font_small.render(short, True, color)
-            screen.blit(surf, (margin_l, list_y))
-            list_y += font_small.get_height() + 4
+        menu_items = [name for name, _ in track_list]
     else:
-        no_tracks = font_small.render("No media in " + getattr(config_module, "MEDIA_FOLDER", "assets/media"), True, config_module.Theme.FOREGROUND)
-        screen.blit(no_tracks, no_tracks.get_rect(centerx=screen_width // 2, y=y))
+        media_folder = getattr(config_module, "MEDIA_FOLDER", "assets/media")
+        menu_items = [f"No media in {media_folder}"]
 
-    # Footer: controls only visible when paused (or stopped)
-    if mgr.is_paused() or not mgr.is_playing():
-        key_prev = pygame.key.name(config_module.KEY_PREV).upper()
-        key_next = pygame.key.name(config_module.KEY_NEXT).upper()
-        key_select = pygame.key.name(config_module.KEY_SELECT).upper()
-        footer = f"< {key_prev}=Prev | {key_next}=Next | {key_select}=Play/Pause | Long {key_next}=Info | Back=Exit >"
-        footer_surf = font_small.render(footer, True, config_module.Theme.FOREGROUND)
-        footer_rect = footer_surf.get_rect(centerx=screen_width // 2, bottom=screen_height - margin_s)
-        screen.blit(footer_surf, footer_rect)
+    selected_index = mgr.get_current_index()
+    if selected_index >= len(menu_items):
+        selected_index = max(0, len(menu_items) - 1)
 
-    # Tricorder-style overlay (frame + corner brackets)
-    _draw_tricorder_overlay(screen, config_module, ui_scaler)
+    key_prev = pygame.key.name(config_module.KEY_PREV).upper()
+    key_next = pygame.key.name(config_module.KEY_NEXT).upper()
+    key_select = pygame.key.name(config_module.KEY_SELECT).upper()
+    footer_hint = f"< {key_prev}=Prev | {key_next}=Next | {key_select}=Play/Pause | Long {key_next}=Info | Back=Exit >"
+    if not mgr.vlc_available:
+        footer_hint += "  (Install python-vlc for playback)"
+
+    draw_scrollable_list_menu(
+        screen=screen,
+        title="Media Player",
+        menu_items=menu_items,
+        selected_index=selected_index,
+        fonts=fonts,
+        config_module=config_module,
+        footer_hint=footer_hint,
+        item_style="simple",
+        ui_scaler=ui_scaler
+    )
 
     # File info overlay when long-press D (or equivalent) was used
     if mgr.is_showing_file_info():

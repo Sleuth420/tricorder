@@ -530,7 +530,7 @@ class UpdateManager:
         
         try:
             if loading_operation:
-                loading_operation.update_status("Checking prerequisites...")
+                loading_operation.step("Checking prerequisites...")
             
             self._save_update_state('prerequisites')
             
@@ -540,48 +540,51 @@ class UpdateManager:
             if not self._check_git_repository():
                 raise Exception("Not in a Git repository")
             
-            # Step 1: Create backup
+            # Step 2: Create backup
             if loading_operation:
-                loading_operation.update_status("Creating backup...")
+                loading_operation.step("Creating backup...")
             
             self._save_update_state('backup_creation')
             self._create_backup()
             
-            # Step 2: Update git repository
+            # Step 3: Update git repository
             if loading_operation:
-                loading_operation.update_status("Downloading updates...")
+                loading_operation.step("Downloading updates...")
             
             self._save_update_state('git_update')
             self._update_git_repo()
             
-            # Step 3: Update Python dependencies
+            # Step 4: Update Python dependencies
             if loading_operation:
-                loading_operation.update_status("Updating dependencies...")
+                loading_operation.step("Updating dependencies...")
             
             self._save_update_state('dependency_update')
             self._update_python_dependencies()
             
-            # Step 4: Clean up files
+            # Step 5: Clean up files
             if loading_operation:
-                loading_operation.update_status("Cleaning up...")
+                loading_operation.step("Cleaning up...")
             
             self._save_update_state('cleanup')
             self._cleanup_after_update()
             
-            # Step 5: Deploy system configuration files (if on Pi)
+            # Step 6: Deploy system configuration files (if on Pi)
             if self.is_raspberry_pi:
                 if loading_operation:
-                    loading_operation.update_status("Deploying system configurations...")
+                    loading_operation.step("Deploying system configurations...")
                 
                 self._save_update_state('config_deployment')
                 config_success = self.system_config_manager.deploy_system_configs(loading_operation)
                 if not config_success:
                     logger.warning("System configuration deployment failed, but continuing...")
                     # Don't fail the entire update for config deployment failures
+            elif loading_operation:
+                # Non-Pi: advance step so progress count stays in sync (step 6 skipped)
+                loading_operation.step("Preparing verification...")
             
-            # Step 6: Verify update
+            # Step 7: Verify update
             if loading_operation:
-                loading_operation.update_status("Verifying update...")
+                loading_operation.step("Verifying update...")
             
             self._save_update_state('verification')
             if not self._verify_update():
@@ -647,49 +650,49 @@ class UpdateManager:
                 f.write(f"OS update started at: {datetime.now().isoformat()}\n")
             
             if loading_operation:
-                loading_operation.update_status("Checking prerequisites...")
+                loading_operation.step("Checking prerequisites...")
             
             self._save_update_state('os_prerequisites')
             
             if not self._check_network_connectivity():
                 raise Exception("No network connection available")
             
-            # Step 1: Update package lists
+            # Step 2: Update package lists
             if loading_operation:
-                loading_operation.update_status("Updating package lists...")
+                loading_operation.step("Updating package lists...")
             
             logger.info("📦 Updating package lists...")
             self._save_update_state('package_list_update')
             self._run_system_command(["sudo", "apt", "update"])
             
-            # Step 2: Upgrade system packages (most critical step)
+            # Step 3: Upgrade system packages (most critical step)
             if loading_operation:
-                loading_operation.update_status("Upgrading system packages...")
+                loading_operation.step("Upgrading system packages...")
             
             logger.info("⬆️  Upgrading system packages...")
             self._save_update_state('package_upgrade')
             self._run_system_command(["sudo", "apt", "upgrade", "-y"])
             
-            # Step 3: Clean up system packages
+            # Step 4: Clean up system packages
             if loading_operation:
-                loading_operation.update_status("Cleaning up packages...")
+                loading_operation.step("Cleaning up packages...")
             
             logger.info("🧹 Cleaning up packages...")
             self._save_update_state('package_cleanup')
             self._run_system_command(["sudo", "apt", "autoremove", "-y"])
             self._run_system_command(["sudo", "apt", "autoclean"])
             
-            # Step 4: Update application
+            # Step 5: Update application (don't pass loading_operation - we use 6 steps for system only)
             if loading_operation:
-                loading_operation.update_status("Updating application...")
+                loading_operation.step("Updating application...")
             
             self._save_update_state('app_update')
-            if not self.perform_app_update(loading_operation):
+            if not self.perform_app_update(None):
                 raise Exception("Application update failed during system update")
             
-            # Step 5: Deploy system configuration files
+            # Step 6: Deploy system configuration files
             if loading_operation:
-                loading_operation.update_status("Deploying system configurations...")
+                loading_operation.step("Deploying system configurations...")
             
             logger.info("⚙️  Deploying system configurations...")
             self._save_update_state('final_config_deployment')

@@ -349,14 +349,14 @@ class WifiManager:
     def _perform_background_scan(self, loading_operation):
         """Perform the network scan in background with progress updates."""
         try:
-            loading_operation.update_status("Initializing scan...")
+            loading_operation.step("Initializing scan...")
             time.sleep(0.3)
             
-            loading_operation.update_status("Scanning networks...")
+            loading_operation.step("Scanning networks...")
             success = self._do_actual_scan()  # Use internal scan method that doesn't check scanning_in_progress
             time.sleep(0.5)
             
-            loading_operation.update_status("Processing results...")
+            loading_operation.step("Processing results...")
             time.sleep(0.3)
             
             loading_operation.complete()

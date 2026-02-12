@@ -36,8 +36,8 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
     if base_sidebar_width is None:
         # Revert to original-style proportional calculations
         if ui_scaler.is_small_screen():
-            # For small screens (Pi), use original proportion: ~30% of screen width
-            base_sidebar_width = max(90, screen_width // 3)  # ~33% of width, minimum 90px
+            # For small screens (Pi), ensure "Schematics" fits; min 118px to avoid cutoff
+            base_sidebar_width = max(118, screen_width // 3)  # ~33% of width
         else:
             # For larger screens, use original proportion: ~25% of screen width  
             base_sidebar_width = max(120, min(screen_width // 4, 200))  # 25% of width, max 200px

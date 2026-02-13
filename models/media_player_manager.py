@@ -47,7 +47,6 @@ class MediaPlayerManager:
         self._lock = threading.Lock()
         self._vlc_init_failed = False  # Avoid repeated failed inits
         self.vlc_available = _VLC_AVAILABLE
-        self._last_pause_position = 0  # For stop/restart pause workaround
         if not self.vlc_available:
             logger.info("Media player: VLC not available; install python-vlc and VLC application.")
         else:
@@ -76,7 +75,6 @@ class MediaPlayerManager:
         """Called by VLC when playback ends (may run on VLC's thread)."""
         with self._lock:
             self._end_reached = True
-        logger.debug("Media player: playback end reached.")
 
     def tick(self):
         """
@@ -86,15 +84,10 @@ class MediaPlayerManager:
         with self._lock:
             if not self._end_reached:
                 return
-
-            # This prevents a manual stop (used in our pause workaround) from triggering
-            # the auto-advance logic. Only advance if the track ended while playing.
             if not self.playing:
                 self._end_reached = False
                 return
-
             self._end_reached = False
-
         self.playing = False
         self.paused = False
         # Auto-advance to next track
@@ -166,7 +159,7 @@ class MediaPlayerManager:
             logger.warning("Media player: could not set window handle: %s", e)
 
     def detach_from_window(self):
-        """Detach VLC from our window so Pygame UI (pause menu, overlay) can be drawn on top."""
+        """Detach VLC from our window so the track list is visible."""
         if not self._player or not self._is_attached:
             return
         try:
@@ -204,7 +197,6 @@ class MediaPlayerManager:
     def play(self):
         """Start or resume playback in VLC (embedded in Tricorder window)."""
         if not self.track_list:
-            logger.debug("Media player: play ignored, no tracks.")
             return False
         if not self.vlc_available:
             logger.warning("Media player: play ignored, VLC not available.")
@@ -216,23 +208,10 @@ class MediaPlayerManager:
         if not self._player:
             return False
         try:
-            # If we are in the "fake pause" state, we need to restart the track from the saved position
             if self.paused:
-                self._apply_window_handle()
-                
-                # Create a new media object with a start time option
-                start_time_sec = self._last_pause_position / 1000.0
-                logger.info(f"Attempting to resume from {start_time_sec:.2f} seconds.")
-                self._current_media = self._vlc_instance.media_new_path(
-                    os.path.abspath(path),
-                    f':start-time={start_time_sec}'
-                )
-
-                self._player.set_media(self._current_media)
-                self._player.play()
+                self._player.set_pause(0)
                 self.paused = False
                 self.playing = True
-                self._playing_index = self.current_index
                 logger.info("Media player: resumed %s", self.get_current_track_name())
                 return True
 
@@ -250,29 +229,16 @@ class MediaPlayerManager:
             return False
 
     def pause(self):
-        """Workaround pause: stops the player, but remembers the position."""
+        """Pause playback. VLC stays attached and shows paused frame."""
         if not self.playing or not self._player:
             return
         try:
-            # 1. Save current position
-            self._last_pause_position = self._player.get_time()
-            logger.debug(f"Pausing. Stored position: {self._last_pause_position} ms")
-
-            # 2. Stop the VLC player transport
-            self._player.stop()
-
-            # 3. Set our internal state to reflect the 'paused' (stopped) condition
+            self._player.set_pause(1)
             self.playing = False
             self.paused = True
-            self._playing_index = -1
-            self._current_media = None # Release media reference
-
-            # 4. Detach from window to allow Pygame UI to draw
-            self.detach_from_window()
-            
-            logger.info("Media player: 'paused' (stopped) %s at %d ms", self.get_current_track_name(), self._last_pause_position)
+            logger.info("Media player: paused %s", self.get_current_track_name())
         except Exception as e:
-            logger.warning("Media player: pause workaround failed: %s", e)
+            logger.warning("Media player: pause failed: %s", e)
 
     def toggle_play_pause(self):
         """Toggle between play and pause."""
@@ -282,7 +248,7 @@ class MediaPlayerManager:
             self.play()
 
     def stop(self):
-        """Stop playback and release current media. Detach VLC so menu is visible."""
+        """Stop playback and release current media. Detach VLC so track list is visible."""
         try:
             if self._player:
                 self._player.stop()
@@ -302,7 +268,6 @@ class MediaPlayerManager:
         if not self.track_list:
             return False
         self.current_index = (self.current_index + 1) % len(self.track_list)
-        logger.debug("Media player: selection -> %s", self.get_current_track_name())
         return True
 
     def navigate_prev(self):
@@ -310,7 +275,6 @@ class MediaPlayerManager:
         if not self.track_list:
             return False
         self.current_index = (self.current_index - 1) % len(self.track_list)
-        logger.debug("Media player: selection -> %s", self.get_current_track_name())
         return True
 
     def next_track(self):
@@ -336,7 +300,6 @@ class MediaPlayerManager:
         if 0 <= index < len(self.track_list):
             self.stop()
             self.current_index = index
-            logger.debug("Media player: selected track index %s", index)
             return True
         return False
 
@@ -380,7 +343,6 @@ class MediaPlayerManager:
 
     def on_enter_view(self):
         """Called when entering media player view. Refresh list and reset index if needed."""
-        logger.debug("Media player: entering view.")
         self._refresh_track_list()
         if self.current_index >= len(self.track_list) and self.track_list:
             self.current_index = 0

@@ -337,9 +337,9 @@ class InputRouter:
         if action == app_config.INPUT_ACTION_NEXT:
             return mgr.navigate_next()
         if action == app_config.INPUT_ACTION_SELECT:
-            # Play selected track; if that track is already playing, toggle pause
+            # If this track is already loaded (playing or paused), toggle play/pause so we resume from position
             idx = mgr.get_current_index()
-            if mgr.is_playing() and idx == mgr.get_playing_index():
+            if idx == mgr.get_playing_index() and (mgr.is_playing() or mgr.is_paused()):
                 mgr.toggle_play_pause()
             else:
                 mgr.select_track(idx)

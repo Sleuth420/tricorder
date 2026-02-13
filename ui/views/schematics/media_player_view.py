@@ -74,41 +74,40 @@ def draw_media_player_view(screen, app_state, fonts, config_module, ui_scaler=No
     # Process end-reached from VLC (main-thread tick)
     mgr.tick()
 
-    # When we need to show Pygame UI (paused or file info overlay), detach VLC from the window
-    # so our draw isn't covered. When playing and no overlay, attach so VLC draws video.
-    show_video = mgr.is_playing() and not mgr.is_paused() and not mgr.is_showing_file_info()
-    mgr.update_window_attachment(show_video)
+    # Keep VLC attached when playing or paused (VLC shows video/paused frame). Detach only when stopped to show the track list.
+    mgr.update_window_attachment(mgr.is_playing() or mgr.is_paused())
 
-    # Build menu items like other sub-menus: list of track names (or placeholder)
-    track_list = mgr.get_track_list()
-    if track_list:
-        menu_items = [name for name, _ in track_list]
-    else:
-        media_folder = getattr(config_module, "MEDIA_FOLDER", "assets/media")
-        menu_items = [f"No media in {media_folder}"]
+    if not mgr.is_playing() and not mgr.is_paused():
+        # Build menu items like other sub-menus: list of track names (or placeholder)
+        track_list = mgr.get_track_list()
+        if track_list:
+            menu_items = [name for name, _ in track_list]
+        else:
+            media_folder = getattr(config_module, "MEDIA_FOLDER", "assets/media")
+            menu_items = [f"No media in {media_folder}"]
 
-    selected_index = mgr.get_current_index()
-    if selected_index >= len(menu_items):
-        selected_index = max(0, len(menu_items) - 1)
+        selected_index = mgr.get_current_index()
+        if selected_index >= len(menu_items):
+            selected_index = max(0, len(menu_items) - 1)
 
-    key_prev = pygame.key.name(config_module.KEY_PREV).upper()
-    key_next = pygame.key.name(config_module.KEY_NEXT).upper()
-    key_select = pygame.key.name(config_module.KEY_SELECT).upper()
-    footer_hint = f"< {key_prev}=Prev | {key_next}=Next | {key_select}=Play/Pause | Long {key_next}=Info | Back=Exit >"
-    if not mgr.vlc_available:
-        footer_hint += "  (Install python-vlc for playback)"
+        key_prev = pygame.key.name(config_module.KEY_PREV).upper()
+        key_next = pygame.key.name(config_module.KEY_NEXT).upper()
+        key_select = pygame.key.name(config_module.KEY_SELECT).upper()
+        footer_hint = f"< {key_prev}=Prev | {key_next}=Next | {key_select}=Play/Pause | Long {key_next}=Info | Back=Exit >"
+        if not mgr.vlc_available:
+            footer_hint += "  (Install python-vlc for playback)"
 
-    draw_scrollable_list_menu(
-        screen=screen,
-        title="Media Player",
-        menu_items=menu_items,
-        selected_index=selected_index,
-        fonts=fonts,
-        config_module=config_module,
-        footer_hint=footer_hint,
-        item_style="simple",
-        ui_scaler=ui_scaler
-    )
+        draw_scrollable_list_menu(
+            screen=screen,
+            title="Media Player",
+            menu_items=menu_items,
+            selected_index=selected_index,
+            fonts=fonts,
+            config_module=config_module,
+            footer_hint=footer_hint,
+            item_style="simple",
+            ui_scaler=ui_scaler
+        )
 
     # File info overlay when long-press D (or equivalent) was used
     if mgr.is_showing_file_info():

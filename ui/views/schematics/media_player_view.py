@@ -29,7 +29,7 @@ def _format_size(bytes_size):
 
 
 def _draw_file_info_overlay(screen, mgr, fonts, config_module, ui_scaler):
-    """Draw file info panel (name, path, duration, size) when long-press D is active."""
+    """Draw file info panel (title, path, duration, size) when long-press D is active."""
     w, h = screen.get_width(), screen.get_height()
     margin = ui_scaler.margin("large") if ui_scaler else 20
     font_small = fonts["small"]
@@ -43,7 +43,7 @@ def _draw_file_info_overlay(screen, mgr, fonts, config_module, ui_scaler):
     pygame.draw.rect(screen, config_module.Theme.ACCENT, panel, 1)
     y = panel.y + 6
     name = mgr.get_current_track_name() or "—"
-    screen.blit(font_small.render("File: " + (name[:40] + "..." if len(name) > 40 else name), True, config_module.Theme.FOREGROUND), (panel.x + 6, y))
+    screen.blit(font_small.render("Title: " + (name[:40] + "..." if len(name) > 40 else name), True, config_module.Theme.FOREGROUND), (panel.x + 6, y))
     y += font_small.get_height() + 2
     path = mgr.get_current_track_path() or ""
     path_short = path[:50] + "..." if len(path) > 50 else path

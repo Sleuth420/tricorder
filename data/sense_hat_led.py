@@ -51,9 +51,23 @@ def _normalize_sensor_value(sensor_key, value, config_module):
         return None
 
 
-def _pattern_menu(pixels):
-    """Idle/menu: four corner dots (tricorder “scanning” feel)."""
-    c = _DIM
+def _pattern_menu(pixels, t=None):
+    """Menu: tricorder-style scanning line with trail, plus dim corner beacons."""
+    if t is None:
+        t = time.time()
+    # Scan speed: full 8-row sweep in ~2 seconds at 4 LED updates/sec
+    phase = (t * 4) % 8.0
+    row_lead = int(phase) % 8
+    # Trail behind the scan line (wrap around)
+    row_trail1 = (row_lead - 1) % 8
+    row_trail2 = (row_lead - 2) % 8
+    # Bright lead line (green), dimmer trail, faint trail
+    for x in range(8):
+        _set_pixel(pixels, x, row_lead, 0, _BRIGHT, 0)
+        _set_pixel(pixels, x, row_trail1, 0, _MID, 0)
+        _set_pixel(pixels, x, row_trail2, 0, _DIM, 0)
+    # Subtle corner beacons (tricorder “listening”)
+    c = _DIM // 2
     _set_pixel(pixels, 0, 0, 0, c, 0)
     _set_pixel(pixels, 7, 0, 0, c, 0)
     _set_pixel(pixels, 0, 7, 0, c, 0)
@@ -72,12 +86,12 @@ def _pattern_dashboard_or_sensor(pixels, app_state, sensor_values, config_module
             sensor_key = config_module.SENSOR_TEMPERATURE
     data = sensor_values.get(sensor_key)
     if not data or not isinstance(data, dict):
-        _pattern_menu(pixels)
+        _pattern_menu(pixels, time.time())
         return
     value = data.get("value")
     norm = _normalize_sensor_value(sensor_key, value, config_module)
     if norm is None:
-        _pattern_menu(pixels)
+        _pattern_menu(pixels, time.time())
         return
     # Single column bar in the middle (col 3 or 4), height 0–8
     height = norm * 8
@@ -177,7 +191,7 @@ def _choose_and_build_pattern(app_state, sensor_values, config_module):
     if state in ("DASHBOARD", "SENSOR", "SENSORS_MENU", "SYSTEM"):
         _pattern_dashboard_or_sensor(pixels, app_state, sensor_values, config_module)
     elif state == "MENU":
-        _pattern_menu(pixels)
+        _pattern_menu(pixels, time.time())
     elif state == "MEDIA_PLAYER":
         _pattern_media_player(pixels, app_state)
     elif state in ("SCHEMATICS", "SCHEMATICS_MENU", "SCHEMATICS_CATEGORY"):
@@ -189,7 +203,7 @@ def _choose_and_build_pattern(app_state, sensor_values, config_module):
     elif "SETTINGS" in state or "CONFIRM" in state or "SELECT_COMBO" in state:
         _pattern_settings(pixels)
     else:
-        _pattern_menu(pixels)
+        _pattern_menu(pixels, time.time())
 
     return pixels
 

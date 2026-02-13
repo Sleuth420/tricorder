@@ -2,29 +2,29 @@
 
 # Core dependencies
 pygame==2.6.1
-numpy==2.3.3
+numpy==2.4.2
 
 # Raspberry Pi specific libraries
 sense-hat==2.6.0    # For Sense HAT sensor access
 
 # System monitoring
-psutil==7.1.0
+psutil==7.2.2
 
 # 3D Graphics and OpenGL rendering
 PyOpenGL==3.1.10
 #PyOpenGL-accelerate==3.1.9  # Accelerated OpenGL operations (optional but recommended)
-PyGLM==2.8.2        # OpenGL Mathematics library for 3D transformations
+PyGLM==2.8.3
 
 # 3D Model support
 pygltflib==1.16.5
 
 # Image processing
-Pillow==11.3.0
+Pillow==12.1.1
 
 # Media player (audio + video via VLC in separate window)
 python-vlc>=3.0.0   # Requires VLC application installed on system (Windows / Raspberry Pi)
 mutagen>=1.47.0     # Read MP4 (and MP3) metadata e.g. Comment for display name
 
 # Optional utilities
-matplotlib==3.10.6
-python-dotenv==1.1.1
+matplotlib==3.10.8
+python-dotenv==1.2.1

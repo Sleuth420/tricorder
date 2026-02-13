@@ -36,6 +36,9 @@ LIST_MENU_MAX_VISIBLE_ITEMS = 4  # Maximum items visible before scrolling
 UI_BASE_WIDTH = 320
 UI_BASE_HEIGHT = 240
 
+# Global scale factor: 1.0 = normal, <1.0 = whole UI slightly smaller (e.g. 0.94 = 6% smaller)
+UI_SCALE_FACTOR = 0.94
+
 # Responsive breakpoints
 UI_BREAKPOINT_SMALL = 320   # Pi and similar small screens
 UI_BREAKPOINT_MEDIUM = 800  # Development screens

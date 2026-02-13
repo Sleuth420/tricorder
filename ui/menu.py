@@ -117,14 +117,13 @@ def _draw_main_menu_content(screen, main_content_rect, sensor_values, fonts, con
     
     # Logo cycling system - change logo every 10 seconds
     logo_cycle_interval = 10.0
-    logo_cycle_phase = int(current_time / logo_cycle_interval) % 2
-    
     # Available logo images (you can add more to assets/images/)
     logo_paths = [
         config_module.SPLASH_LOGO_PATH,  # Main logo
         "assets/images/spork.png",        # Alternative image
-        "assets/images/cap'n_kirb.png"
+        "assets/images/cap'n_kirb.png",
     ]
+    logo_cycle_phase = int(current_time / logo_cycle_interval) % len(logo_paths)
     
     current_logo_path = logo_paths[logo_cycle_phase]
     

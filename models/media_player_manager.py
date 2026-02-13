@@ -47,6 +47,7 @@ class MediaPlayerManager:
         self._lock = threading.Lock()
         self._vlc_init_failed = False  # Avoid repeated failed inits
         self.vlc_available = _VLC_AVAILABLE
+        self._last_pause_position = 0  # For stop/restart pause workaround
         if not self.vlc_available:
             logger.info("Media player: VLC not available; install python-vlc and VLC application.")
         else:
@@ -85,7 +86,15 @@ class MediaPlayerManager:
         with self._lock:
             if not self._end_reached:
                 return
+
+            # This prevents a manual stop (used in our pause workaround) from triggering
+            # the auto-advance logic. Only advance if the track ended while playing.
+            if not self.playing:
+                self._end_reached = False
+                return
+
             self._end_reached = False
+
         self.playing = False
         self.paused = False
         # Auto-advance to next track
@@ -207,12 +216,26 @@ class MediaPlayerManager:
         if not self._player:
             return False
         try:
+            # If we are in the "fake pause" state, we need to restart the track from the saved position
             if self.paused:
-                self._player.set_pause(0)
+                self._apply_window_handle()
+                
+                # Create a new media object with a start time option
+                start_time_sec = self._last_pause_position / 1000.0
+                logger.info(f"Attempting to resume from {start_time_sec:.2f} seconds.")
+                self._current_media = self._vlc_instance.media_new_path(
+                    os.path.abspath(path),
+                    f':start-time={start_time_sec}'
+                )
+
+                self._player.set_media(self._current_media)
+                self._player.play()
                 self.paused = False
                 self.playing = True
+                self._playing_index = self.current_index
                 logger.info("Media player: resumed %s", self.get_current_track_name())
                 return True
+
             self._apply_window_handle()
             self._current_media = self._vlc_instance.media_new_path(os.path.abspath(path))
             self._player.set_media(self._current_media)
@@ -227,17 +250,29 @@ class MediaPlayerManager:
             return False
 
     def pause(self):
-        """Pause playback and detach VLC so the track list (pause menu) is visible immediately."""
+        """Workaround pause: stops the player, but remembers the position."""
         if not self.playing or not self._player:
             return
         try:
-            self._player.set_pause(1)
+            # 1. Save current position
+            self._last_pause_position = self._player.get_time()
+            logger.debug(f"Pausing. Stored position: {self._last_pause_position} ms")
+
+            # 2. Stop the VLC player transport
+            self._player.stop()
+
+            # 3. Set our internal state to reflect the 'paused' (stopped) condition
             self.playing = False
             self.paused = True
-            self.detach_from_window()  # Show Pygame menu immediately; avoid VLC staying on top
-            logger.info("Media player: paused %s", self.get_current_track_name())
+            self._playing_index = -1
+            self._current_media = None # Release media reference
+
+            # 4. Detach from window to allow Pygame UI to draw
+            self.detach_from_window()
+            
+            logger.info("Media player: 'paused' (stopped) %s at %d ms", self.get_current_track_name(), self._last_pause_position)
         except Exception as e:
-            logger.warning("Media player: pause failed: %s", e)
+            logger.warning("Media player: pause workaround failed: %s", e)
 
     def toggle_play_pause(self):
         """Toggle between play and pause."""

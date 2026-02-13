@@ -58,7 +58,12 @@ class MediaPlayerManager:
         if not _VLC_AVAILABLE or self._vlc_instance is not None or self._vlc_init_failed:
             return
         try:
-            self._vlc_instance = vlc.Instance("--no-video-title-show")
+            # Base options: no on-screen title
+            vlc_args = ["--no-video-title-show"]
+            # On Linux (e.g. Raspberry Pi), avoid flicker: disable hw decode if it fights X11 embedding
+            if sys.platform != "win32":
+                vlc_args.append("--avcodec-hw=none")
+            self._vlc_instance = vlc.Instance(" ".join(vlc_args))
             self._player = self._vlc_instance.media_player_new()
             # Window handle is set when we have it (from display); VLC will draw into our window
             events = self._player.event_manager()

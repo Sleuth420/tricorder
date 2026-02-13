@@ -262,8 +262,16 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         logger.error("Failed to get valid display surface")
         return
         
-    # Normal background fill
-    screen.fill(config_module.Theme.BACKGROUND)
+    # Normal background fill (skip when media player is showing video to avoid flicker:
+    # VLC draws into the same window; clearing every frame fights VLC on Pi/X11)
+    show_video = (
+        app_state.current_state == STATE_MEDIA_PLAYER
+        and hasattr(app_state, "media_player_manager")
+        and app_state.media_player_manager
+        and (app_state.media_player_manager.is_playing() or app_state.media_player_manager.is_paused())
+    )
+    if not show_video:
+        screen.fill(config_module.Theme.BACKGROUND)
 
     # Draw the appropriate view based on app state
     if app_state.current_state == STATE_MENU:

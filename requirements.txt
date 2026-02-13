@@ -19,7 +19,7 @@ PyGLM==2.8.2        # OpenGL Mathematics library for 3D transformations
 pygltflib==1.16.5
 
 # Image processing
-Pillow==11.3.0
+Pillow==12.1.1
 
 # Media player (audio + video via VLC in separate window)
 python-vlc>=3.0.0   # Requires VLC application installed on system (Windows / Raspberry Pi)

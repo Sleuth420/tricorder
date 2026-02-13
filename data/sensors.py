@@ -139,8 +139,13 @@ def init_sensors():
             # Clear any pending joystick events from the queue before starting.
             # This ensures we only process events that occur after this initialization.
             if sense and hasattr(sense, 'stick'): # Ensure sense and stick are valid
-                sense.stick.get_events() 
-            
+                sense.stick.get_events()
+            # Clear LED matrix so startup flash is replaced by app-driven patterns once main loop runs
+            try:
+                sense.clear()
+            except Exception:
+                pass
+
             logger.info("Sense HAT initialized successfully. Joystick events will be read via get_events().")
             return True
         except Exception as e:

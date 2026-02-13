@@ -6,6 +6,11 @@
 # Set to False for testing when you want stable readings
 ENABLE_MOCK_SENSOR_DYNAMICS = False
 
+# -- Sense HAT LED Matrix --
+# When True, the 8x8 LED panel shows state-based patterns (menu, sensor bar, media play/pause, etc.)
+# Set to False to leave the matrix off after init (saves a small amount of I2C traffic)
+SENSE_HAT_LED_ENABLED = True
+
 # -- Sensor Mode Constants --
 SENSOR_TEMPERATURE = "TEMPERATURE"
 SENSOR_HUMIDITY = "HUMIDITY"

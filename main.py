@@ -25,6 +25,7 @@ from data import sensors
 from data import system_info
 # Import the new data updater function
 from data.data_updater import update_all_data, update_sensors_by_schedule
+from data.sense_hat_led import update_led_display
 from ui.display_manager import init_display, update_display
 from input.input_handler import process_input, init_joystick
 from utils.error_handling import display_critical_error_on_screen
@@ -212,7 +213,10 @@ def main():
                 
                 # 4. Update Display
                 update_display(screen, app_state, sensor_values, reading_history, fonts, config, ui_scaler)
-                
+
+                # 4.5. Sense HAT LED matrix (state-based patterns; throttled, no-op if no Sense HAT)
+                update_led_display(app_state, sensor_values, config)
+
                 # 5. Control Frame Rate
                 clock.tick(config.FPS)
 

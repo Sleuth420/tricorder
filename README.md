@@ -328,30 +328,15 @@ You can also create a desktop shortcut or startup script:
 
 If the app doesn’t quite fit the physical screen (black top margin, bottom or sides cut off, or the app’s curved mask not matching the display), it can be either **Pi overscan** (framebuffer scaling) or **app safe area** (in-app margins and curve). Try both.
 
-### 1. Pi overscan (command-line / config.txt)
+### 1. Pi display margins (cmdline.txt or config.txt)
 
-The Pi can scale the framebuffer so the image is cropped (overscan) or has black borders (underscan). That’s independent of the app.
+This project uses **composite video** with margins set in the kernel command line. The reference copy is in the repo:
 
-- **Edit the boot config:**
-  ```bash
-  sudo nano /boot/firmware/config.txt
-  ```
-  (On older Pi OS it may be `/boot/config.txt`.)
+- **`system_config/cmdline.txt`** – Contains the `video=Composite-1:320x240M@60,margin_left=...,margin_right=...,margin_top=...,margin_bottom=...` parameters. These margins add black borders (shrink the visible image). **Smaller values** = less border, image closer to edges; **larger values** = more border. Copy this file to `/boot/firmware/cmdline.txt` (or `/boot/cmdline.txt` on older Pi OS) on the Pi and edit the `margin_*` values to match your display, then reboot.
 
-- **Disable overscan** so the framebuffer is 1:1 with the display (no extra scaling/crop):
-  ```ini
-  disable_overscan=1
-  ```
-  Reboot after saving.
+  If the **sides are too tight** or you have **black top margin**, try reducing `margin_left`, `margin_right`, and `margin_top`. If the **bottom is cut off**, reduce `margin_bottom` or increase the others so the image is centered. Keep the rest of the cmdline (console=, root=, etc.) intact.
 
-- **Or fine-tune** (negative values = add padding; positive = crop):
-  ```ini
-  overscan_left=0
-  overscan_right=0
-  overscan_top=0
-  overscan_bottom=0
-  ```
-  Adjust and reboot until the image fills the screen with no unwanted black bars or cut-off edges.
+- **`system_config/config.txt`** – Reference for `/boot/firmware/config.txt`. Overscan is disabled there so the **cmdline.txt** `video=` and margins are in control. For **HDMI** (non-composite) you’d use `overscan_left`, `overscan_right`, etc. in config.txt instead.
 
 ### 2. App safe area and curve (config/display.py)
 

@@ -39,12 +39,21 @@ SCHEMATICS_ZOOM_FAST_STEP = 0.3    # Faster zoom step for held actions
 
 # -- Safe Area Settings for Physical Screen Covers --
 # These values define the safe area where content should be placed to avoid
-# being cut off by curved screen covers or bezels
+# being cut off by curved screen covers, bezels, or Pi overscan.
+# On Pi we use larger insets so the whole UI stays on-screen; on Windows use smaller values.
+if platform.system() == "Windows":
+    SAFE_AREA_TOP = 15
+    SAFE_AREA_BOTTOM = 15
+    SAFE_AREA_LEFT = 20
+    SAFE_AREA_RIGHT = 20
+else:
+    # Pi: larger insets so UI and longest menu label (e.g. "Schematics") are fully visible
+    SAFE_AREA_TOP = 20
+    SAFE_AREA_BOTTOM = 20
+    SAFE_AREA_LEFT = 28
+    SAFE_AREA_RIGHT = 28
+
 SAFE_AREA_ENABLED = True           # Enable/disable safe area system
-SAFE_AREA_TOP = 15                 # Pixels to avoid at top (for curved top edge)
-SAFE_AREA_BOTTOM = 15              # Pixels to avoid at bottom (for curved bottom edge)
-SAFE_AREA_LEFT = 20                # Pixels to avoid at left (for curved left edge)
-SAFE_AREA_RIGHT = 20               # Pixels to avoid at right (for curved right edge)
 
 # Corner radius for rounded safe area (0 = rectangular safe area)
 SAFE_AREA_CORNER_RADIUS = 12       # Pixels - adjust based on your cover's curve

@@ -87,7 +87,7 @@ class MenuManager:
             color_key="COPPER_ROSE"
         ))
         items.append(MenuItem(
-            name="Schematics", 
+            name="Specs", 
             target_state=STATE_SCHEMATICS_CATEGORY, 
             color_key="EAST_SIDE_PURPLE"
         ))
@@ -158,10 +158,10 @@ class MenuManager:
         return items
 
     def _generate_schematics_category_menu_items(self):
-        """Generates the schematics category menu: Schematics (3D) | Media Player."""
+        """Generates the specs category menu: Specs (3D models) | Media Player."""
         return [
             MenuItem(
-                name="Schematics",
+                name="3D Models",
                 target_state=STATE_SCHEMATICS_MENU,
                 color_key="SIDEBAR_SCHEMATICS"
             ),

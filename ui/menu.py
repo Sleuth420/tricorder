@@ -122,7 +122,8 @@ def _draw_main_menu_content(screen, main_content_rect, sensor_values, fonts, con
     # Available logo images (you can add more to assets/images/)
     logo_paths = [
         config_module.SPLASH_LOGO_PATH,  # Main logo
-        "assets/images/spork.png"        # Alternative image
+        "assets/images/spork.png",        # Alternative image
+        "assets/images/cap'n_kirb.png"
     ]
     
     current_logo_path = logo_paths[logo_cycle_phase]

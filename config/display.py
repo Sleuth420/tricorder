@@ -38,16 +38,18 @@ SCHEMATICS_ZOOM_STEP = 0.1         # Zoom step size for each zoom in/out action
 SCHEMATICS_ZOOM_FAST_STEP = 0.3    # Faster zoom step for held actions
 
 # -- Safe Area Settings for Physical Screen Covers --
-# These values define the safe area where content should be placed to avoid
-# being cut off by curved screen covers or bezels
-SAFE_AREA_ENABLED = True           # Enable/disable safe area system
+# These values define the safe area where content is placed and the rounded mask
+# that blacks out the rest (so the app's curve matches the screen/cover).
+# If you see a black top margin or wrong curve: reduce insets or adjust radius.
+# If content is cut off at edges: increase insets. See README "Display tuning on Raspberry Pi".
+SAFE_AREA_ENABLED = True           # Enable/disable safe area and rounded-corner mask
 SAFE_AREA_TOP = 15                 # Pixels to avoid at top (for curved top edge)
 SAFE_AREA_BOTTOM = 15              # Pixels to avoid at bottom (for curved bottom edge)
 SAFE_AREA_LEFT = 20                # Pixels to avoid at left (for curved left edge)
 SAFE_AREA_RIGHT = 20               # Pixels to avoid at right (for curved right edge)
 
-# Corner radius for rounded safe area (0 = rectangular safe area)
-SAFE_AREA_CORNER_RADIUS = 12       # Pixels - adjust based on your cover's curve
+# Corner radius for the visible rounded-rect mask (0 = rectangular, no curve)
+SAFE_AREA_CORNER_RADIUS = 12       # Pixels - match your cover's curve; tune if curve looks wrong
 
 # Alternative: Percentage-based safe areas (overrides pixel values if > 0)
 SAFE_AREA_TOP_PERCENT = 0          # 0 = use pixel value, >0 = percentage of screen height

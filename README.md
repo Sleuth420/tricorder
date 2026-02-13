@@ -324,6 +324,46 @@ You can also create a desktop shortcut or startup script:
    tricorder = /home/dev/start_tricorder.sh
    ```
 
+## Display tuning on Raspberry Pi
+
+If the app doesn’t quite fit the physical screen (black top margin, bottom or sides cut off, or the app’s curved mask not matching the display), it can be either **Pi overscan** (framebuffer scaling) or **app safe area** (in-app margins and curve). Try both.
+
+### 1. Pi overscan (command-line / config.txt)
+
+The Pi can scale the framebuffer so the image is cropped (overscan) or has black borders (underscan). That’s independent of the app.
+
+- **Edit the boot config:**
+  ```bash
+  sudo nano /boot/firmware/config.txt
+  ```
+  (On older Pi OS it may be `/boot/config.txt`.)
+
+- **Disable overscan** so the framebuffer is 1:1 with the display (no extra scaling/crop):
+  ```ini
+  disable_overscan=1
+  ```
+  Reboot after saving.
+
+- **Or fine-tune** (negative values = add padding; positive = crop):
+  ```ini
+  overscan_left=0
+  overscan_right=0
+  overscan_top=0
+  overscan_bottom=0
+  ```
+  Adjust and reboot until the image fills the screen with no unwanted black bars or cut-off edges.
+
+### 2. App safe area and curve (config/display.py)
+
+The app draws a **safe area** (margins) and an optional **rounded-corner mask** to match a curved screen/cover. If your cover or bezel is different, adjust:
+
+- **`config/display.py`**
+  - **`SAFE_AREA_TOP` / `BOTTOM` / `LEFT` / `RIGHT`** – Insets in pixels. Increase if content is still cut off by the bezel; decrease if you see unnecessary black (e.g. a large black top margin).
+  - **`SAFE_AREA_CORNER_RADIUS`** – Radius of the rounded mask. Change so the app’s curve matches your screen/cover (e.g. try 8–20). Set to `0` for a rectangular mask (no curve).
+  - **`SAFE_AREA_ENABLED`** – Set to `False` to disable the safe area and mask entirely (full 320×240 with no blackening).
+
+Typical combo: fix **overscan** first so the Pi output fits the panel, then tweak **safe area** and **corner radius** so the app’s visible area and curve match your hardware.
+
 ## Development Workflow
 
 ### Cross-Platform Development
@@ -349,7 +389,7 @@ You can also create a desktop shortcut or startup script:
 - **"No module named 'RTIMU'" error**: Install python3-rtimu and create RTIMU symbolic links
 - **PyOpenGL-accelerate build errors**: This package is optional and has been removed from requirements.txt due to compilation issues on ARM64
 - **Permission errors**: Ensure you have proper permissions for creating symbolic links
-- **Display issues**: Verify display configuration and resolution settings
+- **Display issues (fit, black margin, bottom/sides cut off)**: See [Display tuning on Raspberry Pi](#display-tuning-on-raspberry-pi) for overscan (`config.txt`) and app safe area (`config/display.py`).
 
 #### Common Sense HAT Issues:
 If you encounter Sense HAT import errors after following the setup:

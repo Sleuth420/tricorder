@@ -132,11 +132,16 @@ def _draw_enhanced_sensor_preview(screen, main_content_rect, content_y, sensor_k
     name_rect = name_surface.get_rect(centerx=main_content_rect.centerx, y=content_y)
     screen.blit(name_surface, name_rect)
     
-    # Large animated value display
+    # Large animated value display (temperature shown in Kelvin to match sensor view)
     value_font = fonts['large']
     text_val = sensor_data.get("text", "N/A")
     unit = sensor_data.get("unit", "")
-    value_text = f"{text_val} {unit}".strip()
+    numeric_val = sensor_data.get("value")
+    if sensor_key == config_module.SENSOR_TEMPERATURE and numeric_val is not None:
+        k_val = numeric_val + 273.15
+        value_text = f"{k_val:.1f} K"
+    else:
+        value_text = f"{text_val} {unit}".strip()
     
     # Color-code based on sensor type and add breathing effect
     if "temp" in sensor_key.lower():

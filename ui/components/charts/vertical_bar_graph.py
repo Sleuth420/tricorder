@@ -277,8 +277,8 @@ class VerticalBarGraph:
                 y = self.scale_bottom_y - int(proportion * self.scale_height)
                 tick_color = self._get_zone_color(current_tick)
                 
-                # Draw small colored ticks on the right side of the main bar
-                small_tick_length = 6
+                # Draw small colored ticks on the right side (same responsive length as other graphs)
+                small_tick_length = self.ui_scaler.scale(6) if self.ui_scaler else 6
                 pygame.draw.line(self.screen, tick_color,
                                (self.scale_line_x, y),
                                (self.scale_line_x + small_tick_length, y), 2)

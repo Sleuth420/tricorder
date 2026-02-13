@@ -32,14 +32,27 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
     screen_width = screen.get_width()
     screen_height = screen.get_height()
     
+    menu_items = app_state.get_current_menu_items()
+    text_padding = ui_scaler.padding("medium")
+    safe_left = ui_scaler.get_safe_area_margins()["left"] if (ui_scaler and ui_scaler.safe_area_enabled) else 0
+    
     # Layout calculations with arrow indicator area using UIScaler
     if base_sidebar_width is None:
-        # Revert to original-style proportional calculations
+        # Compute minimum sidebar width so longest menu label (e.g. "Schematics") fits
+        font = fonts.get("medium", fonts.get("default"))
+        max_text_width = 0
+        if menu_items and font:
+            for item in menu_items:
+                label = CLASSIFIED_TEXT if item.name == "SECRET GAMES" else item.name
+                w = font.size(label)[0]
+                max_text_width = max(max_text_width, w)
+        min_sidebar_for_text = max_text_width + 2 * text_padding + safe_left if max_text_width else 0
+        
         if ui_scaler.is_small_screen():
-            # For small screens (Pi), ensure "Schematics" fits; min 118px to avoid cutoff
-            base_sidebar_width = max(118, screen_width // 3)  # ~33% of width
+            # For small screens (Pi): fit longest label + padding, and respect safe area
+            base_sidebar_width = max(min_sidebar_for_text, 118, screen_width // 3)
         else:
-            # For larger screens, use original proportion: ~25% of screen width  
+            # For larger screens, use original proportion: ~25% of screen width
             base_sidebar_width = max(120, min(screen_width // 4, 200))  # 25% of width, max 200px
 
     arrow_indicator_width = ui_scaler.scale(config_module.ARROW_INDICATOR_WIDTH)
@@ -57,7 +70,6 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
     corner_color = config_module.Theme.HEADER_CORNER_FILL
     curve_radius = config_module.Theme.CORNER_CURVE_RADIUS
 
-    menu_items = app_state.get_current_menu_items()
     selected_index = app_state.get_current_menu_index()
 
     # --- Part 1: Draw Corner Rectangle (Distinct block, Orange) ---

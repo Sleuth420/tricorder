@@ -398,9 +398,10 @@ def _draw_main_menu_footer(screen, main_content_rect, fonts, config_module, scre
     # Create a custom footer rendering that centers on main content area
     footer_font = fonts.get('small', fonts.get('medium'))
     footer_surface = footer_font.render(hint_text, True, config_module.Theme.FOREGROUND)
-    # Use UIScaler for responsive footer positioning
+    # Use UIScaler for responsive footer positioning; inset for safe area / overscan on Pi
     footer_margin = ui_scaler.margin("small")
-    footer_y = screen_height - footer_surface.get_height() - footer_margin
+    safe_bottom = ui_scaler.get_safe_area_margins()["bottom"] if (ui_scaler and ui_scaler.safe_area_enabled) else 0
+    footer_y = screen_height - footer_surface.get_height() - footer_margin - safe_bottom
     footer_x = main_content_rect.centerx - footer_surface.get_width() // 2
     screen.blit(footer_surface, (footer_x, footer_y))
 

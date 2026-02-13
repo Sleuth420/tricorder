@@ -58,8 +58,8 @@ class MediaPlayerManager:
         if not _VLC_AVAILABLE or self._vlc_instance is not None or self._vlc_init_failed:
             return
         try:
-            # Base options: no on-screen title
-            vlc_args = ["--no-video-title-show"]
+            # Base options: no on-screen title; enable marquee filter for pause overlay
+            vlc_args = ["--no-video-title-show", "--sub-filter=marq"]
             # On Linux (e.g. Raspberry Pi), avoid flicker: disable hw decode if it fights X11 embedding
             if sys.platform != "win32":
                 vlc_args.append("--avcodec-hw=none")
@@ -80,6 +80,53 @@ class MediaPlayerManager:
         """Called by VLC when playback ends (may run on VLC's thread)."""
         with self._lock:
             self._end_reached = True
+
+    def _format_time_for_marquee(self, sec):
+        """Format seconds as M:SS for marquee text."""
+        if sec is None or sec < 0:
+            return "0:00"
+        m = int(sec // 60)
+        s = int(sec % 60)
+        return f"{m}:{s:02d}"
+
+    def _build_pause_marquee_text(self):
+        """Build track/media info string for VLC marquee when paused (single line)."""
+        name = self.get_current_track_name() or "—"
+        if len(name) > 35:
+            name = name[:32] + "..."
+        pos = self.get_position_sec()
+        length = self.get_length_sec()
+        pos_str = self._format_time_for_marquee(pos)
+        len_str = self._format_time_for_marquee(length) if length > 0 else "—"
+        size_b = self.get_current_file_size()
+        if size_b is not None:
+            if size_b < 1024 * 1024:
+                size_str = f"{size_b / 1024:.1f} KB"
+            else:
+                size_str = f"{size_b / (1024 * 1024):.2f} MB"
+        else:
+            size_str = "—"
+        return f"  PAUSED  —  {name}  —  {pos_str} / {len_str}  —  {size_str}"
+
+    def _set_pause_marquee(self, show):
+        """Show or hide the pause overlay using VLC marquee (drawn by VLC on top of video)."""
+        if not self._player or not _VLC_AVAILABLE:
+            return
+        try:
+            # LibVLC marquee: Enable=0, Text=1, Position=4, Timeout=7, Size=6
+            opt = getattr(vlc, "VideoMarqueeOption", None)
+            if opt is None:
+                return
+            enable_val = 1 if show else 0
+            self._player.video_set_marquee_int(opt.Enable, enable_val)
+            if show:
+                text = self._build_pause_marquee_text()
+                self._player.video_set_marquee_string(opt.Text, text)
+                self._player.video_set_marquee_int(opt.Position, 0)   # 0=center
+                self._player.video_set_marquee_int(opt.Timeout, 0)    # 0=forever
+                self._player.video_set_marquee_int(opt.Size, 24)
+        except (AttributeError, Exception) as e:
+            logger.debug("Media player: marquee not available (%s)", e)
 
     def tick(self):
         """
@@ -214,12 +261,14 @@ class MediaPlayerManager:
             return False
         try:
             if self.paused:
+                self._set_pause_marquee(False)
                 self._player.set_pause(0)
                 self.paused = False
                 self.playing = True
                 logger.info("Media player: resumed %s", self.get_current_track_name())
                 return True
 
+            self._set_pause_marquee(False)
             self._apply_window_handle()
             self._current_media = self._vlc_instance.media_new_path(os.path.abspath(path))
             self._player.set_media(self._current_media)
@@ -234,13 +283,14 @@ class MediaPlayerManager:
             return False
 
     def pause(self):
-        """Pause playback. VLC stays attached and shows paused frame."""
+        """Pause playback. VLC stays attached and shows paused frame with track-info marquee."""
         if not self.playing or not self._player:
             return
         try:
             self._player.set_pause(1)
             self.playing = False
             self.paused = True
+            self._set_pause_marquee(True)
             logger.info("Media player: paused %s", self.get_current_track_name())
         except Exception as e:
             logger.warning("Media player: pause failed: %s", e)
@@ -255,6 +305,7 @@ class MediaPlayerManager:
     def stop(self):
         """Stop playback and release current media. Detach VLC so track list is visible."""
         try:
+            self._set_pause_marquee(False)
             if self._player:
                 self._player.stop()
             self.playing = False

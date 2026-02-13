@@ -148,10 +148,11 @@ def render_footer(screen, text, fonts, color, width, height, sidebar_width=0, ui
     """
     font = fonts['small'] if 'small' in fonts else fonts['default']
     
-    # Use UIScaler for responsive footer positioning if available
+    # Use UIScaler for responsive footer positioning if available; inset for safe area / overscan on Pi
     if ui_scaler:
         footer_margin = ui_scaler.margin("small")
-        footer_y = height - (font.get_height() * 1.5) - footer_margin
+        safe_bottom = ui_scaler.get_safe_area_margins()["bottom"] if ui_scaler.safe_area_enabled else 0
+        footer_y = height - (font.get_height() * 1.5) - footer_margin - safe_bottom
     else:
         # Fallback to original positioning
         footer_y = height - (font.get_height() * 1.5)

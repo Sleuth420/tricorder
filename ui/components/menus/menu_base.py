@@ -38,7 +38,7 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
     
     # Layout calculations with arrow indicator area using UIScaler
     if base_sidebar_width is None:
-        # Compute minimum sidebar width so longest menu label (e.g. "Schematics") fits with room to spare
+        # Compute minimum sidebar width so longest menu label (e.g. "Schematics") fits
         font = fonts.get("medium", fonts.get("default"))
         max_text_width = 0
         if menu_items and font:
@@ -46,9 +46,7 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
                 label = CLASSIFIED_TEXT if item.name == "SECRET GAMES" else item.name
                 w = font.size(label)[0]
                 max_text_width = max(max_text_width, w)
-        # Extra padding so the trailing 's' in "Schematics" etc. is not cut off on Pi
-        label_extra = ui_scaler.scale(10) if max_text_width else 0
-        min_sidebar_for_text = max_text_width + 2 * text_padding + safe_left + label_extra if max_text_width else 0
+        min_sidebar_for_text = max_text_width + 2 * text_padding + safe_left if max_text_width else 0
         
         if ui_scaler.is_small_screen():
             # For small screens (Pi): fit longest label + padding, and respect safe area
@@ -193,13 +191,11 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
 
     # --- Part 5: Calculate Main Content Area ---
     total_sidebar_width = base_sidebar_width + arrow_indicator_width
-    safe_right = ui_scaler.get_safe_area_margins()["right"] if (ui_scaler and ui_scaler.safe_area_enabled) else 0
-    safe_bottom = ui_scaler.get_safe_area_margins()["bottom"] if (ui_scaler and ui_scaler.safe_area_enabled) else 0
     main_content_rect = pygame.Rect(
         total_sidebar_width,
         header_height,
-        screen_width - total_sidebar_width - safe_right,
-        screen_height - header_height - safe_bottom
+        screen_width - total_sidebar_width,
+        screen_height - header_height
     )
     pygame.draw.rect(screen, config_module.Theme.BACKGROUND, main_content_rect)
     

@@ -17,6 +17,7 @@ Pillow==11.3.0
 
 # Media player (audio + video via VLC; requires VLC app installed)
 python-vlc>=3.0.0
+mutagen>=1.47.0     # Read MP4 metadata (Comment) for display name
 
 # Environment configuration
 python-dotenv==1.1.1

@@ -126,8 +126,13 @@ class InputRouter:
         elif current_state == STATE_SCHEMATICS_CATEGORY:
             return self._handle_schematics_category_back()
         elif current_state == STATE_MEDIA_PLAYER:
-            if hasattr(self.app_state, 'media_player_manager') and self.app_state.media_player_manager:
-                self.app_state.media_player_manager.on_exit_view()
+            mgr = getattr(self.app_state, 'media_player_manager', None)
+            if mgr and not mgr.is_browsing_seasons():
+                # In episode list: back goes to season list
+                mgr.clear_season()
+                return True
+            if mgr:
+                mgr.on_exit_view()
             return (self.app_state.state_manager.return_to_previous() or
                     self.app_state.state_manager.return_to_menu())
         elif current_state == STATE_SETTINGS:
@@ -337,7 +342,12 @@ class InputRouter:
         if action == app_config.INPUT_ACTION_NEXT:
             return mgr.navigate_next()
         if action == app_config.INPUT_ACTION_SELECT:
-            # If this track is already loaded (playing or paused), toggle play/pause so we resume from position
+            if mgr.is_browsing_seasons():
+                folder = mgr.get_selected_season_folder()
+                if folder:
+                    mgr.set_season(folder)
+                return True
+            # Episode list: play selected track or toggle play/pause if already loaded
             idx = mgr.get_current_index()
             if idx == mgr.get_playing_index() and (mgr.is_playing() or mgr.is_paused()):
                 mgr.toggle_play_pause()

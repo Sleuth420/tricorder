@@ -19,6 +19,14 @@ except ImportError:
     _VLC_AVAILABLE = False
     logger.warning("python-vlc not installed. Media player will show 'VLC not available'. Install: pip install python-vlc (and install VLC app).")
 
+# Optional mutagen for MP4 (and MP3) metadata; display name falls back to filename if unavailable
+try:
+    from mutagen.mp4 import MP4 as MutagenMP4
+    _MUTAGEN_AVAILABLE = True
+except ImportError:
+    MutagenMP4 = None
+    _MUTAGEN_AVAILABLE = False
+
 
 class MediaPlayerManager:
     """
@@ -32,7 +40,7 @@ class MediaPlayerManager:
         self.extensions = tuple(
             getattr(config, "MEDIA_EXTENSIONS", (".mp3", ".wav", ".ogg", ".mp4"))
         )
-        self.track_list = []  # List of (display_name, full_path)
+        self.track_list = []  # List of (display_name, full_path) — episodes in current season (or flat list if no seasons)
         self.current_index = 0
         self._playing_index = -1  # Index of track currently loaded in VLC (playing or paused); -1 when none
         self.playing = False
@@ -47,10 +55,14 @@ class MediaPlayerManager:
         self._lock = threading.Lock()
         self._vlc_init_failed = False  # Avoid repeated failed inits
         self.vlc_available = _VLC_AVAILABLE
+        # Season structure: subdirs of media_folder (e.g. 1, 2, 3 for Star Trek). None = browsing seasons; path = browsing episodes in that folder.
+        self._season_folders = []  # List of (display_name, folder_path), e.g. ("Season 1", "assets/media/1")
+        self._current_season_folder = None  # None = show season list; else path to season folder
         if not self.vlc_available:
             logger.info("Media player: VLC not available; install python-vlc and VLC application.")
         else:
             self._ensure_vlc_instance()
+        self._scan_season_folders()
         self._refresh_track_list()
 
     def _ensure_vlc_instance(self):
@@ -148,25 +160,103 @@ class MediaPlayerManager:
             logger.info("Media player: advancing to next track: %s", self.get_current_track_name())
             self.play()
 
-    def _refresh_track_list(self):
-        """Scan media folder for supported audio and video files."""
-        self.track_list = []
+    def _get_display_name_for_path(self, path):
+        """
+        Use MP4 metadata Comment (Details > Comments) as display name when present;
+        otherwise use file basename. Example: mother_earth.mp4 with comment "Muthher Erth" shows as "Muthher Erth".
+        """
+        base = os.path.basename(path)
+        if not _MUTAGEN_AVAILABLE or os.path.splitext(path)[1].lower() != ".mp4":
+            return base
+        try:
+            mp4 = MutagenMP4(path)
+            # MP4 Comment atom (©cmt) = "Comments" in file Details / metadata
+            comment_list = mp4.get("\xa9cmt", [])
+            if comment_list and comment_list[0]:
+                return str(comment_list[0]).strip()
+        except Exception as e:
+            logger.debug("Could not read MP4 comment for %s: %s", path, e)
+        return base
+
+    def _scan_season_folders(self):
+        """Populate _season_folders with subdirs of media_folder that contain at least one media file. Sorted by folder name (1, 2, 3...)."""
+        self._season_folders = []
         if not os.path.isdir(self.media_folder):
-            logger.warning("Media folder not found: %s", self.media_folder)
             return
         try:
             for name in sorted(os.listdir(self.media_folder)):
+                folder_path = os.path.join(self.media_folder, name)
+                if not os.path.isdir(folder_path):
+                    continue
+                has_media = False
+                for f in os.listdir(folder_path):
+                    _, ext = os.path.splitext(f)
+                    if ext.lower() in self.extensions and os.path.isfile(os.path.join(folder_path, f)):
+                        has_media = True
+                        break
+                if has_media:
+                    display_name = f"Season {name}"
+                    self._season_folders.append((display_name, folder_path))
+            if self._season_folders:
+                logger.info("Media player: found %d season folder(s): %s", len(self._season_folders), [t[0] for t in self._season_folders])
+        except OSError as e:
+            logger.error("Media player: could not scan media folder %s: %s", self.media_folder, e)
+
+    def get_season_folders(self):
+        """Return list of (display_name, folder_path) for season selection. Empty if no subdirs with media."""
+        return list(self._season_folders)
+
+    def is_browsing_seasons(self):
+        """True when we have season folders and no season is selected (show season list)."""
+        return bool(self._season_folders) and self._current_season_folder is None
+
+    def get_selected_season_folder(self):
+        """When browsing seasons, return the folder path for the currently selected season index, else None."""
+        if not self.is_browsing_seasons() or not self._season_folders:
+            return None
+        idx = self.current_index % len(self._season_folders)
+        return self._season_folders[idx][1]
+
+    def set_season(self, folder_path):
+        """Set current season folder and refresh episode list. Episodes are ordered by filename; display name from MP4 comment."""
+        if not folder_path or not os.path.isdir(folder_path):
+            return False
+        self._current_season_folder = folder_path
+        self._refresh_track_list()
+        self.current_index = 0
+        return True
+
+    def clear_season(self):
+        """Return to season list (when we have season folders). Clears episode list selection context."""
+        self._current_season_folder = None
+        self._refresh_track_list()
+        self.current_index = 0
+
+    def _refresh_track_list(self):
+        """Scan current folder for media: if a season is selected, scan that folder (episodes sorted by filename); else flat scan of media_folder or empty if browsing seasons."""
+        self.track_list = []
+        scan_folder = self._current_season_folder if self._current_season_folder else self.media_folder
+        if self.is_browsing_seasons():
+            # Show season list only; no tracks
+            return
+        if not scan_folder or not os.path.isdir(scan_folder):
+            if not self._current_season_folder:
+                logger.warning("Media folder not found: %s", self.media_folder)
+            return
+        try:
+            for name in sorted(os.listdir(scan_folder)):
                 _, ext = os.path.splitext(name)
                 if ext.lower() in self.extensions:
-                    path = os.path.join(self.media_folder, name)
+                    path = os.path.join(scan_folder, name)
                     if os.path.isfile(path):
-                        self.track_list.append((name, path))
+                        display_name = self._get_display_name_for_path(path)
+                        self.track_list.append((display_name, path))
             logger.info(
                 "Media player: scanned %s, found %d file(s) (extensions: %s)",
-                self.media_folder, len(self.track_list), ", ".join(self.extensions),
+                scan_folder, len(self.track_list), ", ".join(self.extensions),
             )
         except OSError as e:
-            logger.error("Media player: could not scan folder %s: %s", self.media_folder, e)
+            logger.error("Media player: could not scan folder %s: %s", scan_folder, e)
 
     def get_track_list(self):
         """Return list of (display_name, path) for UI."""
@@ -320,14 +410,24 @@ class MediaPlayerManager:
             logger.warning("Media player: stop failed: %s", e)
 
     def navigate_next(self):
-        """Move selection to next track in list (no play). For scrolling the list."""
+        """Move selection to next item (season when browsing seasons, else episode). No play."""
+        if self.is_browsing_seasons():
+            if not self._season_folders:
+                return False
+            self.current_index = (self.current_index + 1) % len(self._season_folders)
+            return True
         if not self.track_list:
             return False
         self.current_index = (self.current_index + 1) % len(self.track_list)
         return True
 
     def navigate_prev(self):
-        """Move selection to previous track in list (no play). For scrolling the list."""
+        """Move selection to previous item (season when browsing seasons, else episode). No play."""
+        if self.is_browsing_seasons():
+            if not self._season_folders:
+                return False
+            self.current_index = (self.current_index - 1) % len(self._season_folders)
+            return True
         if not self.track_list:
             return False
         self.current_index = (self.current_index - 1) % len(self.track_list)
@@ -398,11 +498,12 @@ class MediaPlayerManager:
         return time.time() < self.show_file_info_until
 
     def on_enter_view(self):
-        """Called when entering media player view. Refresh list and reset index if needed."""
-        self._refresh_track_list()
-        if self.current_index >= len(self.track_list) and self.track_list:
-            self.current_index = 0
+        """Called when entering media player view. Start at season list if using seasons; refresh episode list and reset index otherwise."""
         self.stop()
+        self._scan_season_folders()
+        self.clear_season()  # Back to top level: season list or flat file list
+        if not self.is_browsing_seasons() and self.current_index >= len(self.track_list) and self.track_list:
+            self.current_index = 0
 
     def on_exit_view(self):
         """Called when leaving media player view. Stop playback and release."""

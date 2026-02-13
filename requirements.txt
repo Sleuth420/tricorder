@@ -23,6 +23,7 @@ Pillow==11.3.0
 
 # Media player (audio + video via VLC in separate window)
 python-vlc>=3.0.0   # Requires VLC application installed on system (Windows / Raspberry Pi)
+mutagen>=1.47.0     # Read MP4 (and MP3) metadata e.g. Comment for display name
 
 # Optional utilities
 matplotlib==3.10.6

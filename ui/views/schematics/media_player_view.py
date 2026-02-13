@@ -29,7 +29,7 @@ def _format_size(bytes_size):
 
 
 def _draw_file_info_overlay(screen, mgr, fonts, config_module, ui_scaler):
-    """Draw file info panel (title, path, duration, size) when long-press D is active."""
+    """Draw file info panel (name, path, duration, size) when long-press D is active."""
     w, h = screen.get_width(), screen.get_height()
     margin = ui_scaler.margin("large") if ui_scaler else 20
     font_small = fonts["small"]
@@ -43,7 +43,7 @@ def _draw_file_info_overlay(screen, mgr, fonts, config_module, ui_scaler):
     pygame.draw.rect(screen, config_module.Theme.ACCENT, panel, 1)
     y = panel.y + 6
     name = mgr.get_current_track_name() or "—"
-    screen.blit(font_small.render("Title: " + (name[:40] + "..." if len(name) > 40 else name), True, config_module.Theme.FOREGROUND), (panel.x + 6, y))
+    screen.blit(font_small.render("File: " + (name[:40] + "..." if len(name) > 40 else name), True, config_module.Theme.FOREGROUND), (panel.x + 6, y))
     y += font_small.get_height() + 2
     path = mgr.get_current_track_path() or ""
     path_short = path[:50] + "..." if len(path) > 50 else path
@@ -78,28 +78,39 @@ def draw_media_player_view(screen, app_state, fonts, config_module, ui_scaler=No
     mgr.update_window_attachment(mgr.is_playing() or mgr.is_paused())
 
     if not mgr.is_playing() and not mgr.is_paused():
-        # Build menu items like other sub-menus: list of track names (or placeholder)
-        track_list = mgr.get_track_list()
-        if track_list:
-            menu_items = [name for name, _ in track_list]
+        # Season structure: show season list first, then episode list (episode title = MP4 comment, order = filename)
+        if mgr.is_browsing_seasons():
+            season_folders = mgr.get_season_folders()
+            menu_items = [name for name, _ in season_folders] if season_folders else ["No seasons found"]
+            selected_index = mgr.get_current_index() % max(1, len(menu_items))
+            title = "Media Player"
+            key_prev = pygame.key.name(config_module.KEY_PREV).upper()
+            key_next = pygame.key.name(config_module.KEY_NEXT).upper()
+            key_select = pygame.key.name(config_module.KEY_SELECT).upper()
+            footer_hint = f"< {key_prev}=Up | {key_next}=Down | {key_select}=Open season | Back=Exit >"
         else:
-            media_folder = getattr(config_module, "MEDIA_FOLDER", "assets/media")
-            menu_items = [f"No media in {media_folder}"]
+            track_list = mgr.get_track_list()
+            if track_list:
+                menu_items = [name for name, _ in track_list]  # Episode title from MP4 comment
+            else:
+                media_folder = getattr(config_module, "MEDIA_FOLDER", "assets/media")
+                menu_items = [f"No episodes in {media_folder}"]
 
-        selected_index = mgr.get_current_index()
-        if selected_index >= len(menu_items):
-            selected_index = max(0, len(menu_items) - 1)
+            selected_index = mgr.get_current_index()
+            if selected_index >= len(menu_items):
+                selected_index = max(0, len(menu_items) - 1)
 
-        key_prev = pygame.key.name(config_module.KEY_PREV).upper()
-        key_next = pygame.key.name(config_module.KEY_NEXT).upper()
-        key_select = pygame.key.name(config_module.KEY_SELECT).upper()
-        footer_hint = f"< {key_prev}=Prev | {key_next}=Next | {key_select}=Play/Pause | Long {key_next}=Info | Back=Exit >"
-        if not mgr.vlc_available:
-            footer_hint += "  (Install python-vlc for playback)"
+            key_prev = pygame.key.name(config_module.KEY_PREV).upper()
+            key_next = pygame.key.name(config_module.KEY_NEXT).upper()
+            key_select = pygame.key.name(config_module.KEY_SELECT).upper()
+            footer_hint = f"< {key_prev}=Prev | {key_next}=Next | {key_select}=Play/Pause | Long {key_next}=Info | Back=Season list >"
+            title = "Media Player"
+            if not mgr.vlc_available:
+                footer_hint += "  (Install python-vlc for playback)"
 
         draw_scrollable_list_menu(
             screen=screen,
-            title="Media Player",
+            title=title,
             menu_items=menu_items,
             selected_index=selected_index,
             fonts=fonts,

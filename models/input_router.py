@@ -686,14 +686,15 @@ class InputRouter:
             
         logger.info(f"Secret Menu SELECT: {selected_item.name}")
         
+        ui_scaler = getattr(self.app_state, 'ui_scaler', None)
         if selected_item.action_name == app_config.ACTION_LAUNCH_PONG:
-            if self.app_state.game_manager.launch_pong():
+            if self.app_state.game_manager.launch_pong(ui_scaler):
                 return self.app_state.state_manager.transition_to(STATE_PONG_ACTIVE)
         elif selected_item.action_name == app_config.ACTION_LAUNCH_BREAKOUT:
-            if self.app_state.game_manager.launch_breakout():
+            if self.app_state.game_manager.launch_breakout(ui_scaler):
                 return self.app_state.state_manager.transition_to(STATE_BREAKOUT_ACTIVE)
         elif selected_item.action_name == app_config.ACTION_LAUNCH_SNAKE:
-            if self.app_state.game_manager.launch_snake():
+            if self.app_state.game_manager.launch_snake(ui_scaler):
                 return self.app_state.state_manager.transition_to(STATE_SNAKE_ACTIVE)
         elif selected_item.action_name == app_config.ACTION_LAUNCH_TETRIS:
             pass 

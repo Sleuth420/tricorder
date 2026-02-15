@@ -63,41 +63,21 @@ class LoadingScreen:
             if self.ui_scaler.debug_mode:
                 logger.info(f"🎨 LoadingScreen: screen={self.screen_width}x{self.screen_height}, bar={self.bar_width}x{self.bar_height}px, title_font={self.title_font_size}px")
         
-        elif self.screen_width <= 320:  # Small screen (320x240) optimizations
-            # Title positioning - much higher to make room
-            self.title_y = 30
-            
-            # Status text positioning - closer to title
-            self.status_y = 70
-            
-            # Progress bar - large and prominent
-            self.bar_width = self.screen_width - 30  # Use almost full width
-            self.bar_height = 35  # Thick bar for visibility
-            self.bar_x = 15  # Small margins
-            self.bar_y = 110  # Positioned in middle area
-            
-            # Detail text positioning
-            self.detail_y = self.bar_y + self.bar_height + 20
-            
-            # Font sizes for 320x240 - readable but not overwhelming
-            self.title_font_size = 24  # Large but not huge
-            self.status_font_size = 18  # Medium size
-            self.percent_font_size = 20  # Clear percentage
-            self.detail_font_size = 14  # Small details
-            
-        else:  # Larger screens
-            self.title_y = self.screen_height // 2 - 80
-            self.status_y = self.screen_height // 2 - 30
-            self.bar_width = min(300, self.screen_width - 80)
-            self.bar_height = 25
-            self.bar_x = (self.screen_width - self.bar_width) // 2
-            self.bar_y = self.screen_height // 2
-            self.detail_y = self.bar_y + self.bar_height + 30
-            
-            self.title_font_size = 32
-            self.status_font_size = 20
-            self.percent_font_size = 16
-            self.detail_font_size = 16
+        else:
+            # Fallback when ui_scaler not set: same base as UIScaler (320x240), scale proportionally
+            scale = min(self.screen_width / 320, self.screen_height / 240)
+            margin = max(4, int(8 * scale))
+            self.title_y = max(20, int(30 * scale))
+            self.status_y = max(40, int(70 * scale))
+            self.bar_width = self.screen_width - margin * 2
+            self.bar_height = max(8, int(35 * scale))
+            self.bar_x = margin
+            self.bar_y = max(60, int(110 * scale))
+            self.detail_y = self.bar_y + self.bar_height + margin
+            self.title_font_size = max(12, int(24 * scale))
+            self.status_font_size = max(10, int(18 * scale))
+            self.percent_font_size = max(12, int(20 * scale))
+            self.detail_font_size = max(10, int(14 * scale))
     
     def update_progress(self, progress: float, status: str = None, detail: str = None):
         """

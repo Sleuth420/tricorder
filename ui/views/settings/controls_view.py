@@ -20,8 +20,12 @@ def draw_controls_view(screen, app_state, fonts, config_module, ui_scaler=None):
         ui_scaler (UIScaler, optional): UI scaling system for responsive design
     """
     screen.fill(config_module.Theme.BACKGROUND)
-    screen_width = screen.get_width()
-    screen_height = screen.get_height()
+    if ui_scaler:
+        screen_width = ui_scaler.screen_width
+        screen_height = ui_scaler.screen_height
+    else:
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
     rect = pygame.Rect(0, 0, screen_width, screen_height)
 
     # Use UIScaler for responsive dimensions if available
@@ -127,16 +131,17 @@ def draw_controls_view(screen, app_state, fonts, config_module, ui_scaler=None):
             if is_selected:
                 text_color = config_module.Theme.MENU_SELECTED_TEXT
                 bg_color_selected = config_module.Theme.MENU_SELECTED_BG
-                
-                # Responsive selection background
                 selection_padding = ui_scaler.padding("large") if ui_scaler else 30
+                sel_vert = ui_scaler.scale(5) if ui_scaler else 5
+                sel_height_inset = ui_scaler.scale(10) if ui_scaler else 10
                 selection_bg_rect = pygame.Rect(
                     rect.left + selection_padding,
-                    y_offset + 5,
+                    y_offset + sel_vert,
                     rect.width - (selection_padding * 2),
-                    item_height - 10
+                    item_height - sel_height_inset
                 )
-                pygame.draw.rect(screen, bg_color_selected, selection_bg_rect, border_radius=8)
+                border_r = ui_scaler.scale(8) if ui_scaler else 8
+                pygame.draw.rect(screen, bg_color_selected, selection_bg_rect, border_radius=border_r)
             
             # Render control text with responsive alignment and padding
             text_padding = ui_scaler.padding("large") + ui_scaler.margin("medium") if ui_scaler else 50
@@ -167,14 +172,13 @@ def draw_controls_view(screen, app_state, fonts, config_module, ui_scaler=None):
         down_rect = down_surface.get_rect(center=(screen_width // 2, down_y))
         screen.blit(down_surface, down_rect)
 
-    # Footer hints with responsive positioning
-    key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
-    key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
-    
-    hint = f"< {key_prev_name}=Up | {key_next_name}=Down | Hold {key_prev_name}=Back >"
+    # Footer hints (OS-adaptive: Left/Right/Middle on Pi, A/D/Enter on dev)
+    labels = config_module.get_control_labels()
+    hint = f"< {labels['prev']}=Up | {labels['next']}=Down | {labels['back']} >"
 
     render_footer(
         screen, hint, fonts,
         config_module.Theme.FOREGROUND,
-        screen_width, screen_height
+        screen_width, screen_height,
+        ui_scaler=ui_scaler
     ) 

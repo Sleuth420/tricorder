@@ -224,6 +224,15 @@ def _switch_display_mode_if_needed(app_state):
     # No mode change needed
     return pygame.display.get_surface()
 
+def _draw_game_into_display(screen, game, fonts, config_module, ui_scaler):
+    """Draw the game onto the screen using the app safe area when enabled (games use our UI)."""
+    if ui_scaler and getattr(ui_scaler, 'safe_area_enabled', False):
+        game_rect = ui_scaler.get_safe_area_rect()
+        game_surface = screen.subsurface(game_rect)
+        game.draw(game_surface, fonts, config_module)
+    else:
+        game.draw(screen, fonts, config_module)
+
 def update_display(screen, app_state, sensor_values, sensor_history, fonts, config_module, ui_scaler_instance=None):
     """
     Updates the display based on the current application state.
@@ -317,41 +326,38 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
         # Draw the secret games menu
         draw_secret_games_view(screen, app_state, fonts, config_module, current_ui_scaler)
     elif app_state.current_state == STATE_PONG_ACTIVE:
-        # Draw the active Pong game
         if app_state.active_pong_game:
-            # Clear background before drawing game
             screen.fill(config_module.Theme.BACKGROUND)
-            app_state.active_pong_game.draw(screen, fonts, config_module)
+            _draw_game_into_display(screen, app_state.active_pong_game, fonts, config_module, current_ui_scaler)
         else:
             logger.error("In PONG_ACTIVE state but no active_pong_game instance found!")
-            # Draw fallback screen (optional)
             screen.fill(config_module.Theme.BACKGROUND)
             error_text = fonts['medium'].render("Error: Pong game not loaded", True, config_module.Theme.ALERT)
-            screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
+            cx = current_ui_scaler.screen_width // 2 if current_ui_scaler else screen.get_width() // 2
+            cy = current_ui_scaler.screen_height // 2 if current_ui_scaler else screen.get_height() // 2
+            screen.blit(error_text, (cx - error_text.get_width()//2, cy - error_text.get_height()//2))
     elif app_state.current_state == STATE_BREAKOUT_ACTIVE:
-        # Draw the active Breakout game
         if app_state.active_breakout_game:
-            # Clear background before drawing game
             screen.fill(config_module.Theme.BACKGROUND)
-            app_state.active_breakout_game.draw(screen, fonts, config_module)
+            _draw_game_into_display(screen, app_state.active_breakout_game, fonts, config_module, current_ui_scaler)
         else:
             logger.error("In BREAKOUT_ACTIVE state but no active_breakout_game instance found!")
-            # Draw fallback screen (optional)
             screen.fill(config_module.Theme.BACKGROUND)
             error_text = fonts['medium'].render("Error: Breakout game not loaded", True, config_module.Theme.ALERT)
-            screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
+            cx = current_ui_scaler.screen_width // 2 if current_ui_scaler else screen.get_width() // 2
+            cy = current_ui_scaler.screen_height // 2 if current_ui_scaler else screen.get_height() // 2
+            screen.blit(error_text, (cx - error_text.get_width()//2, cy - error_text.get_height()//2))
     elif app_state.current_state == STATE_SNAKE_ACTIVE:
-        # Draw the active Snake game
         if app_state.active_snake_game:
-            # Clear background before drawing game
             screen.fill(config_module.Theme.BACKGROUND)
-            app_state.active_snake_game.draw(screen, fonts, config_module)
+            _draw_game_into_display(screen, app_state.active_snake_game, fonts, config_module, current_ui_scaler)
         else:
             logger.error("In SNAKE_ACTIVE state but no active_snake_game instance found!")
-            # Draw fallback screen (optional)
             screen.fill(config_module.Theme.BACKGROUND)
             error_text = fonts['medium'].render("Error: Snake game not loaded", True, config_module.Theme.ALERT)
-            screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
+            cx = current_ui_scaler.screen_width // 2 if current_ui_scaler else screen.get_width() // 2
+            cy = current_ui_scaler.screen_height // 2 if current_ui_scaler else screen.get_height() // 2
+            screen.blit(error_text, (cx - error_text.get_width()//2, cy - error_text.get_height()//2))
     elif app_state.current_state == STATE_SENSORS_MENU:
         # Draw the sensors menu
         draw_sensors_menu_view(screen, app_state, sensor_values, sensor_history, fonts, config_module, current_ui_scaler)
@@ -398,14 +404,17 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
             # Fallback if no loading screen
             screen.fill(config_module.Theme.BACKGROUND)
             error_text = fonts['medium'].render("Loading...", True, config_module.Theme.FOREGROUND)
-            screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
+            cx = current_ui_scaler.screen_width // 2 if current_ui_scaler else screen.get_width() // 2
+            cy = current_ui_scaler.screen_height // 2 if current_ui_scaler else screen.get_height() // 2
+            screen.blit(error_text, (cx - error_text.get_width()//2, cy - error_text.get_height()//2))
     else:
         logger.error(f"Unknown application state: {app_state.current_state}")
         # Draw fallback screen
         screen.fill(config_module.Theme.BACKGROUND)
         error_text = fonts['medium'].render("Error: Unknown state", True, config_module.Theme.ALERT)
-        screen.blit(error_text, (screen.get_width()//2 - error_text.get_width()//2, screen.get_height()//2))
-    
+        cx = current_ui_scaler.screen_width // 2 if current_ui_scaler else screen.get_width() // 2
+        cy = current_ui_scaler.screen_height // 2 if current_ui_scaler else screen.get_height() // 2
+        screen.blit(error_text, (cx - error_text.get_width()//2, cy - error_text.get_height()//2))
     # When VLC is showing video it draws directly into the window; do not overwrite with
     # Pygame's surface (flip) or we get menu/video flashing every frame.
     if not show_video:
@@ -416,8 +425,7 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
 
         # Apply rounded corner clipping to match curved screen protector
         if current_ui_scaler and current_ui_scaler.safe_area_enabled:
-            # Create a mask surface for rounded corners
-            mask_surface = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
+            mask_surface = pygame.Surface((current_ui_scaler.screen_width, current_ui_scaler.screen_height), pygame.SRCALPHA)
             mask_surface.fill((0, 0, 0, 0))  # Transparent
 
             # Draw rounded rectangle in white (visible area); radius from config to match your screen/cover

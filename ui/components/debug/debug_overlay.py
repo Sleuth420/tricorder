@@ -90,31 +90,48 @@ class DebugOverlay:
         """
         self.screen_width = screen_width
         self.screen_height = screen_height
+        self.ui_scaler = None
         self.fps_tracker = FPSTracker()
         self.input_tracker = InputTracker()
         self.enabled = False
-        
-        # Auto-hide functionality
         self.last_input_time = 0
-        self.auto_hide_delay = 2.0  # Hide after 2 seconds of no input
+        self.auto_hide_delay = 2.0
         self.show_overlay = False
-        
-        # Responsive sizing based on screen size
-        if screen_width <= 400:  # Small screen (Pi)
+        self._apply_layout()
+
+    def set_ui_scaler(self, ui_scaler):
+        """Use UIScaler for overlay position/size (best practice: align with app UI)."""
+        self.ui_scaler = ui_scaler
+        if ui_scaler:
+            self.screen_width = ui_scaler.screen_width
+            self.screen_height = ui_scaler.screen_height
+        self._apply_layout()
+
+    def _apply_layout(self):
+        """Compute overlay dimensions from screen size or ui_scaler."""
+        if self.ui_scaler:
+            w = self.ui_scaler.screen_width
+            self.overlay_width = self.ui_scaler.scale(100)
+            self.overlay_x = w - self.overlay_width - self.ui_scaler.margin("small")
+            self.overlay_y = self.ui_scaler.margin("small")
+            self.line_height = self.ui_scaler.scale(12)
+            self.max_lines = 4
+            self.font_size = 'tiny'
+        elif self.screen_width <= 400:
             self.overlay_width = 100
-            self.overlay_x = screen_width - 105
+            self.overlay_x = self.screen_width - 105
             self.overlay_y = 5
             self.line_height = 12
             self.max_lines = 4
             self.font_size = 'tiny'
-        else:  # Large screen (Windows dev)
+        else:
             self.overlay_width = 150
-            self.overlay_x = screen_width - 155
+            self.overlay_x = self.screen_width - 155
             self.overlay_y = 10
             self.line_height = 18
             self.max_lines = 6
             self.font_size = 'small'
-        
+
     def set_enabled(self, enabled):
         """Enable or disable the debug overlay."""
         self.enabled = enabled
@@ -151,15 +168,15 @@ class DebugOverlay:
         # Get appropriate font
         font = fonts.get(self.font_size, fonts.get('small', fonts.get('default')))
         
-        # Background rectangle for better readability
-        overlay_height = min(self.max_lines * self.line_height + 8, self.screen_height - 20)
-        bg_rect = pygame.Rect(self.overlay_x - 4, self.overlay_y - 4, self.overlay_width, overlay_height)
-        
-        # Semi-transparent background
+        padding = self.ui_scaler.scale(8) if self.ui_scaler else 8
+        bottom_inset = self.ui_scaler.scale(20) if self.ui_scaler else 20
+        overlay_height = min(self.max_lines * self.line_height + padding, self.screen_height - bottom_inset)
+        border_inset = self.ui_scaler.scale(4) if self.ui_scaler else 4
+        bg_rect = pygame.Rect(self.overlay_x - border_inset, self.overlay_y - border_inset, self.overlay_width, overlay_height)
         overlay_surface = pygame.Surface((self.overlay_width, overlay_height))
-        overlay_surface.set_alpha(200)  # Semi-transparent
+        overlay_surface.set_alpha(200)
         overlay_surface.fill(config_module.Theme.BACKGROUND)
-        screen.blit(overlay_surface, (self.overlay_x - 4, self.overlay_y - 4))
+        screen.blit(overlay_surface, (self.overlay_x - border_inset, self.overlay_y - border_inset))
         
         # Border
         pygame.draw.rect(screen, config_module.Theme.ACCENT, bg_rect, 1)
@@ -185,8 +202,8 @@ class DebugOverlay:
             else:
                 event_text = f"Input: {last_event['type']}"
             
-            # Truncate if too long for small screen
-            max_len = 8 if self.screen_width <= 400 else 12
+            small_breakpoint = self.ui_scaler.scale(400) if self.ui_scaler else 400
+            max_len = 8 if self.screen_width <= small_breakpoint else 12
             if len(event_text) > max_len:
                 event_text = event_text[:max_len] + "..."
             

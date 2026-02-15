@@ -23,15 +23,19 @@ def draw_wifi_settings_view(screen, app_state, fonts, config_module, ui_scaler=N
     # Check if WifiManager is available
     if not app_state.wifi_manager:
         screen.fill(config_module.Theme.BACKGROUND)
-        screen_width = screen.get_width()
-        screen_height = screen.get_height()
-        
+        if ui_scaler:
+            screen_width = ui_scaler.screen_width
+            screen_height = ui_scaler.screen_height
+        else:
+            screen_width = screen.get_width()
+            screen_height = screen.get_height()
         error_msg = "WifiManager not available in AppState"
         logger.error(error_msg)
         font_medium = fonts['medium']
         err_surf = font_medium.render(error_msg, True, config_module.Theme.ALERT)
         screen.blit(err_surf, (screen_width // 2 - err_surf.get_width() // 2, screen_height // 2))
-        render_footer(screen, "Error - Press Back", fonts, config_module.Theme.FOREGROUND, screen_width, screen_height)
+        labels = config_module.get_control_labels()
+        render_footer(screen, f"Error - Press {labels['back']}", fonts, config_module.Theme.FOREGROUND, screen_width, screen_height, ui_scaler=ui_scaler)
         return
 
     # Get menu items and selected index from WifiManager
@@ -69,10 +73,12 @@ def draw_wifi_networks_view(screen, app_state, fonts, config_module, ui_scaler=N
     networks = app_state.wifi_manager.get_available_networks()
     selected_index = app_state.wifi_manager.get_network_selected_index()
     
-    screen_width = screen.get_width()
-    screen_height = screen.get_height()
-    
-    # Use UIScaler for responsive dimensions if available
+    if ui_scaler:
+        screen_width = ui_scaler.screen_width
+        screen_height = ui_scaler.screen_height
+    else:
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
     if ui_scaler:
         title_margin = ui_scaler.margin("medium")
         content_start_y = ui_scaler.header_height() + ui_scaler.margin("large")
@@ -93,10 +99,10 @@ def draw_wifi_networks_view(screen, app_state, fonts, config_module, ui_scaler=N
         sidebar_space = 65
         max_visible = 6
     
-    # Title - bigger font and better positioning
     title_font = fonts['large']
     title_text = title_font.render("WiFi Networks", True, config_module.Theme.FOREGROUND)
-    screen.blit(title_text, (title_margin, 15))
+    title_top = ui_scaler.margin("small") if ui_scaler else 15
+    screen.blit(title_text, (title_margin, title_top))
     
     # Show error states only - scanning is handled by the reusable loading screen
     if app_state.wifi_manager.last_scan_error:

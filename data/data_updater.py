@@ -39,11 +39,16 @@ def _format_sensor_value(sensor_key, raw_value, display_props):
                 numeric_val = None # Clock is not numeric for graphing
 
             elif sensor_key == config.SENSOR_BATTERY and isinstance(raw_value, tuple):
-                # Battery returns (percent, status) tuple
+                # Battery returns (percent, status) tuple; may be (None, None) when no battery (e.g. RPi, or after OS update)
                 percent, status = raw_value
-                numeric_val = float(percent)
-                text_val = f"{percent:.0f}%"
-                note = status
+                if percent is not None:
+                    numeric_val = float(percent)
+                    text_val = f"{percent:.0f}%"
+                    note = status or ""
+                else:
+                    text_val = "N/A"
+                    note = "No battery"
+                    numeric_val = None
                 
             else: # General numeric processing
                 numeric_val = float(raw_value) # Convert to float for history

@@ -43,9 +43,6 @@ class UIScaler:
         
         # Use the smaller scale factor to maintain aspect ratio
         self.scale_factor = min(self.width_scale, self.height_scale)
-        # Apply global scale factor (e.g. 0.94 = whole UI 6% smaller)
-        global_scale = getattr(config_module, 'UI_SCALE_FACTOR', 1.0) if config_module else 1.0
-        self.scale_factor = self.scale_factor * global_scale
 
         # Set debug mode from config
         self.debug_mode = getattr(config_module, 'UI_DEBUG_DRAWING', False) if config_module else False

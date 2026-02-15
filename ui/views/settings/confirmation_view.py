@@ -23,13 +23,14 @@ def draw_confirmation_view(screen, app_state, fonts, config_module, message="Are
         ui_scaler (UIScaler, optional): UI scaling system for responsive design
     """
     screen.fill(config_module.Theme.BACKGROUND)
-    screen_width = screen.get_width()
-    screen_height = screen.get_height()
-
+    if ui_scaler:
+        screen_width = ui_scaler.screen_width
+        screen_height = ui_scaler.screen_height
+    else:
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
     font_large = fonts['large']
     font_medium = fonts['medium']
-
-    # Use UIScaler for responsive dimensions if available
     if ui_scaler:
         message_y = screen_height // 3
         options_spacing = ui_scaler.margin("large")

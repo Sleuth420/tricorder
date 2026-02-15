@@ -6,9 +6,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def draw_panel(screen, rect, title, fonts, colors):
+def draw_panel(screen, rect, title, fonts, colors, ui_scaler=None):
     """
     Draws a bordered panel with a title bar.
+    Callers should pass rects derived from ui_scaler content areas when using scaling.
 
     Args:
         screen (pygame.Surface): The surface to draw on.
@@ -17,35 +18,28 @@ def draw_panel(screen, rect, title, fonts, colors):
         fonts (dict): Dictionary of loaded Pygame fonts (expects 'small' or 'medium').
         colors (dict): Dictionary of color information for the panel.
                        Expected keys: 'background', 'border', 'title', 'title_text'
-                       Example: {
-                           'background': config.Theme.CONTENT_CELLULAR_INFO_BG,
-                           'border': config.Theme.ACCENT,
-                           'title': config.Theme.PANEL_HEADER_BG, # For title bar background
-                           'title_text': config.Theme.PANEL_TITLE_TEXT # For title text
-                       }
+        ui_scaler (UIScaler, optional): If provided, title bar padding and border use scaled values.
 
     Returns:
         pygame.Rect: The rectangle representing the content area of the panel (below the title bar).
     """
-    panel_bg_color = colors.get('background', (30, 30, 30)) # Default fallback
+    panel_bg_color = colors.get('background', (30, 30, 30))
     border_color = colors.get('border', (100, 100, 100))
     title_bar_color = colors.get('title', (50, 50, 50))
     title_text_color = colors.get('title_text', (255, 255, 255))
-    font_to_use = fonts.get('small', fonts.get('medium')) # Prefer small, fallback to medium
+    font_to_use = fonts.get('small', fonts.get('medium'))
+    title_padding = ui_scaler.padding("small") if ui_scaler else 8
+    border_width = max(1, ui_scaler.scale(2)) if ui_scaler else 2
 
-    # Draw main panel background
     pygame.draw.rect(screen, panel_bg_color, rect)
-    # Draw border around the main panel
-    pygame.draw.rect(screen, border_color, rect, 2) 
+    pygame.draw.rect(screen, border_color, rect, border_width)
 
-    # Title bar dimensions
-    title_bar_height = font_to_use.get_height() + 8 # Padding for title text
+    title_bar_height = font_to_use.get_height() + title_padding
     title_bar_rect = pygame.Rect(rect.left, rect.top, rect.width, title_bar_height)
 
     # Draw title bar background
     pygame.draw.rect(screen, title_bar_color, title_bar_rect)
-    # Draw border for the title bar (can be same as panel or different)
-    pygame.draw.rect(screen, border_color, title_bar_rect, 2)
+    pygame.draw.rect(screen, border_color, title_bar_rect, border_width)
 
     # Draw title text
     title_surface = font_to_use.render(title.upper(), True, title_text_color)

@@ -229,7 +229,8 @@ def _draw_animated_instructions(screen, main_content_rect, content_y, fonts, con
     hint_font = fonts['small']
     hint_alpha = 0.5 + 0.3 * (0.5 + 0.5 * math.sin(current_time * 1.5 + 0.5))
     hint_color = tuple(min(255, int(c * hint_alpha)) for c in config_module.Theme.ACCENT)
-    hint_text = "Use UP/DOWN or A/D to browse sensors"
+    labels = config_module.get_control_labels()
+    hint_text = f"Use {labels['prev']}/{labels['next']} to browse sensors"
     hint_surface = hint_font.render(hint_text, True, hint_color)
     hint_rect = hint_surface.get_rect(centerx=main_content_rect.centerx, y=instruction_rect.bottom + hint_spacing)
     screen.blit(hint_surface, hint_rect)

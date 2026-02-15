@@ -40,10 +40,12 @@ def draw_secret_games_view(screen, app_state, fonts, config, ui_scaler=None):
     """
     logger.debug(f"Drawing secret games view - items: {len(app_state.secret_menu_items)}, index: {app_state.secret_menu_index}")
     
-    screen_width = screen.get_width()
-    screen_height = screen.get_height()
-    
-    # Use UIScaler for responsive dimensions if available
+    if ui_scaler:
+        screen_width = ui_scaler.screen_width
+        screen_height = ui_scaler.screen_height
+    else:
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
     if ui_scaler:
         margin = ui_scaler.margin("medium")
         title_y_offset = ui_scaler.scale(10)
@@ -140,14 +142,11 @@ def draw_secret_games_view(screen, app_state, fonts, config, ui_scaler=None):
         text_y = item_rect.centery - text_surface.get_height() // 2
         screen.blit(text_surface, (text_x, text_y))
     
-    # Draw controls at bottom with responsive positioning
+    # Draw controls at bottom (OS-adaptive: Left/Right/Middle on Pi, A/D/Enter on dev)
     controls_y = content_rect.bottom - controls_y_offset
-    key_prev_name = pygame.key.name(config.KEY_PREV).upper()
-    key_next_name = pygame.key.name(config.KEY_NEXT).upper()
-    key_select_name = pygame.key.name(config.KEY_SELECT).upper()
-    
-    controls_text = ""
-    
+    labels = config.get_control_labels()
+    controls_text = f"< {labels['prev']}=Up | {labels['next']}=Down | {labels['select']}=Launch >"
+
     controls_font = fonts.get('small', fonts.get('medium'))
     controls_surface = controls_font.render(controls_text, True, config.Theme.FOREGROUND)
     controls_x = content_rect.centerx - controls_surface.get_width() // 2

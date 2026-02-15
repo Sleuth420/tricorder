@@ -15,10 +15,8 @@ def draw_schematics_category_view(screen, app_state, fonts, config_module, ui_sc
     menu_items = app_state.get_current_menu_items()
     selected_index = app_state.get_current_menu_index()
 
-    key_prev = pygame.key.name(config_module.KEY_PREV).upper()
-    key_next = pygame.key.name(config_module.KEY_NEXT).upper()
-    key_select = pygame.key.name(config_module.KEY_SELECT).upper()
-    footer_hint = f"< {key_prev}=Up | {key_next}=Down | {key_select}=Select >"
+    labels = config_module.get_control_labels()
+    footer_hint = f"< {labels['prev']}=Up | {labels['next']}=Down | {labels['select']}=Select >"
 
     draw_scrollable_list_menu(
         screen=screen,

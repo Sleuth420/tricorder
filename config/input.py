@@ -1,7 +1,62 @@
 # --- config/input.py ---
 # Input mappings and control settings for the tricorder application
+#
+# How controls are used:
+# 1. Raw events (key, mouse, joystick) are mapped to abstract actions here and in
+#    input/input_handler.py: KEY_ACTION_MAP, MOUSE_ACTION_MAP, joystick direction → action.
+# 2. Actions are INPUT_ACTION_PREV, INPUT_ACTION_NEXT, INPUT_ACTION_SELECT, INPUT_ACTION_BACK.
+# 3. input_manager tracks key/button for long-press and combos (KEY_PREV hold = BACK, etc.).
+# 4. app_state and input_router use action names only for routing and game-over (e.g. PREV on
+#    game over = quit to menu). Use get_control_labels() for any user-visible key/button text.
 
+import platform
 import pygame
+
+# -- Control display style for footers --
+# "auto" = use button labels (Left/Middle/Right) on Raspberry Pi, key names (A/D/Enter) elsewhere
+# "buttons" = always show Left, Right, Middle, Back (for Pi / joystick when keys not available)
+# "keys" = always show key names
+CONTROL_DISPLAY_STYLE = "auto"
+
+def _is_raspberry_pi():
+    """True if running on Raspberry Pi (physical buttons / joystick, no keyboard labels)."""
+    if platform.system() != "Linux":
+        return False
+    try:
+        with open("/proc/cpuinfo", "r") as f:
+            return "Raspberry Pi" in f.read()
+    except Exception:
+        return False
+
+def get_control_labels(use_buttons=None):
+    """
+    Return display labels for footer hints, adapted to OS/input.
+    On Pi: Left, Right, Middle, Back (hold Left). On Windows/dev: A, D, Enter, Back.
+
+    Args:
+        use_buttons: If True, use button labels; if False, use key names; if None, use CONTROL_DISPLAY_STYLE / auto.
+
+    Returns:
+        dict with keys "prev", "next", "select", "back"
+    """
+    if use_buttons is None:
+        use_buttons = (
+            CONTROL_DISPLAY_STYLE == "buttons"
+            or (CONTROL_DISPLAY_STYLE == "auto" and _is_raspberry_pi())
+        )
+    if use_buttons:
+        return {
+            "prev": "Left",
+            "next": "Right",
+            "select": "Middle",
+            "back": "Back (hold Left)",
+        }
+    return {
+        "prev": pygame.key.name(KEY_PREV).upper(),
+        "next": pygame.key.name(KEY_NEXT).upper(),
+        "select": pygame.key.name(KEY_SELECT).upper(),
+        "back": "Back (hold " + pygame.key.name(KEY_PREV).upper() + ")",
+    }
 
 # -- Input Mapping (Keyboard for now) --
 # Using 'A' for Previous/Left and 'D' for Next/Right

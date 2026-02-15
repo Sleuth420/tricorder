@@ -23,45 +23,42 @@ class ControlsManager:
         self.controls_items = self._generate_controls_items()
         
     def _generate_controls_items(self):
-        """Generate the list of control items for display."""
-        # Get key names from config
-        key_prev_name = f"'{self.config.KEY_PREV_NAME}'" if hasattr(self.config, 'KEY_PREV_NAME') else "'A'"
-        key_next_name = f"'{self.config.KEY_NEXT_NAME}'" if hasattr(self.config, 'KEY_NEXT_NAME') else "'D'"
-        key_select_name = f"'{self.config.KEY_SELECT_NAME}'" if hasattr(self.config, 'KEY_SELECT_NAME') else "'RETURN'"
-        
-        # We'll dynamically get the actual key names when rendering
+        """Generate the list of control items for display. Uses OS-adaptive labels (Left/Right/Middle on Pi, key names on dev)."""
+        labels = self.config.get_control_labels()
+        prev_l, next_l, select_l, back_l = labels["prev"], labels["next"], labels["select"], labels["back"]
+
         controls_items = [
             {"type": "section", "text": "MENU NAVIGATION:"},
-            {"type": "control", "text": f"{key_prev_name} = Left/Previous/Up"},
-            {"type": "control", "text": f"Long {key_prev_name} = Back to Menu"},
-            {"type": "control", "text": f"{key_next_name} = Right/Next/Down"},
-            {"type": "control", "text": f"'RETURN' = Select"},
+            {"type": "control", "text": f"{prev_l} = Left/Previous/Up"},
+            {"type": "control", "text": f"{back_l} = Back to Menu"},
+            {"type": "control", "text": f"{next_l} = Right/Next/Down"},
+            {"type": "control", "text": f"{select_l} = Select"},
             {"type": "control", "text": "Joystick: Up/Down/Left/Right/Press"},
             {"type": "control", "text": "Mouse: Left=Prev, Right=Next, Middle=Select"},
             {"type": "control", "text": "Long Mouse Left = Back to Menu"},
             {"type": "spacer", "text": ""},
             {"type": "section", "text": "SCHEMATICS VIEW:"},
-            {"type": "control", "text": f"{key_prev_name} = Rotate Left"},
-            {"type": "control", "text": f"Long {key_prev_name} = Rotate Up"},
-            {"type": "control", "text": f"{key_next_name} = Rotate Right"},
-            {"type": "control", "text": f"Long {key_next_name} = Rotate Down"},
-            {"type": "control", "text": f"'RETURN' = Select/Pause"},
+            {"type": "control", "text": f"{prev_l} = Rotate Left"},
+            {"type": "control", "text": f"Long {prev_l} = Rotate Up"},
+            {"type": "control", "text": f"{next_l} = Rotate Right"},
+            {"type": "control", "text": f"Long {next_l} = Rotate Down"},
+            {"type": "control", "text": f"{select_l} = Select/Pause"},
             {"type": "control", "text": "Mouse Left = Rotate Left, Mouse Right = Rotate Right"},
             {"type": "control", "text": "Long Mouse Right = Pause Menu"},
             {"type": "spacer", "text": ""},
             {"type": "section", "text": "GAMES:"},
-            {"type": "control", "text": f"Snake: {key_prev_name}=Left, {key_next_name}=Right"},
-            {"type": "control", "text": f"Pong: {key_prev_name}=Up, {key_next_name}=Down"},
-            {"type": "control", "text": f"'RETURN' = Pause (all games)"},
+            {"type": "control", "text": f"Snake: {prev_l}=Left, {next_l}=Right"},
+            {"type": "control", "text": f"Pong: {prev_l}=Up, {next_l}=Down"},
+            {"type": "control", "text": f"{select_l} = Pause (all games)"},
             {"type": "control", "text": "Mouse: Left=Prev, Right=Next, Middle=Pause"},
             {"type": "spacer", "text": ""},
             {"type": "section", "text": "SECRET COMBO:"},
-            {"type": "control", "text": f"Hold {key_prev_name} + {key_next_name} simultaneously"},
+            {"type": "control", "text": f"Hold {prev_l} + {next_l} simultaneously"},
             {"type": "spacer", "text": ""},
             {"type": "section", "text": "KEY REMAPPING:"},
             {"type": "control", "text": "Coming Soon - Remap keys to arrows, WASD, etc."},
         ]
-        
+
         return controls_items
         
     def navigate_next(self):
@@ -93,37 +90,32 @@ class ControlsManager:
         return self.controls_index
         
     def update_key_names(self, config_module):
-        """Update the controls items with current key names from config."""
-        import pygame
-        
-        # Get actual key names from pygame
-        key_prev_name = f"'{pygame.key.name(config_module.KEY_PREV).upper()}'"
-        key_next_name = f"'{pygame.key.name(config_module.KEY_NEXT).upper()}'"
-        key_select_name = f"'{pygame.key.name(config_module.KEY_SELECT).upper()}'"
-        
-        # Regenerate controls items with updated key names
+        """Update the controls items with OS-adaptive labels (Left/Right/Middle on Pi, key names on dev)."""
+        labels = config_module.get_control_labels()
+        prev_l, next_l, select_l, back_l = labels["prev"], labels["next"], labels["select"], labels["back"]
+
         self.controls_items = [
             {"type": "section", "text": "MENU NAVIGATION:"},
-            {"type": "control", "text": f"{key_prev_name} = Left/Previous/Up"},
-            {"type": "control", "text": f"Long {key_prev_name} = Back to Menu"},
-            {"type": "control", "text": f"{key_next_name} = Right/Next/Down"},
-            {"type": "control", "text": f"{key_select_name} = Select"},
+            {"type": "control", "text": f"{prev_l} = Left/Previous/Up"},
+            {"type": "control", "text": f"{back_l} = Back to Menu"},
+            {"type": "control", "text": f"{next_l} = Right/Next/Down"},
+            {"type": "control", "text": f"{select_l} = Select"},
             {"type": "control", "text": "Joystick: Up/Down/Left/Right/Press"},
             {"type": "spacer", "text": ""},
             {"type": "section", "text": "SCHEMATICS VIEW:"},
-            {"type": "control", "text": f"{key_prev_name} = Rotate Left"},
-            {"type": "control", "text": f"Long {key_prev_name} = Rotate Up"},
-            {"type": "control", "text": f"{key_next_name} = Rotate Right"},
-            {"type": "control", "text": f"Long {key_next_name} = Rotate Down"},
-            {"type": "control", "text": f"{key_select_name} = Select/Pause"},
+            {"type": "control", "text": f"{prev_l} = Rotate Left"},
+            {"type": "control", "text": f"Long {prev_l} = Rotate Up"},
+            {"type": "control", "text": f"{next_l} = Rotate Right"},
+            {"type": "control", "text": f"Long {next_l} = Rotate Down"},
+            {"type": "control", "text": f"{select_l} = Select/Pause"},
             {"type": "spacer", "text": ""},
             {"type": "section", "text": "GAMES:"},
-            {"type": "control", "text": f"Snake: {key_prev_name}=Left, {key_next_name}=Right"},
-            {"type": "control", "text": f"Pong: {key_prev_name}=Up, {key_next_name}=Down"},
-            {"type": "control", "text": f"{key_select_name} = Pause (all games)"},
+            {"type": "control", "text": f"Snake: {prev_l}=Left, {next_l}=Right"},
+            {"type": "control", "text": f"Pong: {prev_l}=Up, {next_l}=Down"},
+            {"type": "control", "text": f"{select_l} = Pause (all games)"},
             {"type": "spacer", "text": ""},
             {"type": "section", "text": "SECRET COMBO:"},
-            {"type": "control", "text": f"Hold {key_prev_name} + {key_next_name} simultaneously"},
+            {"type": "control", "text": f"Hold {prev_l} + {next_l} simultaneously"},
             {"type": "spacer", "text": ""},
             {"type": "section", "text": "KEY REMAPPING:"},
             {"type": "control", "text": "Coming Soon - Remap keys to arrows, WASD, etc."},

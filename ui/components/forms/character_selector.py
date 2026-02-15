@@ -46,6 +46,11 @@ class CharacterSelector:
         if ui_scaler and ui_scaler.debug_mode:
             logger.info(f"🎨 CharacterSelector: UIScaler set, scale_factor={ui_scaler.scale_factor:.2f}")
 
+    def set_screen_rect(self, rect):
+        """Set the content area (e.g. safe area rect) so layout stays within app UI."""
+        self.screen_rect = rect
+        self._calculate_layout()
+
     def _setup_fonts(self, fonts):
         """Setup fonts with responsive sizing."""
         try:
@@ -345,11 +350,12 @@ class CharacterSelector:
             logger.error(f"Error drawing character grid: {e}", exc_info=True)
 
     def _draw_footer(self, screen):
-        """Draw the footer with instructions and responsive spacing."""
+        """Draw the footer with instructions. Uses OS-adaptive labels (Left/Right/Middle on Pi, A/D/Enter on dev)."""
         try:
+            labels = self.config.get_control_labels()
             instructions = [
-                "A/D: Navigate | Joystick: Move cursor",
-                "ENTER: Select character | Hold A: Cancel"
+                f"{labels['prev']}/{labels['next']}: Navigate | Joystick: Move cursor",
+                f"{labels['select']}: Select character | {labels['back']}: Cancel"
             ]
             
             # Responsive line spacing

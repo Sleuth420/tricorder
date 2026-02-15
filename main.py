@@ -64,6 +64,11 @@ def main():
 
     # Initialize Models using the new modular architecture
     app_state = AppState(config, actual_screen_width, actual_screen_height)
+    app_state.ui_scaler = ui_scaler  # So games and UI use safe area / scaling
+    if hasattr(app_state, 'debug_overlay') and app_state.debug_overlay:
+        app_state.debug_overlay.set_ui_scaler(ui_scaler)
+    if hasattr(app_state, 'password_entry_manager') and app_state.password_entry_manager:
+        app_state.password_entry_manager.set_ui_scaler(ui_scaler)
     reading_history = ReadingHistory(config.ALL_SENSOR_MODES, config.GRAPH_HISTORY_SIZE)
     logger.info("Application state and reading history initialized.")
 
@@ -72,15 +77,14 @@ def main():
         # Non-critical Initializations (loading screen with splash, sensors)
         try:
             logo_splash = pygame.image.load(config.SPLASH_LOGO_PATH).convert_alpha()
-            # Scale the logo to be 50% of screen width while maintaining aspect ratio (reduced for better text fit)
-            screen_width = screen.get_width()
-            target_width = int(screen_width * 0.5)
+            # Use UIScaler for logo size and position (best practice: no raw screen dimensions)
+            target_width = ui_scaler.scale(160)  # ~50% of base 320
             aspect_ratio = logo_splash.get_height() / logo_splash.get_width()
             target_height = int(target_width * aspect_ratio)
             logo_splash = pygame.transform.smoothscale(logo_splash, (target_width, target_height))
-            # Position logo lower to balance spacing better
-            logo_center_y = int(screen.get_height() * 0.3)  # Changed from // 4 to 30% for better balance
-            logo_rect = logo_splash.get_rect(center=(screen.get_width() // 2, logo_center_y))
+            logo_center_x = ui_scaler.screen_width // 2
+            logo_center_y = ui_scaler.scale(72)  # ~30% of base 240
+            logo_rect = logo_splash.get_rect(center=(logo_center_x, logo_center_y))
             
             logger.info("Starting loading screen...")
             

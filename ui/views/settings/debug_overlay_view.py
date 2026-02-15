@@ -40,6 +40,6 @@ def draw_debug_overlay_view(screen, app_state, fonts, config_module, ui_scaler=N
         selected_index=current_selection_idx,
         fonts=fonts,
         config_module=config_module,
-        footer_hint="Toggle debug info overlay",
+        footer_hint=f"{config_module.get_control_labels()['select']} to toggle overlay",
         ui_scaler=ui_scaler
     )

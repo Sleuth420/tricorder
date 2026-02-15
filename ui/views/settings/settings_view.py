@@ -25,13 +25,14 @@ def draw_settings_view(screen, app_state, fonts, config_module, ui_scaler=None):
     # Add update available header if needed
     if hasattr(app_state, 'update_available') and app_state.update_available:
         screen.fill(config_module.Theme.BACKGROUND)
+        header_inset = ui_scaler.margin("small") if ui_scaler else 20
+        content_top = ui_scaler.scale(60) if ui_scaler else 60
+        w = ui_scaler.screen_width if ui_scaler else screen.get_width()
+        h = ui_scaler.screen_height if ui_scaler else screen.get_height()
         header_text = "[UPDATE AVAILABLE]"
         header_surface = fonts['medium'].render(header_text, True, config_module.Theme.ALERT)
-        screen.blit(header_surface, (20, 20))
-        
-        # Adjust content area down
-        content_rect = pygame.Rect(0, 60, screen.get_width(), screen.get_height() - 60)
-        # Create subsurface for the menu
+        screen.blit(header_surface, (header_inset, header_inset))
+        content_rect = pygame.Rect(0, content_top, w, h - content_top)
         menu_screen = screen.subsurface(content_rect)
     else:
         menu_screen = screen

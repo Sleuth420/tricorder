@@ -49,6 +49,7 @@ __all__ = [
     'UI_DEBUG_DRAWING',
     
     # From input.py
+    'get_control_labels', 'CONTROL_DISPLAY_STYLE',
     'KEY_PREV', 'KEY_NEXT', 'KEY_SELECT',
     'JOY_UP', 'JOY_DOWN', 'JOY_LEFT', 'JOY_RIGHT', 'JOY_PRESS',
     'INPUT_ACTION_PREV', 'INPUT_ACTION_NEXT', 'INPUT_ACTION_SELECT',

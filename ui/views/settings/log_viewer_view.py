@@ -20,10 +20,14 @@ def draw_log_viewer_view(screen, app_state, fonts, config_module, ui_scaler=None
         ui_scaler (UIScaler, optional): UI scaling system for responsive design
     """
     screen.fill(config_module.Theme.BACKGROUND)
-    
-    screen_width = screen.get_width()
-    screen_height = screen.get_height()
-    
+    if ui_scaler:
+        screen_width = ui_scaler.screen_width
+        screen_height = ui_scaler.screen_height
+    else:
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
+    margin_sm = ui_scaler.margin("small") if ui_scaler else 8
+    margin_md = ui_scaler.margin("medium") if ui_scaler else 15
     # Get or create log viewer
     if not hasattr(app_state, 'log_viewer'):
         from ui.components.log import LogViewer
@@ -35,29 +39,29 @@ def draw_log_viewer_view(screen, app_state, fonts, config_module, ui_scaler=None
     # Get log lines to display
     log_lines = app_state.log_viewer.get_display_lines(scroll_index)
     
-    # Responsive sizing
-    if screen_width <= 400:  # Small screen (Pi)
+    footer_space = ui_scaler.scale(40) if ui_scaler else 40
+    is_small = screen_width <= 400 if not ui_scaler else ui_scaler.is_small_screen()
+    if is_small:
         title_font = fonts['small']
         content_font = fonts['tiny']
-        line_height = 16  # Increased spacing
-        start_y = 30
-        margin = 8
-        max_chars_per_line = 30  # Reduced for better fit
-        max_lines = min(8, (screen_height - start_y - 40) // line_height)
-    else:  # Large screen (Windows)
+        line_height = ui_scaler.scale(16) if ui_scaler else 16
+        start_y = ui_scaler.margin("large") if ui_scaler else 30
+        margin = margin_sm
+        max_chars_per_line = 30
+        max_lines = max(1, min(8, (screen_height - start_y - footer_space) // line_height))
+    else:
         title_font = fonts['medium']
         content_font = fonts['small']
-        line_height = 20  # Increased spacing
-        start_y = 50
-        margin = 15
-        max_chars_per_line = 60  # Reduced for better fit
-        max_lines = min(15, (screen_height - start_y - 50) // line_height)
-    
-    # Title
+        line_height = ui_scaler.scale(20) if ui_scaler else 20
+        start_y = ui_scaler.scale(50) if ui_scaler else 50
+        margin = margin_md
+        max_chars_per_line = 60
+        max_lines = max(1, min(15, (screen_height - start_y - footer_space) // line_height))
     title_text = "Application Logs"
     title_surface = title_font.render(title_text, True, config_module.Theme.FOREGROUND)
     title_x = (screen_width - title_surface.get_width()) // 2
-    screen.blit(title_surface, (title_x, 10))
+    title_top = ui_scaler.margin("small") if ui_scaler else 10
+    screen.blit(title_surface, (title_x, title_top))
     
     # Draw log lines with text wrapping
     y_offset = start_y
@@ -131,9 +135,9 @@ def draw_log_viewer_view(screen, app_state, fonts, config_module, ui_scaler=None
     if len(log_lines) > max_lines:
         scroll_text = f"Scroll: {scroll_index + 1}-{min(scroll_index + max_lines, len(log_lines))}"
         scroll_surface = content_font.render(scroll_text, True, config_module.Theme.WARNING)
-        screen.blit(scroll_surface, (margin, screen_height - 25))
-    
-    # Footer
-    footer_text = "A/D: Scroll | Back: Return"
-    render_footer(screen, footer_text, fonts, config_module.Theme.FOREGROUND, screen_width, screen_height)
+        scroll_bottom = screen_height - (ui_scaler.scale(25) if ui_scaler else 25)
+        screen.blit(scroll_surface, (margin, scroll_bottom))
+    labels = config_module.get_control_labels()
+    footer_text = f"{labels['prev']}/{labels['next']}: Scroll | {labels['back']}: Return"
+    render_footer(screen, footer_text, fonts, config_module.Theme.FOREGROUND, screen_width, screen_height, ui_scaler=ui_scaler)
 

@@ -29,13 +29,20 @@ def _format_size(bytes_size):
 
 
 def _draw_file_info_overlay(screen, mgr, fonts, config_module, ui_scaler):
-    """Draw file info panel (name, path, duration, size) when long-press D is active."""
-    w, h = screen.get_width(), screen.get_height()
-    margin = ui_scaler.margin("large") if ui_scaler else 20
+    """Draw file info panel (name, path, duration, size) when long-press D is active. Uses ui_scaler for layout."""
+    if ui_scaler:
+        w, h = ui_scaler.screen_width, ui_scaler.screen_height
+        margin = ui_scaler.margin("large")
+        panel_h = ui_scaler.scale(100)
+        panel_y_offset = ui_scaler.scale(50)
+    else:
+        w, h = screen.get_width(), screen.get_height()
+        margin = 20
+        panel_h = 100
+        panel_y_offset = 50
     font_small = fonts["small"]
     font_tiny = fonts.get("tiny", font_small)
-    # Semi-transparent panel
-    panel = pygame.Rect(margin, h // 2 - 50, w - 2 * margin, 100)
+    panel = pygame.Rect(margin, h // 2 - panel_y_offset, w - 2 * margin, panel_h)
     s = pygame.Surface((panel.w, panel.h))
     s.set_alpha(220)
     s.fill(config_module.Theme.BACKGROUND)
@@ -67,7 +74,9 @@ def draw_media_player_view(screen, app_state, fonts, config_module, ui_scaler=No
     if not mgr:
         screen.fill(config_module.Theme.BACKGROUND)
         err = fonts["medium"].render("Media player not available", True, config_module.Theme.ALERT)
-        r = err.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
+        center_x = ui_scaler.screen_width // 2 if ui_scaler else screen.get_width() // 2
+        center_y = ui_scaler.screen_height // 2 if ui_scaler else screen.get_height() // 2
+        r = err.get_rect(center=(center_x, center_y))
         screen.blit(err, r)
         return
 
@@ -84,10 +93,8 @@ def draw_media_player_view(screen, app_state, fonts, config_module, ui_scaler=No
             menu_items = [name for name, _ in season_folders] if season_folders else ["No seasons found"]
             selected_index = mgr.get_current_index() % max(1, len(menu_items))
             title = "Media Player"
-            key_prev = pygame.key.name(config_module.KEY_PREV).upper()
-            key_next = pygame.key.name(config_module.KEY_NEXT).upper()
-            key_select = pygame.key.name(config_module.KEY_SELECT).upper()
-            footer_hint = f"< {key_prev}=Up | {key_next}=Down | {key_select}=Open season | Back=Exit >"
+            labels = config_module.get_control_labels()
+            footer_hint = f"< {labels['prev']}=Up | {labels['next']}=Down | {labels['select']}=Open season | {labels['back']}=Exit >"
         else:
             track_list = mgr.get_track_list()
             if track_list:
@@ -100,10 +107,8 @@ def draw_media_player_view(screen, app_state, fonts, config_module, ui_scaler=No
             if selected_index >= len(menu_items):
                 selected_index = max(0, len(menu_items) - 1)
 
-            key_prev = pygame.key.name(config_module.KEY_PREV).upper()
-            key_next = pygame.key.name(config_module.KEY_NEXT).upper()
-            key_select = pygame.key.name(config_module.KEY_SELECT).upper()
-            footer_hint = f"< {key_prev}=Prev | {key_next}=Next | {key_select}=Play/Pause | Long {key_next}=Info | Back=Season list >"
+            labels = config_module.get_control_labels()
+            footer_hint = f"< {labels['prev']}=Prev | {labels['next']}=Next | {labels['select']}=Play/Pause | Long {labels['next']}=Info | {labels['back']}=Season list >"
             title = "Media Player"
             if not mgr.vlc_available:
                 footer_hint += "  (Install python-vlc for playback)"

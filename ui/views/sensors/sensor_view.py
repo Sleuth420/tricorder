@@ -31,8 +31,12 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
     """
     screen.fill(config_module.Theme.BACKGROUND)
     
-    screen_width = screen.get_width()
-    screen_height = screen.get_height()
+    if ui_scaler:
+        screen_width = ui_scaler.screen_width
+        screen_height = ui_scaler.screen_height
+    else:
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
     current_time = time.time()
     
     # Use UIScaler for responsive spacing if available
@@ -116,14 +120,15 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
 
     if graph_type == "LINE":
         history_data = sensor_history.get_history(current_sensor_key)
-        # Leave more space for time label and footer
-        graph_height = screen_height - value_rect.bottom - graph_margin*3 - config_module.FONT_SIZE_SMALL*3 - 40
+        footer_space = ui_scaler.scale(40) if ui_scaler else 40
+        min_graph_h = ui_scaler.scale(100) if ui_scaler else 100
+        graph_height = screen_height - value_rect.bottom - graph_margin*3 - config_module.FONT_SIZE_SMALL*3 - footer_space
         graph_width = screen_width - graph_margin*2
         graph_rect = pygame.Rect(
             graph_margin, 
             value_rect.bottom + graph_margin,
             graph_width,
-            max(100, graph_height)  # Ensure minimum height
+            max(min_graph_h, graph_height)  # Ensure minimum height
         )
         range_override = display_props.get("range_override", (None, None))
         min_val_cfg, max_val_cfg = range_override if range_override is not None else (None, None)
@@ -141,7 +146,8 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
             time_font = fonts.get('small', fonts['medium'])
             time_text = f"Time ({config_module.GRAPH_HISTORY_SIZE}s →)"
             time_surf = time_font.render(time_text, True, config_module.Theme.GRAPH_GRID)
-            time_rect = time_surf.get_rect(center=(graph_rect.centerx, graph_rect.bottom + config_module.FONT_SIZE_SMALL + 5))
+            time_label_offset = (config_module.FONT_SIZE_SMALL + (ui_scaler.scale(5) if ui_scaler else 5))
+            time_rect = time_surf.get_rect(center=(graph_rect.centerx, graph_rect.bottom + time_label_offset))
             screen.blit(time_surf, time_rect)
         except Exception as e:
              logger.error(f"Error drawing line graph for {current_sensor_key}: {e}", exc_info=True)
@@ -218,7 +224,8 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
             fallback_font = fonts.get('medium', pygame.font.Font(None, config_module.FONT_SIZE_MEDIUM))
             fallback_text = "Graph N/A"
             fallback_surf = fallback_font.render(fallback_text, True, config_module.Theme.ACCENT)
-            fallback_rect = fallback_surf.get_rect(center=(screen_width // 2, title_rect.bottom + 80))
+            fallback_offset = ui_scaler.scale(80) if ui_scaler else 80
+            fallback_rect = fallback_surf.get_rect(center=(screen_width // 2, title_rect.bottom + fallback_offset))
             screen.blit(fallback_surf, fallback_rect)
 
     elif graph_type == "NONE" or current_sensor_key == config_module.SENSOR_CLOCK:
@@ -227,29 +234,31 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
         fallback_text = "Graph N/A" if graph_type == "NONE" else ""
         if fallback_text:
             fallback_surf = fallback_font.render(fallback_text, True, config_module.Theme.ACCENT)
-            fallback_rect = fallback_surf.get_rect(center=(screen_width // 2, title_rect.bottom + 80))
+            fallback_offset = ui_scaler.scale(80) if ui_scaler else 80
+            fallback_rect = fallback_surf.get_rect(center=(screen_width // 2, title_rect.bottom + fallback_offset))
             screen.blit(fallback_surf, fallback_rect)
     else:
         logger.warning(f"Unknown graph_type '{graph_type}' or no graph configured for sensor: {current_sensor_key}")
         fallback_font = fonts.get('medium', pygame.font.Font(None, config_module.FONT_SIZE_MEDIUM))
         fallback_text = "Graph N/A"
         fallback_surf = fallback_font.render(fallback_text, True, config_module.Theme.ACCENT)
-        fallback_rect = fallback_surf.get_rect(center=(screen_width // 2, title_rect.bottom + 80))
+        fallback_offset = ui_scaler.scale(80) if ui_scaler else 80
+        fallback_rect = fallback_surf.get_rect(center=(screen_width // 2, title_rect.bottom + fallback_offset))
         screen.blit(fallback_surf, fallback_rect)
 
     # Draw ambient tricorder effects in available spaces
     _draw_sensor_ambient_effects(screen, screen_width, screen_height, graph_rect, current_sensor_data, current_time, config_module, ui_scaler, app_state.is_frozen)
 
-    key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
-    key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
-    key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
+    # Footer can show control hint; labels are OS-adaptive (Left/Middle/Right on Pi, A/D/Enter on dev)
+    labels = config_module.get_control_labels()
     action_text = "Freeze" if not app_state.is_frozen else "Unfreeze"
-    hint_text = ""
+    hint_text = f"< {labels['select']}={action_text} | {labels['back']}=Back >"
 
     render_footer(
         screen, hint_text, fonts,
         config_module.Theme.FOREGROUND,
-        screen_width, screen_height
+        screen_width, screen_height,
+        ui_scaler=ui_scaler
     )
 
 def _draw_subtle_title_glow(screen, text, font, color, center_pos, current_time):
@@ -258,87 +267,70 @@ def _draw_subtle_title_glow(screen, text, font, color, center_pos, current_time)
     pass  # No glow effect needed
 
 def _draw_sensor_ambient_effects(screen, screen_width, screen_height, graph_rect, sensor_data, current_time, config_module, ui_scaler, is_frozen=False):
-    """Draw ambient tricorder effects in available spaces around the graph."""
-    # Only draw effects if we have enough space
+    """Draw ambient tricorder effects in available spaces around the graph. Uses ui_scaler for insets when available."""
     if screen_width < 200 or screen_height < 150:
         return
-    
-    # Freeze animations when frozen
     animation_time = 0 if is_frozen else current_time
-    
-    # Calculate safe Y position to avoid overlapping with title and value text
-    # Title + value + some padding = roughly 80-100px from top
-    safe_top_y = 100  # Safe distance from top to avoid text overlap
-    
-    # Define available areas based on graph position
-    if graph_rect:
-        # Areas around the graph - ensure left area starts below title/value text
-        left_area_top = max(graph_rect.top, safe_top_y)
-        left_area = pygame.Rect(5, left_area_top, max(0, graph_rect.left - 15), max(0, graph_rect.bottom - left_area_top - 20))
-        # Right area - start below frozen indicator to avoid overlap
-        right_area_top = max(graph_rect.top, 50)  # Frozen indicator is smaller, 50px is enough
-        right_area = pygame.Rect(graph_rect.right + 10, right_area_top, max(0, screen_width - graph_rect.right - 20), max(0, graph_rect.bottom - right_area_top - 10))
-        bottom_area = pygame.Rect(10, graph_rect.bottom + 10, screen_width - 20, max(0, screen_height - graph_rect.bottom - 60))
+    if ui_scaler:
+        safe_top_y = ui_scaler.scale(100)
+        inset_sm = ui_scaler.margin("small")
+        inset_md = ui_scaler.margin("medium")
+        inset_bottom = ui_scaler.scale(60)
+        frozen_top = ui_scaler.scale(50)
     else:
-        # Full bottom area if no graph - ensure left area starts below title/value text
+        safe_top_y = 100
+        inset_sm = 10
+        inset_md = 15
+        inset_bottom = 60
+        frozen_top = 50
+    if graph_rect:
+        left_area_top = max(graph_rect.top, safe_top_y)
+        left_area = pygame.Rect(inset_sm, left_area_top, max(0, graph_rect.left - inset_md), max(0, graph_rect.bottom - left_area_top - inset_md))
+        right_area_top = max(graph_rect.top, frozen_top)
+        right_area = pygame.Rect(graph_rect.right + inset_sm, right_area_top, max(0, screen_width - graph_rect.right - inset_md * 2), max(0, graph_rect.bottom - right_area_top - inset_sm))
+        bottom_area = pygame.Rect(inset_sm, graph_rect.bottom + inset_sm, screen_width - inset_sm * 2, max(0, screen_height - graph_rect.bottom - inset_bottom))
+    else:
         left_area_top = max(screen_height // 2, safe_top_y)
-        left_area = pygame.Rect(5, left_area_top, screen_width // 3, max(0, screen_height - left_area_top - 50))
-        # Right area - start below frozen indicator
-        right_area = pygame.Rect(screen_width * 2 // 3, max(screen_height // 2, 50), screen_width // 3 - 10, screen_height // 2 - 50)
-        bottom_area = pygame.Rect(10, screen_height * 3 // 4, screen_width - 20, screen_height // 4 - 50)
+        left_area = pygame.Rect(inset_sm, left_area_top, screen_width // 3, max(0, screen_height - left_area_top - inset_bottom))
+        right_area = pygame.Rect(screen_width * 2 // 3, max(screen_height // 2, frozen_top), screen_width // 3 - inset_sm, screen_height // 2 - inset_bottom)
+        bottom_area = pygame.Rect(inset_sm, screen_height * 3 // 4, screen_width - inset_sm * 2, screen_height // 4 - inset_bottom)
     
-    # Draw effects in each area
-    if left_area.width > 50 and left_area.height > 50:
-        _draw_sensor_data_stream(screen, left_area, animation_time, config_module, "left")
-    
-    if right_area.width > 50 and right_area.height > 50:
-        _draw_sensor_data_stream(screen, right_area, animation_time, config_module, "right")
-    
-    if bottom_area.width > 100 and bottom_area.height > 30:
-        _draw_sensor_status_indicators(screen, bottom_area, animation_time, config_module)
+    min_effect_size = ui_scaler.scale(50) if ui_scaler else 50
+    min_bottom_w = ui_scaler.scale(100) if ui_scaler else 100
+    min_bottom_h = ui_scaler.scale(30) if ui_scaler else 30
+    if left_area.width > min_effect_size and left_area.height > min_effect_size:
+        _draw_sensor_data_stream(screen, left_area, animation_time, config_module, "left", ui_scaler)
+    if right_area.width > min_effect_size and right_area.height > min_effect_size:
+        _draw_sensor_data_stream(screen, right_area, animation_time, config_module, "right", ui_scaler)
+    if bottom_area.width > min_bottom_w and bottom_area.height > min_bottom_h:
+        _draw_sensor_status_indicators(screen, bottom_area, animation_time, config_module, ui_scaler)
 
-def _draw_sensor_data_stream(screen, area, current_time, config_module, side):
-    """Draw flickering data stream effect with fixed position dots."""
+def _draw_sensor_data_stream(screen, area, current_time, config_module, side, ui_scaler=None):
+    """Draw flickering data stream effect with fixed position dots. Uses ui_scaler for spacing/size when available."""
     if current_time == 0:  # Frozen
         return
-        
-    dot_spacing = 20  # Spacing between fixed dot positions
-    
-    # Calculate number of dots that fit
+    dot_spacing = ui_scaler.scale(20) if ui_scaler else 20
+    dot_offset = ui_scaler.scale(7) if ui_scaler else 7
     num_dots = max(1, area.height // dot_spacing)
-    
     for i in range(num_dots):
-        # Fixed Y position for each dot
-        dot_y = area.top + (i * dot_spacing) + 7
-        
-        # Fixed X position based on side
+        dot_y = area.top + (i * dot_spacing) + dot_offset
         if side == "left":
-            dot_x = area.left + area.width // 3  # Fixed position in left third
+            dot_x = area.left + area.width // 3
         else:
-            dot_x = area.right - area.width // 3  # Fixed position in right third
-        
-        # Staggered flickering animation - each dot has different timing
-        flicker_offset = i * 0.7  # Stagger the timing for each dot
+            dot_x = area.right - area.width // 3
+        flicker_offset = i * 0.7
         flicker_progress = (current_time * 1.5 + flicker_offset) % 3.0
-        
-        # Calculate alpha for flickering effect
         if flicker_progress < 1.0:
-            # Fade in
             alpha = flicker_progress
         elif flicker_progress < 2.0:
-            # Stay bright
             alpha = 1.0
         else:
-            # Fade out
             alpha = 3.0 - flicker_progress
-        
-        # Only draw if visible
         if alpha > 0.1:
-            # Use viking blue color for better visibility
             viking_blue = config_module.Palette.VIKING_BLUE
             dot_color = tuple(min(255, int(c * alpha)) for c in viking_blue)
-            dot_size = 4  # Fixed size, larger and more visible
-            pygame.draw.circle(screen, dot_color, (dot_x, dot_y), dot_size)
+            dot_size = ui_scaler.scale(4) if ui_scaler else 4
+            pygame.draw.circle(screen, dot_color, (dot_x, dot_y), max(1, dot_size))
 
 def _draw_sensor_readout_display(screen, area, sensor_data, current_time, config_module):
     """Draw animated sensor readout information without text messages."""
@@ -369,30 +361,24 @@ def _draw_sensor_readout_display(screen, area, sensor_data, current_time, config
                 # Draw small connection dots
                 pygame.draw.circle(screen, segment_color, (line_x + segment_length, line_y), 2)
 
-def _draw_sensor_status_indicators(screen, area, current_time, config_module):
-    """Draw status indicator dots across the bottom - larger and more prominent."""
+def _draw_sensor_status_indicators(screen, area, current_time, config_module, ui_scaler=None):
+    """Draw status indicator dots across the bottom. Uses ui_scaler for spacing/size when available."""
     if current_time == 0:  # Frozen
         return
-        
-    indicator_count = min(6, area.width // 30)  # Fewer but larger indicators
+    min_width_per_indicator = ui_scaler.scale(30) if ui_scaler else 30
+    indicator_radius = ui_scaler.scale(8) if ui_scaler else 8
+    indicator_count = min(6, area.width // max(1, min_width_per_indicator))
     indicator_spacing = area.width // max(1, indicator_count)
-    
     for i in range(indicator_count):
         indicator_x = area.left + (i * indicator_spacing) + indicator_spacing // 2
         indicator_y = area.centery
-        
-        # Staggered pulsing
         pulse_offset = i * 0.5
         pulse_alpha = 0.4 + 0.5 * (0.5 + 0.5 * math.sin(current_time * 1.8 + pulse_offset))
-        
-        # Alternate colors
         if i % 3 == 0:
             base_color = config_module.Palette.GREEN
         elif i % 3 == 1:
             base_color = config_module.Palette.ENGINEERING_GOLD
         else:
             base_color = config_module.Theme.ACCENT
-        
         indicator_color = tuple(min(255, int(c * pulse_alpha)) for c in base_color)
-        # Much larger dots for small screen visibility - increased from 3 to 8
-        pygame.draw.circle(screen, indicator_color, (indicator_x, indicator_y), 8) 
+        pygame.draw.circle(screen, indicator_color, (indicator_x, indicator_y), max(1, indicator_radius)) 

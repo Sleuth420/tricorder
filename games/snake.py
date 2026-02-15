@@ -233,9 +233,10 @@ class SnakeGame:
         direction_surf = self.font.render(direction_text, True, config_module.COLOR_FOREGROUND)
         screen.blit(direction_surf, (10, 30))
 
-        # Draw controls hint
+        # Draw controls hint (OS-adaptive: Left/Right on Pi, A/D on dev)
         if len(self.snake) < 5:  # Show hint for first few moves
-            hint_text = "A=Turn Left, D=Turn Right"
+            labels = config_module.get_control_labels()
+            hint_text = f"{labels['prev']}=Turn Left, {labels['next']}=Turn Right"
             hint_surf = self.font.render(hint_text, True, config_module.COLOR_FOREGROUND)
             hint_x = self.width // 2 - hint_surf.get_width() // 2
             screen.blit(hint_surf, (hint_x, self.height - 30))

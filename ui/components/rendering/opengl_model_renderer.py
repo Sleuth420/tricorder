@@ -664,9 +664,10 @@ class OpenGLModelRenderer:
         glDisable(GL_DEPTH_TEST)
         
         try:
-            # Footer controls
+            # Footer controls (OS-adaptive: Left/Right/Middle on Pi, A/D/Enter on dev)
             hint_font = fonts.get('small', fonts.get('medium'))
-            hint_text = ""
+            labels = self.config.get_control_labels()
+            hint_text = f"< {labels['prev']}=Up | {labels['next']}=Down | {labels['select']}=Select | {labels['back']} >"
             hint_surface = hint_font.render(hint_text, True, (255, 255, 255))
             hint_x = (self.screen_width - hint_surface.get_width()) // 2
             hint_y = 20  # 20 pixels from bottom

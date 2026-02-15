@@ -35,57 +35,51 @@ class GameManager:
         self.active_breakout_game = None
         self.active_snake_game = None
         
-    def launch_pong(self):
+    def _game_rect(self, ui_scaler):
+        """Return the play area rect: safe area if ui_scaler has it enabled, else full screen."""
+        if ui_scaler and getattr(ui_scaler, 'safe_area_enabled', False):
+            return ui_scaler.get_safe_area_rect()
+        return None  # Caller uses full screen dimensions
+
+    def launch_pong(self, ui_scaler=None):
         """
-        Launch a new Pong game.
-        
-        Returns:
-            bool: True if game was launched successfully
+        Launch a new Pong game. Uses app safe area when ui_scaler is provided and enabled.
         """
         try:
-            self.active_pong_game = PongGame(
-                self.screen_width, 
-                self.screen_height, 
-                self.config
-            )
+            rect = self._game_rect(ui_scaler)
+            w = rect.width if rect else self.screen_width
+            h = rect.height if rect else self.screen_height
+            self.active_pong_game = PongGame(w, h, self.config)
             logger.info("Pong game launched successfully")
             return True
         except Exception as e:
             logger.error(f"Failed to launch Pong game: {e}")
             return False
-            
-    def launch_breakout(self):
+
+    def launch_breakout(self, ui_scaler=None):
         """
-        Launch a new Breakout game.
-        
-        Returns:
-            bool: True if game was launched successfully
+        Launch a new Breakout game. Uses app safe area when ui_scaler is provided and enabled.
         """
         try:
-            self.active_breakout_game = BreakoutGame(
-                self.screen_width, 
-                self.screen_height, 
-                self.config
-            )
+            rect = self._game_rect(ui_scaler)
+            w = rect.width if rect else self.screen_width
+            h = rect.height if rect else self.screen_height
+            self.active_breakout_game = BreakoutGame(w, h, self.config)
             logger.info("Breakout game launched successfully")
             return True
         except Exception as e:
             logger.error(f"Failed to launch Breakout game: {e}")
             return False
-            
-    def launch_snake(self):
+
+    def launch_snake(self, ui_scaler=None):
         """
-        Launch a new Snake game.
-        
-        Returns:
-            bool: True if game was launched successfully
+        Launch a new Snake game. Uses app safe area when ui_scaler is provided and enabled.
         """
         try:
-            self.active_snake_game = SnakeGame(
-                self.screen_width, 
-                self.screen_height, 
-                self.config
-            )
+            rect = self._game_rect(ui_scaler)
+            w = rect.width if rect else self.screen_width
+            h = rect.height if rect else self.screen_height
+            self.active_snake_game = SnakeGame(w, h, self.config)
             logger.info("Snake game launched successfully")
             return True
         except Exception as e:

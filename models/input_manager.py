@@ -335,15 +335,24 @@ class InputManager:
     def handle_mouseup(self, button):
         """
         Handle mouse button up events.
-        
+
         Args:
             button: The mouse button that was released
-            
+
         Returns:
-            dict: Input event data
+            dict: Input event data including press_duration for long-press detection
         """
         logger.debug(f"MOUSEUP: button={button}")
-        
+
+        press_duration = None
+        # Compute duration before resetting so app can suppress release-as-action after long press
+        if button == self.config.MOUSE_LEFT and self.mouse_left_press_start_time is not None:
+            press_duration = time.time() - self.mouse_left_press_start_time
+        elif button == self.config.MOUSE_RIGHT and self.mouse_right_press_start_time is not None:
+            press_duration = time.time() - self.mouse_right_press_start_time
+        elif button == self.config.MOUSE_MIDDLE and self.mouse_middle_press_start_time is not None:
+            press_duration = time.time() - self.mouse_middle_press_start_time
+
         # Reset timing for mouse long press detection
         if button == self.config.MOUSE_LEFT:
             self.mouse_left_press_start_time = None
@@ -354,10 +363,11 @@ class InputManager:
         elif button == self.config.MOUSE_MIDDLE:
             self.mouse_middle_press_start_time = None
             logger.debug("Mouse middle press timer reset.")
-            
+
         return {
             'type': 'MOUSEUP',
-            'button': button
+            'button': button,
+            'press_duration': press_duration
         }
     
     def check_mouse_left_long_press(self):

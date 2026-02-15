@@ -107,29 +107,28 @@ def draw_audio_diagnostics_screen(screen, app_state, fonts, config_module, ui_sc
     if diagnostics.refresh_needed:
         diagnostics.refresh_diagnostics(app_state.audio_manager)
     
-    screen_width = screen.get_width()
-    screen_height = screen.get_height()
-    
-    # Clear screen
+    if ui_scaler:
+        screen_width = ui_scaler.screen_width
+        screen_height = ui_scaler.screen_height
+    else:
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
+    left_inset = ui_scaler.margin("small") if ui_scaler else 20
+    title_top = ui_scaler.margin("small") if ui_scaler else 20
+    line_height = ui_scaler.scale(25) if ui_scaler else 25
+    content_top = ui_scaler.scale(70) if ui_scaler else 70
     screen.fill(config_module.Theme.BACKGROUND)
-    
-    # Title
     title_font = fonts['large']
     title_text = "Audio Diagnostics"
     title_surface = title_font.render(title_text, True, config_module.Theme.FOREGROUND)
     title_x = (screen_width - title_surface.get_width()) // 2
-    screen.blit(title_surface, (title_x, 20))
-    
-    # System Information
-    y_offset = 70
-    line_height = 25
+    screen.blit(title_surface, (title_x, title_top))
+    y_offset = content_top
     small_font = fonts['small']
     medium_font = fonts['medium']
-    
-    # Platform info
     platform_text = f"Platform: {diagnostics.diagnostics_data.get('platform', 'Unknown')} {diagnostics.diagnostics_data.get('platform_release', '')}"
     platform_surface = medium_font.render(platform_text, True, config_module.Theme.FOREGROUND)
-    screen.blit(platform_surface, (20, y_offset))
+    screen.blit(platform_surface, (left_inset, y_offset))
     y_offset += line_height
     
     # Python/Pygame versions
@@ -138,8 +137,9 @@ def draw_audio_diagnostics_screen(screen, app_state, fonts, config_module, ui_sc
     
     python_surface = small_font.render(python_text, True, config_module.Theme.FOREGROUND)
     pygame_surface = small_font.render(pygame_text, True, config_module.Theme.FOREGROUND)
-    screen.blit(python_surface, (20, y_offset))
-    screen.blit(pygame_surface, (screen_width - 200, y_offset))
+    right_col = screen_width - (ui_scaler.scale(200) if ui_scaler else 200)
+    screen.blit(python_surface, (left_inset, y_offset))
+    screen.blit(pygame_surface, (right_col, y_offset))
     y_offset += line_height + 10
     
     # Audio status
@@ -148,14 +148,14 @@ def draw_audio_diagnostics_screen(screen, app_state, fonts, config_module, ui_sc
     audio_color = config_module.Theme.ACCENT if audio_enabled else config_module.Theme.ALERT
     
     status_surface = medium_font.render(f"Audio Status: {audio_status}", True, audio_color)
-    screen.blit(status_surface, (20, y_offset))
+    screen.blit(status_surface, (left_inset, y_offset))
     y_offset += line_height
     
     # Sounds loaded
     sounds_count = diagnostics.diagnostics_data.get('sounds_loaded', 0)
     sounds_text = f"Sounds Loaded: {sounds_count}"
     sounds_surface = small_font.render(sounds_text, True, config_module.Theme.FOREGROUND)
-    screen.blit(sounds_surface, (20, y_offset))
+    screen.blit(sounds_surface, (left_inset, y_offset))
     y_offset += line_height
     
     # Available sounds
@@ -165,7 +165,7 @@ def draw_audio_diagnostics_screen(screen, app_state, fonts, config_module, ui_sc
         if len(sounds_list) > 60:  # Truncate if too long
             sounds_list = sounds_list[:60] + "..."
         sounds_list_surface = small_font.render(f"Available: {sounds_list}", True, config_module.Theme.FOREGROUND)
-        screen.blit(sounds_list_surface, (20, y_offset))
+        screen.blit(sounds_list_surface, (left_inset, y_offset))
         y_offset += line_height
     
     # Linux-specific info
@@ -178,7 +178,7 @@ def draw_audio_diagnostics_screen(screen, app_state, fonts, config_module, ui_sc
         pulse_color = config_module.Theme.ACCENT if pulse_running else config_module.Theme.WARNING
         
         pulse_surface = medium_font.render(f"PulseAudio: {pulse_status}", True, pulse_color)
-        screen.blit(pulse_surface, (20, y_offset))
+        screen.blit(pulse_surface, (left_inset, y_offset))
         y_offset += line_height
         
         # System volume
@@ -197,7 +197,7 @@ def draw_audio_diagnostics_screen(screen, app_state, fonts, config_module, ui_sc
             vol_color = config_module.Theme.WARNING
         
         vol_surface = medium_font.render(f"System Volume: {vol_status}", True, vol_color)
-        screen.blit(vol_surface, (20, y_offset))
+        screen.blit(vol_surface, (left_inset, y_offset))
         y_offset += line_height
         
         # 3.5mm jack status
@@ -206,7 +206,7 @@ def draw_audio_diagnostics_screen(screen, app_state, fonts, config_module, ui_sc
         jack_color = config_module.Theme.ACCENT if jack_enabled else config_module.Theme.WARNING
         
         jack_surface = medium_font.render(f"3.5mm Jack: {jack_status}", True, jack_color)
-        screen.blit(jack_surface, (20, y_offset))
+        screen.blit(jack_surface, (left_inset, y_offset))
         y_offset += line_height
         
         # ALSA devices
@@ -214,14 +214,16 @@ def draw_audio_diagnostics_screen(screen, app_state, fonts, config_module, ui_sc
         if alsa_devices:
             alsa_text = f"ALSA Devices: {len(alsa_devices)} found"
             alsa_surface = small_font.render(alsa_text, True, config_module.Theme.FOREGROUND)
-            screen.blit(alsa_surface, (20, y_offset))
+            screen.blit(alsa_surface, (left_inset, y_offset))
             y_offset += line_height
             
             # Show first few devices
             for i, device in enumerate(alsa_devices[:3]):
                 device_surface = small_font.render(f"  {device}", True, config_module.Theme.FOREGROUND)
-                screen.blit(device_surface, (40, y_offset))
+                device_indent = ui_scaler.scale(20) if ui_scaler else 20
+                screen.blit(device_surface, (left_inset + device_indent, y_offset))
                 y_offset += line_height - 5
     
-    # Footer
-    render_footer(screen, "Press Back to return", fonts, config_module.Theme.FOREGROUND, screen_width, screen_height)
+    # Footer (OS-adaptive: "Back (hold Left)" on Pi, "Back (hold A)" on dev)
+    labels = config_module.get_control_labels()
+    render_footer(screen, f"Press {labels['back']} to return", fonts, config_module.Theme.FOREGROUND, screen_width, screen_height, ui_scaler=ui_scaler)

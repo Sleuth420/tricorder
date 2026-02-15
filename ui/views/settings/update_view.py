@@ -33,50 +33,42 @@ def draw_update_view(screen, app_state, fonts, config_module, ui_scaler=None):
     # For update view, we need to show system info above the menu
     # We'll draw it manually first, then use the list menu component
     screen.fill(config_module.Theme.BACKGROUND)
-    screen_width = screen.get_width()
-    screen_height = screen.get_height()
-    
-    # Add update available header if needed
+    if ui_scaler:
+        screen_width = ui_scaler.screen_width
+        screen_height = ui_scaler.screen_height
+    else:
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
+    header_inset = ui_scaler.margin("small") if ui_scaler else 20
     if hasattr(app_state, 'update_available') and app_state.update_available:
         header_text = "[UPDATE AVAILABLE]"
         header_surface = fonts['medium'].render(header_text, True, config_module.Theme.ALERT)
-        screen.blit(header_surface, (20, 20))
-        
-        # Show commit count
+        screen.blit(header_surface, (header_inset, header_inset))
         commit_text = f"{app_state.commits_behind} commits behind"
         commit_surface = fonts['small'].render(commit_text, True, config_module.Theme.FOREGROUND)
-        screen.blit(commit_surface, (20, 45))
-        
-        # Adjust other content down
-        info_y = 70
+        small_margin = ui_scaler.margin("small") if ui_scaler else 5
+        commit_y = header_inset + (header_surface.get_height() or 0) + small_margin
+        screen.blit(commit_surface, (header_inset, commit_y))
+        info_y = commit_y + (commit_surface.get_height() or 0) + small_margin
     else:
-        info_y = 20
+        info_y = ui_scaler.margin("medium") if ui_scaler else 20
     
     # Display system information at the top
     font_small = fonts['small']
     
-    # Use UIScaler for responsive spacing if available
     if ui_scaler:
-        if not (hasattr(app_state, 'update_available') and app_state.update_available):
-            info_y = ui_scaler.margin("medium")
         line_spacing = ui_scaler.margin("small")
         section_spacing = ui_scaler.margin("large")
-        
-        # Debug logging for update view layout
         if ui_scaler.debug_mode:
             logger.info(f"🎨 UpdateView: screen={screen_width}x{screen_height}, info_y={info_y}px, spacing={line_spacing}px")
     else:
-        # Fallback to original calculations
-        if not (hasattr(app_state, 'update_available') and app_state.update_available):
-            info_y = 20
         line_spacing = 3
         section_spacing = 15
-    
-    # Current version
+    left_inset = ui_scaler.margin("small") if ui_scaler else 20
     current_version = update_info['current_version']
     version_text = f"Current: {current_version.get('build_number', 'Unknown')}"
     version_surface = font_small.render(version_text, True, config_module.Theme.FOREGROUND)
-    screen.blit(version_surface, (20, info_y))
+    screen.blit(version_surface, (left_inset, info_y))
     info_y += version_surface.get_height() + line_spacing
     
     # Platform info
@@ -84,7 +76,7 @@ def draw_update_view(screen, app_state, fonts, config_module, ui_scaler=None):
     if update_info['is_raspberry_pi']:
         platform_text += " (Raspberry Pi)"
     platform_surface = font_small.render(platform_text, True, config_module.Theme.FOREGROUND)
-    screen.blit(platform_surface, (20, info_y))
+    screen.blit(platform_surface, (left_inset, info_y))
     info_y += platform_surface.get_height() + line_spacing
     
     # System config status if on Raspberry Pi
@@ -97,21 +89,22 @@ def draw_update_view(screen, app_state, fonts, config_module, ui_scaler=None):
             config_color = config_module.COLOR_ACCENT if available_configs == total_configs else config_module.COLOR_DARK_GREY
             config_text = f"System Configs: {available_configs}/{total_configs} available"
             config_surface = font_small.render(config_text, True, config_color)
-            screen.blit(config_surface, (20, info_y))
+            screen.blit(config_surface, (left_inset, info_y))
             info_y += config_surface.get_height() + (line_spacing * 2)
     
     # Last check result
     if update_info['last_check_result']:
         check_color = config_module.COLOR_ACCENT if update_info['update_available'] else config_module.Theme.FOREGROUND
         check_surface = font_small.render(update_info['last_check_result'], True, check_color)
-        screen.blit(check_surface, (20, info_y))
+        screen.blit(check_surface, (left_inset, info_y))
         info_y += check_surface.get_height() + section_spacing
     
     # Now draw the menu starting below the info section
     menu_start_y = info_y + (ui_scaler.margin("medium") if ui_scaler else 10)
     
     # Calculate available height for menu items
-    available_height = screen_height - menu_start_y - 20  # Leave some bottom margin
+    bottom_margin = ui_scaler.margin("small") if ui_scaler else 20
+    available_height = screen_height - menu_start_y - bottom_margin
     
     # Draw menu items manually without the header since we already have content above
     _draw_update_menu_items(

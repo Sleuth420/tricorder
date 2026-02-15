@@ -20,6 +20,8 @@ class PasswordEntryManager:
             fonts (dict): Dictionary of loaded fonts
         """
         self.config = config_module
+        self._full_screen_rect = screen_rect
+        self._ui_scaler = None
         self.character_selector = CharacterSelector(screen_rect, fonts, config_module)
         
         # Password entry state
@@ -28,9 +30,21 @@ class PasswordEntryManager:
         self.target_network = None
         
         logger.info(f"Password entry manager initialized with screen rect {screen_rect}")
-        
-    # UIScaler removed - UI concerns handled by display_manager.py
-        
+
+    def set_ui_scaler(self, ui_scaler):
+        """Use app safe area and UIScaler so password view aligns with app UI."""
+        if not ui_scaler:
+            return
+        self._ui_scaler = ui_scaler
+        if getattr(ui_scaler, 'safe_area_enabled', False):
+            safe_rect = ui_scaler.get_safe_area_rect()
+            # Content rect is (0,0,w,h) so view can draw to subsurface(safe_rect)
+            import pygame
+            self.character_selector.set_screen_rect(pygame.Rect(0, 0, safe_rect.width, safe_rect.height))
+        else:
+            self.character_selector.set_screen_rect(self._full_screen_rect)
+        self.character_selector.set_ui_scaler(ui_scaler)
+
     def set_target_network(self, network):
         """Set the network to connect to."""
         self.target_network = network

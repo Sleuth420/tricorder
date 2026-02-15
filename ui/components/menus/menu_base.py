@@ -28,10 +28,8 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
     global _layout_logged
     
     screen.fill(config_module.Theme.BACKGROUND)
-    
-    screen_width = screen.get_width()
-    screen_height = screen.get_height()
-    
+    screen_width = ui_scaler.screen_width
+    screen_height = ui_scaler.screen_height
     menu_items = app_state.get_current_menu_items()
     text_padding = ui_scaler.padding("medium")
     safe_left = ui_scaler.get_safe_area_margins()["left"] if (ui_scaler and ui_scaler.safe_area_enabled) else 0
@@ -170,7 +168,7 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
             if (item.name == "Settings" and 
                 hasattr(app_state, 'update_available') and 
                 app_state.update_available):
-                _draw_exclamation_badge(screen, item_rect, config_module, fonts)
+                _draw_exclamation_badge(screen, item_rect, config_module, fonts, ui_scaler)
 
             # Store selected item info for arrow indicator
             if i == selected_index:
@@ -191,11 +189,17 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
 
     # --- Part 5: Calculate Main Content Area ---
     total_sidebar_width = base_sidebar_width + arrow_indicator_width
+    main_content_width = screen_width - total_sidebar_width
+    main_content_height = screen_height - header_height
+    if ui_scaler and ui_scaler.safe_area_enabled:
+        safe_margins = ui_scaler.get_safe_area_margins()
+        main_content_width -= safe_margins['right']
+        main_content_height -= safe_margins['bottom']
     main_content_rect = pygame.Rect(
         total_sidebar_width,
         header_height,
-        screen_width - total_sidebar_width,
-        screen_height - header_height
+        main_content_width,
+        main_content_height
     )
     pygame.draw.rect(screen, config_module.Theme.BACKGROUND, main_content_rect)
     
@@ -249,18 +253,14 @@ def _draw_arrow_indicator(screen, arrow_area_rect, selected_item_rect, item_colo
     # Optional: Add a subtle border to the arrow
     pygame.draw.polygon(screen, config_module.Palette.BLACK, arrow_points, 1)
 
-def _draw_exclamation_badge(screen, item_rect, config_module, fonts):
-    """Draw a red circle with exclamation mark badge."""
-    # Badge size and position
-    badge_size = 16
-    badge_x = item_rect.right - badge_size - 8
-    badge_y = item_rect.top + 8
-    
-    # Draw red circle
+def _draw_exclamation_badge(screen, item_rect, config_module, fonts, ui_scaler=None):
+    """Draw a red circle with exclamation mark badge. Uses ui_scaler for size/inset when provided."""
+    badge_size = ui_scaler.scale(16) if ui_scaler else 16
+    inset = ui_scaler.scale(8) if ui_scaler else 8
+    badge_x = item_rect.right - badge_size - inset
+    badge_y = item_rect.top + inset
     badge_rect = pygame.Rect(badge_x, badge_y, badge_size, badge_size)
-    pygame.draw.circle(screen, config_module.Theme.ALERT, badge_rect.center, badge_size // 2)
-    
-    # Draw white exclamation mark
+    pygame.draw.circle(screen, config_module.Theme.ALERT, badge_rect.center, max(1, badge_size // 2))
     exclamation_surface = fonts['tiny'].render("!", True, config_module.Theme.WHITE)
     exclamation_rect = exclamation_surface.get_rect(center=badge_rect.center)
     screen.blit(exclamation_surface, exclamation_rect) 

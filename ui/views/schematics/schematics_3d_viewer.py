@@ -49,14 +49,11 @@ def draw_schematics_view(screen, app_state, fonts, config_module, ui_scaler=None
     if not is_opengl_mode:
         # Draw pause menu if active
         if app_state.schematics_pause_menu_active:
-            _draw_pause_menu(screen, app_state, fonts, config_module)
+            _draw_pause_menu(screen, app_state, fonts, config_module, ui_scaler)
         else:
-            # Draw footer with controls when pause menu is not active
-            key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
-            key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
-            key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
-            
-            hint_text = ""
+            # Draw footer (OS-adaptive: Left/Right/Middle on Pi, A/D/Enter on dev)
+            labels = config_module.get_control_labels()
+            hint_text = f"< {labels['prev']}/{labels['next']}=Rotate | {labels['select']}=Menu | {labels['back']}=Back >"
 
             render_footer(
                 screen, hint_text, fonts,
@@ -65,34 +62,33 @@ def draw_schematics_view(screen, app_state, fonts, config_module, ui_scaler=None
                 screen.get_height()
             )
 
-def _draw_pause_menu(screen, app_state, fonts, config_module):
-    """Draw the pause menu overlay for the 3D viewer - simplified like confirmation dialog."""
+def _draw_pause_menu(screen, app_state, fonts, config_module, ui_scaler=None):
+    """Draw the pause menu overlay for the 3D viewer. Uses ui_scaler for layout when provided."""
     screen.fill(config_module.Theme.BACKGROUND)
-    screen_width = screen.get_width()
-    screen_height = screen.get_height()
-
+    if ui_scaler:
+        screen_width = ui_scaler.screen_width
+        screen_height = ui_scaler.screen_height
+    else:
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
     font_large = fonts['large']
     font_medium = fonts['medium']
-
-    # Display the menu title
     title_surface = font_large.render("3D VIEWER MENU", True, config_module.Theme.ACCENT)
     title_rect = title_surface.get_rect(center=(screen_width // 2, screen_height // 4))
     screen.blit(title_surface, title_rect)
-
-    # Menu options
     options = ["Toggle Mode", "Zoom In", "Zoom Out", "Reset Zoom", "Back to Schematics", "Resume"]
     current_selection_idx = app_state.schematics_pause_menu_index
-
-    y_offset = title_rect.bottom + 40
-    
+    list_top_offset = ui_scaler.scale(40) if ui_scaler else 40
+    item_width = ui_scaler.scale(160) if ui_scaler else 160
+    item_padding = ui_scaler.scale(20) if ui_scaler else 20
+    item_spacing = ui_scaler.scale(10) if ui_scaler else 10
+    y_offset = title_rect.bottom + list_top_offset
+    item_height = font_medium.get_height() + item_padding
     for i, option_text in enumerate(options):
         text_color = config_module.Theme.FOREGROUND
-        item_width = 160
-        item_height = font_medium.get_height() + 20
-        
         item_display_rect = pygame.Rect(
-            (screen_width // 2) - item_width // 2, 
-            y_offset + (i * (item_height + 10)),
+            (screen_width // 2) - item_width // 2,
+            y_offset + (i * (item_height + item_spacing)),
             item_width,
             item_height
         )
@@ -114,18 +110,9 @@ def _draw_pause_menu(screen, app_state, fonts, config_module):
     mode_text = f"Current Mode: {rotation_mode}"
     mode_font = fonts.get('small', fonts.get('medium'))
     mode_surface = mode_font.render(mode_text, True, config_module.Theme.FOREGROUND)
-    mode_rect = mode_surface.get_rect(center=(screen_width // 2, y_offset + len(options) * (item_height + 10) + 20))
+    mode_bottom_offset = ui_scaler.scale(20) if ui_scaler else 20
+    mode_rect = mode_surface.get_rect(center=(screen_width // 2, y_offset + len(options) * (item_height + item_spacing) + mode_bottom_offset))
     screen.blit(mode_surface, mode_rect)
-
-    # Footer hints
-    key_prev_name = pygame.key.name(config_module.KEY_PREV).upper()
-    key_next_name = pygame.key.name(config_module.KEY_NEXT).upper()
-    key_select_name = pygame.key.name(config_module.KEY_SELECT).upper()
-    
-    hint = ""
-
-    render_footer(
-        screen, hint, fonts,
-        config_module.Theme.FOREGROUND,
-        screen_width, screen_height
-    )
+    labels = config_module.get_control_labels()
+    hint = f"< {labels['prev']}/{labels['next']}=Navigate | {labels['select']}=Select | {labels['back']}=Back >"
+    render_footer(screen, hint, fonts, config_module.Theme.FOREGROUND, screen_width, screen_height, ui_scaler=ui_scaler)

@@ -29,26 +29,24 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
         dict: Layout information including visible item range
     """
     screen.fill(config_module.Theme.BACKGROUND)
-    screen_width = screen.get_width()
-    screen_height = screen.get_height()
-    current_time = time.time()
-    
-    # Use UIScaler for responsive dimensions if available
+    # Use UIScaler dimensions when available (best practice: no raw screen.get_* for layout)
     if ui_scaler:
+        screen_width = ui_scaler.screen_width
+        screen_height = ui_scaler.screen_height
         header_top_margin = ui_scaler.header_top_margin()
-        header_height = ui_scaler.header_height() + ui_scaler.scale(20)  # Taller header
+        header_height = ui_scaler.header_height() + ui_scaler.scale(20)
         content_spacing = ui_scaler.margin("large")
         item_height_padding = ui_scaler.padding("medium")
-        
-        # Debug logging for list menu layout
         if ui_scaler.debug_mode:
             logger.info(f"🎨 ListMenuBase: screen={screen_width}x{screen_height}, header={header_height}px, spacing={content_spacing}px")
     else:
-        # Fallback to original calculations
-        header_top_margin = screen_height // 20  # Reduced top spacing
-        header_height = config_module.HEADER_HEIGHT + 20  # Taller header for better spacing
-        content_spacing = screen_height // 10  # Increased spacing
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
+        header_top_margin = screen_height // 20
+        header_height = config_module.HEADER_HEIGHT + 20
+        content_spacing = screen_height // 10
         item_height_padding = 20
+    current_time = time.time()
     
     # === ANIMATED HEADER SECTION ===
     header_rect = pygame.Rect(0, header_top_margin, screen_width, header_height)
@@ -60,8 +58,9 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
     
     # === CONTENT SECTION ===
     content_y = header_rect.bottom + content_spacing
-    footer_height = config_module.FONT_SIZE_SMALL * 3  # Approximate footer space
-    available_height = screen_height - content_y - footer_height - 20
+    footer_margin = ui_scaler.scale(20) if ui_scaler else 20
+    footer_height = (config_module.FONT_SIZE_SMALL * 3) if not ui_scaler else ui_scaler.scale(config_module.FONT_SIZE_SMALL * 3)
+    available_height = screen_height - content_y - footer_height - footer_margin
     
     # Calculate item dimensions
     font_medium = fonts['medium']
@@ -88,7 +87,9 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
     visible_end = min(total_items, visible_start + max_visible_items)
     
     # === RENDER ANIMATED ITEMS ===
-    y_offset = content_y + 20
+    content_top_offset = ui_scaler.scale(20) if ui_scaler else 20
+    item_spacing = ui_scaler.scale(15) if ui_scaler else 15
+    y_offset = content_y + content_top_offset
     
     for i in range(visible_start, visible_end):
         item = menu_items[i]
@@ -108,16 +109,17 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
         text_color = config_module.Theme.FOREGROUND
         is_selected = (i == selected_index)
         
-        # Create item rectangle - center all items
+        # Create item rectangle - center all items (use UIScaler for sizes when available)
         if item_style == "button":
-            # Button style with borders
+            btn_half_w = ui_scaler.scale(150) if ui_scaler else 150
             item_rect = pygame.Rect(
-                (screen_width // 2) - 150, y_offset - 10,
-                300, effective_item_height
+                (screen_width // 2) - btn_half_w, y_offset - (item_height_padding // 2),
+                btn_half_w * 2, effective_item_height
             )
         else:
-            # Simple list style - centered
-            item_width = min(400, screen_width - 60)  # Limit width but center it
+            max_item_w = ui_scaler.scale(400) if ui_scaler else 400
+            side_inset = ui_scaler.scale(60) if ui_scaler else 60
+            item_width = min(max_item_w, screen_width - side_inset)
             item_rect = pygame.Rect(
                 (screen_width // 2) - (item_width // 2), y_offset - (item_height_padding // 2),
                 item_width, effective_item_height
@@ -127,10 +129,10 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
         if is_selected:
             text_color = config_module.Theme.MENU_SELECTED_TEXT
             
-            # Draw simple animated arrow (using original font-based approach)
-            arrow_x = item_rect.right + 10
+            arrow_offset = ui_scaler.scale(10) if ui_scaler else 10
+            arrow_size = ui_scaler.scale(16) if ui_scaler else 16
+            arrow_x = item_rect.right + arrow_offset
             arrow_y = item_rect.centery
-            arrow_size = 16
             
             # Add more prominent animation to the original arrow
             color_intensity = 0.6 + 0.4 * (0.5 + 0.5 * math.sin(current_time * 3.0))
@@ -163,40 +165,40 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
             text_rect = item_surface.get_rect(center=item_rect.center)
         
         screen.blit(item_surface, text_rect)
-        y_offset += effective_item_height + 15  # Reduced spacing between items
+        y_offset += effective_item_height + item_spacing
     
     # === SCROLL INDICATORS ===
     if total_items > max_visible_items:
         font_medium = fonts['medium']
         
+        scroll_indicator_offset = ui_scaler.scale(15) if ui_scaler else 15
         if visible_start > 0:
             up_indicator = "↑"
             up_surface = font_medium.render(up_indicator, True, config_module.Theme.ACCENT)
-            up_rect = up_surface.get_rect(center=(screen_width // 2, content_y - 15))
+            up_rect = up_surface.get_rect(center=(screen_width // 2, content_y - scroll_indicator_offset))
             screen.blit(up_surface, up_rect)
         
         if visible_end < total_items:
             down_indicator = "↓"
             down_surface = font_medium.render(down_indicator, True, config_module.Theme.ACCENT)
-            down_rect = down_surface.get_rect(center=(screen_width // 2, y_offset + 10))
+            down_rect = down_surface.get_rect(center=(screen_width // 2, y_offset + ui_scaler.scale(10) if ui_scaler else 10))
             screen.blit(down_surface, down_rect)
     
-    # Draw ambient tricorder effects
-    _draw_list_ambient_effects(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module)
+    # Draw ambient tricorder effects (pass ui_scaler for consistent scaling)
+    _draw_list_ambient_effects(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module, ui_scaler)
     
     # === FOOTER === (Optional footer - only show if footer_hint is provided)
     if footer_hint is not None:
         if not footer_hint:
-            # Generate default footer hint
-            key_prev = pygame.key.name(config_module.KEY_PREV).upper()
-            key_next = pygame.key.name(config_module.KEY_NEXT).upper()
-            key_select = pygame.key.name(config_module.KEY_SELECT).upper()
-            footer_hint = f"< {key_prev}=Up | {key_next}=Down | {key_select}=Select >"
+            # OS-adaptive: Pi = Left/Right/Middle, dev = A/D/Enter
+            labels = config_module.get_control_labels()
+            footer_hint = f"< {labels['prev']}=Up | {labels['next']}=Down | {labels['select']}=Select >"
         
         render_footer(
             screen, footer_hint, fonts,
             config_module.Theme.FOREGROUND,
-            screen_width, screen_height
+            screen_width, screen_height,
+            ui_scaler=ui_scaler
         )
     
     return {
@@ -218,58 +220,56 @@ def _draw_animated_header(screen, title, font, header_rect, current_time, config
 
 
 
-def _draw_list_ambient_effects(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module):
-    """Draw ambient tricorder effects around the list menu."""
-    # Only draw if we have enough space
-    if screen_width < 300 or screen_height < 200:
+def _draw_list_ambient_effects(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module, ui_scaler=None):
+    """Draw ambient tricorder effects around the list menu. Uses ui_scaler for sizes when available."""
+    min_w = ui_scaler.scale(300) if ui_scaler else 300
+    min_h = ui_scaler.scale(200) if ui_scaler else 200
+    if screen_width < min_w or screen_height < min_h:
         return
-    
-    # Corner status indicators
-    _draw_corner_status_dots(screen, screen_width, screen_height, current_time, config_module)
-    
-    # Side data streams
-    if screen_width > 400:
-        _draw_side_data_streams(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module)
-    
-    # Bottom status bar
-    _draw_bottom_status_line(screen, screen_width, screen_height, current_time, config_module)
+    margin = ui_scaler.margin("small") if ui_scaler else 15
+    _draw_corner_status_dots(screen, screen_width, screen_height, current_time, config_module, ui_scaler, margin)
+    side_stream_breakpoint = ui_scaler.scale(400) if ui_scaler else 400
+    if screen_width > side_stream_breakpoint:
+        _draw_side_data_streams(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module, ui_scaler)
+    _draw_bottom_status_line(screen, screen_width, screen_height, current_time, config_module, ui_scaler)
 
-def _draw_corner_status_dots(screen, screen_width, screen_height, current_time, config_module):
+def _draw_corner_status_dots(screen, screen_width, screen_height, current_time, config_module, ui_scaler=None, margin=15):
     """Draw pulsing status dots in corners."""
+    if ui_scaler:
+        margin = ui_scaler.margin("small")
+    dot_radius = ui_scaler.scale(6) if ui_scaler else 6
     dot_positions = [
-        (15, 15),  # Top left
-        (screen_width - 15, 15),  # Top right
-        (15, screen_height - 15),  # Bottom left
-        (screen_width - 15, screen_height - 15)  # Bottom right
+        (margin, margin),
+        (screen_width - margin, margin),
+        (margin, screen_height - margin),
+        (screen_width - margin, screen_height - margin)
     ]
-    
     colors = [
         config_module.Palette.GREEN,
         config_module.Palette.ENGINEERING_GOLD,
         config_module.Theme.ACCENT,
         config_module.Palette.VIKING_BLUE
     ]
-    
     for i, (pos, color) in enumerate(zip(dot_positions, colors)):
         pulse_offset = i * 0.8
         pulse_alpha = 0.4 + 0.6 * (0.5 + 0.5 * math.sin(current_time * 2.5 + pulse_offset))
         dot_color = tuple(min(255, int(c * pulse_alpha)) for c in color)
-        pygame.draw.circle(screen, dot_color, pos, 6)
+        pygame.draw.circle(screen, dot_color, pos, dot_radius)
 
-def _draw_side_data_streams(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module):
+def _draw_side_data_streams(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module, ui_scaler=None):
     """Draw flowing data streams on the sides."""
-    # Left side stream
-    left_area = pygame.Rect(5, content_y, 20, screen_height - content_y - 50)
-    _draw_vertical_data_stream(screen, left_area, current_time, config_module, "left")
-    
-    # Right side stream
-    right_area = pygame.Rect(screen_width - 25, content_y, 20, screen_height - content_y - 50)
-    _draw_vertical_data_stream(screen, right_area, current_time, config_module, "right")
+    inset = ui_scaler.scale(5) if ui_scaler else 5
+    stream_w = ui_scaler.scale(20) if ui_scaler else 20
+    bottom_inset = ui_scaler.scale(50) if ui_scaler else 50
+    left_area = pygame.Rect(inset, content_y, stream_w, screen_height - content_y - bottom_inset)
+    _draw_vertical_data_stream(screen, left_area, current_time, config_module, "left", ui_scaler)
+    right_area = pygame.Rect(screen_width - inset - stream_w, content_y, stream_w, screen_height - content_y - bottom_inset)
+    _draw_vertical_data_stream(screen, right_area, current_time, config_module, "right", ui_scaler)
 
-def _draw_vertical_data_stream(screen, area, current_time, config_module, side):
+def _draw_vertical_data_stream(screen, area, current_time, config_module, side, ui_scaler=None):
     """Draw vertical flowing data stream."""
     stream_speed = 2.0
-    dot_spacing = 20
+    dot_spacing = ui_scaler.scale(20) if ui_scaler else 20
     
     # Calculate number of dots that fit
     num_dots = max(1, area.height // dot_spacing)
@@ -294,24 +294,23 @@ def _draw_vertical_data_stream(screen, area, current_time, config_module, side):
                 dot_color = (0, int(150 * alpha), int(50 * alpha))
                 pygame.draw.circle(screen, dot_color, (dot_x, dot_y), max(1, size))
 
-def _draw_bottom_status_line(screen, screen_width, screen_height, current_time, config_module):
-    """Draw animated status line at bottom."""
-    line_y = screen_height - 30
-    line_width = screen_width - 40
-    line_x = 20
-    
-    # Draw base status line
+def _draw_bottom_status_line(screen, screen_width, screen_height, current_time, config_module, ui_scaler=None):
+    """Draw animated status line at bottom. Uses ui_scaler for insets when available."""
+    bottom_inset = ui_scaler.scale(30) if ui_scaler else 30
+    side_inset = ui_scaler.margin("medium") if ui_scaler else 20
+    line_y = screen_height - bottom_inset
+    line_width = screen_width - side_inset * 2
+    line_x = side_inset
     base_alpha = 0.3 + 0.2 * (0.5 + 0.5 * math.sin(current_time * 1.0))
     base_color = (0, int(60 * base_alpha), int(20 * base_alpha))
     pygame.draw.line(screen, base_color, (line_x, line_y), (line_x + line_width, line_y), 1)
-    
-    # Animated scanning line
     scan_progress = (current_time * 1.2) % 2.0
     if scan_progress < 1.0:
         scan_x = line_x + int(scan_progress * line_width)
+        scan_half = ui_scaler.scale(10) if ui_scaler else 10
         scan_alpha = 0.6 + 0.4 * (0.5 + 0.5 * math.sin(current_time * 4.0))
         scan_color = (0, int(150 * scan_alpha), int(60 * scan_alpha))
-        pygame.draw.line(screen, scan_color, (scan_x - 10, line_y), (scan_x + 10, line_y), 2)
+        pygame.draw.line(screen, scan_color, (scan_x - scan_half, line_y), (scan_x + scan_half, line_y), 2)
 
 def draw_simple_list_menu(screen, title, menu_items, selected_index, fonts, config_module, footer_hint="", show_footer=False, ui_scaler=None):
     """

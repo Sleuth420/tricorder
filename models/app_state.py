@@ -85,7 +85,8 @@ class AppState:
         self.config = config_module
         self.actual_screen_width = screen_width
         self.actual_screen_height = screen_height
-        
+        self.ui_scaler = None  # Set after display init (main.py) so games/UI can use safe area
+
         # Initialize component managers
         self.state_manager = StateManager(config_module)
         self.input_manager = InputManager(config_module)
@@ -378,12 +379,23 @@ class AppState:
                     
             elif event_type == 'MOUSEUP':
                 button = result.get('button')
-                self.input_manager.handle_mouseup(button)
-                
+                mouseup_event = self.input_manager.handle_mouseup(button)
+
                 if not self.input_manager.secret_combo_start_time:
                     action_name = result.get('action')
                     if action_name:
-                        state_changed_by_action = self._route_action(action_name) or state_changed_by_action
+                        # Mouse left release: if this was a long press, BACK was already handled in update();
+                        # do not also route PREV on release (would cause extra "up one menu item" action).
+                        if (action_name == app_config.INPUT_ACTION_PREV and
+                                button == self.config.MOUSE_LEFT):
+                            press_dur = mouseup_event.get('press_duration')
+                            if (press_dur is not None and
+                                    press_dur >= getattr(self.config, 'INPUT_LONG_PRESS_DURATION', 2.0)):
+                                pass  # skip routing PREV on release after long press
+                            else:
+                                state_changed_by_action = self._route_action(action_name) or state_changed_by_action
+                        else:
+                            state_changed_by_action = self._route_action(action_name) or state_changed_by_action
                 
         return state_changed_by_action
         
@@ -403,7 +415,7 @@ class AppState:
                 return True
 
         if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game:
-            if self.active_pong_game.game_over and key == self.config.KEY_PREV:
+            if self.active_pong_game.game_over and action_name == app_config.INPUT_ACTION_PREV:
                 state_changed = self._quit_pong_to_menu()
             elif action_name:
                 game_result = self.game_manager.handle_pong_input(action_name)
@@ -413,7 +425,7 @@ class AppState:
                     state_changed = True
         
         elif self.current_state == STATE_BREAKOUT_ACTIVE and self.active_breakout_game:
-            if self.active_breakout_game.game_over and key == self.config.KEY_PREV:
+            if self.active_breakout_game.game_over and action_name == app_config.INPUT_ACTION_PREV:
                 state_changed = self._quit_breakout_to_menu()
             elif action_name:
                 game_result = self.game_manager.handle_breakout_input(action_name)
@@ -423,7 +435,7 @@ class AppState:
                     state_changed = True
         
         elif self.current_state == STATE_SNAKE_ACTIVE and self.active_snake_game:
-            if self.active_snake_game.game_over and key == self.config.KEY_PREV:
+            if self.active_snake_game.game_over and action_name == app_config.INPUT_ACTION_PREV:
                 state_changed = self._quit_snake_to_menu()
             elif action_name:
                 game_result = self.game_manager.handle_snake_input(action_name)
@@ -443,6 +455,12 @@ class AppState:
                 if not state_changed or not self.state_manager.previous_state:
                     state_changed = self.state_manager.return_to_menu()
         elif action_name:
+            # PREV release: if this was a long press, BACK was already handled in update();
+            # do not also route PREV on release (would cause extra "up one menu item" action).
+            if action_name == app_config.INPUT_ACTION_PREV:
+                press_dur = key_event.get("press_duration")
+                if press_dur is not None and press_dur >= getattr(self.config, "INPUT_LONG_PRESS_DURATION", 2.0):
+                    return state_changed
             state_changed = self._route_action(action_name)
                 
         return state_changed
@@ -792,16 +810,14 @@ class AppState:
         is_manual_mode = not self.schematics_manager.auto_rotation_mode
         
         if is_manual_mode:
-            # In manual mode, keys control rotation, not navigation
-            if key == self.config.KEY_PREV:
-                # A key released - apply left rotation
+            # In manual mode, PREV/NEXT control rotation (keyboard, joystick, or mouse)
+            if action_name == app_config.INPUT_ACTION_PREV:
                 self.schematics_manager.apply_manual_rotation('LEFT')
-                logger.debug("A key released: Manual rotation LEFT")
+                logger.debug("PREV released: Manual rotation LEFT")
                 return True
-            elif key == self.config.KEY_NEXT:
-                # D key released - apply right rotation
+            elif action_name == app_config.INPUT_ACTION_NEXT:
                 self.schematics_manager.apply_manual_rotation('RIGHT')
-                logger.debug("D key released: Manual rotation RIGHT")
+                logger.debug("NEXT released: Manual rotation RIGHT")
                 return True
             elif action_name == app_config.INPUT_ACTION_SELECT:
                 # Enter key in manual mode - pass through to input router to activate pause menu

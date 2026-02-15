@@ -30,9 +30,12 @@ def draw_system_info_view(screen, app_state, sensor_values, fonts, config_module
         ui_scaler (UIScaler, optional): UI scaling system for responsive design
     """
     screen.fill(config_module.Theme.BACKGROUND)
-    
-    screen_width = screen.get_width()
-    screen_height = screen.get_height()
+    if ui_scaler:
+        screen_width = ui_scaler.screen_width
+        screen_height = ui_scaler.screen_height
+    else:
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
     current_time = time.time()
     
     # Use UIScaler for responsive dimensions if available

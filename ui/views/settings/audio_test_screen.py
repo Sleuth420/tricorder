@@ -107,20 +107,34 @@ def draw_audio_test_screen(screen, app_state, fonts, config_module, ui_scaler=No
     audio_test = app_state.audio_test_screen
     audio_test.update()
     
-    screen_width = screen.get_width()
-    screen_height = screen.get_height()
-    
-    # Clear screen
+    if ui_scaler:
+        screen_width = ui_scaler.screen_width
+        screen_height = ui_scaler.screen_height
+    else:
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
+    title_top = ui_scaler.margin("small") if ui_scaler else 20
+    status_y = ui_scaler.scale(60) if ui_scaler else 60
+    section_y = ui_scaler.scale(100) if ui_scaler else 100
+    freq_y = ui_scaler.scale(130) if ui_scaler else 130
+    bar_inset = ui_scaler.scale(50) if ui_scaler else 50
+    bar_y = ui_scaler.scale(160) if ui_scaler else 160
+    bar_h = ui_scaler.scale(20) if ui_scaler else 20
+    overall_y = ui_scaler.scale(200) if ui_scaler else 200
+    volume_y = ui_scaler.scale(230) if ui_scaler else 230
+    vol_bar_y = ui_scaler.scale(250) if ui_scaler else 250
+    vol_bar_h = ui_scaler.scale(15) if ui_scaler else 15
+    menu_start_y = ui_scaler.scale(300) if ui_scaler else 300
+    option_height = ui_scaler.scale(30) if ui_scaler else 30
+    option_inset = ui_scaler.margin("small") if ui_scaler else 30
+    instruction_bottom = ui_scaler.scale(80) if ui_scaler else 80
+    instruction_line = ui_scaler.scale(20) if ui_scaler else 20
     screen.fill(config_module.Theme.BACKGROUND)
-    
-    # Title
     title_font = fonts['large']
     title_text = "Audio Test Screen"
     title_surface = title_font.render(title_text, True, config_module.Theme.FOREGROUND)
     title_x = (screen_width - title_surface.get_width()) // 2
-    screen.blit(title_surface, (title_x, 20))
-    
-    # Audio status
+    screen.blit(title_surface, (title_x, title_top))
     status_font = fonts['medium']
     if audio_test.is_playing:
         status_text = "🔊 PLAYING"
@@ -128,10 +142,9 @@ def draw_audio_test_screen(screen, app_state, fonts, config_module, ui_scaler=No
     else:
         status_text = "🔇 STOPPED"
         status_color = config_module.Theme.WARNING
-    
     status_surface = status_font.render(status_text, True, status_color)
     status_x = (screen_width - status_surface.get_width()) // 2
-    screen.blit(status_surface, (status_x, 60))
+    screen.blit(status_surface, (status_x, status_y))
     
     # Current section info
     if audio_test.is_playing:
@@ -142,36 +155,22 @@ def draw_audio_test_screen(screen, app_state, fonts, config_module, ui_scaler=No
             section_text = f"Section {audio_test.current_section + 1}: {section_info['name']}"
             section_surface = section_font.render(section_text, True, section_info['color'])
             section_x = (screen_width - section_surface.get_width()) // 2
-            screen.blit(section_surface, (section_x, 100))
-            
-            # Frequency range
+            screen.blit(section_surface, (section_x, section_y))
             freq_text = f"Frequency: {section_info['freq_range']}"
             freq_surface = fonts['small'].render(freq_text, True, config_module.Theme.FOREGROUND)
             freq_x = (screen_width - freq_surface.get_width()) // 2
-            screen.blit(freq_surface, (freq_x, 130))
+            screen.blit(freq_surface, (freq_x, freq_y))
             
-            # Progress bar for current section
             progress = audio_test.get_section_progress()
-            bar_width = screen_width - 100
-            bar_height = 20
-            bar_x = 50
-            bar_y = 160
-            
-            # Background bar
-            pygame.draw.rect(screen, config_module.Palette.DARK_GREY, 
-                           (bar_x, bar_y, bar_width, bar_height))
-            
-            # Progress bar
+            bar_width = screen_width - 2 * bar_inset
+            pygame.draw.rect(screen, config_module.Palette.DARK_GREY, (bar_inset, bar_y, bar_width, bar_h))
             progress_width = int(bar_width * progress)
-            pygame.draw.rect(screen, section_info['color'], 
-                           (bar_x, bar_y, progress_width, bar_height))
-            
-            # Progress text
+            pygame.draw.rect(screen, section_info['color'], (bar_inset, bar_y, progress_width, bar_h))
             progress_text = f"{int(progress * 100)}%"
             progress_surface = fonts['small'].render(progress_text, True, config_module.Theme.WHITE)
-            progress_x = bar_x + (bar_width - progress_surface.get_width()) // 2
-            progress_y = bar_y + (bar_height - progress_surface.get_height()) // 2
-            screen.blit(progress_surface, (progress_x, progress_y))
+            progress_x = bar_inset + (bar_width - progress_surface.get_width()) // 2
+            progress_y_off = bar_y + (bar_h - progress_surface.get_height()) // 2
+            screen.blit(progress_surface, (progress_x, progress_y_off))
     
     # Overall progress
     if audio_test.is_playing:
@@ -179,28 +178,15 @@ def draw_audio_test_screen(screen, app_state, fonts, config_module, ui_scaler=No
         overall_text = f"Overall Progress: {int(overall_progress * 100)}%"
         overall_surface = fonts['small'].render(overall_text, True, config_module.Theme.FOREGROUND)
         overall_x = (screen_width - overall_surface.get_width()) // 2
-        screen.blit(overall_surface, (overall_x, 200))
-    
-    # Volume display
+        screen.blit(overall_surface, (overall_x, overall_y))
     volume_text = f"Volume: {int(audio_test.volume * 100)}%"
     volume_surface = fonts['small'].render(volume_text, True, config_module.Theme.FOREGROUND)
     volume_x = (screen_width - volume_surface.get_width()) // 2
-    screen.blit(volume_surface, (volume_x, 230))
-    
-    # Volume bar
-    vol_bar_width = screen_width - 100
-    vol_bar_height = 15
-    vol_bar_x = 50
-    vol_bar_y = 250
-    
-    # Background volume bar
-    pygame.draw.rect(screen, config_module.Palette.DARK_GREY, 
-                   (vol_bar_x, vol_bar_y, vol_bar_width, vol_bar_height))
-    
-    # Volume level
+    screen.blit(volume_surface, (volume_x, volume_y))
+    vol_bar_width = screen_width - 2 * bar_inset
+    pygame.draw.rect(screen, config_module.Palette.DARK_GREY, (bar_inset, vol_bar_y, vol_bar_width, vol_bar_h))
     vol_width = int(vol_bar_width * audio_test.volume)
-    pygame.draw.rect(screen, config_module.Theme.ACCENT, 
-                   (vol_bar_x, vol_bar_y, vol_width, vol_bar_height))
+    pygame.draw.rect(screen, config_module.Theme.ACCENT, (bar_inset, vol_bar_y, vol_width, vol_bar_h))
     
     # Menu options
     menu_options = [
@@ -210,33 +196,28 @@ def draw_audio_test_screen(screen, app_state, fonts, config_module, ui_scaler=No
         "Back to Settings"
     ]
     
-    # Draw menu options
-    menu_start_y = 300
-    option_height = 30
-    
+    menu_inset = ui_scaler.margin("small") if ui_scaler else 20
     for i, option in enumerate(menu_options):
         y_pos = menu_start_y + i * option_height
         is_selected = (i == audio_test.selected_option)
-        
-        # Highlight selected option
         if is_selected:
-            pygame.draw.rect(screen, config_module.Theme.MENU_SELECTED_BG, 
-                           (20, y_pos - 5, screen_width - 40, option_height))
-        
-        # Option text
+            sel_pad = ui_scaler.scale(5) if ui_scaler else 5
+            pygame.draw.rect(screen, config_module.Theme.MENU_SELECTED_BG,
+                             (menu_inset, y_pos - sel_pad, screen_width - 2 * menu_inset, option_height))
         color = config_module.Theme.MENU_SELECTED_TEXT if is_selected else config_module.Theme.FOREGROUND
         option_surface = fonts['medium'].render(option, True, color)
-        screen.blit(option_surface, (30, y_pos))
+        screen.blit(option_surface, (option_inset, y_pos))
     
-    # Instructions
+    # Instructions (OS-adaptive: Left/Right/Middle on Pi, A/D/Enter on dev)
+    labels = config_module.get_control_labels()
     instructions = [
-        "Use A/D to navigate, Enter to select",
+        f"Use {labels['prev']}/{labels['next']} to navigate, {labels['select']} to select",
         "Test covers 200Hz - 2000Hz frequency range",
         "Listen for clarity across all sections"
     ]
     
-    instruction_y = screen_height - 80
+    instruction_y = screen_height - instruction_bottom
     for i, instruction in enumerate(instructions):
         inst_surface = fonts['small'].render(instruction, True, config_module.Palette.DARK_GREY)
         inst_x = (screen_width - inst_surface.get_width()) // 2
-        screen.blit(inst_surface, (inst_x, instruction_y + i * 20))
+        screen.blit(inst_surface, (inst_x, instruction_y + i * instruction_line))

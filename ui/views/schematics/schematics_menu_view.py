@@ -25,11 +25,8 @@ def draw_schematics_menu_view(screen, app_state, fonts, config_module, ui_scaler
     menu_items = app_state.get_current_menu_items()
     selected_index = app_state.get_current_menu_index()
     
-    # Generate footer hint
-    key_prev = pygame.key.name(config_module.KEY_PREV).upper()
-    key_next = pygame.key.name(config_module.KEY_NEXT).upper()
-    key_select = pygame.key.name(config_module.KEY_SELECT).upper()
-    footer_hint = f"< {key_prev}=Up | {key_next}=Down | {key_select}=Select >"
+    labels = config_module.get_control_labels()
+    footer_hint = f"< {labels['prev']}=Up | {labels['next']}=Down | {labels['select']}=Select >"
     
     # Use the standardized list menu component
     draw_scrollable_list_menu(

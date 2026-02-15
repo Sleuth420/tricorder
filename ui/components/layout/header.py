@@ -54,10 +54,8 @@ class Header:
         Returns:
             pygame.Rect: The header rectangle for layout calculations
         """
-        screen_width = screen.get_width()
-        screen_height = screen.get_height()
-        
-        # Create header rectangle
+        screen_width = self.ui_scaler.screen_width
+        screen_height = self.ui_scaler.screen_height
         header_rect = pygame.Rect(0, self.top_margin, screen_width, self.height)
         
         # Debug logging for header layout

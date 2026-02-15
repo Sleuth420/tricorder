@@ -27,7 +27,9 @@ def draw_wifi_password_entry_view(screen, app_state, fonts, config_module, ui_sc
             # Draw error message
             error_font = fonts.get('medium', fonts.get('default'))
             error_surface = error_font.render("Password Entry Error", True, config_module.Theme.ALERT)
-            error_rect = error_surface.get_rect(center=(screen.get_width()//2, screen.get_height()//2))
+            center_x = ui_scaler.screen_width // 2 if ui_scaler else screen.get_width() // 2
+            center_y = ui_scaler.screen_height // 2 if ui_scaler else screen.get_height() // 2
+            error_rect = error_surface.get_rect(center=(center_x, center_y))
             screen.blit(error_surface, error_rect)
             return
 
@@ -39,14 +41,16 @@ def draw_wifi_password_entry_view(screen, app_state, fonts, config_module, ui_sc
             password_manager.character_selector.set_fonts(fonts)
             password_manager.character_selector._fonts_initialized = True
 
-        # Set UIScaler on character selector UI component directly
-        # (UI concerns handled in UI layer, not in models)
+        # Draw within safe area when ui_scaler has it enabled (align with app UI)
+        if ui_scaler and getattr(ui_scaler, 'safe_area_enabled', False):
+            safe_rect = ui_scaler.get_safe_area_rect()
+            draw_surface = screen.subsurface(safe_rect)
+        else:
+            draw_surface = screen
         if ui_scaler and hasattr(password_manager, 'character_selector') and password_manager.character_selector:
             if hasattr(password_manager.character_selector, 'set_ui_scaler'):
                 password_manager.character_selector.set_ui_scaler(ui_scaler)
-
-        # Use the character selector's draw method which now handles small screen optimization
-        password_manager.draw(screen)
+        password_manager.draw(draw_surface)
         
         logger.debug("WiFi password entry view drawn successfully")
         
@@ -57,5 +61,7 @@ def draw_wifi_password_entry_view(screen, app_state, fonts, config_module, ui_sc
         screen.fill(config_module.Theme.BACKGROUND)
         error_font = fonts.get('medium', fonts.get('default', pygame.font.Font(None, 20)))
         error_surface = error_font.render(f"Display Error: {str(e)[:30]}", True, config_module.Theme.ALERT)
-        error_rect = error_surface.get_rect(center=(screen.get_width()//2, screen.get_height()//2))
+        center_x = ui_scaler.screen_width // 2 if ui_scaler else screen.get_width() // 2
+        center_y = ui_scaler.screen_height // 2 if ui_scaler else screen.get_height() // 2
+        error_rect = error_surface.get_rect(center=(center_x, center_y))
         screen.blit(error_surface, error_rect) 

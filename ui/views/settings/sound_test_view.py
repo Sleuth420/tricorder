@@ -33,7 +33,8 @@ def draw_sound_test_view(screen, app_state, fonts, config_module, ui_scaler=None
         font_medium = fonts['medium']
         err_surf = font_medium.render(error_msg, True, config_module.Theme.ALERT)
         screen.blit(err_surf, (screen_width // 2 - err_surf.get_width() // 2, screen_height // 2))
-        render_footer(screen, "Error - Press Back", fonts, config_module.Theme.FOREGROUND, screen_width, screen_height)
+        labels = config_module.get_control_labels()
+        render_footer(screen, f"Error - Press {labels['back']}", fonts, config_module.Theme.FOREGROUND, screen_width, screen_height)
         return
 
     # Check if we should show the dedicated test screen
@@ -66,6 +67,6 @@ def draw_sound_test_view(screen, app_state, fonts, config_module, ui_scaler=None
         selected_index=current_selection_idx,
         fonts=fonts,
         config_module=config_module,
-        footer_hint="Select to test audio",
+        footer_hint=f"{config_module.get_control_labels()['select']} to test audio",
         ui_scaler=ui_scaler
     )

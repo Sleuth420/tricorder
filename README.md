@@ -229,6 +229,8 @@ python main.py
     * Button 2 (`D`): Short Press = Down (Menus)
     * Button 3 (`Enter`): Short Press = Select/Action
 
+On Raspberry Pi (physical left/middle/right + joystick), in-app footers and the Controls menu show **Left**, **Right**, **Middle**, and **Back (hold Left)** instead of key names. On Windows they show **A**, **D**, **Enter**, and **Back (hold A)**. To force one style everywhere, set `CONTROL_DISPLAY_STYLE` in `config/input.py` to `"buttons"` or `"keys"`.
+
 ## To Do
 
 1. Add GPIO button support for physical buttons
@@ -348,6 +350,15 @@ The app draws a **safe area** (margins) and an optional **rounded-corner mask** 
   - **`SAFE_AREA_ENABLED`** – Set to `False` to disable the safe area and mask entirely (full 320×240 with no blackening).
 
 Typical combo: fix **overscan** first so the Pi output fits the panel, then tweak **safe area** and **corner radius** so the app’s visible area and curve match your hardware.
+
+### UI scaling best practices
+
+When adding or changing UI code, keep layout consistent across resolutions and safe areas:
+
+- **Use `UIScaler` everywhere** – Layout and sizing should go through `utils/ui_scaler.py`: `scale()`, `margin()`, `padding()` for dimensions; `screen_width` / `screen_height` for logical size.
+- **Pass `ui_scaler` into draw paths** – Views and components should receive `ui_scaler` (from `app_state.ui_scaler` or the display layer) and use it instead of raw `screen.get_width()` / `get_height()` or magic numbers.
+- **Prefer content rects** – Use the main content rect (e.g. from the menu layout) or `ui_scaler.get_safe_area_rect()` when drawing into a restricted area so content and games stay inside the safe area.
+- **Avoid raw pixels in views** – Replace hardcoded values (e.g. `80`, `40`, `20`) with `ui_scaler.scale(...)` or `ui_scaler.margin(...)` so the UI scales correctly on different resolutions and on Pi with safe area enabled.
 
 ## Development Workflow
 

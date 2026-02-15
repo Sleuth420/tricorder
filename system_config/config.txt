@@ -9,6 +9,9 @@ disable_fw_kms_setup=1
 
 # --- Global Settings (Applied to ALL Raspberry Pi models) ---
 [all]
+# Skip early rainbow splash for faster boot-to-app
+disable_splash=1
+
 # --- Composite Video (TV Out) Configuration ---
 # General firmware flag
 enable_tvout=1

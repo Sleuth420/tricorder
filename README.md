@@ -277,6 +277,41 @@ The Tricorder application can be configured to start automatically when your Ras
 
 The Tricorder application will now start automatically when the desktop loads.
 
+### Booting faster and (almost) straight to the app
+
+To reduce the time until the app is on screen:
+
+1. **Autologin** – Skip the login screen so the desktop (and then the app) starts without user input.
+   - Run `sudo raspi-config` → **System Options** → **Boot / Auto Login** → choose **Desktop Autologin** (or **Console Autologin** if you later switch to console-only boot).
+   - Reboot to apply.
+
+2. **Disable the early rainbow splash** – Removes the first splash before the boot loader.
+   - Edit the Pi boot config (on the Pi):
+     ```bash
+     sudo nano /boot/firmware/config.txt
+     ```
+     (Use `/boot/config.txt` on older Pi OS if that’s what you have.)
+   - In the `[all]` section (or at the top), add:
+     ```ini
+     disable_splash=1
+     ```
+   - Save and exit.
+
+3. **Shorten or disable the Plymouth splash** – The “Raspberry Pi” graphic during boot is Plymouth. To hide it and see console text (or a black screen) until the app runs:
+   - Edit the kernel command line:
+     ```bash
+     sudo nano /boot/firmware/cmdline.txt
+     ```
+     (Or `/boot/cmdline.txt` on older Pi OS.)
+   - In the single line, **remove** the word `splash` (and optionally add `plymouth.enable=0` to fully disable Plymouth).
+   - Example before: `... quiet splash plymouth.ignore-serial-consoles ...`
+   - Example after: `... quiet plymouth.enable=0 plymouth.ignore-serial-consoles ...`
+   - Save (keep the rest of the line unchanged) and reboot.
+
+4. **Keep Wayfire autostart** – The app is started by the `[autostart]` entry in `~/.config/wayfire/wayfire.ini` (see above). With autologin, the sequence is: boot → (optional splash) → desktop → Tricorder starts automatically.
+
+Result: the Pi boots, optionally shows a short or no splash, logs in automatically, loads the desktop, and then starts the Tricorder app. For a true “console-only” boot (no desktop, app on framebuffer) you’d need a custom setup (e.g. start only the app in a minimal X session); the steps above are the standard way to get “boot and go straight to the app” with the desktop still available in the background.
+
 **To disable autostart:**
 Edit the wayfire.ini file and remove or comment out the tricorder line:
 ```ini

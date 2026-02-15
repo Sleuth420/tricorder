@@ -26,8 +26,8 @@ def draw_graph(screen, history, rect, color, min_val=None, max_val=None, sensor_
     """
     if not config_module:
         logger.error(f"Graph for '{sensor_name}' cannot be drawn: config_module is mandatory but was not provided.")
-        # Optionally, draw an error message on the graph rect
-        font = pygame.font.Font(None, 20)
+        # Draw error with default size (config not available in this path)
+        font = pygame.font.Font(None, 24)
         err_surf = font.render("Graph Config Error", True, (255,0,0))
         screen.blit(err_surf, err_surf.get_rect(center=rect.center))
         return

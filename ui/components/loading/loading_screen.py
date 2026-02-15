@@ -53,11 +53,11 @@ class LoadingScreen:
             # Detail text positioning
             self.detail_y = self.bar_y + self.bar_height + self.ui_scaler.margin("medium")
             
-            # Responsive font sizes
-            self.title_font_size = self.ui_scaler.scale(24)
-            self.status_font_size = self.ui_scaler.scale(18)
-            self.percent_font_size = self.ui_scaler.scale(20)
-            self.detail_font_size = self.ui_scaler.scale(14)
+            # Responsive font sizes from config (single source of truth)
+            self.title_font_size = self.ui_scaler.scale(getattr(self.config, 'FONT_SIZE_LARGE', 30))
+            self.status_font_size = self.ui_scaler.scale(getattr(self.config, 'FONT_SIZE_MEDIUM', 24))
+            self.percent_font_size = self.ui_scaler.scale(getattr(self.config, 'FONT_SIZE_MEDIUM', 24))
+            self.detail_font_size = self.ui_scaler.scale(getattr(self.config, 'FONT_SIZE_SMALL', 20))
             
             # Debug logging for loading screen layout
             if self.ui_scaler.debug_mode:
@@ -74,10 +74,13 @@ class LoadingScreen:
             self.bar_x = margin
             self.bar_y = max(60, int(110 * scale))
             self.detail_y = self.bar_y + self.bar_height + margin
-            self.title_font_size = max(12, int(24 * scale))
-            self.status_font_size = max(10, int(18 * scale))
-            self.percent_font_size = max(12, int(20 * scale))
-            self.detail_font_size = max(10, int(14 * scale))
+            large = getattr(self.config, 'FONT_SIZE_LARGE', 30)
+            medium = getattr(self.config, 'FONT_SIZE_MEDIUM', 24)
+            small = getattr(self.config, 'FONT_SIZE_SMALL', 20)
+            self.title_font_size = max(12, int(large * scale))
+            self.status_font_size = max(10, int(medium * scale))
+            self.percent_font_size = max(12, int(medium * scale))
+            self.detail_font_size = max(10, int(small * scale))
     
     def update_progress(self, progress: float, status: str = None, detail: str = None):
         """

@@ -789,15 +789,21 @@ class SchematicsManager:
             if not screen:
                 return
             
-            # Create simple fallback fonts if needed
+            # Create fallback fonts from config (single source of truth)
             try:
+                from config import FONT_SIZE_LARGE, FONT_SIZE_MEDIUM, FONT_SIZE_SMALL, FONT_PRIMARY_PATH
+                path = FONT_PRIMARY_PATH
+                def _font(sz):
+                    try:
+                        return pygame.font.Font(path, sz) if path else pygame.font.Font(None, sz)
+                    except Exception:
+                        return pygame.font.Font(None, sz)
                 fonts = {
-                    'large': pygame.font.Font(None, 24),
-                    'medium': pygame.font.Font(None, 20), 
-                    'small': pygame.font.Font(None, 16)
+                    'large': _font(FONT_SIZE_LARGE),
+                    'medium': _font(FONT_SIZE_MEDIUM),
+                    'small': _font(FONT_SIZE_SMALL)
                 }
-            except:
-                # If font creation fails, skip the refresh
+            except Exception:
                 return
             
             # Clear screen and draw loading screen directly

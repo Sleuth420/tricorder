@@ -52,34 +52,44 @@ class CharacterSelector:
         self._calculate_layout()
 
     def _setup_fonts(self, fonts):
-        """Setup fonts with responsive sizing."""
+        """Setup fonts with responsive sizing; all sizes from config."""
+        cfg = self.config
+        small_pt = getattr(cfg, 'FONT_SIZE_SMALL', 20)
+        medium_pt = getattr(cfg, 'FONT_SIZE_MEDIUM', 24)
+        font_path = getattr(cfg, 'FONT_PRIMARY_PATH', None)
+        def _font(size):
+            if font_path:
+                try:
+                    return pygame.font.Font(font_path, size)
+                except Exception:
+                    pass
+            return pygame.font.Font(None, size)
         try:
             if self.ui_scaler:
-                # Use UIScaler for responsive font sizing
-                char_font_size = self.ui_scaler.scale(16)
-                title_font_size = self.ui_scaler.scale(20)
-                footer_font_size = self.ui_scaler.scale(14)
-                
-                self.char_font = pygame.font.Font(None, char_font_size)
-                self.title_font = pygame.font.Font(None, title_font_size)
-                self.footer_font = pygame.font.Font(None, footer_font_size)
-                
+                char_font_size = self.ui_scaler.scale(small_pt)
+                title_font_size = self.ui_scaler.scale(medium_pt)
+                footer_font_size = self.ui_scaler.scale(small_pt)
+                self.char_font = _font(char_font_size)
+                self.title_font = _font(title_font_size)
+                self.footer_font = _font(footer_font_size)
                 if self.ui_scaler.debug_mode:
                     logger.info(f"🎨 CharacterSelector: responsive fonts - char={char_font_size}px, title={title_font_size}px, footer={footer_font_size}px")
             else:
-                # Fallback to original font selection
-                self.char_font = fonts.get('small', pygame.font.Font(None, 16)) if fonts else pygame.font.Font(None, 16)
-                self.title_font = fonts.get('medium', pygame.font.Font(None, 20)) if fonts else pygame.font.Font(None, 20)
-                self.footer_font = fonts.get('small', pygame.font.Font(None, 14)) if fonts else pygame.font.Font(None, 14)
-            
+                if fonts:
+                    self.char_font = fonts.get('small', _font(small_pt))
+                    self.title_font = fonts.get('medium', _font(medium_pt))
+                    self.footer_font = fonts.get('small', _font(small_pt))
+                else:
+                    self.char_font = _font(small_pt)
+                    self.title_font = _font(medium_pt)
+                    self.footer_font = _font(small_pt)
             self.fonts = fonts
             logger.info("Character selector fonts loaded")
-                
         except Exception as e:
-            logger.warning(f"Error setting up fonts, using pygame defaults: {e}")
-            self.char_font = pygame.font.Font(None, 16)
-            self.title_font = pygame.font.Font(None, 20)
-            self.footer_font = pygame.font.Font(None, 14)
+            logger.warning(f"Error setting up fonts, using config sizes: {e}")
+            self.char_font = _font(small_pt)
+            self.title_font = _font(medium_pt)
+            self.footer_font = _font(small_pt)
             self.fonts = None
         
         # Test font rendering
@@ -328,10 +338,15 @@ class CharacterSelector:
                             if test_surface.get_width() > cell_rect.width - 4:
                                 # Use a smaller font for long action names with responsive sizing
                                 base_font_height = self.char_font.get_height()
-                                small_font_size = max(8, int(base_font_height * 0.7))
+                                tiny_pt = getattr(self.config, 'FONT_SIZE_TINY', 14)
+                                small_font_size = max(tiny_pt, int(base_font_height * 0.7))
                                 if self.ui_scaler:
-                                    small_font_size = max(self.ui_scaler.scale(8), small_font_size)
-                                font_to_use = pygame.font.Font(None, small_font_size)
+                                    small_font_size = max(self.ui_scaler.scale(tiny_pt), small_font_size)
+                                path = getattr(self.config, 'FONT_PRIMARY_PATH', None)
+                                try:
+                                    font_to_use = pygame.font.Font(path, small_font_size) if path else pygame.font.Font(None, small_font_size)
+                                except Exception:
+                                    font_to_use = pygame.font.Font(None, small_font_size)
                             
                         char_surface = font_to_use.render(display_char, True, text_color)
                         char_rect = char_surface.get_rect(center=cell_rect.center)

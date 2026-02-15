@@ -7,8 +7,8 @@ FONT_PRIMARY_PATH = "assets/fonts/Minecraftia-Regular.ttf"
 # FONT_PRIMARY_PATH = "assets/fonts/Finalnew.ttf"
 FONT_SIZE_LARGE = 30
 FONT_SIZE_MEDIUM = 24  # Reduced from 26 for better layout fit
-FONT_SIZE_SMALL = 18
-FONT_SIZE_TINY = 12    # For debug overlay on small screens
+FONT_SIZE_SMALL = 20   # Legible on small screens (was 18); used for commits behind, version, etc.
+FONT_SIZE_TINY = 14    # Legible on small screens (was 12); used for hints, debug overlay
 
 # -- UI Layout Constants --
 MAX_SIDEBAR_WIDTH = 150

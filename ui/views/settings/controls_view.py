@@ -140,7 +140,7 @@ def draw_controls_view(screen, app_state, fonts, config_module, ui_scaler=None):
                     rect.width - (selection_padding * 2),
                     item_height - sel_height_inset
                 )
-                border_r = ui_scaler.scale(8) if ui_scaler else 8
+                border_r = ui_scaler.scale(config_module.Theme.CORNER_CURVE_RADIUS) if ui_scaler else config_module.Theme.CORNER_CURVE_RADIUS
                 pygame.draw.rect(screen, bg_color_selected, selection_bg_rect, border_radius=border_r)
             
             # Render control text with responsive alignment and padding

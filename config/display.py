@@ -48,7 +48,9 @@ SAFE_AREA_LEFT = 28                # Pixels at left so menu text clears the beze
 SAFE_AREA_RIGHT = 28               # Pixels at right so content clears the bezel
 
 # Corner radius for the visible rounded-rect mask (0 = rectangular, no curve)
-SAFE_AREA_CORNER_RADIUS = 12       # Pixels - match your cover's curve; tune if curve looks wrong
+# Sourced from theme so one value controls all UI and mask curvature app-wide
+from config.colors import Theme
+SAFE_AREA_CORNER_RADIUS = Theme.CORNER_CURVE_RADIUS
 
 # Alternative: Percentage-based safe areas (overrides pixel values if > 0)
 SAFE_AREA_TOP_PERCENT = 0          # 0 = use pixel value, >0 = percentage of screen height

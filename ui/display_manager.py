@@ -428,9 +428,9 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
             mask_surface = pygame.Surface((current_ui_scaler.screen_width, current_ui_scaler.screen_height), pygame.SRCALPHA)
             mask_surface.fill((0, 0, 0, 0))  # Transparent
 
-            # Draw rounded rectangle in white (visible area); radius from config to match your screen/cover
+            # Draw rounded rectangle in white (visible area); use theme radius app-wide
             safe_rect = current_ui_scaler.get_safe_area_rect()
-            corner_radius = getattr(config_module, 'SAFE_AREA_CORNER_RADIUS', 12)
+            corner_radius = getattr(config_module.Theme, 'CORNER_CURVE_RADIUS', 8)
             pygame.draw.rect(mask_surface, (255, 255, 255, 255), safe_rect, border_radius=corner_radius)
 
             # Apply the mask to clip content to rounded corners

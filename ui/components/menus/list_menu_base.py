@@ -148,7 +148,7 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
             # Draw border for unselected button items with subtle animation
             border_alpha = 0.6 + 0.2 * (0.5 + 0.5 * math.sin(current_time * 0.8 + i * 0.3))
             border_color = tuple(min(255, int(c * border_alpha)) for c in config_module.Theme.GRAPH_BORDER)
-            pygame.draw.rect(screen, border_color, item_rect, 2, border_radius=5)
+            pygame.draw.rect(screen, border_color, item_rect, 2, border_radius=config_module.Theme.CORNER_CURVE_RADIUS)
         
         # Render item text with strong breathing effect for selected item
         if is_selected:

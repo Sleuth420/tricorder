@@ -96,10 +96,10 @@ def _draw_pause_menu(screen, app_state, fonts, config_module, ui_scaler=None):
         if i == current_selection_idx:
             text_color = config_module.Theme.MENU_SELECTED_TEXT
             bg_color_selected = config_module.Theme.MENU_SELECTED_BG
-            pygame.draw.rect(screen, bg_color_selected, item_display_rect, border_radius=5)
+            pygame.draw.rect(screen, bg_color_selected, item_display_rect, border_radius=config_module.Theme.CORNER_CURVE_RADIUS)
         else:
             # Draw a border for unselected items to make them look like buttons
-            pygame.draw.rect(screen, config_module.Theme.GRAPH_BORDER, item_display_rect, 2, border_radius=5)
+            pygame.draw.rect(screen, config_module.Theme.GRAPH_BORDER, item_display_rect, 2, border_radius=config_module.Theme.CORNER_CURVE_RADIUS)
 
         option_surface = font_medium.render(option_text, True, text_color)
         option_rect = option_surface.get_rect(center=item_display_rect.center)

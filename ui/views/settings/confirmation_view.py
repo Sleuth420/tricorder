@@ -88,7 +88,7 @@ def draw_confirmation_view(screen, app_state, fonts, config_module, message="Are
             pygame.draw.polygon(screen, config_module.Theme.ACCENT, arrow_points)
         else:
             # Draw subtle border for unselected items
-            pygame.draw.rect(screen, config_module.Theme.GRAPH_BORDER, item_rect, 1, border_radius=5)
+            pygame.draw.rect(screen, config_module.Theme.GRAPH_BORDER, item_rect, 1, border_radius=config_module.Theme.CORNER_CURVE_RADIUS)
 
         # Render option text - centered like our list menus
         option_surface = font_medium.render(option_text, True, text_color)

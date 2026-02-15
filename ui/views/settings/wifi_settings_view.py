@@ -120,7 +120,7 @@ def draw_wifi_networks_view(screen, app_state, fonts, config_module, ui_scaler=N
     
     # Responsive list background
     list_bg_rect = pygame.Rect(list_margin, content_start_y - 8, screen_width - sidebar_space - list_margin, (max_visible * item_height) + 16)
-    pygame.draw.rect(screen, (15, 15, 15), list_bg_rect, border_radius=5)
+    pygame.draw.rect(screen, (15, 15, 15), list_bg_rect, border_radius=config_module.Theme.CORNER_CURVE_RADIUS)
     
     # Draw networks with responsive spacing
     for i in range(max_visible):
@@ -134,7 +134,7 @@ def draw_wifi_networks_view(screen, app_state, fonts, config_module, ui_scaler=N
         # Highlight selected item
         if net_index == selected_index:
             highlight_rect = pygame.Rect(list_margin + 3, y_pos - 3, screen_width - sidebar_space - list_margin - 6, item_height - 6)
-            pygame.draw.rect(screen, config_module.Theme.MENU_SELECTED_BG, highlight_rect, border_radius=4)
+            pygame.draw.rect(screen, config_module.Theme.MENU_SELECTED_BG, highlight_rect, border_radius=config_module.Theme.CORNER_CURVE_RADIUS)
             text_color = config_module.Theme.MENU_SELECTED_TEXT
         else:
             text_color = config_module.Theme.FOREGROUND
@@ -166,7 +166,7 @@ def draw_wifi_networks_view(screen, app_state, fonts, config_module, ui_scaler=N
         
         # Background bar
         bar_bg_rect = pygame.Rect(bar_x, bar_y, bar_width, bar_height)
-        pygame.draw.rect(screen, (30, 30, 30), bar_bg_rect, border_radius=2)
+        pygame.draw.rect(screen, (30, 30, 30), bar_bg_rect, border_radius=config_module.Theme.CORNER_CURVE_RADIUS)
         
         # Signal strength fill
         fill_width = int((signal / 100.0) * bar_width)
@@ -179,13 +179,13 @@ def draw_wifi_networks_view(screen, app_state, fonts, config_module, ui_scaler=N
                 bar_color = (255, 165, 0)  # Orange for medium
             else:
                 bar_color = (255, 100, 100)  # Red for weak
-            pygame.draw.rect(screen, bar_color, fill_rect, border_radius=2)
+            pygame.draw.rect(screen, bar_color, fill_rect, border_radius=config_module.Theme.CORNER_CURVE_RADIUS)
     
     # Responsive scroll indicators
     if len(networks) > max_visible:
         # Responsive scroll area background
         scroll_bg_rect = pygame.Rect(screen_width - sidebar_space + 10, content_start_y - 8, sidebar_space - 20, (max_visible * item_height) + 16)
-        pygame.draw.rect(screen, config_module.Theme.MENU_SELECTED_BG, scroll_bg_rect, border_radius=5)
+        pygame.draw.rect(screen, config_module.Theme.MENU_SELECTED_BG, scroll_bg_rect, border_radius=config_module.Theme.CORNER_CURVE_RADIUS)
         
         # Up arrow if we can scroll up
         if scroll_offset > 0:

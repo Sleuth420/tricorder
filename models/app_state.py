@@ -94,6 +94,9 @@ class AppState:
         # Update status tracking
         self.update_available = False
         self.commits_behind = 0
+        # Location and public IP (fetched once on boot when WiFi connected)
+        self.location_from_ip = None
+        self.public_ip = None
         
         # Schematics selection data for 3D viewer
         self.selected_schematics_data = None  # Data from schematics menu selection

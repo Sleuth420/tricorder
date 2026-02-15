@@ -219,148 +219,187 @@ def _draw_main_menu_content(screen, main_content_rect, sensor_values, fonts, con
         _draw_tricorder_scanning_effect(screen, main_content_rect, logo_rect, current_time, config_module, ui_scaler)
         _draw_data_stream_animation(screen, main_content_rect, current_time, config_module, ui_scaler)
         _draw_corner_status_indicators(screen, main_content_rect, current_time, config_module, ui_scaler)
+        _draw_floating_data_particles(screen, main_content_rect, logo_rect, current_time, config_module, ui_scaler)
+        _draw_subtle_grid_drift(screen, main_content_rect, current_time, config_module, ui_scaler)
+    
+def _draw_floating_data_particles(screen, main_content_rect, logo_rect, current_time, config_module, ui_scaler):
+    """
+    Draw slow-drifting data particles in the main content area (around logo/stardate area).
+    """
+    if main_content_rect.width < 200 or main_content_rect.height < 150:
+        return
+    margin = ui_scaler.margin("small")
+    dot_size = 1
+    num_particles = 12
+    speed = 0.03
+    for i in range(num_particles):
+        seed = (i * 1.618) % 1.0  # golden ratio spread
+        # Horizontal drift with vertical wave
+        x_phase = (current_time * speed + seed * 6.28) % 6.28
+        y_phase = (current_time * 0.02 + i * 0.7) % 6.28
+        x = main_content_rect.left + margin + (main_content_rect.width - 2 * margin) * (0.5 + 0.4 * pygame.math.Vector2(1, 0).rotate(x_phase * 57.3).x)
+        y = main_content_rect.top + margin + (main_content_rect.height - 2 * margin) * (0.5 + 0.45 * pygame.math.Vector2(1, 0).rotate(y_phase * 57.3).x)
+        # Skip if too close to logo center to avoid clutter
+        if logo_rect.collidepoint(x, y):
+            continue
+        alpha = 0.3 + 0.2 * (0.5 + 0.5 * pygame.math.Vector2(1, 0).rotate((current_time + i) * 0.5).x)
+        color = (0, int(70 * alpha), int(25 * alpha))
+        pygame.draw.circle(screen, color, (int(x), int(y)), dot_size)
+
+
+def _draw_subtle_grid_drift(screen, main_content_rect, current_time, config_module, ui_scaler):
+    """
+    Draw very subtle horizontal scan lines that drift slowly (sensor grid feel).
+    """
+    if main_content_rect.height < 80:
+        return
+    line_spacing = ui_scaler.scale(24) if ui_scaler else 24
+    drift = int((current_time * 8) % line_spacing) - line_spacing // 2
+    y_start = main_content_rect.top + drift
+    dim = (0, 35, 12)
+    while y_start < main_content_rect.bottom:
+        if y_start >= main_content_rect.top:
+            pygame.draw.line(
+                screen, dim,
+                (main_content_rect.left, y_start),
+                (main_content_rect.right, y_start),
+                1
+            )
+        y_start += line_spacing
     
 def _draw_tricorder_scanning_effect(screen, main_content_rect, logo_rect, current_time, config_module, ui_scaler):
     """
-    Draw subtle tricorder-style scanning lines animation.
-    
-    Args:
-        screen (pygame.Surface): The surface to draw on
-        main_content_rect (pygame.Rect): Rectangle for main content area
-        logo_rect (pygame.Rect): Rectangle of the logo
-        current_time (float): Current time for animation
-        config_module (module): Configuration module
-        ui_scaler (UIScaler): UI scaling system for responsive design
+    Draw tricorder-style scanning lines animation (growing/shrinking bars below logo).
     """
-    # Animation parameters
-    scan_speed = 2.0  # Speed of scanning animation
-    scan_height = 2   # Height of scanning lines
-    scan_spacing = 20 # Spacing between scan lines
-    
-    # Calculate scanning area below logo
+    scan_speed = 2.2
+    scan_height = max(2, ui_scaler.scale(2) if ui_scaler else 2)
+    scan_spacing = max(12, (ui_scaler.scale(14) if ui_scaler else 14))
     scan_area_top = logo_rect.bottom + ui_scaler.margin("medium")
     scan_area_bottom = main_content_rect.bottom - ui_scaler.margin("large")
     scan_area_height = scan_area_bottom - scan_area_top
-    
-    if scan_area_height > 40:  # Only draw if we have enough space
-        # Calculate number of scan lines that fit
-        num_lines = max(1, scan_area_height // scan_spacing)
-        
+
+    if scan_area_height > 30:
+        num_lines = max(2, scan_area_height // scan_spacing)
+        max_width = main_content_rect.width * 0.75
+        primary = (0, 140, 45)
+        secondary = (0, 90, 28)
+
         for i in range(num_lines):
-            # Stagger the animation timing for each line
-            line_offset = i * 0.3
+            line_offset = i * 0.25
             line_progress = (current_time * scan_speed + line_offset) % 4.0
-            
-            # Only draw line during certain phases of the animation
-            if line_progress < 2.0:  # Line is "active" for half the cycle
-                line_y = scan_area_top + (i * scan_spacing)
-                
-                # Calculate line width and position for scanning effect
-                max_width = main_content_rect.width * 0.6
-                if line_progress < 1.0:
-                    # Growing phase
-                    line_width = int(max_width * line_progress)
-                else:
-                    # Shrinking phase
-                    line_width = int(max_width * (2.0 - line_progress))
-                
-                if line_width > 4:  # Only draw if line is visible
-                    line_x = main_content_rect.centerx - line_width // 2
-                    line_rect = pygame.Rect(line_x, line_y, line_width, scan_height)
-                    
-                    # Use a dim green color for subtle effect
-                    scan_color = (0, 100, 30)  # Dim green
-                    pygame.draw.rect(screen, scan_color, line_rect)
+            if line_progress >= 2.0:
+                continue
+            line_y = scan_area_top + (i * scan_spacing)
+            if line_progress < 1.0:
+                line_width = int(max_width * line_progress)
+            else:
+                line_width = int(max_width * (2.0 - line_progress))
+            if line_width < 6:
+                continue
+            line_x = main_content_rect.centerx - line_width // 2
+            line_rect = pygame.Rect(line_x, line_y, line_width, scan_height)
+            scan_color = secondary if i % 2 else primary
+            pygame.draw.rect(screen, scan_color, line_rect)
+            # Slight highlight on top edge for depth
+            highlight = (min(255, scan_color[0] + 40), min(255, scan_color[1] + 30), min(255, scan_color[2] + 15))
+            pygame.draw.line(screen, highlight, (line_rect.left, line_rect.top), (line_rect.right, line_rect.top), 1)
 
 def _draw_data_stream_animation(screen, main_content_rect, current_time, config_module, ui_scaler):
     """
-    Draw subtle data stream animation in corners - like tricorder data processing.
-    
-    Args:
-        screen (pygame.Surface): The surface to draw on
-        main_content_rect (pygame.Rect): Rectangle for main content area
-        current_time (float): Current time for animation
-        config_module (module): Configuration module
-        ui_scaler (UIScaler): UI scaling system for responsive design
+    Draw data stream animations in corners - multiple streams, more visible dots.
     """
-    # Only draw if we have enough space
     if main_content_rect.width < 200 or main_content_rect.height < 150:
         return
-    
-    # Animation parameters
-    stream_speed = 3.0
-    dot_size = 2
-    stream_length = 8
-    
-    # Top-right corner data stream
+
+    stream_speed = 3.5
+    dot_size = max(2, ui_scaler.scale(2) if ui_scaler else 2)
+    stream_length = 14
     corner_margin = ui_scaler.margin("small")
-    start_x = main_content_rect.right - corner_margin - 60
-    start_y = main_content_rect.top + corner_margin
-    
-    for i in range(stream_length):
-        # Calculate position with flowing animation
-        flow_offset = (current_time * stream_speed + i * 0.5) % 6.0
-        
-        if flow_offset < 3.0:  # Dot is visible during first half of cycle
-            dot_x = start_x + int(flow_offset * 8)
-            dot_y = start_y + (i * 4)
-            
-            # Fade in/out effect
+    step_x = 10
+    step_y = 5
+
+    def draw_stream(origin_x, origin_y, dx, dy, reverse=False):
+        for i in range(stream_length):
+            flow_offset = (current_time * stream_speed + i * 0.4 + (0.5 if reverse else 0)) % 6.0
+            if flow_offset >= 3.0:
+                continue
+            dot_x = origin_x + int(flow_offset * step_x) * (1 if dx > 0 else -1)
+            dot_y = origin_y + (i * step_y) * (1 if dy > 0 else -1)
             if flow_offset < 1.0:
                 alpha_factor = flow_offset
             elif flow_offset > 2.0:
                 alpha_factor = 3.0 - flow_offset
             else:
                 alpha_factor = 1.0
-            
-            # Dim green dots
-            dot_color = (0, int(80 * alpha_factor), int(20 * alpha_factor))
-            if dot_color[1] > 10:  # Only draw if visible
+            dot_color = (0, int(110 * alpha_factor), int(35 * alpha_factor))
+            if dot_color[1] > 15:
                 pygame.draw.circle(screen, dot_color, (dot_x, dot_y), dot_size)
+
+    # Top-right stream (flows right and down)
+    draw_stream(
+        main_content_rect.right - corner_margin - 80,
+        main_content_rect.top + corner_margin,
+        1, 1
+    )
+    # Top-left stream (flows left and down), reversed phase
+    draw_stream(
+        main_content_rect.left + corner_margin + 50,
+        main_content_rect.top + corner_margin,
+        -1, 1, reverse=True
+    )
+    # Bottom-right short stream
+    draw_stream(
+        main_content_rect.right - corner_margin - 45,
+        main_content_rect.bottom - corner_margin - 40,
+        1, -1, reverse=True
+    )
 
 def _draw_corner_status_indicators(screen, main_content_rect, current_time, config_module, ui_scaler):
     """
-    Draw subtle pulsing status indicators in corners - like system status lights.
-    
-    Args:
-        screen (pygame.Surface): The surface to draw on
-        main_content_rect (pygame.Rect): Rectangle for main content area
-        current_time (float): Current time for animation
-        config_module (module): Configuration module
-        ui_scaler (UIScaler): UI scaling system for responsive design
+    Draw pulsing status indicators in all four corners - multiple lights per corner.
     """
-    # Only draw if we have enough space
     if main_content_rect.width < 150 or main_content_rect.height < 100:
         return
-    
+
     corner_margin = ui_scaler.margin("small")
-    indicator_size = 4
-    
-    # Bottom-left status indicator (slow pulse)
-    pulse_1 = (current_time * 0.8) % 2.0
-    if pulse_1 < 1.0:
-        pulse_alpha_1 = pulse_1
-    else:
-        pulse_alpha_1 = 2.0 - pulse_1
-    
-    indicator_1_pos = (main_content_rect.left + corner_margin, 
-                      main_content_rect.bottom - corner_margin - indicator_size)
-    indicator_1_color = (0, int(120 * pulse_alpha_1), int(40 * pulse_alpha_1))
-    if indicator_1_color[1] > 20:
-        pygame.draw.circle(screen, indicator_1_color, indicator_1_pos, indicator_size)
-    
-    # Bottom-right status indicator (faster pulse, offset timing)
-    pulse_2 = (current_time * 1.2 + 1.0) % 2.0
-    if pulse_2 < 1.0:
-        pulse_alpha_2 = pulse_2
-    else:
-        pulse_alpha_2 = 2.0 - pulse_2
-    
-    indicator_2_pos = (main_content_rect.right - corner_margin - indicator_size, 
-                      main_content_rect.bottom - corner_margin - indicator_size)
-    indicator_2_color = (int(100 * pulse_alpha_2), int(100 * pulse_alpha_2), 0)  # Amber
-    if indicator_2_color[0] > 20:
-        pygame.draw.circle(screen, indicator_2_color, indicator_2_pos, indicator_size)
+    indicator_size = max(4, ui_scaler.scale(4) if ui_scaler else 4)
+    gap = 8
+
+    def pulse_alpha(t_offset, rate=0.8):
+        p = (current_time * rate + t_offset) % 2.0
+        return p if p < 1.0 else 2.0 - p
+
+    # Bottom-left: 3 green status lights in a short row
+    base_x = main_content_rect.left + corner_margin
+    base_y = main_content_rect.bottom - corner_margin - indicator_size
+    for k in range(3):
+        a = pulse_alpha(k * 0.35)
+        c = (0, int(140 * a), int(50 * a))
+        if c[1] > 25:
+            pygame.draw.circle(screen, c, (base_x + k * (indicator_size * 2 + gap), base_y), indicator_size)
+
+    # Bottom-right: 3 amber lights
+    base_x = main_content_rect.right - corner_margin - (indicator_size * 2 + gap) * 2 - indicator_size
+    for k in range(3):
+        a = pulse_alpha(1.0 + k * 0.3, 1.0)
+        c = (int(130 * a), int(100 * a), 0)
+        if c[0] > 25:
+            pygame.draw.circle(screen, c, (base_x + k * (indicator_size * 2 + gap), base_y), indicator_size)
+
+    # Top-left: 2 smaller cyan/teal indicators
+    top_y = main_content_rect.top + corner_margin + indicator_size
+    for k in range(2):
+        a = pulse_alpha(0.5 + k * 0.6, 0.6)
+        c = (0, int(120 * a), int(100 * a))
+        if c[1] > 25:
+            pygame.draw.circle(screen, c, (main_content_rect.left + corner_margin + k * (indicator_size * 2 + gap), top_y), indicator_size - 1)
+
+    # Top-right: 2 smaller orange indicators
+    for k in range(2):
+        a = pulse_alpha(1.2 + k * 0.5, 0.7)
+        c = (int(180 * a), int(90 * a), 0)
+        if c[0] > 25:
+            pygame.draw.circle(screen, c, (main_content_rect.right - corner_margin - indicator_size - k * (indicator_size * 2 + gap), top_y), indicator_size - 1)
 
 def _draw_secret_games_content(screen, main_content_rect, fonts, config_module, ui_scaler):
     """

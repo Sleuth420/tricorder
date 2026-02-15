@@ -334,18 +334,25 @@ def loading_worker(progress_tracker):
         progress_tracker.update(stage="Calibrating sensor array...")
         time.sleep(0.7)
         
-        # Stage 4: Check for updates if WiFi available
+        # Stage 4: Check for updates and resolve location if WiFi available
         progress_tracker.update(stage="Checking for updates...")
         try:
             from data import system_info
             wifi_status, _ = system_info.get_wifi_info()
             if wifi_status in ["Connected", "Online"] and hasattr(progress_tracker, 'app_state') and progress_tracker.app_state:
-                if progress_tracker.app_state.update_manager._check_network_connectivity():
-                    progress_tracker.app_state.update_manager._check_for_updates()
-                    progress_tracker.app_state.update_available = progress_tracker.app_state.update_manager.update_available
-                    progress_tracker.app_state.commits_behind = progress_tracker.app_state.update_manager.remote_version.get('commits_behind', 0) if progress_tracker.app_state.update_manager.remote_version else 0
+                app = progress_tracker.app_state
+                if app.update_manager._check_network_connectivity():
+                    app.update_manager._check_for_updates()
+                    app.update_available = app.update_manager.update_available
+                    app.commits_behind = app.update_manager.remote_version.get('commits_behind', 0) if app.update_manager.remote_version else 0
+                # Resolve location and public IP (once on boot)
+                if app.location_from_ip is None:
+                    progress_tracker.update(stage="Resolving location...")
+                    loc, pub_ip = system_info.get_location_and_public_ip(timeout_sec=3.0)
+                    app.location_from_ip = loc
+                    app.public_ip = pub_ip
         except Exception as e:
-            logger.debug(f"Update check failed: {e}")
+            logger.debug(f"Update/location check failed: {e}")
         
         # Stage 5: Preparing system
         progress_tracker.update(stage="Establishing subspace link...")

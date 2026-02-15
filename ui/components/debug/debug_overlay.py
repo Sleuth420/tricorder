@@ -111,30 +111,32 @@ class DebugOverlay:
         """Compute overlay dimensions from screen size or ui_scaler."""
         if self.ui_scaler:
             w = self.ui_scaler.screen_width
-            self.overlay_width = self.ui_scaler.scale(100)
+            self.overlay_width = self.ui_scaler.scale(160)
             self.overlay_x = w - self.overlay_width - self.ui_scaler.margin("small")
             self.overlay_y = self.ui_scaler.margin("small")
-            self.line_height = self.ui_scaler.scale(12)
-            self.max_lines = 4
+            self.line_height = self.ui_scaler.scale(16)
+            self.max_lines = 8
             self.font_size = 'tiny'
         elif self.screen_width <= 400:
-            self.overlay_width = 100
-            self.overlay_x = self.screen_width - 105
+            self.overlay_width = 140
+            self.overlay_x = self.screen_width - self.overlay_width - 10
             self.overlay_y = 5
-            self.line_height = 12
-            self.max_lines = 4
+            self.line_height = 14
+            self.max_lines = 8
             self.font_size = 'tiny'
         else:
-            self.overlay_width = 150
-            self.overlay_x = self.screen_width - 155
+            self.overlay_width = 180
+            self.overlay_x = self.screen_width - self.overlay_width - 15
             self.overlay_y = 10
-            self.line_height = 18
-            self.max_lines = 6
+            self.line_height = 20
+            self.max_lines = 8
             self.font_size = 'small'
 
     def set_enabled(self, enabled):
         """Enable or disable the debug overlay."""
         self.enabled = enabled
+        if enabled:
+            self.show_overlay = True  # Show immediately when turned on
         
     def update(self):
         """Update debug information."""
@@ -162,54 +164,63 @@ class DebugOverlay:
             fonts (dict): Font dictionary
             config_module: Configuration module for colors
         """
-        if not self.enabled or not self.show_overlay:
+        if not self.enabled:
             return
-            
+
         # Get appropriate font
         font = fonts.get(self.font_size, fonts.get('small', fonts.get('default')))
         
         padding = self.ui_scaler.scale(8) if self.ui_scaler else 8
         bottom_inset = self.ui_scaler.scale(20) if self.ui_scaler else 20
-        overlay_height = min(self.max_lines * self.line_height + padding, self.screen_height - bottom_inset)
+        content_height = min(self.max_lines * self.line_height + padding, self.screen_height - bottom_inset)
         border_inset = self.ui_scaler.scale(4) if self.ui_scaler else 4
-        bg_rect = pygame.Rect(self.overlay_x - border_inset, self.overlay_y - border_inset, self.overlay_width, overlay_height)
-        overlay_surface = pygame.Surface((self.overlay_width, overlay_height))
+        # Box includes padding on all sides
+        box_w = self.overlay_width + 2 * border_inset
+        box_h = content_height + 2 * border_inset
+        bg_rect = pygame.Rect(self.overlay_x - border_inset, self.overlay_y - border_inset, box_w, box_h)
+        overlay_surface = pygame.Surface((box_w, box_h))
         overlay_surface.set_alpha(200)
         overlay_surface.fill(config_module.Theme.BACKGROUND)
         screen.blit(overlay_surface, (self.overlay_x - border_inset, self.overlay_y - border_inset))
-        
+
         # Border
         pygame.draw.rect(screen, config_module.Theme.ACCENT, bg_rect, 1)
         
-        # Draw debug information (minimal for small screen)
+        # Draw debug information: FPS then recent input events
         y_offset = self.overlay_y
         line_spacing = self.line_height
-        
-        # FPS (most important)
-        fps_text = f"FPS: {self.fps_tracker.get_fps():.0f}"
+
+        # FPS (first line)
+        fps_text = f"FPS: {self.fps_tracker.get_fps():.1f}"
         fps_surface = font.render(fps_text, True, config_module.Theme.ACCENT)
         screen.blit(fps_surface, (self.overlay_x, y_offset))
         y_offset += line_spacing
-        
-        # Show input data on both screens (you need this on Pi too)
+
+        # Recent input events (newest last, show last 3)
         recent_events = self.input_tracker.get_recent_events()
-        if recent_events:
-            last_event = recent_events[-1]
-            if last_event['key']:
-                # Convert key code to readable name
-                key_name = self._get_key_name(last_event['key'])
-                event_text = f"Key: {key_name}"
+        events_to_show = recent_events[-3:] if len(recent_events) > 3 else recent_events
+        for ev in events_to_show:
+            event_text = self._format_event(ev)
+            if event_text:
+                event_surface = font.render(event_text, True, config_module.Theme.WARNING)
+                screen.blit(event_surface, (self.overlay_x, y_offset))
+                y_offset += line_spacing
+
+    def _format_event(self, ev):
+        """Format a single input event for display. Handles key codes and joystick action strings."""
+        if ev.get('key') is not None and ev['key'] != '':
+            key = ev['key']
+            if isinstance(key, str):
+                text = f"{ev['type']}: {key}"
             else:
-                event_text = f"Input: {last_event['type']}"
-            
-            small_breakpoint = self.ui_scaler.scale(400) if self.ui_scaler else 400
-            max_len = 8 if self.screen_width <= small_breakpoint else 12
-            if len(event_text) > max_len:
-                event_text = event_text[:max_len] + "..."
-            
-            event_surface = font.render(event_text, True, config_module.Theme.WARNING)
-            screen.blit(event_surface, (self.overlay_x, y_offset))
-    
+                key_name = self._get_key_name(key)
+                text = f"{ev['type']}: {key_name}"
+        else:
+            text = f"Input: {ev['type']}"
+        # Truncate to fit overlay (roughly 18–22 chars for current widths)
+        max_chars = 20 if self.overlay_width >= 160 else 14
+        return (text[:max_chars] + "…") if len(text) > max_chars else text
+
     def _get_key_name(self, key_code):
         """Convert pygame key code to readable name."""
         # Common key mappings

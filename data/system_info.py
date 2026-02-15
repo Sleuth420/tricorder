@@ -6,6 +6,7 @@ import os
 import platform
 import datetime
 import subprocess
+import socket
 
 # Get a logger for this module
 logger = logging.getLogger(__name__)
@@ -305,6 +306,64 @@ def get_wifi_info():
     except Exception as e:
         logger.error(f"Error getting WiFi info: {e}", exc_info=True)
         return "Error", "N/A"
+
+
+def get_local_ip():
+    """Get the primary local IPv4 address (e.g. for WiFi interface). Returns None if not connected."""
+    if not PSUTIL_AVAILABLE:
+        return None
+    try:
+        addrs = psutil.net_if_addrs()
+        stats = psutil.net_if_stats()
+        # Prefer wlan*, then eth*, then first up interface with IPv4
+        for name in sorted(addrs.keys()):
+            if not stats.get(name, None) or not stats[name].isup:
+                continue
+            for addr in addrs[name]:
+                if addr.family == socket.AF_INET:
+                    ip = addr.address
+                    if ip and not ip.startswith('127.'):
+                        if 'wlan' in name.lower() or 'wi' in name.lower():
+                            return ip
+                        if 'eth' in name.lower():
+                            return ip
+        for name in sorted(addrs.keys()):
+            if not stats.get(name, None) or not stats[name].isup:
+                continue
+            for addr in addrs[name]:
+                if addr.family == socket.AF_INET:
+                    ip = addr.address
+                    if ip and not ip.startswith('127.'):
+                        return ip
+        return None
+    except Exception as e:
+        logger.debug(f"Error getting local IP: {e}")
+        return None
+
+
+def get_location_and_public_ip(timeout_sec=3.0):
+    """
+    Fetch approximate location and public IP (e.g. when on WiFi). Uses ip-api.com (no key).
+    Returns (location_str, public_ip) e.g. ("London, United Kingdom", "1.2.3.4") or (None, None) on failure.
+    """
+    try:
+        import urllib.request
+        import json
+        req = urllib.request.Request(
+            "http://ip-api.com/json/?fields=city,country,query",
+            headers={"User-Agent": "Tricorder/1.0"}
+        )
+        with urllib.request.urlopen(req, timeout=timeout_sec) as resp:
+            data = json.loads(resp.read().decode())
+        city = data.get("city") or ""
+        country = data.get("country") or ""
+        location = f"{city}, {country}" if (city and country) else (country or city or None)
+        public_ip = data.get("query") or None
+        return (location, public_ip)
+    except Exception as e:
+        logger.debug(f"Location/public-IP fetch failed: {e}")
+        return (None, None)
+
 
 def get_cellular_info():
     """Get Cellular status and provider (Basic Check)."""

@@ -237,14 +237,14 @@ class UpdateManager:
         """Generate update menu options based on platform."""
         options = [
             {
-                "name": "Check for Updates",
-                "action": "CHECK_UPDATES", 
-                "description": "Check Git repository for available updates"
-            },
-            {
                 "name": "Quick App Update", 
                 "action": "APP_UPDATE",
                 "description": "Update application code and dependencies"
+            },
+            {
+                "name": "Check for Updates",
+                "action": "CHECK_UPDATES", 
+                "description": "Check Git repository for available updates"
             }
         ]
         

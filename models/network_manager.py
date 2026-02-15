@@ -20,8 +20,21 @@ class NetworkManager:
         self.cache_interval = cache_interval
         self.last_wifi_check = 0
         self.last_bluetooth_check = 0
+        self.last_ip_check = 0
         self.cached_wifi_status = "Unknown", "Unknown"
         self.cached_bluetooth_status = "Unknown", "Unknown"
+        self.cached_ip = None
+
+    def get_ip_cached(self):
+        """Get local IP with caching (e.g. for WiFi). Returns None if not connected."""
+        current_time = time.time()
+        if (current_time - self.last_ip_check) >= self.cache_interval:
+            try:
+                self.cached_ip = system_info.get_local_ip()
+                self.last_ip_check = current_time
+            except Exception as e:
+                logger.debug(f"Error updating IP cache: {e}")
+        return self.cached_ip
     
     def get_wifi_info_cached(self):
         """Get WiFi status with caching."""

@@ -91,67 +91,67 @@ def draw_graph(screen, history, rect, color, min_val=None, max_val=None, sensor_
     y_range = y_max - y_min
     if y_range == 0: y_range = 1 # Avoid division by zero
 
-    # X-axis parameters
-    num_points = len(history) # Use full history length for x-axis scaling
-    x_spacing = rect.width / max(1, num_points -1) if num_points > 1 else rect.width
+    # Inner plot area: inset so line/points don't sit on border (improves readability)
+    inset_x = ui_scaler.scale(4) if ui_scaler else 4
+    inset_y = ui_scaler.scale(4) if ui_scaler else 4
+    plot_rect = pygame.Rect(
+        rect.left + inset_x,
+        rect.top + inset_y,
+        max(1, rect.width - 2 * inset_x),
+        max(1, rect.height - 2 * inset_y)
+    )
 
-    # --- Drawing --- 
-    pygame.draw.rect(screen, config_module.Theme.BACKGROUND, rect) # Clear graph area with background
-    pygame.draw.rect(screen, color_border, rect, 1) # Draw border
+    num_points = len(history)
+    x_spacing = plot_rect.width / max(1, num_points - 1) if num_points > 1 else plot_rect.width
 
-    # Draw grid lines (horizontal and vertical)
+    # --- Drawing ---
+    pygame.draw.rect(screen, config_module.Theme.BACKGROUND, rect)
+    pygame.draw.rect(screen, color_border, rect, 1)
+
+    # Grid and axes use plot_rect so they align with the data
     num_grid_lines_h = 4
-    spacing_y = rect.height / (num_grid_lines_h + 1)
+    spacing_y = plot_rect.height / (num_grid_lines_h + 1)
     for i in range(1, num_grid_lines_h + 1):
-        y = rect.top + i * spacing_y
-        pygame.draw.line(screen, color_grid, (rect.left, y), (rect.right, y), 1)
-    
-    # Vertical grid lines (time divisions)
-    # Base time divisions on GRAPH_HISTORY_SIZE for meaningful time markers
+        y = plot_rect.top + i * spacing_y
+        pygame.draw.line(screen, color_grid, (plot_rect.left, y), (plot_rect.right, y), 1)
+
     history_size = config_module.GRAPH_HISTORY_SIZE
     if history_size <= 10:
-        time_interval = 2  # Every 2 seconds for short histories
+        time_interval = 2
     elif history_size <= 30:
-        time_interval = 5  # Every 5 seconds for 30s history
+        time_interval = 5
     elif history_size <= 60:
-        time_interval = 10  # Every 10 seconds for 60s history
+        time_interval = 10
     else:
-        time_interval = 15  # Every 15 seconds for longer histories
-    
-    # Calculate how many grid lines we need based on time intervals
+        time_interval = 15
+
     num_time_markers = history_size // time_interval
     if num_time_markers > 0 and num_points > 1:
         for i in range(1, num_time_markers + 1):
-            # Calculate x position based on time, not equal divisions
             time_position = i * time_interval
             x_ratio = time_position / history_size
-            x = rect.left + x_ratio * rect.width
-            if x < rect.right:  # Don't draw on the right border
-                pygame.draw.line(screen, color_grid, (x, rect.top), (x, rect.bottom), 1)
+            x = plot_rect.left + x_ratio * plot_rect.width
+            if x < plot_rect.right:
+                pygame.draw.line(screen, color_grid, (x, plot_rect.top), (x, plot_rect.bottom), 1)
 
-    # Draw Y-axis (simple line on the left)
-    pygame.draw.line(screen, color_axis, (rect.left, rect.top), (rect.left, rect.bottom), 1)
-    # Draw X-axis (simple line on the bottom)
-    pygame.draw.line(screen, color_axis, (rect.left, rect.bottom), (rect.right, rect.bottom), 1)
+    pygame.draw.line(screen, color_axis, (plot_rect.left, plot_rect.top), (plot_rect.left, plot_rect.bottom), 1)
+    pygame.draw.line(screen, color_axis, (plot_rect.left, plot_rect.bottom), (plot_rect.right, plot_rect.bottom), 1)
 
-    # Plot points and lines
+    # Plot within plot_rect so line doesn't touch border
     points_to_draw = []
     for i, value in enumerate(history):
-        if value is None: continue # Skip None values in history for plotting
-        
-        x = rect.left + i * x_spacing
-        # Clamp value to y_min/y_max before scaling to prevent drawing outside bounds
+        if value is None:
+            continue
+        x = plot_rect.left + i * x_spacing
         clamped_value = max(y_min, min(y_max, value))
-        y = rect.bottom - ((clamped_value - y_min) / y_range * rect.height)
-        
-        # Ensure points are within the drawable rect to avoid overdraw
-        x = max(rect.left, min(rect.right, x))
-        y = max(rect.top, min(rect.bottom, y))
+        y = plot_rect.bottom - ((clamped_value - y_min) / y_range * plot_rect.height)
+        x = max(plot_rect.left, min(plot_rect.right, x))
+        y = max(plot_rect.top, min(plot_rect.bottom, y))
         points_to_draw.append((x, y))
 
     if len(points_to_draw) >= 2:
         pygame.draw.lines(screen, color, False, points_to_draw, line_width)
-    
+
     for point_x, point_y in points_to_draw:
         pygame.draw.circle(screen, color, (int(point_x), int(point_y)), point_size)
 

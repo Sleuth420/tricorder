@@ -168,8 +168,10 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
                 graph_margin_top = 20
                 graph_margin_bottom = 20
                 
-            # Maximize vertical space within safe area so graph and labels clear curved bezel
-            graph_height = safe_rect.height - graph_margin_top - graph_margin_bottom
+            # Reserve space for footer so it doesn't overlap the graph
+            footer_space = ui_scaler.scale(36) if ui_scaler else 36
+            graph_height = safe_rect.height - graph_margin_top - graph_margin_bottom - footer_space
+            graph_height = max(80, graph_height)
             graph_x = safe_rect.centerx - (graph_width // 2)
             graph_y = safe_rect.top + graph_margin_top
             graph_rect = pygame.Rect(graph_x, graph_y, graph_width, graph_height)
@@ -251,18 +253,17 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
     # Draw ambient tricorder effects in available spaces
     _draw_sensor_ambient_effects(screen, screen_width, screen_height, graph_rect, current_sensor_data, current_time, config_module, ui_scaler, app_state.is_frozen)
 
-    # Footer can show control hint; labels are OS-adaptive (Left/Middle/Right on Pi, A/D/Enter on dev)
-    labels = config_module.get_control_labels()
-    action_text = "Freeze" if not app_state.is_frozen else "Unfreeze"
-    hint_text = f"< {labels['select']}={action_text} | {labels['back']}=Back >"
-
-    render_footer(
-        screen, hint_text, fonts,
-        config_module.Theme.FOREGROUND,
-        screen_width, screen_height,
-        ui_scaler=ui_scaler,
-        content_center_x=safe_rect.centerx
-    )
+    # No footer when a graph is shown (LINE or VERTICAL_BAR) to avoid overlap; short hint when no graph
+    if graph_type not in ("LINE", "VERTICAL_BAR"):
+        labels = config_module.get_control_labels()
+        hint_text = f"< {labels['back']}=Back >"
+        render_footer(
+            screen, hint_text, fonts,
+            config_module.Theme.FOREGROUND,
+            screen_width, screen_height,
+            ui_scaler=ui_scaler,
+            content_center_x=safe_rect.centerx
+        )
 
 def _draw_subtle_title_glow(screen, text, font, color, center_pos, current_time):
     """Draw title with subtle animated glow effect behind the main text."""

@@ -107,6 +107,8 @@ class InputRouter:
             return self._handle_schematics_input(action)
         elif current_state == STATE_SETTINGS_WIFI:
             return self._handle_wifi_settings_input(action)
+        elif current_state == STATE_SETTINGS_BLUETOOTH:
+            return self._handle_bluetooth_settings_input(action)
         elif current_state == STATE_SETTINGS_WIFI_NETWORKS:
             return self._handle_wifi_networks_input(action)
         elif current_state == STATE_WIFI_PASSWORD_ENTRY:
@@ -411,6 +413,16 @@ class InputRouter:
             elif result == "CONFIRM_RESTART_APP":
                 return self.app_state.state_manager.transition_to(STATE_CONFIRM_RESTART_APP)
         return result
+
+    def _handle_bluetooth_settings_input(self, action):
+        """Handle input for the Bluetooth Settings view (single option: Back to Settings)."""
+        if action == app_config.INPUT_ACTION_BACK:
+            return False  # Handled by _handle_back_action
+        if action == app_config.INPUT_ACTION_SELECT:
+            return self.app_state.state_manager.transition_to(STATE_SETTINGS)
+        if action in (app_config.INPUT_ACTION_NEXT, app_config.INPUT_ACTION_PREV):
+            return True  # Single item, no-op
+        return False
 
     def _handle_controls_settings_input(self, action):
         """Handle input for the Controls Settings view."""

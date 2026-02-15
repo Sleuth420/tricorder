@@ -99,7 +99,7 @@ class VerticalBarGraph:
             self.pointer_height = 20
             self.zone_width = 8
         
-        # Use full rect height for scale since we don't need title space anymore
+        # Use full rect height; reserve top/bottom bands for unit label so it doesn't overlap tick values
         self.scale_rect = pygame.Rect(
             self.rect.left,
             self.rect.top,
@@ -107,9 +107,10 @@ class VerticalBarGraph:
             self.rect.height
         )
         self.scale_line_x = self.scale_rect.centerx
-        self.scale_top_y = self.scale_rect.top + padding
-        self.scale_bottom_y = self.scale_rect.bottom - padding
-        self.scale_height = self.scale_bottom_y - self.scale_top_y
+        self.unit_band_height = self.font_small.get_height() + (self.ui_scaler.scale(4) if self.ui_scaler else 4)
+        self.scale_top_y = self.scale_rect.top + padding + self.unit_band_height
+        self.scale_bottom_y = self.scale_rect.bottom - padding - self.unit_band_height
+        self.scale_height = max(1, self.scale_bottom_y - self.scale_top_y)
 
     def _calculate_stable_dynamic_range(self, current_value):
         """Calculate range - initialize with correct range, switch when within threshold of edge."""
@@ -162,7 +163,7 @@ class VerticalBarGraph:
                     self.current_display_min = range_min
                     self.current_display_max = range_max
                     self.consecutive_readings = 0
-                    print(f"[DBG] Initialized range to {range_min}-{range_max} for value {current_value}")
+                    logger.debug("Initialized range to %s-%s for value %s", range_min, range_max, current_value)
                     break
 
         # Find the next range (up or down) if needed
@@ -192,17 +193,17 @@ class VerticalBarGraph:
             near_lower = current_value < self.current_display_min + threshold
             if near_upper or near_lower:
                 self.consecutive_readings = getattr(self, 'consecutive_readings', 0) + 1
-                print(f"[DBG] Value {current_value} near {('upper' if near_upper else 'lower')} edge of {self.current_display_min}-{self.current_display_max}. Consecutive: {self.consecutive_readings}")
+                logger.debug("Value %s near %s edge; consecutive: %s", current_value, 'upper' if near_upper else 'lower', self.consecutive_readings)
                 if self.consecutive_readings >= required_consecutive and next_range:
-                    print(f"[DBG] Switching range from {self.current_display_min}-{self.current_display_max} to {next_range[0]}-{next_range[1]} after {required_consecutive} consecutive readings.")
+                    logger.debug("Switching range to %s-%s after %s consecutive readings", next_range[0], next_range[1], required_consecutive)
                     self.current_display_min, self.current_display_max = next_range
                     self.consecutive_readings = 0
             else:
                 if getattr(self, 'consecutive_readings', 0) != 0:
-                    print(f"[DBG] Value {current_value} not near edge. Resetting consecutive counter.")
+                    logger.debug("Value %s not near edge; resetting consecutive counter", current_value)
                 self.consecutive_readings = 0
         else:
-            print(f"[DBG] Value {current_value} is outside current range {self.current_display_min}-{self.current_display_max}")
+            logger.debug("Value %s outside current range %s-%s", current_value, self.current_display_min, self.current_display_max)
             self.consecutive_readings = 0
 
         return self.current_display_min, self.current_display_max
@@ -313,20 +314,21 @@ class VerticalBarGraph:
                              (self.scale_line_x - self.tick_length // 2, y),
                              (self.scale_line_x, y), 4)
             
-            # Draw value label
+            # Draw value label (right-aligned so longest label doesn't overlap unit)
             label_text = f"{tick_value:.0f}"
             label_surface = self.font_small.render(label_text, True, self.config.Theme.WHITE)
             label_rect = label_surface.get_rect(centery=y, right=self.scale_line_x - self.label_offset_x)
             self.screen.blit(label_surface, label_rect)
 
-            # Draw units at top and bottom of graph, on the left side
-            units_surface = self.font_small.render(self.units, True, self.config.Theme.WHITE)
-            # Top units
-            top_units_rect = units_surface.get_rect(centery=self.scale_top_y, right=self.scale_line_x - self.label_offset_x - 30)
-            self.screen.blit(units_surface, top_units_rect)
-            # Bottom units
-            bottom_units_rect = units_surface.get_rect(centery=self.scale_bottom_y, right=self.scale_line_x - self.label_offset_x - 30)
-            self.screen.blit(units_surface, bottom_units_rect)
+        # Draw units once in reserved top/bottom bands (avoids overlap with tick values e.g. "1701" and "K")
+        units_surface = self.font_small.render(self.units, True, self.config.Theme.WHITE)
+        pad = self.ui_scaler.margin("medium") if self.ui_scaler else 15
+        top_band_center_y = self.scale_rect.top + pad + self.unit_band_height // 2
+        bottom_band_center_y = self.scale_rect.bottom - pad - self.unit_band_height // 2
+        top_units_rect = units_surface.get_rect(centery=top_band_center_y, right=self.scale_line_x - self.label_offset_x - 8)
+        bottom_units_rect = units_surface.get_rect(centery=bottom_band_center_y, right=self.scale_line_x - self.label_offset_x - 8)
+        self.screen.blit(units_surface, top_units_rect)
+        self.screen.blit(units_surface, bottom_units_rect)
 
         # Draw current value pointer (enhanced and more prominent)
         if current_value is not None:

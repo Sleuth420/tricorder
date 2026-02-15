@@ -207,44 +207,95 @@ def get_battery_info():
         return None, None
 
 def get_bluetooth_info():
-    """Get Bluetooth status information."""
+    """Get Bluetooth status and connected device name (Linux: bluetoothctl; Windows: placeholder)."""
     try:
         if platform.system() == "Linux":
-            # Try using bluetoothctl or hciconfig
-            try:
-                # Try hciconfig first (more reliable)
-                result = subprocess.run(['hciconfig'], capture_output=True, text=True, timeout=3)
-                if result.returncode == 0:
-                    output = result.stdout.lower()
-                    if 'up running' in output:
-                        # Check if any devices are connected
-                        try:
-                            bt_result = subprocess.run(['bluetoothctl', 'info'], 
-                                                     capture_output=True, text=True, timeout=2)
-                            if bt_result.returncode == 0 and 'connected: yes' in bt_result.stdout.lower():
-                                return "Connected", "Device Connected"
-                            else:
-                                return "On", "No Devices"
-                        except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError):
-                            return "On", "Available"
-                    else:
-                        return "Off", "Disabled"
-                else:
-                    return "N/A", "Not Available"
-            except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError) as e:
-                logger.debug(f"Bluetooth check failed: {e}")
-                return "N/A", "Not Available"
-        
+            return _get_bluetooth_info_linux()
         elif platform.system() == "Windows":
-            # Windows Bluetooth check is more complex, return placeholder
             return "N/A", "Windows"
-        
         else:
             return "N/A", "Unsupported"
-            
     except Exception as e:
         logger.error(f"Error getting Bluetooth info: {e}", exc_info=True)
         return "Error", "Error"
+
+
+def _get_bluetooth_info_linux():
+    """Linux: use bluetoothctl to get powered state and connected device. Fallback to hciconfig for on/off."""
+    # 1) Check powered state and connected devices via bluetoothctl
+    try:
+        show_result = subprocess.run(
+            ["bluetoothctl", "show"],
+            capture_output=True, text=True, timeout=3
+        )
+        if show_result.returncode != 0:
+            raise FileNotFoundError("bluetoothctl show failed")
+        out = show_result.stdout
+        out_lower = out.lower()
+        if "powered: no" in out_lower or "powered: off" in out_lower:
+            return "Off", "Disabled"
+
+        # 2) Get connected device(s): BlueZ 5.65+ supports "bluetoothctl devices Connected"
+        conn_result = subprocess.run(
+            ["bluetoothctl", "devices", "Connected"],
+            capture_output=True, text=True, timeout=3
+        )
+        if conn_result.returncode == 0 and conn_result.stdout.strip():
+            # Parse first line: "Device AA:BB:CC:DD:EE:FF Device Name"
+            line = conn_result.stdout.strip().split("\n")[0]
+            parts = line.split(None, 2)  # max 3 parts: Device, MAC, Name
+            if len(parts) >= 3:
+                return "Connected", parts[2].strip()
+            if len(parts) >= 2:
+                return "Connected", parts[1]
+            return "Connected", "Device"
+
+        # 3) Older BlueZ: list all devices then check info for each until we find connected
+        dev_result = subprocess.run(
+            ["bluetoothctl", "devices"],
+            capture_output=True, text=True, timeout=3
+        )
+        if dev_result.returncode != 0 or not dev_result.stdout.strip():
+            return "On", "No Devices"
+
+        for line in dev_result.stdout.strip().split("\n"):
+            parts = line.split(None, 2)
+            if len(parts) < 2 or parts[0].lower() != "device":
+                continue
+            mac = parts[1]
+            info_result = subprocess.run(
+                ["bluetoothctl", "info", mac],
+                capture_output=True, text=True, timeout=2
+            )
+            if info_result.returncode != 0:
+                continue
+            info_lower = info_result.stdout.lower()
+            if "connected: yes" not in info_lower:
+                continue
+            # Get device name from "Name: ..."
+            for info_line in info_result.stdout.split("\n"):
+                if info_line.strip().lower().startswith("name:"):
+                    name = info_line.split(":", 1)[1].strip()
+                    return "Connected", name or mac
+            return "Connected", mac
+
+        return "On", "No Devices"
+
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError) as e:
+        logger.debug(f"bluetoothctl failed: {e}, trying hciconfig")
+    except Exception as e:
+        logger.debug(f"Bluetooth bluetoothctl path failed: {e}")
+
+    # Fallback: hciconfig for adapter on/off only (no device name)
+    try:
+        result = subprocess.run(["hciconfig"], capture_output=True, text=True, timeout=3)
+        if result.returncode == 0 and "up running" in result.stdout.lower():
+            return "On", "Available"
+        if result.returncode == 0:
+            return "Off", "Disabled"
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    return "N/A", "Not Available"
 
 def get_wifi_info():
     """Get WiFi status and SSID."""

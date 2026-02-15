@@ -58,7 +58,7 @@ class Theme:
     HEADER_CORNER_FILL = Palette.ATOMIC_TANGERINE # Color for the filled corner shape
     BORDER_GENERAL = Palette.BLACK          # General border color for UI elements
     BORDER_WIDTH = 1 # General border width for UI elements
-    CORNER_CURVE_RADIUS = 40  # Match screen cover's curve (larger radius = gentler); used app-wide
+    CORNER_CURVE_RADIUS = 60  # Match screen cover's curve (larger radius = gentler); used app-wide
 
     # Sidebar specific colors (can be a sub-class or dict if it grows more complex)
     SIDEBAR_SYSTEM = Palette.ATOMIC_TANGERINE

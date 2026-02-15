@@ -261,9 +261,18 @@ class PongGame:
 
             # Draw game over message
             game_over_text = self.font.render(self.winner_message, True, config_module.COLOR_ACCENT)
-            game_over_pos = (self.width // 2 - game_over_text.get_width() // 2, 
-                           self.height // 2 - game_over_text.get_height() // 2)
+            game_over_pos = (self.width // 2 - game_over_text.get_width() // 2,
+                            self.height // 2 - game_over_text.get_height() // 2 - 20)
             screen.blit(game_over_text, game_over_pos)
+            # Quit hint (OS-adaptive)
+            try:
+                labels = config_module.get_control_labels()
+                quit_hint = f"Press {labels['prev']} to quit"
+            except Exception:
+                quit_hint = "Press A to quit"
+            hint_surf = self.font.render(quit_hint, True, config_module.COLOR_FOREGROUND)
+            hint_pos = (self.width // 2 - hint_surf.get_width() // 2, self.height // 2 + 15)
+            screen.blit(hint_surf, hint_pos)
 
         # Draw pause menu if paused
         if self.paused:

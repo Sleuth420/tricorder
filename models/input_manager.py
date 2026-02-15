@@ -33,6 +33,9 @@ class InputManager:
         self.mouse_left_press_start_time = None
         self.mouse_right_press_start_time = None
         self.mouse_middle_press_start_time = None
+        # So release can skip PREV when BACK was already handled by long press
+        self.key_prev_long_press_consumed = False
+        self.mouse_left_long_press_consumed = False
         
         # Zoom combo timing (to prevent accidental menu activation)
         self.last_zoom_combo_time = None
@@ -103,10 +106,16 @@ class InputManager:
         
         # Handle KEY_PREV release
         press_duration = None
-        if key == self.config.KEY_PREV and self.key_prev_press_start_time is not None:
-            press_duration = time.time() - self.key_prev_press_start_time
-            self.key_prev_press_start_time = None
-            logger.debug("KEY_PREV released, timer reset.")
+        if key == self.config.KEY_PREV:
+            if self.key_prev_press_start_time is not None:
+                press_duration = time.time() - self.key_prev_press_start_time
+                self.key_prev_press_start_time = None
+                logger.debug("KEY_PREV released, timer reset.")
+            elif self.key_prev_long_press_consumed:
+                # BACK was already handled in update(); treat as long press so release skips PREV
+                press_duration = self.config.INPUT_LONG_PRESS_DURATION
+                self.key_prev_long_press_consumed = False
+                logger.debug("KEY_PREV release after consumed long press, skipping PREV.")
             
         # Handle KEY_NEXT release (for 3D viewer pause menu)
         next_press_duration = None
@@ -223,9 +232,11 @@ class InputManager:
         hold_duration = time.time() - self.key_prev_press_start_time
         return hold_duration >= self.config.INPUT_LONG_PRESS_DURATION
         
-    def reset_long_press_timer(self):
-        """Reset the long press timer."""
+    def reset_long_press_timer(self, consumed_as_long_press=False):
+        """Reset the long press timer. If consumed_as_long_press, next KEY_PREV release will report long duration so PREV is skipped."""
         self.key_prev_press_start_time = None
+        if consumed_as_long_press:
+            self.key_prev_long_press_consumed = True
         
     def check_next_key_long_press(self):
         """
@@ -346,8 +357,14 @@ class InputManager:
 
         press_duration = None
         # Compute duration before resetting so app can suppress release-as-action after long press
-        if button == self.config.MOUSE_LEFT and self.mouse_left_press_start_time is not None:
-            press_duration = time.time() - self.mouse_left_press_start_time
+        if button == self.config.MOUSE_LEFT:
+            if self.mouse_left_press_start_time is not None:
+                press_duration = time.time() - self.mouse_left_press_start_time
+            elif self.mouse_left_long_press_consumed:
+                # BACK was already handled in update(); treat as long press so release skips PREV
+                press_duration = self.config.INPUT_LONG_PRESS_DURATION
+                self.mouse_left_long_press_consumed = False
+                logger.debug("Mouse left release after consumed long press, skipping PREV.")
         elif button == self.config.MOUSE_RIGHT and self.mouse_right_press_start_time is not None:
             press_duration = time.time() - self.mouse_right_press_start_time
         elif button == self.config.MOUSE_MIDDLE and self.mouse_middle_press_start_time is not None:
@@ -414,9 +431,11 @@ class InputManager:
         duration = current_time - self.mouse_middle_press_start_time
         return duration >= self.config.CURRENT_SECRET_COMBO_DURATION
         
-    def reset_mouse_left_timer(self):
-        """Reset the mouse left press timer."""
+    def reset_mouse_left_timer(self, consumed_as_long_press=False):
+        """Reset the mouse left press timer. If consumed_as_long_press, next MOUSE_LEFT release will report long duration so PREV is skipped."""
         self.mouse_left_press_start_time = None
+        if consumed_as_long_press:
+            self.mouse_left_long_press_consumed = True
         
     def reset_mouse_right_timer(self):
         """Reset the mouse right press timer."""

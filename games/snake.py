@@ -224,14 +224,14 @@ class SnakeGame:
                 pygame.draw.rect(screen, body_color, snake_rect)
 
         # Draw score
-        score_text = f"Score: {self.score}  Length: {len(self.snake)}"
+        score_text = f"Score: {self.score}"
         score_surf = self.font.render(score_text, True, config_module.COLOR_ACCENT)
         screen.blit(score_surf, (10, 10))
 
-        # Draw direction indicator
-        direction_text = f"Direction: {self.direction.name}"
-        direction_surf = self.font.render(direction_text, True, config_module.COLOR_FOREGROUND)
-        screen.blit(direction_surf, (10, 30))
+        # Draw level/length (compact)
+        length_text = f"Length: {len(self.snake)}"
+        length_surf = self.font.render(length_text, True, config_module.COLOR_FOREGROUND)
+        screen.blit(length_surf, (10, 30))
 
         # Draw controls hint (OS-adaptive: Left/Right on Pi, A/D on dev)
         if len(self.snake) < 5:  # Show hint for first few moves
@@ -249,9 +249,17 @@ class SnakeGame:
             screen.blit(overlay, (0, 0))
 
             game_over_text = self.font.render(self.winner_message, True, config_module.COLOR_ACCENT)
-            game_over_pos = (self.width // 2 - game_over_text.get_width() // 2, 
-                           self.height // 2 - game_over_text.get_height() // 2)
+            game_over_pos = (self.width // 2 - game_over_text.get_width() // 2,
+                             self.height // 2 - game_over_text.get_height() // 2 - 20)
             screen.blit(game_over_text, game_over_pos)
+            try:
+                labels = config_module.get_control_labels()
+                quit_hint = f"Press {labels['prev']} to quit"
+            except Exception:
+                quit_hint = "Press A to quit"
+            hint_surf = self.font.render(quit_hint, True, config_module.COLOR_FOREGROUND)
+            hint_pos = (self.width // 2 - hint_surf.get_width() // 2, self.height // 2 + 15)
+            screen.blit(hint_surf, hint_pos)
 
         # Draw pause menu
         if self.paused:

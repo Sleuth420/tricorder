@@ -202,23 +202,11 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
             else:
                 pygame.draw.rect(screen, config_module.COLOR_BORDER, item_rect, width=config_module.Theme.BORDER_WIDTH)
 
-            # Bevel: 1px top highlight (raised panel look)
+            # Bevel: 1px top highlight and bottom shadow (raised panel look)
             top_highlight = _lighten(item_bg_color, 0.35)
             pygame.draw.line(screen, top_highlight, (item_rect.left, item_rect.top), (item_rect.right, item_rect.top), 1)
-            # 1px bottom edge shadow for depth
             bottom_shadow = _darken(item_bg_color, 0.25)
             pygame.draw.line(screen, bottom_shadow, (item_rect.left, item_rect.bottom - 1), (item_rect.right, item_rect.bottom - 1), 1)
-
-            # LCARS-style data ticks: small vertical bars on the right (like status/connection indicators)
-            tick_x = item_rect.right - (ui_scaler.scale(14) if ui_scaler else 14)
-            tick_w = max(1, ui_scaler.scale(2) if ui_scaler else 2)
-            tick_h = max(2, item_rect.height // 4)
-            tick_y_center = item_rect.centery
-            tick_color = _darken(item_bg_color, 0.15)
-            for offset in (-tick_h, 0, tick_h) if item_height >= 20 else (0,):
-                ty = tick_y_center + offset - tick_h // 2
-                if item_rect.top <= ty <= item_rect.bottom - tick_h:
-                    pygame.draw.rect(screen, tick_color, (tick_x, ty, tick_w, tick_h))
 
             # LCARS-style: selected item — pulsing outer glow then bright left-edge accent (accent on top)
             if i == selected_index:

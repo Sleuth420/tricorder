@@ -3,7 +3,7 @@
 
 import pygame
 import logging
-from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SCHEMATICS, STATE_SCHEMATICS_MENU, STATE_SCHEMATICS_CATEGORY, STATE_MEDIA_PLAYER, STATE_SENSORS_MENU, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_DEVICE, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY, STATE_SETTINGS_BLUETOOTH, STATE_LOADING
+from models.app_state import STATE_MENU, STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO, STATE_SETTINGS, STATE_SECRET_GAMES, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_TETRIS_ACTIVE, STATE_SCHEMATICS, STATE_SCHEMATICS_MENU, STATE_SCHEMATICS_CATEGORY, STATE_MEDIA_PLAYER, STATE_SENSORS_MENU, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_DEVICE, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY, STATE_SETTINGS_BLUETOOTH, STATE_LOADING
 from ui.menu import draw_menu_screen
 from ui.views.sensors.sensor_view import draw_sensor_view
 from ui.views.system.system_info_view import draw_system_info_view
@@ -356,6 +356,17 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
             logger.error("In SNAKE_ACTIVE state but no active_snake_game instance found!")
             screen.fill(config_module.Theme.BACKGROUND)
             error_text = fonts['medium'].render("Error: Snake game not loaded", True, config_module.Theme.ALERT)
+            cx = current_ui_scaler.screen_width // 2 if current_ui_scaler else screen.get_width() // 2
+            cy = current_ui_scaler.screen_height // 2 if current_ui_scaler else screen.get_height() // 2
+            screen.blit(error_text, (cx - error_text.get_width()//2, cy - error_text.get_height()//2))
+    elif app_state.current_state == STATE_TETRIS_ACTIVE:
+        if app_state.active_tetris_game:
+            screen.fill(config_module.Theme.BACKGROUND)
+            _draw_game_into_display(screen, app_state.active_tetris_game, fonts, config_module, current_ui_scaler)
+        else:
+            logger.error("In TETRIS_ACTIVE state but no active_tetris_game instance found!")
+            screen.fill(config_module.Theme.BACKGROUND)
+            error_text = fonts['medium'].render("Error: Tetris game not loaded", True, config_module.Theme.ALERT)
             cx = current_ui_scaler.screen_width // 2 if current_ui_scaler else screen.get_width() // 2
             cy = current_ui_scaler.screen_height // 2 if current_ui_scaler else screen.get_height() // 2
             screen.blit(error_text, (cx - error_text.get_width()//2, cy - error_text.get_height()//2))

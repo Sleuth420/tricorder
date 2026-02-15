@@ -18,6 +18,7 @@ STATE_SECRET_GAMES = "SECRET_GAMES"
 STATE_PONG_ACTIVE = "PONG_ACTIVE"
 STATE_BREAKOUT_ACTIVE = "BREAKOUT_ACTIVE"
 STATE_SNAKE_ACTIVE = "SNAKE_ACTIVE"
+STATE_TETRIS_ACTIVE = "TETRIS_ACTIVE"
 STATE_SCHEMATICS = "SCHEMATICS"
 STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU"
 STATE_SCHEMATICS_CATEGORY = "SCHEMATICS_CATEGORY"
@@ -101,6 +102,8 @@ class InputRouter:
             return self._handle_breakout_input(action)
         elif current_state == STATE_SNAKE_ACTIVE:
             return self._handle_snake_input(action)
+        elif current_state == STATE_TETRIS_ACTIVE:
+            return self._handle_tetris_input(action)
         elif current_state in [STATE_DASHBOARD, STATE_SENSOR_VIEW, STATE_SYSTEM_INFO]:
             return self._handle_view_input(action)
         elif current_state == STATE_SCHEMATICS:
@@ -149,7 +152,7 @@ class InputRouter:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_WIFI_NETWORKS)
             else:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS)
-        elif current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE]:
+        elif current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_TETRIS_ACTIVE]:
             logger.info(f"BACK from {current_state} (general view), returning to previous or menu")
             return (self.app_state.state_manager.return_to_previous() or 
                    self.app_state.state_manager.return_to_menu())
@@ -709,7 +712,8 @@ class InputRouter:
             if self.app_state.game_manager.launch_snake(ui_scaler):
                 return self.app_state.state_manager.transition_to(STATE_SNAKE_ACTIVE)
         elif selected_item.action_name == app_config.ACTION_LAUNCH_TETRIS:
-            pass 
+            if self.app_state.game_manager.launch_tetris(ui_scaler):
+                return self.app_state.state_manager.transition_to(STATE_TETRIS_ACTIVE)
         elif selected_item.action_name == app_config.ACTION_RETURN_TO_MENU:
             return self.app_state.state_manager.return_to_menu()
         return False
@@ -992,6 +996,17 @@ class InputRouter:
             return False
             
         game_result = self.app_state.game_manager.handle_snake_input(action)
+        if game_result == "QUIT_TO_MENU":
+            return self.app_state.state_manager.return_to_menu()
+        elif game_result:
+            return True
+        return False
+
+    def _handle_tetris_input(self, action):
+        """Handle input for the Tetris game."""
+        if not self.app_state.active_tetris_game:
+            return False
+        game_result = self.app_state.game_manager.handle_tetris_input(action)
         if game_result == "QUIT_TO_MENU":
             return self.app_state.state_manager.return_to_menu()
         elif game_result:

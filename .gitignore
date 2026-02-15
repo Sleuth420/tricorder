@@ -58,3 +58,6 @@ wifi_scan_output.txt
 # Environment variables
 .env
 .env.example
+
+# Media under assets
+assets/media/

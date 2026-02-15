@@ -5,10 +5,12 @@ import logging
 from games.pong import PongGame
 from games.breakout import BreakoutGame
 from games.snake import SnakeGame
+from games.tetris import TetrisGame
 # State constants - defined locally to avoid circular imports
 STATE_PONG_ACTIVE = "PONG_ACTIVE"
 STATE_BREAKOUT_ACTIVE = "BREAKOUT_ACTIVE"
 STATE_SNAKE_ACTIVE = "SNAKE_ACTIVE"
+STATE_TETRIS_ACTIVE = "TETRIS_ACTIVE"
 STATE_MENU = "MENU"
 import config as app_config
 
@@ -34,6 +36,7 @@ class GameManager:
         self.active_pong_game = None
         self.active_breakout_game = None
         self.active_snake_game = None
+        self.active_tetris_game = None
         
     def _game_rect(self, ui_scaler):
         """Return the play area rect: safe area if ui_scaler has it enabled, else full screen."""
@@ -86,15 +89,20 @@ class GameManager:
             logger.error(f"Failed to launch Snake game: {e}")
             return False
             
-    def launch_tetris(self):
+    def launch_tetris(self, ui_scaler=None):
         """
-        Launch a new Tetris game (placeholder).
-        
-        Returns:
-            bool: True if game was launched successfully
+        Launch a new Tetris game. Uses app safe area when ui_scaler is provided and enabled.
         """
-        logger.warning("Tetris game not yet implemented")
-        return False
+        try:
+            rect = self._game_rect(ui_scaler)
+            w = rect.width if rect else self.screen_width
+            h = rect.height if rect else self.screen_height
+            self.active_tetris_game = TetrisGame(w, h, self.config)
+            logger.info("Tetris game launched successfully")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to launch Tetris game: {e}")
+            return False
         
     def close_current_game(self):
         """Close the currently active game."""
@@ -107,6 +115,9 @@ class GameManager:
         if self.active_snake_game:
             logger.info("Closing Snake game")
             self.active_snake_game = None
+        if self.active_tetris_game:
+            logger.info("Closing Tetris game")
+            self.active_tetris_game = None
             
     def handle_pong_input(self, action_name, event_type=None):
         """
@@ -358,4 +369,43 @@ class GameManager:
         
     def get_snake_game(self):
         """Get the active Snake game instance."""
-        return self.active_snake_game 
+        return self.active_snake_game
+
+    def get_tetris_game(self):
+        """Get the active Tetris game instance."""
+        return self.active_tetris_game
+
+    def handle_tetris_input(self, action_name, event_type=None):
+        """
+        Handle input for the active Tetris game.
+        PREV=left, NEXT=right, SELECT=rotate clockwise. BACK on game over = quit.
+        """
+        if not self.active_tetris_game:
+            return None
+        g = self.active_tetris_game
+        if not g.paused and not g.game_over:
+            if action_name == app_config.INPUT_ACTION_PREV:
+                g.move_left()
+            elif action_name == app_config.INPUT_ACTION_NEXT:
+                g.move_right()
+            elif action_name == app_config.INPUT_ACTION_SELECT:
+                g.rotate_cw()
+        elif g.paused:
+            if action_name == app_config.INPUT_ACTION_PREV:
+                g.navigate_pause_menu_up()
+            elif action_name == app_config.INPUT_ACTION_NEXT:
+                g.navigate_pause_menu_down()
+            elif action_name == app_config.INPUT_ACTION_SELECT:
+                menu_action = g.select_pause_menu_option()
+                if menu_action == "RESUME_GAME":
+                    return "RESUME_GAME"
+                if menu_action == "QUIT_TO_MENU":
+                    return "QUIT_TO_MENU"
+        elif g.game_over and action_name == app_config.INPUT_ACTION_BACK:
+            return "QUIT_TO_MENU"
+        return None
+
+    def update_tetris(self, keys_held):
+        """Update Tetris; optional: hold SELECT for soft drop."""
+        if self.active_tetris_game and not self.active_tetris_game.paused and not self.active_tetris_game.game_over:
+            self.active_tetris_game.update(keys_held) 

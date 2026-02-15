@@ -3,6 +3,7 @@
 # Same pattern as 3D schematics: one window, VLC draws into it (set_hwnd/set_xwindow).
 
 import os
+import re
 import sys
 import time
 import logging
@@ -160,23 +161,55 @@ class MediaPlayerManager:
             logger.info("Media player: advancing to next track: %s", self.get_current_track_name())
             self.play()
 
+    @staticmethod
+    def _format_episode_display_name(raw):
+        """
+        Convert metadata/filename to 's01e06 - Episode Title' when it contains SxxExx.
+        Example: "Star Trek TOS S01E06 Mudd's Women" -> "s01e06 - Mudd's Women".
+        If no SxxExx pattern is found, return the string trimmed.
+        """
+        if not raw or not isinstance(raw, str):
+            return raw or ""
+        raw = raw.strip()
+        # Match S01E06 (case insensitive) and everything after as episode title
+        m = re.search(r"(s\d+e\d+)\s*(.*)", raw, re.IGNORECASE)
+        if m:
+            code = m.group(1).lower()
+            title = m.group(2).strip()
+            if title:
+                return f"{code} - {title}"
+            return code
+        return raw
+
     def _get_display_name_for_path(self, path):
         """
-        Use MP4 metadata Comment (Details > Comments) as display name when present;
-        otherwise use file basename. Example: mother_earth.mp4 with comment "Muthher Erth" shows as "Muthher Erth".
+        Use MP4 metadata (Comment, then Title) or filename, then format as 's01e06 - Episode Title'.
         """
         base = os.path.basename(path)
-        if not _MUTAGEN_AVAILABLE or os.path.splitext(path)[1].lower() != ".mp4":
-            return base
-        try:
-            mp4 = MutagenMP4(path)
-            # MP4 Comment atom (©cmt) = "Comments" in file Details / metadata
-            comment_list = mp4.get("\xa9cmt", [])
-            if comment_list and comment_list[0]:
-                return str(comment_list[0]).strip()
-        except Exception as e:
-            logger.debug("Could not read MP4 comment for %s: %s", path, e)
-        return base
+        name_no_ext = os.path.splitext(base)[0]
+        raw = name_no_ext
+        if _MUTAGEN_AVAILABLE and os.path.splitext(path)[1].lower() == ".mp4":
+            try:
+                mp4 = MutagenMP4(path)
+                # Comment (©cmt) = Details > Comments; Title (©nam) = Details tab title
+                for key in ("\xa9cmt", "\xa9nam"):
+                    val = mp4.get(key, [])
+                    if val and val[0]:
+                        raw = str(val[0]).strip()
+                        break
+            except Exception as e:
+                logger.debug("Could not read MP4 metadata for %s: %s", path, e)
+        return self._format_episode_display_name(raw)
+
+    @staticmethod
+    def _is_temporary_media_file(name):
+        """Return True if the filename looks like a temporary/helper file (e.g. macOS ._* resource forks)."""
+        base = os.path.basename(name)
+        if base.startswith("._"):
+            return True
+        if base.startswith(".") and len(base) > 1:
+            return True
+        return False
 
     def _scan_season_folders(self):
         """Populate _season_folders with subdirs of media_folder that contain at least one media file. Sorted by folder name (1, 2, 3...)."""
@@ -190,6 +223,8 @@ class MediaPlayerManager:
                     continue
                 has_media = False
                 for f in os.listdir(folder_path):
+                    if self._is_temporary_media_file(f):
+                        continue
                     _, ext = os.path.splitext(f)
                     if ext.lower() in self.extensions and os.path.isfile(os.path.join(folder_path, f)):
                         has_media = True
@@ -245,6 +280,8 @@ class MediaPlayerManager:
             return
         try:
             for name in sorted(os.listdir(scan_folder)):
+                if self._is_temporary_media_file(name):
+                    continue
                 _, ext = os.path.splitext(name)
                 if ext.lower() in self.extensions:
                     path = os.path.join(scan_folder, name)

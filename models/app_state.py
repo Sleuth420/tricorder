@@ -34,6 +34,7 @@ STATE_SECRET_GAMES = "SECRET_GAMES" # Secret menu
 STATE_PONG_ACTIVE = "PONG_ACTIVE" # Pong game
 STATE_BREAKOUT_ACTIVE = "BREAKOUT_ACTIVE" # Breakout game
 STATE_SNAKE_ACTIVE = "SNAKE_ACTIVE" # Snake game
+STATE_TETRIS_ACTIVE = "TETRIS_ACTIVE" # Tetris game
 STATE_SCHEMATICS = "SCHEMATICS" # Schematics viewer
 STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU" # Schematics selection menu
 STATE_SCHEMATICS_CATEGORY = "SCHEMATICS_CATEGORY" # Schematics submenu: Schematics | Media Player
@@ -174,6 +175,11 @@ class AppState:
         return self.game_manager.get_snake_game()
 
     @property
+    def active_tetris_game(self):
+        """Get the active Tetris game instance."""
+        return self.game_manager.get_tetris_game()
+
+    @property
     def secret_menu_items(self):
         """Get secret menu items (compatibility property)."""
         return self.menu_manager.secret_menu_items
@@ -307,6 +313,8 @@ class AppState:
                         state_changed_by_action = self._handle_breakout_joystick_input(action_name) or state_changed_by_action
                     elif self.current_state == STATE_SNAKE_ACTIVE:
                         state_changed_by_action = self._handle_snake_joystick_input(action_name) or state_changed_by_action
+                    elif self.current_state == STATE_TETRIS_ACTIVE:
+                        state_changed_by_action = self._handle_tetris_joystick_input(action_name) or state_changed_by_action
                     elif self.current_state == STATE_WIFI_PASSWORD_ENTRY:
                         # Handle joystick navigation for password entry
                         direction = result.get('direction')
@@ -446,6 +454,16 @@ class AppState:
                     state_changed = self._quit_snake_to_menu()
                 elif game_result:
                     state_changed = True
+
+        elif self.current_state == STATE_TETRIS_ACTIVE and self.active_tetris_game:
+            if self.active_tetris_game.game_over and action_name == app_config.INPUT_ACTION_PREV:
+                state_changed = self._quit_tetris_to_menu()
+            elif action_name:
+                game_result = self.game_manager.handle_tetris_input(action_name)
+                if game_result == "QUIT_TO_MENU":
+                    state_changed = self._quit_tetris_to_menu()
+                elif game_result:
+                    state_changed = True
         
         # Special handling for schematics view - check rotation mode
         elif self.current_state == STATE_SCHEMATICS and not self.schematics_pause_menu_active:
@@ -453,7 +471,7 @@ class AppState:
         
         # General key releases for menu navigation or back action
         elif action_name == app_config.INPUT_ACTION_BACK:
-            if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SECRET_GAMES, STATE_SENSORS_MENU, STATE_SETTINGS, STATE_SCHEMATICS_CATEGORY, STATE_MEDIA_PLAYER]:
+            if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_TETRIS_ACTIVE, STATE_SECRET_GAMES, STATE_SENSORS_MENU, STATE_SETTINGS, STATE_SCHEMATICS_CATEGORY, STATE_MEDIA_PLAYER]:
                 state_changed = self.state_manager.return_to_previous()
                 if not state_changed or not self.state_manager.previous_state:
                     state_changed = self.state_manager.return_to_menu()
@@ -521,6 +539,23 @@ class AppState:
             target_state = self.previous_state
         self.game_manager.close_current_game()
         return self.state_manager.transition_to(target_state)
+
+    def _quit_tetris_to_menu(self):
+        """Quit Tetris game and return to menu."""
+        target_state = STATE_MENU
+        if self.previous_state and self.previous_state != STATE_TETRIS_ACTIVE:
+            target_state = self.previous_state
+        self.game_manager.close_current_game()
+        return self.state_manager.transition_to(target_state)
+
+    def _handle_tetris_joystick_input(self, action_name):
+        """Handle joystick input specifically for Tetris game."""
+        game_result = self.game_manager.handle_tetris_input(action_name)
+        if game_result == "QUIT_TO_MENU":
+            return self._quit_tetris_to_menu()
+        elif game_result:
+            return True
+        return False
 
     def _route_action(self, action):
         """Route an action to the appropriate handler using the input router."""
@@ -611,7 +646,9 @@ class AppState:
         elif self.current_state == STATE_BREAKOUT_ACTIVE:
             self.game_manager.handle_continuous_breakout_input(self.keys_held)
         # Snake doesn't need continuous input - it uses discrete turns
-            
+        elif self.current_state == STATE_TETRIS_ACTIVE:
+            self.game_manager.update_tetris(self.keys_held)
+
         # Check KEY_PREV long press for back to menu / previous state
         if self.input_manager.check_long_press_duration():
             # If a secret combo is currently being timed (i.e., secret_combo_start_time is not None),
@@ -622,19 +659,20 @@ class AppState:
                     handled = self._handle_schematics_long_press('PREV')
                     if handled:
                         state_changed = True
-                    self.input_manager.reset_long_press_timer()
+                    self.input_manager.reset_long_press_timer(consumed_as_long_press=handled)
                 else:
                     logger.info(f"KEY_PREV Long press detected in {self.current_state}.")
                     handled_by_back_action = self._route_action(app_config.INPUT_ACTION_BACK)
                     if not handled_by_back_action:
-                        if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SECRET_GAMES]:
+                        if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_TETRIS_ACTIVE, STATE_SECRET_GAMES]:
                             logger.info(f"Long press in view state {self.current_state}, returning to previous or menu.")
                             state_changed = self.state_manager.return_to_previous()
                             if not state_changed or not self.state_manager.previous_state:
                                 state_changed = self.state_manager.return_to_menu()
                     else:
                         state_changed = True
-                    self.input_manager.reset_long_press_timer() # Reset only if processed or intended to be processed
+                    # Consumed so KEYUP does not route PREV (would move selection up one)
+                    self.input_manager.reset_long_press_timer(consumed_as_long_press=True)
                 
         # Check D key long press: media player = file info overlay, 3D viewer = pause menu
         if self.input_manager.check_next_key_long_press():
@@ -670,19 +708,20 @@ class AppState:
                     handled = self._handle_schematics_long_press('PREV')
                     if handled:
                         state_changed = True
-                    self.input_manager.reset_mouse_left_timer()
+                    self.input_manager.reset_mouse_left_timer(consumed_as_long_press=handled)
                 else:
                     logger.info(f"Mouse left long press detected in {self.current_state}.")
                     handled_by_back_action = self._route_action(app_config.INPUT_ACTION_BACK)
                     if not handled_by_back_action:
-                        if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_SECRET_GAMES]:
+                        if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_TETRIS_ACTIVE, STATE_SECRET_GAMES]:
                             logger.info(f"Mouse left long press in view state {self.current_state}, returning to previous or menu.")
                             state_changed = self.state_manager.return_to_previous()
                             if not state_changed or not self.state_manager.previous_state:
                                 state_changed = self.state_manager.return_to_menu()
                     else:
                         state_changed = True
-                    self.input_manager.reset_mouse_left_timer()
+                    # Consumed so MOUSEUP does not route PREV (would move selection up one)
+                    self.input_manager.reset_mouse_left_timer(consumed_as_long_press=True)
                     
         # Check mouse right button long press for 3D viewer pause menu
         if (self.current_state == STATE_SCHEMATICS and 

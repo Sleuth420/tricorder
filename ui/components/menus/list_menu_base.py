@@ -29,10 +29,11 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
         dict: Layout information including visible item range
     """
     screen.fill(config_module.Theme.BACKGROUND)
-    # Use UIScaler dimensions when available (best practice: no raw screen.get_* for layout)
+    # Use UIScaler dimensions when available; respect safe area so content clears curved bezel
     if ui_scaler:
         screen_width = ui_scaler.screen_width
         screen_height = ui_scaler.screen_height
+        safe_rect = ui_scaler.get_safe_area_rect() if ui_scaler.safe_area_enabled else pygame.Rect(0, 0, screen_width, screen_height)
         header_top_margin = ui_scaler.header_top_margin()
         header_height = ui_scaler.header_height() + ui_scaler.scale(20)
         content_spacing = ui_scaler.margin("large")
@@ -42,25 +43,26 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
     else:
         screen_width = screen.get_width()
         screen_height = screen.get_height()
+        safe_rect = pygame.Rect(0, 0, screen_width, screen_height)
         header_top_margin = screen_height // 20
         header_height = config_module.HEADER_HEIGHT + 20
         content_spacing = screen_height // 10
         item_height_padding = 20
     current_time = time.time()
     
-    # === ANIMATED HEADER SECTION ===
-    header_rect = pygame.Rect(0, header_top_margin, screen_width, header_height)
+    # === ANIMATED HEADER SECTION === (within safe area to avoid corner cutoff)
+    header_rect = pygame.Rect(safe_rect.left, safe_rect.top + header_top_margin, safe_rect.width, header_height)
     pygame.draw.rect(screen, config_module.Theme.BACKGROUND, header_rect)
     
     # Draw animated header with glow effect
     font_large = fonts['large']
     _draw_animated_header(screen, title, font_large, header_rect, current_time, config_module)
     
-    # === CONTENT SECTION ===
+    # === CONTENT SECTION === (within safe area)
     content_y = header_rect.bottom + content_spacing
     footer_margin = ui_scaler.scale(20) if ui_scaler else 20
     footer_height = (config_module.FONT_SIZE_SMALL * 3) if not ui_scaler else ui_scaler.scale(config_module.FONT_SIZE_SMALL * 3)
-    available_height = screen_height - content_y - footer_height - footer_margin
+    available_height = safe_rect.bottom - content_y - footer_height - footer_margin
     
     # Calculate item dimensions
     font_medium = fonts['medium']
@@ -109,19 +111,19 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
         text_color = config_module.Theme.FOREGROUND
         is_selected = (i == selected_index)
         
-        # Create item rectangle - center all items (use UIScaler for sizes when available)
+        # Create item rectangle - center all items within safe area (use UIScaler for sizes when available)
         if item_style == "button":
             btn_half_w = ui_scaler.scale(150) if ui_scaler else 150
             item_rect = pygame.Rect(
-                (screen_width // 2) - btn_half_w, y_offset - (item_height_padding // 2),
+                safe_rect.centerx - btn_half_w, y_offset - (item_height_padding // 2),
                 btn_half_w * 2, effective_item_height
             )
         else:
             max_item_w = ui_scaler.scale(400) if ui_scaler else 400
             side_inset = ui_scaler.scale(60) if ui_scaler else 60
-            item_width = min(max_item_w, screen_width - side_inset)
+            item_width = min(max_item_w, safe_rect.width - side_inset)
             item_rect = pygame.Rect(
-                (screen_width // 2) - (item_width // 2), y_offset - (item_height_padding // 2),
+                safe_rect.centerx - (item_width // 2), y_offset - (item_height_padding // 2),
                 item_width, effective_item_height
             )
         
@@ -175,13 +177,13 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
         if visible_start > 0:
             up_indicator = "↑"
             up_surface = font_medium.render(up_indicator, True, config_module.Theme.ACCENT)
-            up_rect = up_surface.get_rect(center=(screen_width // 2, content_y - scroll_indicator_offset))
+            up_rect = up_surface.get_rect(center=(safe_rect.centerx, content_y - scroll_indicator_offset))
             screen.blit(up_surface, up_rect)
         
         if visible_end < total_items:
             down_indicator = "↓"
             down_surface = font_medium.render(down_indicator, True, config_module.Theme.ACCENT)
-            down_rect = down_surface.get_rect(center=(screen_width // 2, y_offset + ui_scaler.scale(10) if ui_scaler else 10))
+            down_rect = down_surface.get_rect(center=(safe_rect.centerx, y_offset + ui_scaler.scale(10) if ui_scaler else 10))
             screen.blit(down_surface, down_rect)
     
     # Draw ambient tricorder effects (pass ui_scaler for consistent scaling)
@@ -234,16 +236,32 @@ def _draw_list_ambient_effects(screen, screen_width, screen_height, header_rect,
     _draw_bottom_status_line(screen, screen_width, screen_height, current_time, config_module, ui_scaler)
 
 def _draw_corner_status_dots(screen, screen_width, screen_height, current_time, config_module, ui_scaler=None, margin=15):
-    """Draw pulsing status dots in corners."""
+    """Draw pulsing status dots in corners (within safe area when enabled)."""
+    dot_radius = ui_scaler.scale(6) if ui_scaler else 6
     if ui_scaler:
         margin = ui_scaler.margin("small")
-    dot_radius = ui_scaler.scale(6) if ui_scaler else 6
-    dot_positions = [
-        (margin, margin),
-        (screen_width - margin, margin),
-        (margin, screen_height - margin),
-        (screen_width - margin, screen_height - margin)
-    ]
+        if ui_scaler.safe_area_enabled:
+            sr = ui_scaler.get_safe_area_rect()
+            dot_positions = [
+                (sr.left + margin, sr.top + margin),
+                (sr.right - margin, sr.top + margin),
+                (sr.left + margin, sr.bottom - margin),
+                (sr.right - margin, sr.bottom - margin)
+            ]
+        else:
+            dot_positions = [
+                (margin, margin),
+                (screen_width - margin, margin),
+                (margin, screen_height - margin),
+                (screen_width - margin, screen_height - margin)
+            ]
+    else:
+        dot_positions = [
+            (margin, margin),
+            (screen_width - margin, margin),
+            (margin, screen_height - margin),
+            (screen_width - margin, screen_height - margin)
+        ]
     colors = [
         config_module.Palette.GREEN,
         config_module.Palette.ENGINEERING_GOLD,

@@ -26,9 +26,11 @@ def draw_confirmation_view(screen, app_state, fonts, config_module, message="Are
     if ui_scaler:
         screen_width = ui_scaler.screen_width
         screen_height = ui_scaler.screen_height
+        safe_rect = ui_scaler.get_safe_area_rect() if ui_scaler.safe_area_enabled else pygame.Rect(0, 0, screen_width, screen_height)
     else:
         screen_width = screen.get_width()
         screen_height = screen.get_height()
+        safe_rect = pygame.Rect(0, 0, screen_width, screen_height)
     font_large = fonts['large']
     font_medium = fonts['medium']
     if ui_scaler:
@@ -53,9 +55,9 @@ def draw_confirmation_view(screen, app_state, fonts, config_module, message="Are
         arrow_size = 16
         arrow_offset = 10
 
-    # Display the confirmation message with viking blue header color for consistency
+    # Display the confirmation message within safe area (curved bezel)
     msg_surface = font_large.render(message, True, config_module.Palette.VIKING_BLUE)
-    msg_rect = msg_surface.get_rect(center=(screen_width // 2, message_y))
+    msg_rect = msg_surface.get_rect(center=(safe_rect.centerx, message_y))
     screen.blit(msg_surface, msg_rect)
 
     # Get selected option from app_state
@@ -67,9 +69,9 @@ def draw_confirmation_view(screen, app_state, fonts, config_module, message="Are
         text_color = config_module.Theme.FOREGROUND
         is_selected = (i == current_selection_idx)
         
-        # Create item rectangle - centered like our list menus
+        # Create item rectangle - centered within safe area like our list menus
         item_rect = pygame.Rect(
-            (screen_width // 2) - (item_width // 2), 
+            safe_rect.centerx - (item_width // 2),
             y_offset + (i * (item_height + item_spacing)),
             item_width,
             item_height

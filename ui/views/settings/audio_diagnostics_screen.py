@@ -110,19 +110,21 @@ def draw_audio_diagnostics_screen(screen, app_state, fonts, config_module, ui_sc
     if ui_scaler:
         screen_width = ui_scaler.screen_width
         screen_height = ui_scaler.screen_height
+        safe_rect = ui_scaler.get_safe_area_rect() if ui_scaler.safe_area_enabled else pygame.Rect(0, 0, screen_width, screen_height)
     else:
         screen_width = screen.get_width()
         screen_height = screen.get_height()
-    left_inset = ui_scaler.margin("small") if ui_scaler else 20
-    title_top = ui_scaler.margin("small") if ui_scaler else 20
+        safe_rect = pygame.Rect(0, 0, screen_width, screen_height)
+    left_inset = safe_rect.left + (ui_scaler.margin("small") if ui_scaler else 20)
+    title_top = safe_rect.top + (ui_scaler.margin("small") if ui_scaler else 20)
     line_height = ui_scaler.scale(25) if ui_scaler else 25
-    content_top = ui_scaler.scale(70) if ui_scaler else 70
+    content_top = safe_rect.top + (ui_scaler.scale(70) if ui_scaler else 70)
     screen.fill(config_module.Theme.BACKGROUND)
     title_font = fonts['large']
     title_text = "Audio Diagnostics"
     title_surface = title_font.render(title_text, True, config_module.Theme.FOREGROUND)
-    title_x = (screen_width - title_surface.get_width()) // 2
-    screen.blit(title_surface, (title_x, title_top))
+    title_rect = title_surface.get_rect(centerx=safe_rect.centerx)
+    screen.blit(title_surface, (title_rect.x, title_top))
     y_offset = content_top
     small_font = fonts['small']
     medium_font = fonts['medium']
@@ -137,7 +139,7 @@ def draw_audio_diagnostics_screen(screen, app_state, fonts, config_module, ui_sc
     
     python_surface = small_font.render(python_text, True, config_module.Theme.FOREGROUND)
     pygame_surface = small_font.render(pygame_text, True, config_module.Theme.FOREGROUND)
-    right_col = screen_width - (ui_scaler.scale(200) if ui_scaler else 200)
+    right_col = safe_rect.right - (ui_scaler.scale(200) if ui_scaler else 200)
     screen.blit(python_surface, (left_inset, y_offset))
     screen.blit(pygame_surface, (right_col, y_offset))
     y_offset += line_height + 10
@@ -226,4 +228,4 @@ def draw_audio_diagnostics_screen(screen, app_state, fonts, config_module, ui_sc
     
     # Footer (OS-adaptive: "Back (hold Left)" on Pi, "Back (hold A)" on dev)
     labels = config_module.get_control_labels()
-    render_footer(screen, f"Press {labels['back']} to return", fonts, config_module.Theme.FOREGROUND, screen_width, screen_height, ui_scaler=ui_scaler)
+    render_footer(screen, f"Press {labels['back']} to return", fonts, config_module.Theme.FOREGROUND, screen_width, screen_height, ui_scaler=ui_scaler, content_center_x=safe_rect.centerx)

@@ -63,8 +63,9 @@ def draw_system_info_view(screen, app_state, sensor_values, fonts, config_module
         logger.info(f"🎨 SystemInfoView: screen={screen_width}x{screen_height}, spacing: section={section_spacing}px, line={line_spacing}px, text={text_spacing}px")
         _system_info_logged = True
 
-    # Draw header with subtle animation
-    header_rect = pygame.Rect(0, header_top_margin, screen_width, header_height)
+    # Draw header within safe area so it is not cut off by curved bezel
+    safe_rect = ui_scaler.get_safe_area_rect() if (ui_scaler and ui_scaler.safe_area_enabled) else pygame.Rect(0, 0, screen_width, screen_height)
+    header_rect = pygame.Rect(safe_rect.left, safe_rect.top + header_top_margin, safe_rect.width, header_height)
     _draw_animated_header(screen, header_rect, app_state, fonts, config_module, current_time)
 
     font_medium = fonts['medium']

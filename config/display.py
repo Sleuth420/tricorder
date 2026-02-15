@@ -42,10 +42,10 @@ SCHEMATICS_ZOOM_FAST_STEP = 0.3    # Faster zoom step for held actions
 # that blacks out the rest (so the app's curve matches the screen/cover).
 # Tune so content clears the bezel: increase if cut off; reduce top if black bar above.
 SAFE_AREA_ENABLED = True           # Enable/disable safe area and rounded-corner mask
-SAFE_AREA_TOP = 8                  # Pixels at top (reduced so orange header uses black bar area)
-SAFE_AREA_BOTTOM = 26              # Pixels at bottom so footer and status text clear the bezel
-SAFE_AREA_LEFT = 28                # Pixels at left so menu text clears the bezel
-SAFE_AREA_RIGHT = 28               # Pixels at right so content clears the bezel
+SAFE_AREA_TOP = 14                 # Pixels at top so headers and titles clear the curved bezel
+SAFE_AREA_BOTTOM = 32             # Pixels at bottom so footer and status text clear the bezel
+SAFE_AREA_LEFT = 34               # Pixels at left so menu text and labels clear the bezel
+SAFE_AREA_RIGHT = 34              # Pixels at right so content and graphs clear the bezel
 
 # Corner radius for the visible rounded-rect mask (0 = rectangular, no curve)
 # Sourced from theme so one value controls all UI and mask curvature app-wide

@@ -22,17 +22,18 @@ def draw_settings_view(screen, app_state, fonts, config_module, ui_scaler=None):
         config_module (module): Configuration module (config package)
         ui_scaler (UIScaler, optional): UI scaling system for responsive design
     """
-    # Add update available header if needed
+    # Add update available header if needed (respect safe area for curved bezel)
     if hasattr(app_state, 'update_available') and app_state.update_available:
         screen.fill(config_module.Theme.BACKGROUND)
-        header_inset = ui_scaler.margin("small") if ui_scaler else 20
-        content_top = ui_scaler.scale(60) if ui_scaler else 60
         w = ui_scaler.screen_width if ui_scaler else screen.get_width()
         h = ui_scaler.screen_height if ui_scaler else screen.get_height()
+        safe_rect = ui_scaler.get_safe_area_rect() if (ui_scaler and ui_scaler.safe_area_enabled) else pygame.Rect(0, 0, w, h)
+        header_inset = max(ui_scaler.margin("small"), safe_rect.left) if ui_scaler else 20
+        content_top = ui_scaler.scale(60) if ui_scaler else 60
         header_text = "[UPDATE AVAILABLE]"
         header_surface = fonts['medium'].render(header_text, True, config_module.Theme.ALERT)
-        screen.blit(header_surface, (header_inset, header_inset))
-        content_rect = pygame.Rect(0, content_top, w, h - content_top)
+        screen.blit(header_surface, (header_inset, safe_rect.top + (ui_scaler.margin("small") if ui_scaler else 8)))
+        content_rect = pygame.Rect(safe_rect.left, content_top, safe_rect.width, safe_rect.bottom - content_top)
         menu_screen = screen.subsurface(content_rect)
     else:
         menu_screen = screen

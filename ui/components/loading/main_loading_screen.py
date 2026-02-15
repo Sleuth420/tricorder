@@ -140,12 +140,13 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
     # Draw subtle tricorder-themed animations around the logo
     draw_tricorder_animations(screen, logo_rect, animation_time, progress, ui_scaler)
     
-    # Use UIScaler for all dimensions (best practice: no raw screen.get_* in layout)
+    # Use UIScaler for all dimensions; respect safe area for curved bezel
     if ui_scaler:
         screen_w = ui_scaler.screen_width
         screen_h = ui_scaler.screen_height
-        center_x = screen_w // 2
-        bar_width = ui_scaler.scale(192)  # ~60% of base 320
+        safe_rect = ui_scaler.get_safe_area_rect() if ui_scaler.safe_area_enabled else pygame.Rect(0, 0, screen_w, screen_h)
+        center_x = safe_rect.centerx
+        bar_width = min(ui_scaler.scale(192), safe_rect.width - ui_scaler.margin("medium") * 2)  # ~60% of base 320, within safe area
         bar_height = max(8, ui_scaler.scale(8))
         spacing_after_logo = ui_scaler.margin("large")
         progress_spacing = ui_scaler.margin("large")
@@ -155,6 +156,7 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
     else:
         screen_w = screen.get_width()
         screen_h = screen.get_height()
+        safe_rect = pygame.Rect(0, 0, screen_w, screen_h)
         center_x = screen_w // 2
         bar_width = int(screen_w * 0.6)
         bar_height = max(8, screen_h // 30)
@@ -164,8 +166,8 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
         lines_spacing = max(20, screen_h // 30)
         bottom_margin = max(40, screen_h // 15)
     
-    available_space_below_logo = screen_h - logo_rect.bottom
-    bar_x = (screen_w - bar_width) // 2
+    available_space_below_logo = (safe_rect.bottom if ui_scaler and ui_scaler.safe_area_enabled else screen_h) - logo_rect.bottom
+    bar_x = center_x - bar_width // 2
     bar_y = logo_rect.bottom + spacing_after_logo
     
     # Get font for text measurements

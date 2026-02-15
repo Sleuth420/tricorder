@@ -129,7 +129,7 @@ def render_note(screen, note, fonts, color, position, ui_scaler=None):
         ui_scaler=ui_scaler
     )
 
-def render_footer(screen, text, fonts, color, width, height, sidebar_width=0, ui_scaler=None):
+def render_footer(screen, text, fonts, color, width, height, sidebar_width=0, ui_scaler=None, content_center_x=None):
     """
     Render footer text at the bottom of the screen with responsive positioning.
     
@@ -142,6 +142,7 @@ def render_footer(screen, text, fonts, color, width, height, sidebar_width=0, ui
         height (int): Screen height for positioning
         sidebar_width (int): Width of the sidebar, if any
         ui_scaler (UIScaler, optional): UI scaling system for responsive design
+        content_center_x (int, optional): Override horizontal center (e.g. safe area center)
     
     Returns:
         pygame.Rect: The rectangle of the rendered text
@@ -157,14 +158,17 @@ def render_footer(screen, text, fonts, color, width, height, sidebar_width=0, ui
         # Fallback to original positioning
         footer_y = height - (font.get_height() * 1.5)
     
-    # Calculate center position relative to main content area
-    main_content_center = sidebar_width + (width - sidebar_width) // 2
+    # Use explicit center if provided (e.g. safe area center), else main content area
+    if content_center_x is not None:
+        center_x = content_center_x
+    else:
+        center_x = sidebar_width + (width - sidebar_width) // 2
     
     return render_text(
         screen, 
         text, 
         font,
         color, 
-        (main_content_center, footer_y),
+        (center_x, footer_y),
         ui_scaler=ui_scaler
     ) 

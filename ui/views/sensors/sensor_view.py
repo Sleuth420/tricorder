@@ -34,14 +34,16 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
     if ui_scaler:
         screen_width = ui_scaler.screen_width
         screen_height = ui_scaler.screen_height
+        safe_rect = ui_scaler.get_safe_area_rect() if ui_scaler.safe_area_enabled else pygame.Rect(0, 0, screen_width, screen_height)
     else:
         screen_width = screen.get_width()
         screen_height = screen.get_height()
+        safe_rect = pygame.Rect(0, 0, screen_width, screen_height)
     current_time = time.time()
     
-    # Use UIScaler for responsive spacing if available
+    # Use UIScaler for responsive spacing if available; keep content inside safe area for curved bezel
     if ui_scaler:
-        title_margin = ui_scaler.margin("small")
+        title_margin = max(ui_scaler.margin("small"), ui_scaler.get_safe_area_margins()["left"] if ui_scaler.safe_area_enabled else 0)
         value_spacing = ui_scaler.margin("medium")
         graph_margin = ui_scaler.margin("medium")
         
@@ -80,33 +82,33 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
     else:
         value_text_display = f"{text_val} {unit}".strip()
     
-    # Draw sensor name in top left with subtle glow effect
+    # Draw sensor name in top left within safe area
     title_font = fonts['medium']
     title_surface = title_font.render(display_name, True, config_module.Theme.ACCENT)
-    title_rect = title_surface.get_rect(topleft=(title_margin, title_margin))
+    title_rect = title_surface.get_rect(topleft=(safe_rect.left + title_margin, safe_rect.top + title_margin))
     _draw_subtle_title_glow(screen, display_name, title_font, config_module.Theme.ACCENT, title_rect.center, current_time)
     screen.blit(title_surface, title_rect)
     
-    # Draw frozen indicator if needed (moved to top right) - solid color for small screen visibility
+    # Draw frozen indicator if needed (moved to top right) within safe area
     if app_state.is_frozen:
         frozen_font = fonts['medium']
         frozen_surface = frozen_font.render("[FROZEN]", True, config_module.Theme.FROZEN_INDICATOR)
-        frozen_rect = frozen_surface.get_rect(topright=(screen_width - title_margin, title_margin))
+        frozen_rect = frozen_surface.get_rect(topright=(safe_rect.right - title_margin, safe_rect.top + title_margin))
         screen.blit(frozen_surface, frozen_rect)
     
-    # Draw current value below the title (temperature: omit so only small ticks show)
+    # Draw current value below the title (temperature: omit so only small ticks show), within safe area
     value_font = fonts['large']
     value_surface = value_font.render(value_text_display, True, config_module.Theme.FOREGROUND)
-    value_rect = value_surface.get_rect(midleft=(title_margin, title_rect.bottom + value_spacing))
+    value_rect = value_surface.get_rect(midleft=(safe_rect.left + title_margin, title_rect.bottom + value_spacing))
     if current_sensor_key != config_module.SENSOR_TEMPERATURE:
         screen.blit(value_surface, value_rect)
     else:
         value_rect = pygame.Rect(title_rect.x, title_rect.y, title_rect.width, title_rect.height + value_spacing)
     
-    # Draw note in middle right if present
+    # Draw note in middle right if present, within safe area
     if note:
-        note_x_pos = screen_width - title_margin  # Right side of screen  
-        note_y_pos = screen_height // 2  # Middle of screen
+        note_x_pos = safe_rect.right - title_margin
+        note_y_pos = safe_rect.centery
         render_text(
             screen, note, 
             fonts['small'] if 'small' in fonts else fonts['medium'],
@@ -122,10 +124,10 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
         history_data = sensor_history.get_history(current_sensor_key)
         footer_space = ui_scaler.scale(40) if ui_scaler else 40
         min_graph_h = ui_scaler.scale(100) if ui_scaler else 100
-        graph_height = screen_height - value_rect.bottom - graph_margin*3 - config_module.FONT_SIZE_SMALL*3 - footer_space
-        graph_width = screen_width - graph_margin*2
+        graph_height = safe_rect.bottom - value_rect.bottom - graph_margin*3 - config_module.FONT_SIZE_SMALL*3 - footer_space
+        graph_width = safe_rect.width - graph_margin*2
         graph_rect = pygame.Rect(
-            graph_margin, 
+            safe_rect.left + graph_margin, 
             value_rect.bottom + graph_margin,
             graph_width,
             max(min_graph_h, graph_height)  # Ensure minimum height
@@ -166,10 +168,10 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
                 graph_margin_top = 20
                 graph_margin_bottom = 20
                 
-            # Maximize vertical space by using margins from top and bottom
-            graph_height = screen_height - graph_margin_top - graph_margin_bottom  # Use all available space between margins
-            graph_x = (screen_width - graph_width) // 2
-            graph_y = graph_margin_top  # Start from top margin
+            # Maximize vertical space within safe area so graph and labels clear curved bezel
+            graph_height = safe_rect.height - graph_margin_top - graph_margin_bottom
+            graph_x = safe_rect.centerx - (graph_width // 2)
+            graph_y = safe_rect.top + graph_margin_top
             graph_rect = pygame.Rect(graph_x, graph_y, graph_width, graph_height)
             
             # UI-only: temperature graph shows K scale 0–1701 (convert at draw time; data unchanged)
@@ -225,7 +227,7 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
             fallback_text = "Graph N/A"
             fallback_surf = fallback_font.render(fallback_text, True, config_module.Theme.ACCENT)
             fallback_offset = ui_scaler.scale(80) if ui_scaler else 80
-            fallback_rect = fallback_surf.get_rect(center=(screen_width // 2, title_rect.bottom + fallback_offset))
+            fallback_rect = fallback_surf.get_rect(center=(safe_rect.centerx, title_rect.bottom + fallback_offset))
             screen.blit(fallback_surf, fallback_rect)
 
     elif graph_type == "NONE" or current_sensor_key == config_module.SENSOR_CLOCK:
@@ -235,7 +237,7 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
         if fallback_text:
             fallback_surf = fallback_font.render(fallback_text, True, config_module.Theme.ACCENT)
             fallback_offset = ui_scaler.scale(80) if ui_scaler else 80
-            fallback_rect = fallback_surf.get_rect(center=(screen_width // 2, title_rect.bottom + fallback_offset))
+            fallback_rect = fallback_surf.get_rect(center=(safe_rect.centerx, title_rect.bottom + fallback_offset))
             screen.blit(fallback_surf, fallback_rect)
     else:
         logger.warning(f"Unknown graph_type '{graph_type}' or no graph configured for sensor: {current_sensor_key}")
@@ -243,7 +245,7 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
         fallback_text = "Graph N/A"
         fallback_surf = fallback_font.render(fallback_text, True, config_module.Theme.ACCENT)
         fallback_offset = ui_scaler.scale(80) if ui_scaler else 80
-        fallback_rect = fallback_surf.get_rect(center=(screen_width // 2, title_rect.bottom + fallback_offset))
+        fallback_rect = fallback_surf.get_rect(center=(safe_rect.centerx, title_rect.bottom + fallback_offset))
         screen.blit(fallback_surf, fallback_rect)
 
     # Draw ambient tricorder effects in available spaces
@@ -258,7 +260,8 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
         screen, hint_text, fonts,
         config_module.Theme.FOREGROUND,
         screen_width, screen_height,
-        ui_scaler=ui_scaler
+        ui_scaler=ui_scaler,
+        content_center_x=safe_rect.centerx
     )
 
 def _draw_subtle_title_glow(screen, text, font, color, center_pos, current_time):

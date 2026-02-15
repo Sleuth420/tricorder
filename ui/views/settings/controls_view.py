@@ -23,10 +23,12 @@ def draw_controls_view(screen, app_state, fonts, config_module, ui_scaler=None):
     if ui_scaler:
         screen_width = ui_scaler.screen_width
         screen_height = ui_scaler.screen_height
+        safe_rect = ui_scaler.get_safe_area_rect() if ui_scaler.safe_area_enabled else pygame.Rect(0, 0, screen_width, screen_height)
     else:
         screen_width = screen.get_width()
         screen_height = screen.get_height()
-    rect = pygame.Rect(0, 0, screen_width, screen_height)
+        safe_rect = pygame.Rect(0, 0, screen_width, screen_height)
+    rect = safe_rect
 
     # Use UIScaler for responsive dimensions if available
     if ui_scaler:
@@ -72,7 +74,7 @@ def draw_controls_view(screen, app_state, fonts, config_module, ui_scaler=None):
     font_large = fonts['large']
     
     # Calculate how many items can fit on screen
-    available_height = screen_height - content_y - footer_space
+    available_height = safe_rect.bottom - content_y - footer_space
     max_visible_items = available_height // item_height
     
     # Only count selectable items (controls, not sections/spacers) for navigation
@@ -111,7 +113,7 @@ def draw_controls_view(screen, app_state, fonts, config_module, ui_scaler=None):
             font = font_large
             text_color = config_module.Theme.ACCENT
             text_surface = font.render(item_text, True, text_color)
-            text_rect = text_surface.get_rect(center=(screen_width // 2, y_offset + (item_height // 2)))
+            text_rect = text_surface.get_rect(center=(safe_rect.centerx, y_offset + (item_height // 2)))
             screen.blit(text_surface, text_rect)
             y_offset += item_height
             
@@ -154,7 +156,7 @@ def draw_controls_view(screen, app_state, fonts, config_module, ui_scaler=None):
             y_offset += item_height
         
         # Stop if we're running out of space
-        if y_offset >= screen_height - footer_space:
+        if y_offset >= safe_rect.bottom - footer_space:
             break
     
     # Show scroll indicators if there are more items
@@ -162,14 +164,14 @@ def draw_controls_view(screen, app_state, fonts, config_module, ui_scaler=None):
         up_text = "▲ More above"
         up_surface = font_small.render(up_text, True, config_module.Theme.ACCENT)
         up_y = content_y + (ui_scaler.scale(5) if ui_scaler else 5)
-        up_rect = up_surface.get_rect(center=(screen_width // 2, up_y))
+        up_rect = up_surface.get_rect(center=(safe_rect.centerx, up_y))
         screen.blit(up_surface, up_rect)
     
     if visible_end < len(controls_items):
         down_text = "▼ More below"
         down_surface = font_small.render(down_text, True, config_module.Theme.ACCENT)
-        down_y = screen_height - (ui_scaler.scale(75) if ui_scaler else 75)
-        down_rect = down_surface.get_rect(center=(screen_width // 2, down_y))
+        down_y = safe_rect.bottom - (ui_scaler.scale(75) if ui_scaler else 75)
+        down_rect = down_surface.get_rect(center=(safe_rect.centerx, down_y))
         screen.blit(down_surface, down_rect)
 
     # Footer hints (OS-adaptive: Left/Right/Middle on Pi, A/D/Enter on dev)
@@ -180,5 +182,6 @@ def draw_controls_view(screen, app_state, fonts, config_module, ui_scaler=None):
         screen, hint, fonts,
         config_module.Theme.FOREGROUND,
         screen_width, screen_height,
-        ui_scaler=ui_scaler
+        ui_scaler=ui_scaler,
+        content_center_x=safe_rect.centerx
     ) 

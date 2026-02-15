@@ -110,7 +110,7 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
     sidebar_content_y_start = header_height # Items start below the header/corner
     sidebar_content_height = screen_height - header_height
     
-    # Respect safe area margins for sidebar items
+    # Respect safe area margins for sidebar items so text is not cut off by curved bezel
     if ui_scaler and ui_scaler.safe_area_enabled:
         safe_margins = ui_scaler.get_safe_area_margins()
         sidebar_items_area = pygame.Rect(
@@ -126,11 +126,13 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
     selected_item_color = config_module.Theme.ACCENT
 
     if menu_items:
-        item_height = sidebar_content_height // len(menu_items)
+        # Use sidebar_items_area height so last item is not cut off by bottom curve
+        available_sidebar_height = max(1, sidebar_items_area.height)
+        item_height = available_sidebar_height // len(menu_items)
         for i, item in enumerate(menu_items): # item is now a MenuItem object
             item_rect = pygame.Rect(
                 sidebar_items_area.left,
-                sidebar_content_y_start + (i * item_height),
+                sidebar_items_area.top + (i * item_height),
                 sidebar_items_area.width,
                 item_height
             )

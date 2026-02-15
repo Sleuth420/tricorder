@@ -23,9 +23,11 @@ def draw_log_viewer_view(screen, app_state, fonts, config_module, ui_scaler=None
     if ui_scaler:
         screen_width = ui_scaler.screen_width
         screen_height = ui_scaler.screen_height
+        safe_rect = ui_scaler.get_safe_area_rect() if ui_scaler.safe_area_enabled else pygame.Rect(0, 0, screen_width, screen_height)
     else:
         screen_width = screen.get_width()
         screen_height = screen.get_height()
+        safe_rect = pygame.Rect(0, 0, screen_width, screen_height)
     margin_sm = ui_scaler.margin("small") if ui_scaler else 8
     margin_md = ui_scaler.margin("medium") if ui_scaler else 15
     # Get or create log viewer
@@ -48,7 +50,7 @@ def draw_log_viewer_view(screen, app_state, fonts, config_module, ui_scaler=None
         start_y = ui_scaler.margin("large") if ui_scaler else 30
         margin = margin_sm
         max_chars_per_line = 30
-        max_lines = max(1, min(8, (screen_height - start_y - footer_space) // line_height))
+        max_lines = max(1, min(8, (safe_rect.height - start_y - footer_space) // line_height))
     else:
         title_font = fonts['medium']
         content_font = fonts['small']
@@ -56,15 +58,15 @@ def draw_log_viewer_view(screen, app_state, fonts, config_module, ui_scaler=None
         start_y = ui_scaler.scale(50) if ui_scaler else 50
         margin = margin_md
         max_chars_per_line = 60
-        max_lines = max(1, min(15, (screen_height - start_y - footer_space) // line_height))
+        max_lines = max(1, min(15, (safe_rect.height - start_y - footer_space) // line_height))
     title_text = "Application Logs"
     title_surface = title_font.render(title_text, True, config_module.Theme.FOREGROUND)
-    title_x = (screen_width - title_surface.get_width()) // 2
-    title_top = ui_scaler.margin("small") if ui_scaler else 10
-    screen.blit(title_surface, (title_x, title_top))
+    title_rect = title_surface.get_rect(centerx=safe_rect.centerx)
+    title_top = safe_rect.top + (ui_scaler.margin("small") if ui_scaler else 10)
+    screen.blit(title_surface, (title_rect.x, title_top))
     
-    # Draw log lines with text wrapping
-    y_offset = start_y
+    # Draw log lines with text wrapping (within safe area)
+    y_offset = safe_rect.top + start_y
     lines_drawn = 0
     
     for line in log_lines:
@@ -87,7 +89,7 @@ def draw_log_viewer_view(screen, app_state, fonts, config_module, ui_scaler=None
             if lines_drawn >= max_lines:
                 break
             line_surface = content_font.render(line, True, color)
-            screen.blit(line_surface, (margin, y_offset))
+            screen.blit(line_surface, (safe_rect.left + margin, y_offset))
             y_offset += line_height
             lines_drawn += 1
         else:
@@ -104,7 +106,7 @@ def draw_log_viewer_view(screen, app_state, fonts, config_module, ui_scaler=None
                     # Current line is full, display it
                     if current_line and lines_drawn < max_lines:
                         line_surface = content_font.render(current_line, True, color)
-                        screen.blit(line_surface, (margin, y_offset))
+                        screen.blit(line_surface, (safe_rect.left + margin, y_offset))
                         y_offset += line_height
                         lines_drawn += 1
                     
@@ -118,7 +120,7 @@ def draw_log_viewer_view(screen, app_state, fonts, config_module, ui_scaler=None
                                 break
                             chunk = word[:max_chars_per_line-3] + "..."
                             line_surface = content_font.render(chunk, True, color)
-                            screen.blit(line_surface, (margin, y_offset))
+                            screen.blit(line_surface, (safe_rect.left + margin, y_offset))
                             y_offset += line_height
                             lines_drawn += 1
                             word = word[max_chars_per_line-3:]
@@ -127,17 +129,17 @@ def draw_log_viewer_view(screen, app_state, fonts, config_module, ui_scaler=None
             # Display the last line
             if current_line and lines_drawn < max_lines:
                 line_surface = content_font.render(current_line, True, color)
-                screen.blit(line_surface, (margin, y_offset))
+                screen.blit(line_surface, (safe_rect.left + margin, y_offset))
                 y_offset += line_height
                 lines_drawn += 1
     
-    # Scroll indicator
+    # Scroll indicator (within safe area)
     if len(log_lines) > max_lines:
         scroll_text = f"Scroll: {scroll_index + 1}-{min(scroll_index + max_lines, len(log_lines))}"
         scroll_surface = content_font.render(scroll_text, True, config_module.Theme.WARNING)
-        scroll_bottom = screen_height - (ui_scaler.scale(25) if ui_scaler else 25)
-        screen.blit(scroll_surface, (margin, scroll_bottom))
+        scroll_bottom = safe_rect.bottom - (ui_scaler.scale(25) if ui_scaler else 25)
+        screen.blit(scroll_surface, (safe_rect.left + margin, scroll_bottom))
     labels = config_module.get_control_labels()
     footer_text = f"{labels['prev']}/{labels['next']}: Scroll | {labels['back']}: Return"
-    render_footer(screen, footer_text, fonts, config_module.Theme.FOREGROUND, screen_width, screen_height, ui_scaler=ui_scaler)
+    render_footer(screen, footer_text, fonts, config_module.Theme.FOREGROUND, screen_width, screen_height, ui_scaler=ui_scaler, content_center_x=safe_rect.centerx)
 

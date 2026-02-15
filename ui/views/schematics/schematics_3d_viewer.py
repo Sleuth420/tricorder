@@ -59,22 +59,26 @@ def draw_schematics_view(screen, app_state, fonts, config_module, ui_scaler=None
                 screen, hint_text, fonts,
                 config_module.Theme.FOREGROUND,
                 screen.get_width(),
-                screen.get_height()
+                screen.get_height(),
+                ui_scaler=ui_scaler,
+                content_center_x=ui_scaler.get_safe_area_rect().centerx if (ui_scaler and ui_scaler.safe_area_enabled) else None
             )
 
 def _draw_pause_menu(screen, app_state, fonts, config_module, ui_scaler=None):
-    """Draw the pause menu overlay for the 3D viewer. Uses ui_scaler for layout when provided."""
+    """Draw the pause menu overlay for the 3D viewer. Uses ui_scaler and safe area when provided."""
     screen.fill(config_module.Theme.BACKGROUND)
     if ui_scaler:
         screen_width = ui_scaler.screen_width
         screen_height = ui_scaler.screen_height
+        safe_rect = ui_scaler.get_safe_area_rect() if ui_scaler.safe_area_enabled else pygame.Rect(0, 0, screen_width, screen_height)
     else:
         screen_width = screen.get_width()
         screen_height = screen.get_height()
+        safe_rect = pygame.Rect(0, 0, screen_width, screen_height)
     font_large = fonts['large']
     font_medium = fonts['medium']
     title_surface = font_large.render("3D VIEWER MENU", True, config_module.Theme.ACCENT)
-    title_rect = title_surface.get_rect(center=(screen_width // 2, screen_height // 4))
+    title_rect = title_surface.get_rect(center=(safe_rect.centerx, safe_rect.top + safe_rect.height // 4))
     screen.blit(title_surface, title_rect)
     options = ["Toggle Mode", "Zoom In", "Zoom Out", "Reset Zoom", "Back to Schematics", "Resume"]
     current_selection_idx = app_state.schematics_pause_menu_index
@@ -87,7 +91,7 @@ def _draw_pause_menu(screen, app_state, fonts, config_module, ui_scaler=None):
     for i, option_text in enumerate(options):
         text_color = config_module.Theme.FOREGROUND
         item_display_rect = pygame.Rect(
-            (screen_width // 2) - item_width // 2,
+            safe_rect.centerx - item_width // 2,
             y_offset + (i * (item_height + item_spacing)),
             item_width,
             item_height
@@ -111,8 +115,8 @@ def _draw_pause_menu(screen, app_state, fonts, config_module, ui_scaler=None):
     mode_font = fonts.get('small', fonts.get('medium'))
     mode_surface = mode_font.render(mode_text, True, config_module.Theme.FOREGROUND)
     mode_bottom_offset = ui_scaler.scale(20) if ui_scaler else 20
-    mode_rect = mode_surface.get_rect(center=(screen_width // 2, y_offset + len(options) * (item_height + item_spacing) + mode_bottom_offset))
+    mode_rect = mode_surface.get_rect(center=(safe_rect.centerx, y_offset + len(options) * (item_height + item_spacing) + mode_bottom_offset))
     screen.blit(mode_surface, mode_rect)
     labels = config_module.get_control_labels()
     hint = f"< {labels['prev']}/{labels['next']}=Navigate | {labels['select']}=Select | {labels['back']}=Back >"
-    render_footer(screen, hint, fonts, config_module.Theme.FOREGROUND, screen_width, screen_height, ui_scaler=ui_scaler)
+    render_footer(screen, hint, fonts, config_module.Theme.FOREGROUND, screen_width, screen_height, ui_scaler=ui_scaler, content_center_x=safe_rect.centerx)

@@ -56,7 +56,12 @@ class Header:
         """
         screen_width = self.ui_scaler.screen_width
         screen_height = self.ui_scaler.screen_height
-        header_rect = pygame.Rect(0, self.top_margin, screen_width, self.height)
+        if self.ui_scaler.safe_area_enabled:
+            safe_rect = self.ui_scaler.get_safe_area_rect()
+            header_rect = pygame.Rect(safe_rect.left, safe_rect.top + self.top_margin, safe_rect.width, self.height)
+        else:
+            safe_rect = pygame.Rect(0, 0, screen_width, screen_height)
+            header_rect = pygame.Rect(0, self.top_margin, screen_width, self.height)
         
         # Debug logging for header layout
         if self.ui_scaler.debug_mode:
@@ -87,13 +92,14 @@ class Header:
         # Render title text
         title_surface = font.render(title_text, True, text_color)
         
-        # Position title
+        # Position title (within safe area when enabled)
+        content_center_x = safe_rect.centerx if self.ui_scaler.safe_area_enabled else (screen_width // 2)
+        content_left = safe_rect.left if self.ui_scaler.safe_area_enabled else 0
         if center_title:
-            title_rect = title_surface.get_rect(center=(screen_width // 2, header_rect.centery))
+            title_rect = title_surface.get_rect(center=(content_center_x, header_rect.centery))
         else:
-            # Left-aligned with margin
             margin = self.ui_scaler.margin("medium")
-            title_rect = title_surface.get_rect(midleft=(margin, header_rect.centery))
+            title_rect = title_surface.get_rect(midleft=(content_left + margin, header_rect.centery))
         
         # Draw title
         screen.blit(title_surface, title_rect)

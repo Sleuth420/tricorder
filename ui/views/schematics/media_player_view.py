@@ -29,20 +29,22 @@ def _format_size(bytes_size):
 
 
 def _draw_file_info_overlay(screen, mgr, fonts, config_module, ui_scaler):
-    """Draw file info panel (name, path, duration, size) when long-press D is active. Uses ui_scaler for layout."""
+    """Draw file info panel (name, path, duration, size) when long-press D is active. Uses ui_scaler and safe area."""
     if ui_scaler:
         w, h = ui_scaler.screen_width, ui_scaler.screen_height
         margin = ui_scaler.margin("large")
         panel_h = ui_scaler.scale(100)
         panel_y_offset = ui_scaler.scale(50)
+        safe_rect = ui_scaler.get_safe_area_rect() if ui_scaler.safe_area_enabled else pygame.Rect(0, 0, w, h)
     else:
         w, h = screen.get_width(), screen.get_height()
         margin = 20
-        panel_h = 100
         panel_y_offset = 50
+        panel_h = 100
+        safe_rect = pygame.Rect(0, 0, w, h)
     font_small = fonts["small"]
     font_tiny = fonts.get("tiny", font_small)
-    panel = pygame.Rect(margin, h // 2 - panel_y_offset, w - 2 * margin, panel_h)
+    panel = pygame.Rect(safe_rect.left + margin, safe_rect.centery - panel_y_offset, safe_rect.width - 2 * margin, panel_h)
     s = pygame.Surface((panel.w, panel.h))
     s.set_alpha(220)
     s.fill(config_module.Theme.BACKGROUND)
@@ -74,9 +76,13 @@ def draw_media_player_view(screen, app_state, fonts, config_module, ui_scaler=No
     if not mgr:
         screen.fill(config_module.Theme.BACKGROUND)
         err = fonts["medium"].render("Media player not available", True, config_module.Theme.ALERT)
-        center_x = ui_scaler.screen_width // 2 if ui_scaler else screen.get_width() // 2
-        center_y = ui_scaler.screen_height // 2 if ui_scaler else screen.get_height() // 2
-        r = err.get_rect(center=(center_x, center_y))
+        if ui_scaler and ui_scaler.safe_area_enabled:
+            safe_rect = ui_scaler.get_safe_area_rect()
+            r = err.get_rect(center=(safe_rect.centerx, safe_rect.centery))
+        else:
+            center_x = ui_scaler.screen_width // 2 if ui_scaler else screen.get_width() // 2
+            center_y = ui_scaler.screen_height // 2 if ui_scaler else screen.get_height() // 2
+            r = err.get_rect(center=(center_x, center_y))
         screen.blit(err, r)
         return
 

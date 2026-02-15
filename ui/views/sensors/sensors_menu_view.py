@@ -239,9 +239,10 @@ def _draw_animated_instructions(screen, main_content_rect, content_y, fonts, con
     _draw_scanning_lines_effect(screen, main_content_rect, current_time, config_module)
 
 def _draw_enhanced_sensor_status(screen, main_content_rect, sensor_values, fonts, config_module, ui_scaler, current_time):
-    """Draw enhanced sensor status with animations at the bottom."""
+    """Draw enhanced sensor status with animations at the bottom (above safe area curve)."""
     if ui_scaler:
-        bottom_margin = ui_scaler.margin("large")
+        safe_bottom = ui_scaler.get_safe_area_margins()["bottom"] if ui_scaler.safe_area_enabled else 0
+        bottom_margin = max(ui_scaler.margin("large"), safe_bottom)
         status_spacing = ui_scaler.margin("small")
     else:
         bottom_margin = 50

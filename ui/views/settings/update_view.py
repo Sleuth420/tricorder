@@ -36,10 +36,13 @@ def draw_update_view(screen, app_state, fonts, config_module, ui_scaler=None):
     if ui_scaler:
         screen_width = ui_scaler.screen_width
         screen_height = ui_scaler.screen_height
+        safe_rect = ui_scaler.get_safe_area_rect() if ui_scaler.safe_area_enabled else None
     else:
         screen_width = screen.get_width()
         screen_height = screen.get_height()
-    header_inset = ui_scaler.margin("small") if ui_scaler else 20
+        safe_rect = None
+    # Use safe area left so text is not cut off by curved bezel
+    header_inset = max(ui_scaler.margin("small"), ui_scaler.get_safe_area_margins()["left"]) if (ui_scaler and ui_scaler.safe_area_enabled) else (ui_scaler.margin("small") if ui_scaler else 20)
     if hasattr(app_state, 'update_available') and app_state.update_available:
         header_text = "[UPDATE AVAILABLE]"
         header_surface = fonts['medium'].render(header_text, True, config_module.Theme.ALERT)
@@ -64,7 +67,7 @@ def draw_update_view(screen, app_state, fonts, config_module, ui_scaler=None):
     else:
         line_spacing = 3
         section_spacing = 15
-    left_inset = ui_scaler.margin("small") if ui_scaler else 20
+    left_inset = max(ui_scaler.margin("small"), ui_scaler.get_safe_area_margins()["left"]) if (ui_scaler and ui_scaler.safe_area_enabled) else (ui_scaler.margin("small") if ui_scaler else 20)
     current_version = update_info['current_version']
     version_text = f"Current: {current_version.get('build_number', 'Unknown')}"
     version_surface = font_small.render(version_text, True, config_module.Theme.FOREGROUND)
@@ -106,15 +109,19 @@ def draw_update_view(screen, app_state, fonts, config_module, ui_scaler=None):
     bottom_margin = ui_scaler.margin("small") if ui_scaler else 20
     available_height = screen_height - menu_start_y - bottom_margin
     
-    # Draw menu items manually without the header since we already have content above
+    # Draw menu items manually without the header since we already have content above (use safe area width/center)
+    content_width = safe_rect.width if safe_rect else screen_width
+    content_center_x = safe_rect.centerx if safe_rect else (screen_width // 2)
     _draw_update_menu_items(
         screen, menu_items, current_selection_index, fonts, config_module,
-        menu_start_y, screen_width, available_height, ui_scaler
+        menu_start_y, screen_width, available_height, ui_scaler,
+        content_width=content_width, content_center_x=content_center_x
     )
 
 
 def _draw_update_menu_items(screen, menu_items, selected_index, fonts, config_module, 
-                           start_y, screen_width, available_height, ui_scaler=None):
+                           start_y, screen_width, available_height, ui_scaler=None,
+                           content_width=None, content_center_x=None):
     """
     Draw menu items without header for the update view.
     
@@ -128,7 +135,13 @@ def _draw_update_menu_items(screen, menu_items, selected_index, fonts, config_mo
         screen_width (int): Width of the screen
         available_height (int): Available height for menu items
         ui_scaler (UIScaler): UI scaler for scaling calculations
+        content_width (int, optional): Width to constrain items (safe area width)
+        content_center_x (int, optional): Center X for items (safe area center)
     """
+    if content_width is None:
+        content_width = screen_width
+    if content_center_x is None:
+        content_center_x = screen_width // 2
     current_time = time.time()
     
     # Calculate item dimensions
@@ -175,10 +188,10 @@ def _draw_update_menu_items(screen, menu_items, selected_index, fonts, config_mo
         if is_selected:
             text_color = config_module.Theme.MENU_SELECTED_TEXT
         
-        # Create item rectangle - center all items
-        item_width = min(400, screen_width - 60)
+        # Create item rectangle - center all items within content (safe) area
+        item_width = min(400, content_width - 60)
         item_rect = pygame.Rect(
-            (screen_width // 2) - (item_width // 2), y_offset - (item_height_padding // 2),
+            content_center_x - (item_width // 2), y_offset - (item_height_padding // 2),
             item_width, effective_item_height
         )
         
@@ -216,11 +229,11 @@ def _draw_update_menu_items(screen, menu_items, selected_index, fonts, config_mo
         if visible_start > 0:
             up_indicator = "↑"
             up_surface = font_medium.render(up_indicator, True, config_module.Theme.ACCENT)
-            up_rect = up_surface.get_rect(center=(screen_width // 2, start_y + 5))
+            up_rect = up_surface.get_rect(center=(content_center_x, start_y + 5))
             screen.blit(up_surface, up_rect)
         
         if visible_end < total_items:
             down_indicator = "↓"
             down_surface = font_medium.render(down_indicator, True, config_module.Theme.ACCENT)
-            down_rect = down_surface.get_rect(center=(screen_width // 2, y_offset + 10))
+            down_rect = down_surface.get_rect(center=(content_center_x, y_offset + 10))
             screen.blit(down_surface, down_rect) 

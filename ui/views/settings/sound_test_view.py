@@ -25,16 +25,17 @@ def draw_sound_test_view(screen, app_state, fonts, config_module, ui_scaler=None
     # Check if AudioManager is available
     if not hasattr(app_state, 'audio_manager') or not app_state.audio_manager:
         screen.fill(config_module.Theme.BACKGROUND)
-        screen_width = screen.get_width()
-        screen_height = screen.get_height()
-        
+        screen_width = ui_scaler.screen_width if ui_scaler else screen.get_width()
+        screen_height = ui_scaler.screen_height if ui_scaler else screen.get_height()
+        safe_rect = ui_scaler.get_safe_area_rect() if (ui_scaler and ui_scaler.safe_area_enabled) else pygame.Rect(0, 0, screen_width, screen_height)
         error_msg = "AudioManager not available in AppState"
         logger.error(error_msg)
         font_medium = fonts['medium']
         err_surf = font_medium.render(error_msg, True, config_module.Theme.ALERT)
-        screen.blit(err_surf, (screen_width // 2 - err_surf.get_width() // 2, screen_height // 2))
+        err_rect = err_surf.get_rect(center=(safe_rect.centerx, safe_rect.centery))
+        screen.blit(err_surf, err_rect)
         labels = config_module.get_control_labels()
-        render_footer(screen, f"Error - Press {labels['back']}", fonts, config_module.Theme.FOREGROUND, screen_width, screen_height)
+        render_footer(screen, f"Error - Press {labels['back']}", fonts, config_module.Theme.FOREGROUND, screen_width, screen_height, ui_scaler=ui_scaler, content_center_x=safe_rect.centerx)
         return
 
     # Check if we should show the dedicated test screen

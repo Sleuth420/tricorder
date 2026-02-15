@@ -37,18 +37,27 @@ class LoadingScreen:
             logger.info(f"🎨 LoadingScreen: UIScaler set, scale_factor={ui_scaler.scale_factor:.2f}")
 
     def _calculate_layout(self):
-        """Calculate responsive layout based on screen size and UIScaler."""
+        """Calculate responsive layout based on screen size and UIScaler; respect safe area when enabled."""
         if self.ui_scaler:
-            # Use UIScaler for responsive dimensions
-            self.title_y = self.ui_scaler.scale(30)
-            self.status_y = self.ui_scaler.scale(70)
+            if self.ui_scaler.safe_area_enabled:
+                safe_rect = self.ui_scaler.get_safe_area_rect()
+                self.content_center_x = safe_rect.centerx
+                bar_margin = self.ui_scaler.margin("medium")
+                self.bar_width = min(self.screen_width - bar_margin * 2, safe_rect.width - bar_margin * 2)
+                self.bar_x = self.content_center_x - self.bar_width // 2
+                self.title_y = safe_rect.top + self.ui_scaler.scale(30)
+                self.status_y = safe_rect.top + self.ui_scaler.scale(70)
+                self.bar_y = safe_rect.top + self.ui_scaler.scale(110)
+            else:
+                self.content_center_x = self.screen_width // 2
+                bar_margin = self.ui_scaler.margin("medium")
+                self.bar_width = self.screen_width - bar_margin * 2
+                self.bar_x = bar_margin
+                self.title_y = self.ui_scaler.scale(30)
+                self.status_y = self.ui_scaler.scale(70)
+                self.bar_y = self.ui_scaler.scale(110)
             
-            # Progress bar - responsive sizing
-            bar_margin = self.ui_scaler.margin("medium")
-            self.bar_width = self.screen_width - bar_margin * 2
             self.bar_height = self.ui_scaler.scale(35)
-            self.bar_x = bar_margin
-            self.bar_y = self.ui_scaler.scale(110)
             
             # Detail text positioning
             self.detail_y = self.bar_y + self.bar_height + self.ui_scaler.margin("medium")
@@ -64,6 +73,7 @@ class LoadingScreen:
                 logger.info(f"🎨 LoadingScreen: screen={self.screen_width}x{self.screen_height}, bar={self.bar_width}x{self.bar_height}px, title_font={self.title_font_size}px")
         
         else:
+            self.content_center_x = self.screen_width // 2
             # Fallback when ui_scaler not set: same base as UIScaler (320x240), scale proportionally
             scale = min(self.screen_width / 320, self.screen_height / 240)
             margin = max(4, int(8 * scale))
@@ -107,6 +117,7 @@ class LoadingScreen:
         """
         # Clear screen
         screen.fill(self.config.Theme.BACKGROUND)
+        content_center_x = getattr(self, 'content_center_x', self.screen_width // 2)
         
         # Draw title with responsive font size
         try:
@@ -116,7 +127,7 @@ class LoadingScreen:
         
         title_text = "TRICORDER"
         title_surface = title_font.render(title_text, True, self.config.Theme.ACCENT)
-        title_rect = title_surface.get_rect(center=(self.screen_width // 2, self.title_y))
+        title_rect = title_surface.get_rect(center=(content_center_x, self.title_y))
         screen.blit(title_surface, title_rect)
         
         # Draw status text with responsive font size
@@ -132,7 +143,7 @@ class LoadingScreen:
             display_status = display_status[:max_status_chars-3] + "..."
         
         status_surface = status_font.render(display_status, True, self.config.Theme.FOREGROUND)
-        status_rect = status_surface.get_rect(center=(self.screen_width // 2, self.status_y))
+        status_rect = status_surface.get_rect(center=(content_center_x, self.status_y))
         screen.blit(status_surface, status_rect)
         
         # Draw progress bar
@@ -152,7 +163,7 @@ class LoadingScreen:
                 display_detail = display_detail[:max_detail_chars-3] + "..."
             
             detail_surface = detail_font.render(display_detail, True, self.config.Theme.FOREGROUND)
-            detail_rect = detail_surface.get_rect(center=(self.screen_width // 2, self.detail_y))
+            detail_rect = detail_surface.get_rect(center=(content_center_x, self.detail_y))
             screen.blit(detail_surface, detail_rect)
     
     def _draw_progress_bar(self, screen):

@@ -43,9 +43,11 @@ def draw_secret_games_view(screen, app_state, fonts, config, ui_scaler=None):
     if ui_scaler:
         screen_width = ui_scaler.screen_width
         screen_height = ui_scaler.screen_height
+        safe_rect = ui_scaler.get_safe_area_rect() if ui_scaler.safe_area_enabled else pygame.Rect(0, 0, screen_width, screen_height)
     else:
         screen_width = screen.get_width()
         screen_height = screen.get_height()
+        safe_rect = pygame.Rect(0, 0, screen_width, screen_height)
     if ui_scaler:
         margin = ui_scaler.margin("medium")
         title_y_offset = ui_scaler.scale(10)
@@ -100,8 +102,8 @@ def draw_secret_games_view(screen, app_state, fonts, config, ui_scaler=None):
     overlay.fill(config.Theme.BACKGROUND)
     screen.blit(overlay, (0, 0))
     
-    # Add responsive spacing around edges
-    content_rect = pygame.Rect(margin, margin, screen_width - 2*margin, screen_height - 2*margin)
+    # Add responsive spacing within safe area (curved bezel)
+    content_rect = pygame.Rect(safe_rect.left + margin, safe_rect.top + margin, safe_rect.width - 2*margin, safe_rect.height - 2*margin)
     
     # Draw title at top with responsive positioning
     title_font = fonts.get('large', fonts.get('medium'))

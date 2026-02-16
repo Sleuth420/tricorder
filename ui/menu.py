@@ -436,16 +436,24 @@ def _draw_main_menu_footer(screen, main_content_rect, fonts, config_module, scre
     """
     hint_text = _get_footer_content(config_module)
 
-    # Create a custom footer rendering centered in main content area (to the right of sidebar)
+    # Footer left-aligned in main content area; scale to fit if text is wider than content (avoids cutoff)
     footer_font = fonts.get('small', fonts.get('medium'))
     footer_surface = footer_font.render(hint_text, True, config_module.Theme.FOREGROUND)
-    # Use UIScaler for responsive footer positioning; inset for safe area / overscan on Pi
+    left_inset = max(2, ui_scaler.scale(4))
+    right_inset = ui_scaler.get_safe_area_margins()["right"] if (ui_scaler and ui_scaler.safe_area_enabled) else ui_scaler.margin("small")
+    available_width = main_content_rect.width - left_inset - right_inset
+    if footer_surface.get_width() > available_width and available_width > 0:
+        scale_w = available_width
+        scale_h = max(1, int(footer_surface.get_height() * (available_width / footer_surface.get_width())))
+        try:
+            footer_surface = pygame.transform.smoothscale(footer_surface, (scale_w, scale_h))
+        except pygame.error:
+            pass  # keep original if scale fails
     footer_margin = ui_scaler.margin("small")
     safe_bottom = ui_scaler.get_safe_area_margins()["bottom"] if (ui_scaler and ui_scaler.safe_area_enabled) else 0
-    # Position higher so it doesn't overlap scanning animations; extra offset from bottom
     extra_top_offset = ui_scaler.margin("medium") + ui_scaler.scale(8)
     footer_y = screen_height - footer_surface.get_height() - footer_margin - safe_bottom - extra_top_offset
-    footer_x = main_content_rect.centerx - footer_surface.get_width() // 2
+    footer_x = main_content_rect.left + left_inset
     screen.blit(footer_surface, (footer_x, footer_y))
 
 # Note: Arrow indicator and sidebar rendering logic moved to ui/components/menu_base.py

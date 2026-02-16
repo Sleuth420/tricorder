@@ -44,27 +44,16 @@ def _draw_enhanced_sensors_content(screen, main_content_rect, app_state, sensor_
     """
     Draw enhanced main content area with tricorder-style animations and theming.
     """
-    # Use UIScaler for responsive spacing; keep compact so data/animations use more space
-    title_font = fonts['large']
-    title_height = title_font.get_height()
-    # Ensure title (and its glow) sits fully below the header panel, not overlapping it
-    min_title_spacing = title_height // 2 + 6  # half height + buffer for glow
+    # Use UIScaler for responsive spacing; keep compact so data/animations use more space (no title)
     if ui_scaler:
-        title_spacing = max(ui_scaler.margin("medium"), min_title_spacing)
         content_spacing = ui_scaler.margin("medium")
         section_spacing = ui_scaler.margin("small")
     else:
-        title_spacing = max(12, min_title_spacing, main_content_rect.height // 20)
         content_spacing = max(12, main_content_rect.height // 20)
         section_spacing = max(10, main_content_rect.height // 24)
     
-    # Animated title with glow effect (positioned so it stays in content area below header)
-    title_text = "Environmental Sensors"
-    _draw_glowing_title(screen, title_text, title_font, config_module.Theme.ACCENT, 
-                       (main_content_rect.centerx, main_content_rect.top + title_spacing), current_time)
-    
-    # Calculate content areas
-    content_start_y = main_content_rect.top + title_spacing + title_height + content_spacing
+    # Content starts at top of main area with small margin (title removed to save space)
+    content_start_y = main_content_rect.top + content_spacing
     
     # Get currently selected sensor info
     menu_items = app_state.get_current_menu_items()

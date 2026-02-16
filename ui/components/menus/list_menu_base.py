@@ -5,8 +5,6 @@ import pygame
 import logging
 import time
 import math
-from ui.components.text.text_display import render_footer
-
 logger = logging.getLogger(__name__)
 
 def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, config_module, 
@@ -60,9 +58,8 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
     
     # === CONTENT SECTION === (within safe area)
     content_y = header_rect.bottom + content_spacing
-    footer_margin = ui_scaler.scale(20) if ui_scaler else 20
-    footer_height = (config_module.FONT_SIZE_SMALL * 3) if not ui_scaler else ui_scaler.scale(config_module.FONT_SIZE_SMALL * 3)
-    available_height = safe_rect.bottom - content_y - footer_height - footer_margin
+    bottom_margin = ui_scaler.scale(50) if ui_scaler else 50  # room for status line
+    available_height = safe_rect.bottom - content_y - bottom_margin
     
     # Calculate item dimensions
     font_medium = fonts['medium']
@@ -199,20 +196,6 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
     
     # Draw ambient tricorder effects (respect safe area when enabled)
     _draw_list_ambient_effects(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module, ui_scaler, safe_rect)
-    
-    # === FOOTER === (Optional footer - only show if footer_hint is provided)
-    if footer_hint is not None:
-        if not footer_hint:
-            # OS-adaptive: Pi = Left/Right/Middle, dev = A/D/Enter
-            labels = config_module.get_control_labels()
-            footer_hint = f"< {labels['prev']}=Up | {labels['next']}=Down | {labels['select']}=Select >"
-        
-        render_footer(
-            screen, footer_hint, fonts,
-            config_module.Theme.FOREGROUND,
-            screen_width, screen_height,
-            ui_scaler=ui_scaler
-        )
     
     return {
         "visible_start": visible_start,

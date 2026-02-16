@@ -34,6 +34,7 @@ STATE_SETTINGS_DEBUG_OVERLAY = "SETTINGS_DEBUG_OVERLAY"
 STATE_SETTINGS_LOG_VIEWER = "SETTINGS_LOG_VIEWER"
 STATE_SELECT_COMBO_DURATION = "SELECT_COMBO_DURATION"
 STATE_SETTINGS_VOLUME = "SETTINGS_VOLUME"
+STATE_DISPLAY_CYCLE_INTERVAL = "DISPLAY_CYCLE_INTERVAL"
 STATE_SETTINGS_WIFI_NETWORKS = "SETTINGS_WIFI_NETWORKS"
 STATE_WIFI_PASSWORD_ENTRY = "WIFI_PASSWORD_ENTRY"
 STATE_CONFIRM_REBOOT = "CONFIRM_REBOOT"
@@ -95,6 +96,8 @@ class InputRouter:
             return self._handle_select_combo_duration_input(action)
         elif current_state == STATE_SETTINGS_VOLUME:
             return self._handle_volume_settings_input(action)
+        elif current_state == STATE_DISPLAY_CYCLE_INTERVAL:
+            return self._handle_display_cycle_interval_input(action)
         elif current_state in [STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP]:
             return self._handle_confirmation_input(action)
         elif current_state == STATE_SECRET_GAMES:
@@ -145,10 +148,12 @@ class InputRouter:
                     self.app_state.state_manager.return_to_menu())
         elif current_state == STATE_SETTINGS:
             return self._handle_settings_main_menu_back()
-        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_VOLUME, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY]:
+        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_VOLUME, STATE_DISPLAY_CYCLE_INTERVAL, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY]:
             logger.info(f"BACK from {current_state}, returning to appropriate parent")
             if current_state == STATE_SELECT_COMBO_DURATION or current_state == STATE_SETTINGS_VOLUME:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_DEVICE)
+            elif current_state == STATE_DISPLAY_CYCLE_INTERVAL:
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS_DISPLAY)
             elif current_state == STATE_SETTINGS_WIFI_NETWORKS:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_WIFI)
             elif current_state == STATE_WIFI_PASSWORD_ENTRY:
@@ -396,11 +401,13 @@ class InputRouter:
         return self.app_state.state_manager.return_to_menu()
 
     def _handle_display_settings_input(self, action):
-        """Handle input for the Display Settings view."""
+        """Handle input for the Display Settings main menu."""
         result = self.app_state.settings_manager.handle_display_settings_input(action)
-        if result == "GO_TO_MAIN_MENU":
-            self.app_state.menu_manager.reset_to_main_menu()
-            return self.app_state.state_manager.transition_to(STATE_MENU)
+        if isinstance(result, str):
+            if result == "DISPLAY_CYCLE_INTERVAL":
+                return self.app_state.state_manager.transition_to(STATE_DISPLAY_CYCLE_INTERVAL)
+            if result == "GO_BACK":
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS)
         return result
 
     def _handle_device_settings_input(self, action):
@@ -865,6 +872,13 @@ class InputRouter:
         result = self.app_state.settings_manager.handle_combo_duration_input(action)
         if result and action == app_config.INPUT_ACTION_SELECT:
             return self.app_state.state_manager.transition_to(STATE_SETTINGS_DEVICE)
+        return result
+
+    def _handle_display_cycle_interval_input(self, action):
+        """Handle Dashboard auto-cycle interval picker sub-screen."""
+        result = self.app_state.settings_manager.handle_display_cycle_interval_input(action)
+        if result == "BACK_TO_DISPLAY_SETTINGS":
+            return self.app_state.state_manager.transition_to(STATE_SETTINGS_DISPLAY)
         return result
 
     def _handle_volume_settings_input(self, action):

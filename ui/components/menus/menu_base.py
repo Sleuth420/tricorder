@@ -339,13 +339,18 @@ def _draw_corner_tricorder_effects(screen, corner_rect, corner_color, config_mod
     label_rect = label_surf.get_rect(bottomright=(corner_rect.right - pad, corner_rect.bottom - pad))
     if label_rect.width < corner_rect.width - 2 * pad and label_rect.height < corner_rect.height - 2 * pad:
         screen.blit(label_surf, label_rect)
-    # Small vertical data bars (signal/status style), bottom-aligned, with spacing from READY
-    bar_w = max(1, ui_scaler.scale(2) if ui_scaler else 2)
-    bar_gap = 1
+    # Vertical data bars (signal/status style): larger on small Pi screens so they're visible
+    if ui_scaler and ui_scaler.is_small_screen():
+        bar_w = max(2, ui_scaler.scale(4))
+        bar_gap = max(1, ui_scaler.scale(2))
+        heights = (8, 12, 10)
+    else:
+        bar_w = max(1, ui_scaler.scale(2) if ui_scaler else 2)
+        bar_gap = 1
+        heights = (4, 7, 5)
     spacing_from_label = ui_scaler.scale(10) if ui_scaler else 10  # gap between bars and READY
     bar_bottom = corner_rect.bottom - pad
     bar_x_start = label_rect.left - spacing_from_label - (bar_w * 3 + bar_gap * 2)
-    heights = (4, 7, 5)  # varying heights
     for i in range(3):
         h = (ui_scaler.scale(heights[i]) if ui_scaler else heights[i])
         h = max(2, min(h, corner_rect.height - 2 * pad))

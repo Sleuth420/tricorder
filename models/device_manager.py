@@ -79,6 +79,9 @@ class DeviceManager:
         elif action_type == app_config.ACTION_SELECT_COMBO_DURATION:
             logger.info("Device Settings: Action Select Combo Duration selected.")
             return "SELECT_COMBO_DURATION"
+        elif action_type == app_config.ACTION_VOLUME:
+            logger.info("Device Settings: Volume selected.")
+            return "VOLUME"
         elif action_type == app_config.ACTION_GO_TO_MAIN_MENU:
             logger.info("Device Settings: Action Go To Main Menu selected.")
             return "GO_TO_MAIN_MENU"

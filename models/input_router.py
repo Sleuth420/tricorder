@@ -33,6 +33,7 @@ STATE_SETTINGS_SOUND_TEST = "SETTINGS_SOUND_TEST"
 STATE_SETTINGS_DEBUG_OVERLAY = "SETTINGS_DEBUG_OVERLAY"
 STATE_SETTINGS_LOG_VIEWER = "SETTINGS_LOG_VIEWER"
 STATE_SELECT_COMBO_DURATION = "SELECT_COMBO_DURATION"
+STATE_SETTINGS_VOLUME = "SETTINGS_VOLUME"
 STATE_SETTINGS_WIFI_NETWORKS = "SETTINGS_WIFI_NETWORKS"
 STATE_WIFI_PASSWORD_ENTRY = "WIFI_PASSWORD_ENTRY"
 STATE_CONFIRM_REBOOT = "CONFIRM_REBOOT"
@@ -92,6 +93,8 @@ class InputRouter:
             return self._handle_log_viewer_input(action)
         elif current_state == STATE_SELECT_COMBO_DURATION:
             return self._handle_select_combo_duration_input(action)
+        elif current_state == STATE_SETTINGS_VOLUME:
+            return self._handle_volume_settings_input(action)
         elif current_state in [STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP]:
             return self._handle_confirmation_input(action)
         elif current_state == STATE_SECRET_GAMES:
@@ -142,9 +145,9 @@ class InputRouter:
                     self.app_state.state_manager.return_to_menu())
         elif current_state == STATE_SETTINGS:
             return self._handle_settings_main_menu_back()
-        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY]:
+        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_VOLUME, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY]:
             logger.info(f"BACK from {current_state}, returning to appropriate parent")
-            if current_state == STATE_SELECT_COMBO_DURATION:
+            if current_state == STATE_SELECT_COMBO_DURATION or current_state == STATE_SETTINGS_VOLUME:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_DEVICE)
             elif current_state == STATE_SETTINGS_WIFI_NETWORKS:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_WIFI)
@@ -409,6 +412,8 @@ class InputRouter:
                 return self.app_state.state_manager.transition_to(STATE_MENU)
             elif result == "SELECT_COMBO_DURATION":
                 return self.app_state.state_manager.transition_to(STATE_SELECT_COMBO_DURATION)
+            elif result == "VOLUME":
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS_VOLUME)
             elif result == "CONFIRM_REBOOT":
                 return self.app_state.state_manager.transition_to(STATE_CONFIRM_REBOOT)
             elif result == "CONFIRM_SHUTDOWN":
@@ -861,6 +866,23 @@ class InputRouter:
         if result and action == app_config.INPUT_ACTION_SELECT:
             return self.app_state.state_manager.transition_to(STATE_SETTINGS_DEVICE)
         return result
+
+    def _handle_volume_settings_input(self, action):
+        """Handle volume settings: Next = volume up, Prev = volume down."""
+        if action != app_config.INPUT_ACTION_NEXT and action != app_config.INPUT_ACTION_PREV:
+            return False
+        am = getattr(self.app_state, "audio_manager", None)
+        if not am or not am.enabled:
+            return False
+        vol = am.get_volume()
+        step = 0.05
+        if action == app_config.INPUT_ACTION_NEXT:
+            vol = min(1.0, vol + step)
+        else:
+            vol = max(0.0, vol - step)
+        am.set_volume(vol)
+        logger.debug(f"Volume set to {int(vol * 100)}%")
+        return True
 
     def _handle_wifi_settings_input(self, action):
         """Handle input for the WiFi Settings view."""

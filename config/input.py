@@ -128,6 +128,7 @@ ACTION_LAUNCH_SNAKE = "LAUNCH_SNAKE"
 ACTION_RETURN_TO_MENU = "RETURN_TO_MENU"
 ACTION_GO_TO_MAIN_MENU = "GO_TO_MAIN_MENU" # New action for direct to main menu
 ACTION_SELECT_COMBO_DURATION = "SELECT_COMBO_DURATION" # New action
+ACTION_VOLUME = "VOLUME"  # Device settings: volume control (app + future media player)
 ACTION_TEST_SOUND = "TEST_SOUND" # New action for sound testing
 
 # -- Audio Configuration --

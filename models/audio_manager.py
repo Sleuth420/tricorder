@@ -419,7 +419,22 @@ class AudioManager:
                 self._set_system_volume(volume)
             
             logger.debug(f"Set volume to: {int(volume * 100)}% (Pygame + System)")
-    
+
+    def get_volume(self):
+        """
+        Get current master volume (Pygame mixer level).
+        Used by device settings volume control and can be synced with media player later.
+
+        Returns:
+            float: Volume level (0.0 to 1.0)
+        """
+        if not self.enabled:
+            return 0.0
+        try:
+            return float(pygame.mixer.music.get_volume())
+        except Exception:
+            return 0.0
+
     def _set_system_volume(self, volume):
         """
         Set system-level audio volume using ALSA or PulseAudio.

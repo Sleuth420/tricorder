@@ -12,40 +12,6 @@ logger = logging.getLogger(__name__)
 # Module-level flag to prevent repeated layout logging
 _system_info_logged = False
 
-# Cache for UI-scaled fonts so we don't recreate every frame
-_scaled_font_cache = {}
-
-
-def _get_fonts_for_view(fonts, config_module, ui_scaler):
-    """Return fonts dict. When ui_scaler is present, use scaled font sizes so text respects UI scaling."""
-    if not ui_scaler:
-        return fonts
-    key = (ui_scaler.screen_width, ui_scaler.screen_height)
-    if key in _scaled_font_cache:
-        return _scaled_font_cache[key]
-    try:
-        base_medium = getattr(config_module, "FONT_SIZE_MEDIUM", 24)
-        base_small = getattr(config_module, "FONT_SIZE_SMALL", 20)
-        base_tiny = getattr(config_module, "FONT_SIZE_TINY", 14)
-        path = getattr(config_module, "FONT_PRIMARY_PATH", None)
-        if path:
-            scaled_medium = ui_scaler.font_size(base_medium)
-            scaled_small = ui_scaler.font_size(base_small)
-            scaled_tiny = ui_scaler.font_size(base_tiny)
-            scaled = {
-                "medium": pygame.font.Font(path, scaled_medium),
-                "small": pygame.font.Font(path, scaled_small),
-                "tiny": pygame.font.Font(path, scaled_tiny),
-                "large": fonts.get("large"),
-                "default": None,
-            }
-            scaled["default"] = scaled["medium"]
-            _scaled_font_cache[key] = scaled
-            return scaled
-    except Exception as e:
-        logger.debug(f"System info scaled fonts failed, using defaults: {e}")
-    return fonts
-
 def draw_system_info_view(screen, app_state, sensor_values, fonts, config_module, target_rect=None, draw_footer=False, ui_scaler=None):
     """
     Draw the redesigned system information screen with rotating status bar and tricorder animations.
@@ -69,24 +35,21 @@ def draw_system_info_view(screen, app_state, sensor_values, fonts, config_module
         screen_height = screen.get_height()
     current_time = time.time()
     
-    # Use UIScaler for responsive dimensions if available
+    # Layout: use UI scaler for all spacing so it scales with screen
     if ui_scaler:
         header_height = ui_scaler.header_height()
         header_top_margin = ui_scaler.header_top_margin()
         content_margin = ui_scaler.content_margin()
-        # Standardized spacing values
-        section_spacing = ui_scaler.margin("large")  # Between major sections
-        line_spacing = ui_scaler.margin("medium")    # Between lines within sections
-        text_spacing = ui_scaler.margin("small")     # Between related text elements
+        section_spacing = ui_scaler.margin("small")
+        line_spacing = ui_scaler.margin("small")
+        text_spacing = ui_scaler.margin("small")
     else:
-        # Fallback to original calculations
         header_height = config_module.HEADER_HEIGHT
         header_top_margin = screen_height // 20
         content_margin = max(8, screen_width // 30)
-        # Standardized fallback spacing
-        section_spacing = max(20, screen_height // 25)  # ~4% of screen height
-        line_spacing = max(15, screen_height // 35)     # ~3% of screen height  
-        text_spacing = max(8, screen_height // 60)      # ~1.5% of screen height
+        section_spacing = max(4, screen_height // 60)
+        line_spacing = max(4, screen_height // 60)
+        text_spacing = max(4, screen_height // 60)
     
     # Debug logging for system info view layout
     global _system_info_logged
@@ -98,12 +61,10 @@ def draw_system_info_view(screen, app_state, sensor_values, fonts, config_module
     safe_rect = ui_scaler.get_safe_area_rect() if (ui_scaler and ui_scaler.safe_area_enabled) else pygame.Rect(0, 0, screen_width, screen_height)
     header_rect = pygame.Rect(safe_rect.left, safe_rect.top + header_top_margin, safe_rect.width, header_height)
 
-    # Use UI-scaled fonts when available so system status text scales with screen
-    effective_fonts = _get_fonts_for_view(fonts, config_module, ui_scaler)
-    _draw_animated_header(screen, header_rect, app_state, effective_fonts, config_module, current_time)
+    _draw_animated_header(screen, header_rect, app_state, fonts, config_module, current_time)
 
-    font_medium = effective_fonts["medium"]
-    font_small = effective_fonts["small"]
+    font_medium = fonts["medium"]
+    font_small = fonts["small"]
 
     # Use standardized spacing throughout
     content_y = header_rect.bottom + section_spacing
@@ -126,27 +87,30 @@ def draw_system_info_view(screen, app_state, sensor_values, fonts, config_module
         date_surface = font_small.render(date_text, True, config_module.Theme.ACCENT)
         screen.blit(date_surface, (time_rect.left, date_y))
 
-    # Section 2: Network Status with standardized spacing and sizing
-    network_section_y = date_y + font_small.get_height() + section_spacing
-    network_rect = pygame.Rect(content_margin, network_section_y, screen_width - (content_margin * 2), 
-                              font_small.get_height() * 2 + line_spacing)  # Exact height for 2 lines
+    # Section 2: Network Status (reserve space for date line only if date is shown)
+    network_section_y = date_y + (font_small.get_height() if date_text else 0) + section_spacing
+    network_rect = pygame.Rect(content_margin, network_section_y, screen_width - (content_margin * 2),
+                               font_small.get_height() * 2 + line_spacing)
     
-    _draw_network_status_with_indicators(screen, network_rect, sensor_values, effective_fonts, config_module, current_time, line_spacing)
+    _draw_network_status_with_indicators(screen, network_rect, sensor_values, fonts, config_module, current_time, line_spacing, ui_scaler)
 
-    # Section 3: Rotating Status Bar System (LCARS-style)
+    # Section 3: Rotating Status Bar
     status_bar_y = network_rect.bottom + section_spacing
-    status_bar_height = ui_scaler.scale(28) if ui_scaler else 35
+    status_bar_height = ui_scaler.scale(22) if ui_scaler else 22
     status_bar_rect = pygame.Rect(content_margin, status_bar_y, screen_width - (content_margin * 2), status_bar_height)
     
-    _draw_rotating_status_bar(screen, status_bar_rect, sensor_values, effective_fonts, config_module, current_time, ui_scaler)
+    _draw_rotating_status_bar(screen, status_bar_rect, sensor_values, fonts, config_module, current_time, ui_scaler)
     
-    # Section 4: Use freed space for tricorder-style animations and data display
+    # Section 4: Dots + readout under status bar (stay within safe area when enabled)
     animation_area_y = status_bar_rect.bottom + section_spacing
-    animation_area_height = screen_height - animation_area_y - content_margin
-    animation_rect = pygame.Rect(content_margin, animation_area_y, screen_width - (content_margin * 2), animation_area_height)
-    
-    if animation_area_height > 50:  # Only draw if we have space
-        _draw_tricorder_data_analysis(screen, animation_rect, sensor_values, effective_fonts, config_module, current_time, ui_scaler)
+    content_bottom = safe_rect.bottom - content_margin
+    animation_area_height = content_bottom - animation_area_y
+    content_width = safe_rect.right - 2 * content_margin
+    animation_rect = pygame.Rect(content_margin, animation_area_y, max(0, content_width), max(0, animation_area_height))
+
+    min_bottom_height = ui_scaler.scale(22) if ui_scaler else 22
+    if animation_area_height >= min_bottom_height and animation_rect.width > 0:
+        _draw_tricorder_data_analysis(screen, animation_rect, sensor_values, fonts, config_module, current_time, ui_scaler)
 
 def _draw_animated_header(screen, header_rect, app_state, fonts, config_module, current_time):
     """Draw header with subtle animation effects."""
@@ -188,11 +152,11 @@ def _draw_glowing_text(screen, text, font, color, pos, current_time):
     # Draw main text on top
     screen.blit(text_surface, pos)
 
-def _draw_network_status_with_indicators(screen, network_rect, sensor_values, fonts, config_module, current_time, line_spacing):
-    """Draw network status with animated status indicators and standardized spacing."""
+def _draw_network_status_with_indicators(screen, network_rect, sensor_values, fonts, config_module, current_time, line_spacing, ui_scaler=None):
+    """Draw network status with animated status indicators; uses ui_scaler for sizes when provided."""
     font_small = fonts['small']
-    indicator_size = 4
-    indicator_margin = 12  # Space for indicator + padding
+    indicator_size = ui_scaler.scale(4) if ui_scaler else 4
+    indicator_margin = ui_scaler.scale(12) if ui_scaler else 12
     
     # WiFi Status with indicator
     wifi_status_data = sensor_values.get(app_config.INFO_WIFI_STATUS, {})
@@ -275,8 +239,8 @@ def _draw_rotating_status_bar(screen, status_bar_rect, sensor_values, fonts, con
             "sensor_key": app_config.SENSOR_DISK_USAGE,
             "label": "DISK",
             "units": "%",
-            "green_range": (0, 75),
-            "yellow_range": (75, 90),
+            "green_range": (0, 60),
+            "yellow_range": (60, 85),
             "max_val": 100,
         },
     ]
@@ -347,18 +311,20 @@ def _draw_rotating_status_bar(screen, status_bar_rect, sensor_values, fonts, con
         screen.blit(fallback_surface, status_bar_rect.topleft)
 
 def _draw_tricorder_data_analysis(screen, animation_rect, sensor_values, fonts, config_module, current_time, ui_scaler):
-    """Draw tricorder-style data panel: data stream in upper area, readout in a reserved strip so text is never covered."""
-    if animation_rect.height < 60:
+    """Dots then readout strip; readout is always drawn and kept visible."""
+    if animation_rect.height <= 0 or animation_rect.width <= 0:
         return
 
-    # Reserve a dedicated readout strip at the bottom so scrolling dots never overlap text (LCARS-style)
-    readout_strip_height = fonts["small"].get_height() * 2 + (ui_scaler.margin("medium") if ui_scaler else 16)
-    readout_strip_height = max(40, readout_strip_height)
+    line_h = fonts["small"].get_height()
+    readout_pad = ui_scaler.margin("small") * 2 if ui_scaler else 4
+    readout_strip_height = min(animation_rect.height, line_h + readout_pad)
+    readout_strip_height = max(readout_strip_height, line_h + 2)
+    grid_height = max(0, animation_rect.height - readout_strip_height)
     grid_rect = pygame.Rect(
         animation_rect.left,
         animation_rect.top,
         animation_rect.width,
-        max(0, animation_rect.height - readout_strip_height),
+        grid_height,
     )
     readout_rect = pygame.Rect(
         animation_rect.left,
@@ -367,34 +333,27 @@ def _draw_tricorder_data_analysis(screen, animation_rect, sensor_values, fonts, 
         readout_strip_height,
     )
 
-    # LCARS: left accent bar on the whole analysis panel
-    accent_w = (ui_scaler.scale(4) if ui_scaler else 4)
-    pygame.draw.rect(screen, config_module.Theme.ACCENT, (animation_rect.left, animation_rect.top, accent_w, animation_rect.height))
+    min_grid_height = ui_scaler.scale(12) if ui_scaler else 12
+    if grid_rect.height > min_grid_height:
+        _draw_data_stream_grid(screen, grid_rect, current_time, config_module, ui_scaler)
+    _draw_system_readout_text(screen, readout_rect, sensor_values, fonts, config_module, current_time, ui_scaler)
 
-    # Data stream only in upper area (keeps dots away from readout)
-    if grid_rect.height > 20:
-        _draw_data_stream_grid(screen, grid_rect, current_time, config_module)
+def _draw_data_stream_grid(screen, rect, current_time, config_module, ui_scaler=None):
+    """Grid of flowing dots; grid_spacing and dot_size from ui_scaler when provided."""
+    grid_spacing = ui_scaler.scale(16) if ui_scaler else 16
+    dot_size = max(1, ui_scaler.scale(3) if ui_scaler else 3)
 
-    # Readout strip with dark background so text is always readable
-    _draw_system_readout_text(screen, readout_rect, sensor_values, fonts, config_module, current_time)
+    cols = rect.width // grid_spacing if grid_spacing else 1
+    rows = max(1, rect.height // grid_spacing) if grid_spacing else 1
 
-def _draw_data_stream_grid(screen, rect, current_time, config_module):
-    """Draw a grid of flowing data points like tricorder analysis - more prominent like other dots."""
-    grid_spacing = 20  # Tighter spacing for more dots
-    dot_size = 4  # Larger dots like in sensor view
-    
-    cols = rect.width // grid_spacing
-    rows = min(6, rect.height // grid_spacing)  # More rows for better coverage
-    
     for row in range(rows):
         for col in range(cols):
-            # Stagger animation timing with more variation
             offset = (row * cols + col) * 0.3
             flow_progress = (current_time * 1.8 + offset) % 4.0
-            
-            if flow_progress < 2.5:  # Dot visible for longer duration
-                dot_x = rect.left + col * grid_spacing + 10
-                dot_y = rect.top + row * grid_spacing + 10
+
+            if flow_progress < 2.5:
+                dot_x = rect.left + col * grid_spacing + grid_spacing // 2
+                dot_y = rect.top + row * grid_spacing + grid_spacing // 2
                 
                 # Improved fade in/out with flickering effect like sensor view
                 if flow_progress < 0.8:
@@ -417,27 +376,19 @@ def _draw_data_stream_grid(screen, rect, current_time, config_module):
                 if alpha > 0.15:
                     pygame.draw.circle(screen, dot_color, (dot_x, dot_y), dot_size)
 
-def _draw_system_readout_text(screen, readout_rect, sensor_values, fonts, config_module, current_time):
-    """Draw LCARS-style readout strip: dark background, accent line, then rotating status text (no overlap from dots)."""
-    if readout_rect.height < 24:
+def _draw_system_readout_text(screen, readout_rect, sensor_values, fonts, config_module, current_time, ui_scaler=None):
+    """Draw readout strip: opaque dark background, rotating status text (always visible)."""
+    if readout_rect.height <= 0 or readout_rect.width <= 0:
+        return
+    font_small = fonts["small"]
+    if readout_rect.height < font_small.get_height():
         return
 
-    font_small = fonts["small"]
-
-    # LCARS readout strip background so text is never obscured
+    # Opaque dark strip so readout is always visible
     strip_bg = config_module.Palette.DARK_GREY
     s = pygame.Surface((readout_rect.width, readout_rect.height))
-    s.set_alpha(220)
     s.fill(strip_bg)
     screen.blit(s, readout_rect.topleft)
-    # Accent line above strip (Tricorder style)
-    pygame.draw.line(
-        screen,
-        config_module.Theme.ACCENT,
-        (readout_rect.left, readout_rect.top),
-        (readout_rect.right, readout_rect.top),
-        2,
-    )
 
     readout_interval = 4.0
     readout_index = int(current_time / readout_interval) % 4

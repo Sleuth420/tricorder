@@ -331,32 +331,8 @@ def _draw_exclamation_badge(screen, item_rect, config_module, fonts, ui_scaler=N
 
 
 def _draw_corner_tricorder_effects(screen, corner_rect, corner_color, config_module, fonts, ui_scaler):
-    """Tricorder-style effects in the orange corner panel: READY label + data bars."""
-    font_tiny = fonts.get('tiny', fonts.get('small', fonts.get('default')))
-    pad = ui_scaler.scale(4) if ui_scaler else 4
-    label_color = _darken(corner_color, 0.55)
-    label_surf = font_tiny.render("READY", True, label_color)
-    label_rect = label_surf.get_rect(bottomright=(corner_rect.right - pad, corner_rect.bottom - pad))
-    if label_rect.width < corner_rect.width - 2 * pad and label_rect.height < corner_rect.height - 2 * pad:
-        screen.blit(label_surf, label_rect)
-    # Vertical data bars (signal/status style): larger on small Pi screens so they're visible
-    if ui_scaler and ui_scaler.is_small_screen():
-        bar_w = max(2, ui_scaler.scale(4))
-        bar_gap = max(1, ui_scaler.scale(2))
-        heights = (8, 12, 10)
-    else:
-        bar_w = max(1, ui_scaler.scale(2) if ui_scaler else 2)
-        bar_gap = 1
-        heights = (4, 7, 5)
-    spacing_from_label = ui_scaler.scale(10) if ui_scaler else 10  # gap between bars and READY
-    bar_bottom = corner_rect.bottom - pad
-    bar_x_start = label_rect.left - spacing_from_label - (bar_w * 3 + bar_gap * 2)
-    for i in range(3):
-        h = (ui_scaler.scale(heights[i]) if ui_scaler else heights[i])
-        h = max(2, min(h, corner_rect.height - 2 * pad))
-        bx = bar_x_start + i * (bar_w + bar_gap)
-        by = bar_bottom - h
-        pygame.draw.rect(screen, label_color, (bx, by, bar_w, h))
+    """Tricorder-style corner panel (no READY/bars on small Pi screen)."""
+    pass
 
 
 def _draw_header_tricorder_effects(screen, header_rect, header_color, config_module, fonts, ui_scaler, app_state=None):

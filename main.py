@@ -72,6 +72,16 @@ def main():
     reading_history = ReadingHistory(config.ALL_SENSOR_MODES, config.GRAPH_HISTORY_SIZE)
     logger.info("Application state and reading history initialized.")
 
+    admin_timer = None
+    try:
+        from utils.admin_timer import AdminTimer
+        admin_timer = AdminTimer(config)
+        app_state.admin_timer = admin_timer
+        if app_state.admin_timer_enabled:
+            admin_timer.start()
+    except Exception as e_admin:
+        logger.warning("Admin timer unavailable: %s", e_admin)
+
     exit_code = 0
     try:
         # Non-critical Initializations (loading screen with splash, sensors)
@@ -223,6 +233,10 @@ def main():
                 # 4.5. Sense HAT LED matrix (state-based patterns; throttled, no-op if no Sense HAT)
                 update_led_display(app_state, sensor_values, config)
 
+                # 4.6. Admin battery-life timer: log scenario + CPU/RAM/temp/battery at interval (flush+fsync)
+                if admin_timer and app_state.admin_timer_enabled:
+                    admin_timer.log_sample(app_state)
+
                 # 5. Control Frame Rate
                 clock.tick(config.FPS)
 
@@ -261,6 +275,11 @@ def main():
         exit_code = 1 # Indicate an error exit
     finally:
         logger.info("Performing application cleanup...")
+        if admin_timer:
+            try:
+                admin_timer.stop()
+            except Exception as e_at:
+                logger.warning("Admin timer stop: %s", e_at)
         try:
             # Only cleanup sensors if the module was loaded and init attempted
             if 'sensors' in sys.modules and 'sensors_active' in locals(): 

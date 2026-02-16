@@ -43,3 +43,12 @@ UI_BREAKPOINT_LARGE = 1200  # Large development screens
 
 # Debug Configuration
 UI_DEBUG_DRAWING = False    # Enable detailed drawing/layout logging (shows dimensions, positions, etc.)
+
+# Admin / battery life testing
+# When True, logs elapsed time, scenario (menu/video/sensors etc.), CPU%, RAM%, temp, battery to a
+# separate file at regular intervals. Flush+fsync after each write so data survives power loss when
+# the Pi dies from battery drain.
+ADMIN_TIMER = True
+ADMIN_TIMER_LOG_INTERVAL_SEC = 30   # How often to append a row (balance detail vs. write load)
+ADMIN_TIMER_LOG_DIR = "logs"
+ADMIN_TIMER_LOG_FILENAME = "battery_timer.log"

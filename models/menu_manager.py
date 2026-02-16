@@ -24,6 +24,7 @@ STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
 STATE_SETTINGS_CONTROLS = "SETTINGS_CONTROLS"
 STATE_SETTINGS_UPDATE = "SETTINGS_UPDATE"
 STATE_SETTINGS_SOUND_TEST = "SETTINGS_SOUND_TEST"
+STATE_SETTINGS_DEBUG = "SETTINGS_DEBUG"
 STATE_SETTINGS_DEBUG_OVERLAY = "SETTINGS_DEBUG_OVERLAY"
 STATE_SETTINGS_LOG_VIEWER = "SETTINGS_LOG_VIEWER"
 
@@ -246,13 +247,8 @@ class MenuManager:
                 color_key="SIDEBAR_SYSTEM" # Example color
             ),
             MenuItem(
-                name="Debug Overlay", # New Debug Overlay menu item
-                target_state=STATE_SETTINGS_DEBUG_OVERLAY,
-                color_key="SIDEBAR_SYSTEM" # Example color
-            ),
-            MenuItem(
-                name="View Logs", # New Log Viewer menu item
-                target_state=STATE_SETTINGS_LOG_VIEWER,
+                name="Debug Settings", # View Logs, Debug Overlay, Admin Timer
+                target_state=STATE_SETTINGS_DEBUG,
                 color_key="SIDEBAR_SYSTEM" # Example color
             ),
             MenuItem(

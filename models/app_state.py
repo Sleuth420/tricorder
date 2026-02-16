@@ -51,6 +51,7 @@ STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
 STATE_SETTINGS_CONTROLS = "SETTINGS_CONTROLS"
 STATE_SETTINGS_UPDATE = "SETTINGS_UPDATE"
 STATE_SETTINGS_SOUND_TEST = "SETTINGS_SOUND_TEST"
+STATE_SETTINGS_DEBUG = "SETTINGS_DEBUG"
 STATE_SETTINGS_DEBUG_OVERLAY = "SETTINGS_DEBUG_OVERLAY"
 STATE_SETTINGS_LOG_VIEWER = "SETTINGS_LOG_VIEWER"
 STATE_SELECT_COMBO_DURATION = "SELECT_COMBO_DURATION" # New state for selecting combo duration
@@ -127,6 +128,9 @@ class AppState:
         # Debug overlay - initialized with screen dimensions
         from ui.components.debug import DebugOverlay
         self.debug_overlay = DebugOverlay(screen_width, screen_height)
+        # Admin timer: runtime toggle (main.py sets .admin_timer reference after creating it)
+        self.admin_timer_enabled = getattr(config_module, "ADMIN_TIMER", False)
+        self.admin_timer = None
         
         # Password entry manager - initialized with screen dimensions
         import pygame

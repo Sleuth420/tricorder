@@ -30,6 +30,7 @@ STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
 STATE_SETTINGS_CONTROLS = "SETTINGS_CONTROLS"
 STATE_SETTINGS_UPDATE = "SETTINGS_UPDATE"
 STATE_SETTINGS_SOUND_TEST = "SETTINGS_SOUND_TEST"
+STATE_SETTINGS_DEBUG = "SETTINGS_DEBUG"
 STATE_SETTINGS_DEBUG_OVERLAY = "SETTINGS_DEBUG_OVERLAY"
 STATE_SETTINGS_LOG_VIEWER = "SETTINGS_LOG_VIEWER"
 STATE_SELECT_COMBO_DURATION = "SELECT_COMBO_DURATION"
@@ -89,6 +90,8 @@ class InputRouter:
             return self._handle_update_settings_input(action)
         elif current_state == STATE_SETTINGS_SOUND_TEST:
             return self._handle_sound_test_input(action)
+        elif current_state == STATE_SETTINGS_DEBUG:
+            return self._handle_debug_settings_input(action)
         elif current_state == STATE_SETTINGS_DEBUG_OVERLAY:
             return self._handle_debug_overlay_input(action)
         elif current_state == STATE_SETTINGS_LOG_VIEWER:
@@ -151,7 +154,7 @@ class InputRouter:
                     self.app_state.state_manager.return_to_menu())
         elif current_state == STATE_SETTINGS:
             return self._handle_settings_main_menu_back()
-        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_VOLUME, STATE_DISPLAY_CYCLE_INTERVAL, STATE_SETTINGS_WIFI_NETWORKS, STATE_SETTINGS_BLUETOOTH_DEVICES, STATE_WIFI_PASSWORD_ENTRY]:
+        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_VOLUME, STATE_DISPLAY_CYCLE_INTERVAL, STATE_SETTINGS_WIFI_NETWORKS, STATE_SETTINGS_BLUETOOTH_DEVICES, STATE_WIFI_PASSWORD_ENTRY]:
             logger.info(f"BACK from {current_state}, returning to appropriate parent")
             if current_state == STATE_SELECT_COMBO_DURATION or current_state == STATE_SETTINGS_VOLUME:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_DEVICE)
@@ -163,6 +166,8 @@ class InputRouter:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_BLUETOOTH)
             elif current_state == STATE_WIFI_PASSWORD_ENTRY:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_WIFI_NETWORKS)
+            elif current_state == STATE_SETTINGS_DEBUG:
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS)
             else:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS)
         elif current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_TETRIS_ACTIVE]:
@@ -632,6 +637,40 @@ class InputRouter:
                 return True
         return False
     
+    def _handle_debug_settings_input(self, action):
+        """Handle input for the Debug Settings menu (View Logs, Debug Overlay, Admin Timer, Back)."""
+        if action == app_config.INPUT_ACTION_NEXT:
+            if not hasattr(self.app_state, "debug_settings_option_index"):
+                self.app_state.debug_settings_option_index = 0
+            self.app_state.debug_settings_option_index = (self.app_state.debug_settings_option_index + 1) % 4
+            return True
+        elif action == app_config.INPUT_ACTION_PREV:
+            if not hasattr(self.app_state, "debug_settings_option_index"):
+                self.app_state.debug_settings_option_index = 0
+            self.app_state.debug_settings_option_index = (self.app_state.debug_settings_option_index - 1 + 4) % 4
+            return True
+        elif action == app_config.INPUT_ACTION_SELECT:
+            if not hasattr(self.app_state, "debug_settings_option_index"):
+                self.app_state.debug_settings_option_index = 0
+            idx = self.app_state.debug_settings_option_index
+            if idx == 0:
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS_LOG_VIEWER)
+            if idx == 1:
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS_DEBUG_OVERLAY)
+            if idx == 2:
+                # Toggle Admin Timer
+                self.app_state.admin_timer_enabled = not self.app_state.admin_timer_enabled
+                if self.app_state.admin_timer:
+                    if self.app_state.admin_timer_enabled:
+                        self.app_state.admin_timer.start()
+                    else:
+                        self.app_state.admin_timer.stop()
+                logger.info("Admin timer %s", "ON" if self.app_state.admin_timer_enabled else "OFF")
+                return True
+            if idx == 3:
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS)
+        return False
+
     def _handle_debug_overlay_input(self, action):
         """Handle input for the Debug Overlay settings view."""
         if action == app_config.INPUT_ACTION_NEXT:

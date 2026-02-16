@@ -89,29 +89,31 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
     visible_end = min(total_items, visible_start + max_visible_items)
     
     # === RENDER ANIMATED ITEMS ===
+    # Arrow zone: reserve space so arrow stays inside safe area (smaller, LCARS-friendly chevron)
+    arrow_offset = ui_scaler.scale(6) if ui_scaler else 6
+    arrow_size = ui_scaler.scale(10) if ui_scaler else 10  # Slim chevron (was 16)
+    arrow_zone = arrow_offset + arrow_size
+    safe_right_margin = ui_scaler.scale(4) if ui_scaler else 4  # Min gap from safe_rect.right
+
     content_top_offset = ui_scaler.scale(20) if ui_scaler else 20
     item_spacing = ui_scaler.scale(15) if ui_scaler else 15
     y_offset = content_y + content_top_offset
-    
+
     for i in range(visible_start, visible_end):
         item = menu_items[i]
-        
+
         # Extract item text (handle MenuItem objects, dicts, and strings)
         if hasattr(item, 'name'):
-            # MenuItem object with .name attribute
             item_text = item.name
         elif isinstance(item, dict):
-            # Dictionary with 'name' key
             item_text = item.get('name', str(item))
         else:
-            # String or other object
             item_text = str(item)
-        
-        # Determine colors and styling
+
         text_color = config_module.Theme.FOREGROUND
         is_selected = (i == selected_index)
-        
-        # Create item rectangle - center all items within safe area (use UIScaler for sizes when available)
+
+        # Item rect: stay within safe area and reserve space for arrow on the right
         if item_style == "button":
             btn_half_w = ui_scaler.scale(150) if ui_scaler else 150
             item_rect = pygame.Rect(
@@ -121,29 +123,38 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
         else:
             max_item_w = ui_scaler.scale(400) if ui_scaler else 400
             side_inset = ui_scaler.scale(60) if ui_scaler else 60
-            item_width = min(max_item_w, safe_rect.width - side_inset)
+            # Reserve arrow zone so arrow doesn't overlap bezel (safe area)
+            item_width = min(max_item_w, safe_rect.width - side_inset - arrow_zone)
             item_rect = pygame.Rect(
                 safe_rect.centerx - (item_width // 2), y_offset - (item_height_padding // 2),
                 item_width, effective_item_height
             )
-        
-        # Draw selection arrow (original working version with subtle animation)
+
+        # LCARS-style selected row: right-edge accent bar then slim chevron (both inside safe area)
         if is_selected:
             text_color = config_module.Theme.MENU_SELECTED_TEXT
-            
-            arrow_offset = ui_scaler.scale(10) if ui_scaler else 10
-            arrow_size = ui_scaler.scale(16) if ui_scaler else 16
+
+            # Right-edge accent bar (like menu_base left-edge accent)
+            accent_w = max(2, ui_scaler.scale(3) if ui_scaler else 3)
+            accent_rect = pygame.Rect(item_rect.right - accent_w, item_rect.top, accent_w, item_rect.height)
+            pulse = 0.6 + 0.4 * (0.5 + 0.5 * math.sin(current_time * 2.2))
+            accent_color = tuple(min(255, int(c * pulse)) for c in config_module.Theme.ACCENT)
+            pygame.draw.rect(screen, accent_color, accent_rect)
+
+            # Slim chevron arrow: clamp so it stays inside safe area
             arrow_x = item_rect.right + arrow_offset
             arrow_y = item_rect.centery
-            
-            # Add more prominent animation to the original arrow
+            arrow_right_max = (safe_rect.right - safe_right_margin) if ui_scaler and ui_scaler.safe_area_enabled else (screen_width - safe_right_margin)
+            if arrow_x + arrow_size > arrow_right_max:
+                arrow_x = arrow_right_max - arrow_size
             color_intensity = 0.6 + 0.4 * (0.5 + 0.5 * math.sin(current_time * 3.0))
             arrow_color = tuple(min(255, int(c * color_intensity)) for c in config_module.Theme.ACCENT)
-            
+            # Slim chevron (width arrow_size, height ~2/5 for LCARS look)
+            half_h = max(2, arrow_size * 2 // 5)
             arrow_points = [
-                (arrow_x, arrow_y),  # Left point (tip)
-                (arrow_x + arrow_size, arrow_y - arrow_size // 2),  # Top right
-                (arrow_x + arrow_size, arrow_y + arrow_size // 2)   # Bottom right
+                (arrow_x, arrow_y),
+                (arrow_x + arrow_size, arrow_y - half_h),
+                (arrow_x + arrow_size, arrow_y + half_h)
             ]
             pygame.draw.polygon(screen, arrow_color, arrow_points)
         elif item_style == "button":
@@ -186,8 +197,8 @@ def draw_scrollable_list_menu(screen, title, menu_items, selected_index, fonts, 
             down_rect = down_surface.get_rect(center=(safe_rect.centerx, y_offset + ui_scaler.scale(10) if ui_scaler else 10))
             screen.blit(down_surface, down_rect)
     
-    # Draw ambient tricorder effects (pass ui_scaler for consistent scaling)
-    _draw_list_ambient_effects(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module, ui_scaler)
+    # Draw ambient tricorder effects (respect safe area when enabled)
+    _draw_list_ambient_effects(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module, ui_scaler, safe_rect)
     
     # === FOOTER === (Optional footer - only show if footer_hint is provided)
     if footer_hint is not None:
@@ -222,8 +233,8 @@ def _draw_animated_header(screen, title, font, header_rect, current_time, config
 
 
 
-def _draw_list_ambient_effects(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module, ui_scaler=None):
-    """Draw ambient tricorder effects around the list menu. Uses ui_scaler for sizes when available."""
+def _draw_list_ambient_effects(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module, ui_scaler=None, safe_rect=None):
+    """Draw ambient tricorder effects around the list menu. Respects safe_rect when provided (safe area enabled)."""
     min_w = ui_scaler.scale(300) if ui_scaler else 300
     min_h = ui_scaler.scale(200) if ui_scaler else 200
     if screen_width < min_w or screen_height < min_h:
@@ -232,8 +243,8 @@ def _draw_list_ambient_effects(screen, screen_width, screen_height, header_rect,
     _draw_corner_status_dots(screen, screen_width, screen_height, current_time, config_module, ui_scaler, margin)
     side_stream_breakpoint = ui_scaler.scale(400) if ui_scaler else 400
     if screen_width > side_stream_breakpoint:
-        _draw_side_data_streams(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module, ui_scaler)
-    _draw_bottom_status_line(screen, screen_width, screen_height, current_time, config_module, ui_scaler)
+        _draw_side_data_streams(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module, ui_scaler, safe_rect)
+    _draw_bottom_status_line(screen, screen_width, screen_height, current_time, config_module, ui_scaler, safe_rect)
 
 def _draw_corner_status_dots(screen, screen_width, screen_height, current_time, config_module, ui_scaler=None, margin=15):
     """Draw pulsing status dots in corners (within safe area when enabled)."""
@@ -274,14 +285,19 @@ def _draw_corner_status_dots(screen, screen_width, screen_height, current_time, 
         dot_color = tuple(min(255, int(c * pulse_alpha)) for c in color)
         pygame.draw.circle(screen, dot_color, pos, dot_radius)
 
-def _draw_side_data_streams(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module, ui_scaler=None):
-    """Draw flowing data streams on the sides."""
+def _draw_side_data_streams(screen, screen_width, screen_height, header_rect, content_y, current_time, config_module, ui_scaler=None, safe_rect=None):
+    """Draw flowing data streams on the sides; stay inside safe_rect when provided."""
     inset = ui_scaler.scale(5) if ui_scaler else 5
     stream_w = ui_scaler.scale(20) if ui_scaler else 20
     bottom_inset = ui_scaler.scale(50) if ui_scaler else 50
-    left_area = pygame.Rect(inset, content_y, stream_w, screen_height - content_y - bottom_inset)
+    if safe_rect is not None:
+        content_bottom = min(screen_height - bottom_inset, safe_rect.bottom - inset)
+        left_area = pygame.Rect(safe_rect.left + inset, content_y, stream_w, content_bottom - content_y)
+        right_area = pygame.Rect(safe_rect.right - inset - stream_w, content_y, stream_w, content_bottom - content_y)
+    else:
+        left_area = pygame.Rect(inset, content_y, stream_w, screen_height - content_y - bottom_inset)
+        right_area = pygame.Rect(screen_width - inset - stream_w, content_y, stream_w, screen_height - content_y - bottom_inset)
     _draw_vertical_data_stream(screen, left_area, current_time, config_module, "left", ui_scaler)
-    right_area = pygame.Rect(screen_width - inset - stream_w, content_y, stream_w, screen_height - content_y - bottom_inset)
     _draw_vertical_data_stream(screen, right_area, current_time, config_module, "right", ui_scaler)
 
 def _draw_vertical_data_stream(screen, area, current_time, config_module, side, ui_scaler=None):
@@ -312,13 +328,18 @@ def _draw_vertical_data_stream(screen, area, current_time, config_module, side, 
                 dot_color = (0, int(150 * alpha), int(50 * alpha))
                 pygame.draw.circle(screen, dot_color, (dot_x, dot_y), max(1, size))
 
-def _draw_bottom_status_line(screen, screen_width, screen_height, current_time, config_module, ui_scaler=None):
-    """Draw animated status line at bottom. Uses ui_scaler for insets when available."""
+def _draw_bottom_status_line(screen, screen_width, screen_height, current_time, config_module, ui_scaler=None, safe_rect=None):
+    """Draw animated status line at bottom; within safe_rect when provided (clears curved bezel)."""
     bottom_inset = ui_scaler.scale(30) if ui_scaler else 30
     side_inset = ui_scaler.margin("medium") if ui_scaler else 20
-    line_y = screen_height - bottom_inset
-    line_width = screen_width - side_inset * 2
-    line_x = side_inset
+    if safe_rect is not None:
+        line_y = safe_rect.bottom - bottom_inset
+        line_x = safe_rect.left + side_inset
+        line_width = safe_rect.width - side_inset * 2
+    else:
+        line_y = screen_height - bottom_inset
+        line_x = side_inset
+        line_width = screen_width - side_inset * 2
     base_alpha = 0.3 + 0.2 * (0.5 + 0.5 * math.sin(current_time * 1.0))
     base_color = (0, int(60 * base_alpha), int(20 * base_alpha))
     pygame.draw.line(screen, base_color, (line_x, line_y), (line_x + line_width, line_y), 1)

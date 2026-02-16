@@ -43,8 +43,8 @@ SCHEMATICS_ZOOM_FAST_STEP = 0.3    # Faster zoom step for held actions
 # Tune so content clears the bezel: increase if cut off; reduce top if black bar above.
 SAFE_AREA_ENABLED = True           # Enable/disable safe area and rounded-corner mask
 SAFE_AREA_TOP = 14                 # Pixels at top so headers and titles clear the curved bezel
-SAFE_AREA_BOTTOM = 32             # Pixels at bottom so footer and status text clear the bezel
-SAFE_AREA_LEFT = 34               # Pixels at left so menu text and labels clear the bezel
+SAFE_AREA_BOTTOM = 28             # Pixels at bottom so footer and status text clear the bezel
+SAFE_AREA_LEFT = 32              # Pixels at left so menu text and labels clear the bezel
 SAFE_AREA_RIGHT = 34              # Pixels at right so content and graphs clear the bezel
 
 # Corner radius for the visible rounded-rect mask (0 = rectangular, no curve)

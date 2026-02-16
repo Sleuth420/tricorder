@@ -10,7 +10,7 @@ import os
 logger = logging.getLogger(__name__)
 
 # Version configuration - update these manually when needed
-RELEASE_STAGE = "ALPHA"
+RELEASE_STAGE = "BETA"
 MAJOR_VERSION = 0
 MINOR_VERSION = 1
 
@@ -59,11 +59,19 @@ def get_git_commit_hash():
 
 def get_build_number():
     """
-    Generate the build number string.
-    Format: STAGE MAJOR.MINOR.PATCH
+    Generate the build number string for display (short form to fit menu footer).
+    Format: STAGE MAJOR.MINOR (one decimal place)
     
     Returns:
         str: Build number string
+    """
+    return f"{RELEASE_STAGE} {MAJOR_VERSION}.{MINOR_VERSION}"
+
+
+def get_build_number_full():
+    """
+    Full build string including patch (for Settings/update screen, logging).
+    Format: STAGE MAJOR.MINOR.PATCH
     """
     patch_version = get_git_commit_count()
     return f"{RELEASE_STAGE} {MAJOR_VERSION}.{MINOR_VERSION}.{patch_version}"
@@ -81,8 +89,8 @@ def get_version_info():
         'minor': MINOR_VERSION,
         'patch': get_git_commit_count(),
         'commit_hash': get_git_commit_hash(),
-        'build_number': get_build_number()
+        'build_number': get_build_number_full()
     }
 
-# For backward compatibility
+# For backward compatibility (short form used in menu footer)
 BUILD_NUMBER = get_build_number() 

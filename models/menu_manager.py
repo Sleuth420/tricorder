@@ -87,7 +87,7 @@ class MenuManager:
             color_key="COPPER_ROSE"
         ))
         items.append(MenuItem(
-            name="Specs", 
+            name="Schematics", 
             target_state=STATE_SCHEMATICS_CATEGORY, 
             color_key="EAST_SIDE_PURPLE"
         ))

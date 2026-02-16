@@ -58,7 +58,7 @@ def _get_footer_content(config_module):
         
     except Exception as e:
         logger.error(f"Error generating footer content: {e}")
-        return "Stardate 47457.1 | ALPHA 0.0.1"
+        return "Stardate 47457.1 | BETA 0.1"
 
 def draw_menu_screen(screen, app_state, fonts, config_module, sensor_values, ui_scaler):
     """
@@ -275,7 +275,9 @@ def _draw_tricorder_scanning_effect(screen, main_content_rect, logo_rect, curren
     scan_height = max(2, ui_scaler.scale(2) if ui_scaler else 2)
     scan_spacing = max(12, (ui_scaler.scale(14) if ui_scaler else 14))
     scan_area_top = logo_rect.bottom + ui_scaler.margin("medium")
-    scan_area_bottom = main_content_rect.bottom - ui_scaler.margin("large")
+    # Leave room for footer (stardate/version) so animations don't overlap
+    footer_clearance = ui_scaler.margin("large") + ui_scaler.scale(24)
+    scan_area_bottom = main_content_rect.bottom - footer_clearance
     scan_area_height = scan_area_bottom - scan_area_top
 
     if scan_area_height > 30:
@@ -434,13 +436,15 @@ def _draw_main_menu_footer(screen, main_content_rect, fonts, config_module, scre
     """
     hint_text = _get_footer_content(config_module)
 
-    # Create a custom footer rendering that centers on main content area
+    # Create a custom footer rendering centered in main content area (to the right of sidebar)
     footer_font = fonts.get('small', fonts.get('medium'))
     footer_surface = footer_font.render(hint_text, True, config_module.Theme.FOREGROUND)
     # Use UIScaler for responsive footer positioning; inset for safe area / overscan on Pi
     footer_margin = ui_scaler.margin("small")
     safe_bottom = ui_scaler.get_safe_area_margins()["bottom"] if (ui_scaler and ui_scaler.safe_area_enabled) else 0
-    footer_y = screen_height - footer_surface.get_height() - footer_margin - safe_bottom
+    # Position higher so it doesn't overlap scanning animations; extra offset from bottom
+    extra_top_offset = ui_scaler.margin("medium") + ui_scaler.scale(8)
+    footer_y = screen_height - footer_surface.get_height() - footer_margin - safe_bottom - extra_top_offset
     footer_x = main_content_rect.centerx - footer_surface.get_width() // 2
     screen.blit(footer_surface, (footer_x, footer_y))
 

@@ -119,8 +119,8 @@ def _draw_main_menu_content(screen, main_content_rect, sensor_values, fonts, con
     logo_cycle_interval = 10.0
     logo_paths = [
         config_module.SPLASH_LOGO_PATH,
-        "assets/images/spork.png",
-        "assets/images/cap'n_kirb.png",
+        #"assets/images/spork.png",
+        #"assets/images/cap'n_kirb.png",
         #"assets/images/star_trek_badge.png",
     ]
     logo_cycle_phase = int(current_time / logo_cycle_interval) % len(logo_paths)

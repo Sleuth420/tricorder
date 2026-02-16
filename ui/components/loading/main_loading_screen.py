@@ -132,15 +132,7 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
         scan_progress (float): Progress of the scanning animation (0.0 to 1.0)
         animation_time (float): Time in seconds for animations
     """
-    screen.fill(config.Theme.BACKGROUND)
-    
-    # Draw the splash logo
-    screen.blit(logo_splash, logo_rect)
-    
-    # Draw subtle tricorder-themed animations around the logo
-    draw_tricorder_animations(screen, logo_rect, animation_time, progress, ui_scaler)
-    
-    # Use UIScaler for all dimensions; respect safe area for curved bezel
+    # Use UIScaler for all dimensions; respect safe area for curved bezel (before drawing so logo is centered)
     if ui_scaler:
         screen_w = ui_scaler.screen_width
         screen_h = ui_scaler.screen_height
@@ -166,34 +158,35 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
         lines_spacing = max(20, screen_h // 30)
         bottom_margin = max(40, screen_h // 15)
     
+    # Get font for text measurements (used for centering and drawing)
+    try:
+        progress_font = fonts.get('medium', pygame.font.Font(None, config.FONT_SIZE_MEDIUM))
+    except Exception:
+        progress_font = pygame.font.Font(None, config.FONT_SIZE_MEDIUM)
+    
+    # Pre-measure text to compute total content height (needed for vertical centering)
+    progress_text = f"{int(progress * 100)}%"
+    progress_surface = progress_font.render(progress_text, True, config.Theme.FOREGROUND)
+    stage_surface = progress_font.render(stage_text, True, config.Theme.ACCENT)
+    lines_surface = None
+    if total_lines > 0:
+        lines_text = f"Analyzing code matrices: {current_lines:,} / {total_lines:,}"
+        lines_surface = progress_font.render(lines_text, True, config.Theme.FOREGROUND)
+    
+    content_below_logo = (bar_height + progress_spacing + progress_surface.get_height() +
+                         stage_spacing + stage_surface.get_height())
+    if lines_surface:
+        content_below_logo += lines_spacing + lines_surface.get_height()
+    total_content_height = logo_rect.height + spacing_after_logo + content_below_logo
+    # Center the entire block vertically in the safe area
+    content_top = safe_rect.top + max(0, (safe_rect.height - total_content_height) // 2)
+    logo_rect.midtop = (center_x, content_top)
+    
     available_space_below_logo = (safe_rect.bottom if ui_scaler and ui_scaler.safe_area_enabled else screen_h) - logo_rect.bottom
     bar_x = center_x - bar_width // 2
     bar_y = logo_rect.bottom + spacing_after_logo
     
-    # Get font for text measurements
-    try:
-        progress_font = fonts.get('medium', pygame.font.Font(None, config.FONT_SIZE_MEDIUM))
-    except:
-        progress_font = pygame.font.Font(None, config.FONT_SIZE_MEDIUM)
-    
-    # Pre-calculate text elements to determine total height needed
-    progress_text = f"{int(progress * 100)}%"
-    progress_surface = progress_font.render(progress_text, True, config.Theme.FOREGROUND)
-    
-    stage_surface = progress_font.render(stage_text, True, config.Theme.ACCENT)
-    
-    lines_surface = None
-    if total_lines > 0:
-        # Star Trek themed line count display
-        lines_text = f"Analyzing code matrices: {current_lines:,} / {total_lines:,}"
-        lines_surface = progress_font.render(lines_text, True, config.Theme.FOREGROUND)
-    
-    # Calculate total content height to check if it fits well
-    content_height = (bar_height + progress_spacing + progress_surface.get_height() + 
-                     stage_spacing + stage_surface.get_height())
-    if lines_surface:
-        content_height += lines_spacing + lines_surface.get_height()
-    
+    content_height = content_below_logo
     # Adjust spacing if content would extend too close to bottom
     remaining_space = screen_h - (bar_y + content_height)
     if remaining_space < bottom_margin and content_height > 0:
@@ -208,6 +201,11 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
         bottom_space = screen_h - total_height
         logger.info(f"🎨 LoadingScreen: screen={screen_w}x{screen_h}, logo_rect={logo_rect}")
         logger.info(f"🎨 LoadingScreen: bar={bar_width}x{bar_height}px at ({bar_x}, {bar_y}), content_height={content_height}px, bottom_space={bottom_space}px")
+
+    # Draw background, logo, and animations (after layout so logo is centered)
+    screen.fill(config.Theme.BACKGROUND)
+    screen.blit(logo_splash, logo_rect)
+    draw_tricorder_animations(screen, logo_rect, animation_time, progress, ui_scaler)
 
     # Draw loading bar with improved design
     # Outer border (green)

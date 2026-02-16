@@ -122,15 +122,16 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
 
     if graph_type == "LINE":
         history_data = sensor_history.get_history(current_sensor_key)
-        footer_space = ui_scaler.scale(40) if ui_scaler else 40
+        # No footer when graph is shown; reserve only space for time axis label below graph
+        time_label_height = (config_module.FONT_SIZE_SMALL or 14) + (ui_scaler.scale(8) if ui_scaler else 8)
         min_graph_h = ui_scaler.scale(100) if ui_scaler else 100
-        graph_height = safe_rect.bottom - value_rect.bottom - graph_margin*3 - config_module.FONT_SIZE_SMALL*3 - footer_space
-        graph_width = safe_rect.width - graph_margin*2
+        graph_height = safe_rect.bottom - value_rect.bottom - graph_margin * 2 - time_label_height
+        graph_width = safe_rect.width - graph_margin * 2
         graph_rect = pygame.Rect(
-            safe_rect.left + graph_margin, 
+            safe_rect.left + graph_margin,
             value_rect.bottom + graph_margin,
             graph_width,
-            max(min_graph_h, graph_height)  # Ensure minimum height
+            max(min_graph_h, graph_height)
         )
         range_override = display_props.get("range_override", (None, None))
         min_val_cfg, max_val_cfg = range_override if range_override is not None else (None, None)
@@ -168,9 +169,8 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
                 graph_margin_top = 20
                 graph_margin_bottom = 20
                 
-            # Reserve space for footer so it doesn't overlap the graph
-            footer_space = ui_scaler.scale(36) if ui_scaler else 36
-            graph_height = safe_rect.height - graph_margin_top - graph_margin_bottom - footer_space
+            # No footer when graph is shown; use full safe area height
+            graph_height = safe_rect.height - graph_margin_top - graph_margin_bottom
             graph_height = max(80, graph_height)
             graph_x = safe_rect.centerx - (graph_width // 2)
             graph_y = safe_rect.top + graph_margin_top
@@ -279,13 +279,13 @@ def _draw_sensor_ambient_effects(screen, screen_width, screen_height, graph_rect
         safe_top_y = ui_scaler.scale(100)
         inset_sm = ui_scaler.margin("small")
         inset_md = ui_scaler.margin("medium")
-        inset_bottom = ui_scaler.scale(60)
+        inset_bottom = ui_scaler.scale(40)
         frozen_top = ui_scaler.scale(50)
     else:
         safe_top_y = 100
         inset_sm = 10
         inset_md = 15
-        inset_bottom = 60
+        inset_bottom = 40
         frozen_top = 50
     if graph_rect:
         left_area_top = max(graph_rect.top, safe_top_y)
@@ -313,8 +313,8 @@ def _draw_sensor_data_stream(screen, area, current_time, config_module, side, ui
     """Draw flickering data stream effect with fixed position dots. Uses ui_scaler for spacing/size when available."""
     if current_time == 0:  # Frozen
         return
-    dot_spacing = ui_scaler.scale(20) if ui_scaler else 20
-    dot_offset = ui_scaler.scale(7) if ui_scaler else 7
+    dot_spacing = ui_scaler.scale(14) if ui_scaler else 14
+    dot_offset = ui_scaler.scale(5) if ui_scaler else 5
     num_dots = max(1, area.height // dot_spacing)
     for i in range(num_dots):
         dot_y = area.top + (i * dot_spacing) + dot_offset
@@ -333,8 +333,8 @@ def _draw_sensor_data_stream(screen, area, current_time, config_module, side, ui
         if alpha > 0.1:
             viking_blue = config_module.Palette.VIKING_BLUE
             dot_color = tuple(min(255, int(c * alpha)) for c in viking_blue)
-            dot_size = ui_scaler.scale(4) if ui_scaler else 4
-            pygame.draw.circle(screen, dot_color, (dot_x, dot_y), max(1, dot_size))
+            dot_size = max(1, ui_scaler.scale(2) if ui_scaler else 2)
+            pygame.draw.circle(screen, dot_color, (dot_x, dot_y), dot_size)
 
 def _draw_sensor_readout_display(screen, area, sensor_data, current_time, config_module):
     """Draw animated sensor readout information without text messages."""
@@ -369,8 +369,8 @@ def _draw_sensor_status_indicators(screen, area, current_time, config_module, ui
     """Draw status indicator dots across the bottom. Uses ui_scaler for spacing/size when available."""
     if current_time == 0:  # Frozen
         return
-    min_width_per_indicator = ui_scaler.scale(30) if ui_scaler else 30
-    indicator_radius = ui_scaler.scale(8) if ui_scaler else 8
+    min_width_per_indicator = ui_scaler.scale(24) if ui_scaler else 24
+    indicator_radius = max(1, ui_scaler.scale(5) if ui_scaler else 5)
     indicator_count = min(6, area.width // max(1, min_width_per_indicator))
     indicator_spacing = area.width // max(1, indicator_count)
     for i in range(indicator_count):

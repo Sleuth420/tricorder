@@ -64,8 +64,8 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
             # For small screens (Pi): wider minimum so "Env: Humid", "Environmental" etc. don't cut off
             base_sidebar_width = max(min_sidebar_for_text, 132, screen_width // 3)
         else:
-            # For larger screens, use original proportion: ~25% of screen width
-            base_sidebar_width = max(130, min(screen_width // 4, 200))
+            # For larger screens: ensure longest label fits (e.g. "Env: Humidity"), cap at 260px or 25% of screen
+            base_sidebar_width = max(130, min_sidebar_for_text, min(screen_width // 4, 260))
 
     arrow_indicator_width = ui_scaler.scale(config_module.ARROW_INDICATOR_WIDTH)
     header_height = ui_scaler.header_height()

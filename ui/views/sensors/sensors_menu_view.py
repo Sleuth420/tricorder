@@ -44,16 +44,15 @@ def _draw_enhanced_sensors_content(screen, main_content_rect, app_state, sensor_
     """
     Draw enhanced main content area with tricorder-style animations and theming.
     """
-    # Use UIScaler for responsive spacing if available
+    # Use UIScaler for responsive spacing; keep compact so data/animations use more space
     if ui_scaler:
-        title_spacing = ui_scaler.margin("large")
-        content_spacing = ui_scaler.margin("large")
-        section_spacing = ui_scaler.margin("medium")
+        title_spacing = ui_scaler.margin("medium")
+        content_spacing = ui_scaler.margin("medium")
+        section_spacing = ui_scaler.margin("small")
     else:
-        # Fallback to proportional values
-        title_spacing = max(25, main_content_rect.height // 15)
-        content_spacing = max(25, main_content_rect.height // 15)
-        section_spacing = max(20, main_content_rect.height // 18)
+        title_spacing = max(12, main_content_rect.height // 20)
+        content_spacing = max(12, main_content_rect.height // 20)
+        section_spacing = max(10, main_content_rect.height // 24)
     
     # Animated title with glow effect
     title_font = fonts['large']
@@ -114,15 +113,15 @@ def _draw_enhanced_sensor_preview(screen, main_content_rect, content_y, sensor_k
     display_props = config_module.SENSOR_DISPLAY_PROPERTIES.get(sensor_key, {})
     display_name = display_props.get("display_name", sensor_key)
     
-    # Use responsive spacing
+    # Compact spacing so value and bars feel larger in the layout
     if ui_scaler:
-        name_spacing = ui_scaler.margin("medium")
+        name_spacing = ui_scaler.margin("small")
         value_spacing = ui_scaler.margin("small")
         note_spacing = ui_scaler.margin("small")
     else:
-        name_spacing = 25
-        value_spacing = 15
-        note_spacing = 10
+        name_spacing = 10
+        value_spacing = 8
+        note_spacing = 6
     
     # Animated sensor name with subtle pulse
     name_font = fonts['medium']
@@ -186,15 +185,15 @@ def _draw_sensor_data_visualization(screen, value_rect, sensor_data, current_tim
     # Normalize value for visualization (0-100 range)
     normalized_val = min(100, max(0, abs(numeric_val)))
     
-    # Draw animated data bars on sides of value
-    bar_count = 5
-    bar_width = 3
-    bar_spacing = 12
-    bar_height_base = 8
+    # Draw animated data bars on sides of value (larger for better visibility)
+    bar_count = 6
+    bar_width = 5
+    bar_spacing = 14
+    bar_height_base = 16
     
     for i in range(bar_count):
         # Left side bars
-        bar_height = bar_height_base + int(4 * math.sin(current_time * 2.0 + i * 0.5))
+        bar_height = bar_height_base + int(8 * math.sin(current_time * 2.0 + i * 0.5))
         bar_alpha = 0.3 + 0.4 * (normalized_val / 100.0) * (0.5 + 0.5 * math.sin(current_time * 1.5 + i * 0.3))
         
         if bar_alpha > 0.1:
@@ -242,11 +241,11 @@ def _draw_enhanced_sensor_status(screen, main_content_rect, sensor_values, fonts
     """Draw enhanced sensor status with animations at the bottom (above safe area curve)."""
     if ui_scaler:
         safe_bottom = ui_scaler.get_safe_area_margins()["bottom"] if ui_scaler.safe_area_enabled else 0
-        bottom_margin = max(ui_scaler.margin("large"), safe_bottom)
+        bottom_margin = max(ui_scaler.margin("medium"), safe_bottom)
         status_spacing = ui_scaler.margin("small")
     else:
-        bottom_margin = 50
-        status_spacing = 8
+        bottom_margin = 32
+        status_spacing = 6
     
     summary_font = fonts['small']
     
@@ -284,9 +283,9 @@ def _draw_enhanced_sensor_status(screen, main_content_rect, sensor_values, fonts
     status_rect = status_surface.get_rect(centerx=main_content_rect.centerx, 
                                         y=main_content_rect.bottom - bottom_margin)
     
-    # Draw status indicator dot
-    indicator_radius = 4
-    indicator_x = status_rect.left - 15
+    # Draw status indicator dot (slightly larger)
+    indicator_radius = 5
+    indicator_x = status_rect.left - 18
     indicator_y = status_rect.centery
     indicator_pulse = 0.5 + 0.5 * (0.5 + 0.5 * math.sin(current_time * 3.0))
     indicator_color = tuple(min(255, int(c * indicator_pulse)) for c in status_color)
@@ -307,7 +306,7 @@ def _draw_enhanced_sensor_status(screen, main_content_rect, sensor_values, fonts
 def _draw_sensor_ambient_effects(screen, main_content_rect, current_time, config_module, ui_scaler):
     """Draw ambient tricorder-style effects in the background."""
     # Only draw if we have enough space
-    if main_content_rect.width < 200 or main_content_rect.height < 150:
+    if main_content_rect.width < 160 or main_content_rect.height < 120:
         return
     
     # Corner data streams (similar to main menu but sensor-themed)
@@ -317,23 +316,21 @@ def _draw_sensor_ambient_effects(screen, main_content_rect, current_time, config
     _draw_sensor_grid_pattern(screen, main_content_rect, current_time, config_module)
 
 def _draw_scanning_lines_effect(screen, main_content_rect, current_time, config_module):
-    """Draw scanning lines effect for when no sensor is selected."""
+    """Draw scanning lines effect for when no sensor is selected (wider, more visible)."""
     scan_speed = 1.5
-    line_height = 2
-    line_spacing = 30
+    line_height = 3
+    line_spacing = 24
     
-    # Calculate number of lines that fit
     num_lines = max(1, main_content_rect.height // line_spacing)
     
     for i in range(num_lines):
         line_offset = i * 0.4
         line_progress = (current_time * scan_speed + line_offset) % 3.0
         
-        if line_progress < 1.5:  # Line visible for half the cycle
-            line_y = main_content_rect.top + (i * line_spacing) + 50  # Offset from top
+        if line_progress < 1.5:
+            line_y = main_content_rect.top + (i * line_spacing) + 30
             
-            # Calculate line width and alpha
-            max_width = main_content_rect.width * 0.4
+            max_width = main_content_rect.width * 0.6
             if line_progress < 0.75:
                 line_width = int(max_width * (line_progress / 0.75))
                 alpha = line_progress / 0.75
@@ -347,21 +344,21 @@ def _draw_scanning_lines_effect(screen, main_content_rect, current_time, config_
                 pygame.draw.rect(screen, line_color, (line_x, line_y, line_width, line_height))
 
 def _draw_sensor_data_streams(screen, main_content_rect, current_time, config_module):
-    """Draw flowing data streams in corners."""
-    corner_margin = 10
-    stream_length = 6
-    dot_size = 2
+    """Draw flowing data streams in corners (larger, more visible)."""
+    corner_margin = 12
+    stream_length = 10
+    dot_size = 3
     
     # Top-right corner stream
-    start_x = main_content_rect.right - corner_margin - 30
-    start_y = main_content_rect.top + corner_margin + 40  # Below title area
+    start_x = main_content_rect.right - corner_margin - 40
+    start_y = main_content_rect.top + corner_margin + 30
     
     for i in range(stream_length):
         flow_offset = (current_time * 2.5 + i * 0.4) % 4.0
         
         if flow_offset < 2.0:
-            dot_x = start_x + int(flow_offset * 6)
-            dot_y = start_y + (i * 5)
+            dot_x = start_x + int(flow_offset * 8)
+            dot_y = start_y + (i * 8)
             
             alpha_factor = 1.0 - (flow_offset / 2.0) if flow_offset > 1.0 else flow_offset
             dot_color = (0, int(60 * alpha_factor), int(20 * alpha_factor))
@@ -370,26 +367,24 @@ def _draw_sensor_data_streams(screen, main_content_rect, current_time, config_mo
                 pygame.draw.circle(screen, dot_color, (dot_x, dot_y), dot_size)
 
 def _draw_sensor_grid_pattern(screen, main_content_rect, current_time, config_module):
-    """Draw subtle grid pattern for ambient effect."""
-    grid_spacing = 40
-    dot_size = 1
+    """Draw subtle grid pattern for ambient effect (larger dots, denser grid)."""
+    grid_spacing = 28
+    dot_size = 2
     
-    # Only draw a few grid points to keep it subtle
-    cols = min(6, main_content_rect.width // grid_spacing)
-    rows = min(4, main_content_rect.height // grid_spacing)
+    cols = min(8, main_content_rect.width // grid_spacing)
+    rows = min(6, main_content_rect.height // grid_spacing)
     
     for row in range(rows):
         for col in range(cols):
-            # Stagger animation
             offset = (row * cols + col) * 0.3
             alpha_cycle = (current_time * 0.8 + offset) % 4.0
             
             if alpha_cycle < 2.0:
-                alpha = 0.3 * (1.0 - abs(alpha_cycle - 1.0))
+                alpha = 0.35 * (1.0 - abs(alpha_cycle - 1.0))
                 
                 if alpha > 0.05:
-                    dot_x = main_content_rect.left + col * grid_spacing + 20
-                    dot_y = main_content_rect.top + row * grid_spacing + 60
+                    dot_x = main_content_rect.left + col * grid_spacing + 12
+                    dot_y = main_content_rect.top + row * grid_spacing + 24
                     
                     dot_color = (0, int(40 * alpha), int(15 * alpha))
                     pygame.draw.circle(screen, dot_color, (dot_x, dot_y), dot_size)

@@ -14,6 +14,7 @@ from .device_manager import DeviceManager
 from .controls_manager import ControlsManager
 from .loading_manager import LoadingManager
 from .wifi_manager import WifiManager, WIFI_ACTION_TOGGLE, WIFI_ACTION_BACK_TO_SETTINGS, WIFI_ACTION_BROWSE_NETWORKS, WIFI_ACTION_BACK_TO_WIFI, WIFI_ACTION_CONNECT_TO_NETWORK, WIFI_ACTION_ENTER_PASSWORD # Import WifiManager and relevant actions
+from .bluetooth_manager import BluetoothManager
 from .password_entry_manager import PasswordEntryManager
 from .input_router import InputRouter
 from .update_manager import UpdateManager
@@ -44,6 +45,7 @@ STATE_LOADING = "LOADING"     # Loading screen
 # New Settings Sub-View States
 STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
 STATE_SETTINGS_BLUETOOTH = "SETTINGS_BLUETOOTH"
+STATE_SETTINGS_BLUETOOTH_DEVICES = "SETTINGS_BLUETOOTH_DEVICES"
 STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
 STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
 STATE_SETTINGS_CONTROLS = "SETTINGS_CONTROLS"
@@ -115,6 +117,7 @@ class AppState:
         self.controls_manager = ControlsManager(config_module)
         self.loading_manager = LoadingManager(config_module, screen_width, screen_height)
         self.wifi_manager = WifiManager(config_module) # Instantiate WifiManager (no command func needed)
+        self.bluetooth_manager = BluetoothManager(config_module)
         self.update_manager = UpdateManager(config_module) # Instantiate UpdateManager
         self.audio_manager = AudioManager(config_module) # Instantiate AudioManager
         self.network_manager = NetworkManager() # Instantiate NetworkManager
@@ -251,6 +254,12 @@ class AppState:
         if new_state == STATE_SETTINGS_WIFI and self.current_state != STATE_SETTINGS_WIFI:
             if self.wifi_manager:
                 self.wifi_manager.update_wifi_status() # WifiManager handles its own status update
+        if new_state == STATE_SETTINGS_BLUETOOTH and self.current_state != STATE_SETTINGS_BLUETOOTH:
+            if self.bluetooth_manager:
+                self.bluetooth_manager.update_bluetooth_status()
+        if new_state == STATE_SETTINGS_BLUETOOTH_DEVICES and self.current_state != STATE_SETTINGS_BLUETOOTH_DEVICES:
+            if self.bluetooth_manager:
+                self.bluetooth_manager.refresh_devices()
         return self.state_manager.transition_to(new_state)
 
     def handle_input(self, input_results):

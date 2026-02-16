@@ -193,9 +193,11 @@ def main():
                 app_state.auto_cycle_dashboard(current_time)
                 app_state.update()
 
-                # 2.5. Check for WiFi scan completion (main thread)
+                # 2.5. Check for WiFi/Bluetooth scan completion (main thread)
                 if hasattr(app_state, 'wifi_manager') and app_state.wifi_manager:
                     app_state.wifi_manager.check_scan_completion()
+                if hasattr(app_state, 'bluetooth_manager') and app_state.bluetooth_manager:
+                    app_state.bluetooth_manager.check_scan_completion()
 
                 if app_state.current_state == STATE_PONG_ACTIVE and app_state.active_pong_game:
                     app_state.game_manager.update_pong(app_state.keys_held)

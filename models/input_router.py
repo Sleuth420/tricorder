@@ -36,6 +36,7 @@ STATE_SELECT_COMBO_DURATION = "SELECT_COMBO_DURATION"
 STATE_SETTINGS_VOLUME = "SETTINGS_VOLUME"
 STATE_DISPLAY_CYCLE_INTERVAL = "DISPLAY_CYCLE_INTERVAL"
 STATE_SETTINGS_WIFI_NETWORKS = "SETTINGS_WIFI_NETWORKS"
+STATE_SETTINGS_BLUETOOTH_DEVICES = "SETTINGS_BLUETOOTH_DEVICES"
 STATE_WIFI_PASSWORD_ENTRY = "WIFI_PASSWORD_ENTRY"
 STATE_CONFIRM_REBOOT = "CONFIRM_REBOOT"
 STATE_CONFIRM_SHUTDOWN = "CONFIRM_SHUTDOWN"
@@ -118,6 +119,8 @@ class InputRouter:
             return self._handle_wifi_settings_input(action)
         elif current_state == STATE_SETTINGS_BLUETOOTH:
             return self._handle_bluetooth_settings_input(action)
+        elif current_state == STATE_SETTINGS_BLUETOOTH_DEVICES:
+            return self._handle_bluetooth_devices_input(action)
         elif current_state == STATE_SETTINGS_WIFI_NETWORKS:
             return self._handle_wifi_networks_input(action)
         elif current_state == STATE_WIFI_PASSWORD_ENTRY:
@@ -148,7 +151,7 @@ class InputRouter:
                     self.app_state.state_manager.return_to_menu())
         elif current_state == STATE_SETTINGS:
             return self._handle_settings_main_menu_back()
-        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_VOLUME, STATE_DISPLAY_CYCLE_INTERVAL, STATE_SETTINGS_WIFI_NETWORKS, STATE_WIFI_PASSWORD_ENTRY]:
+        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_VOLUME, STATE_DISPLAY_CYCLE_INTERVAL, STATE_SETTINGS_WIFI_NETWORKS, STATE_SETTINGS_BLUETOOTH_DEVICES, STATE_WIFI_PASSWORD_ENTRY]:
             logger.info(f"BACK from {current_state}, returning to appropriate parent")
             if current_state == STATE_SELECT_COMBO_DURATION or current_state == STATE_SETTINGS_VOLUME:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_DEVICE)
@@ -156,6 +159,8 @@ class InputRouter:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_DISPLAY)
             elif current_state == STATE_SETTINGS_WIFI_NETWORKS:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_WIFI)
+            elif current_state == STATE_SETTINGS_BLUETOOTH_DEVICES:
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS_BLUETOOTH)
             elif current_state == STATE_WIFI_PASSWORD_ENTRY:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_WIFI_NETWORKS)
             else:
@@ -430,14 +435,62 @@ class InputRouter:
         return result
 
     def _handle_bluetooth_settings_input(self, action):
-        """Handle input for the Bluetooth Settings view (single option: Back to Settings)."""
-        if action == app_config.INPUT_ACTION_BACK:
-            return False  # Handled by _handle_back_action
-        if action == app_config.INPUT_ACTION_SELECT:
+        """Handle input for the Bluetooth Settings view (toggle, devices, back)."""
+        if not self.app_state.bluetooth_manager:
             return self.app_state.state_manager.transition_to(STATE_SETTINGS)
-        if action in (app_config.INPUT_ACTION_NEXT, app_config.INPUT_ACTION_PREV):
-            return True  # Single item, no-op
-        return False
+
+        result = self.app_state.bluetooth_manager.handle_input(action)
+        if isinstance(result, str):
+            from .bluetooth_manager import (
+                BLUETOOTH_ACTION_TOGGLE,
+                BLUETOOTH_ACTION_DEVICES,
+                BLUETOOTH_ACTION_BACK_TO_SETTINGS,
+            )
+            if result == BLUETOOTH_ACTION_TOGGLE:
+                self.app_state.bluetooth_manager.toggle_bluetooth()
+                return True
+            if result == BLUETOOTH_ACTION_DEVICES:
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS_BLUETOOTH_DEVICES)
+            if result == BLUETOOTH_ACTION_BACK_TO_SETTINGS:
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS)
+        return result
+
+    def _handle_bluetooth_devices_input(self, action):
+        """Handle input for the Bluetooth device list (scan, connect/disconnect, back)."""
+        if not self.app_state.bluetooth_manager:
+            return self.app_state.state_manager.transition_to(STATE_SETTINGS_BLUETOOTH)
+
+        result = self.app_state.bluetooth_manager.handle_device_list_input(action)
+        if isinstance(result, str):
+            from .bluetooth_manager import (
+                BLUETOOTH_ACTION_BACK_TO_BLUETOOTH,
+                BLUETOOTH_ACTION_CONNECT_OR_DISCONNECT,
+                BLUETOOTH_ACTION_SCAN_DEVICES,
+            )
+            if result == BLUETOOTH_ACTION_BACK_TO_BLUETOOTH:
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS_BLUETOOTH)
+            if result == BLUETOOTH_ACTION_SCAN_DEVICES:
+                loading_operation = self.app_state.start_loading_operation(
+                    target_state=STATE_SETTINGS_BLUETOOTH_DEVICES,
+                    operation_name="Scanning for devices",
+                    total_steps=3,
+                )
+                def on_done():
+                    target = self.app_state.complete_loading_operation()
+                    if target:
+                        self.app_state.state_manager.transition_to(target)
+                self.app_state.bluetooth_manager.start_scan(on_done)
+                return True
+            if result == BLUETOOTH_ACTION_CONNECT_OR_DISCONNECT:
+                dev = self.app_state.bluetooth_manager.get_selected_device()
+                if dev:
+                    mac = dev.get("mac")
+                    if dev.get("connected"):
+                        self.app_state.bluetooth_manager.disconnect_device(mac)
+                    else:
+                        self.app_state.bluetooth_manager.connect_device(mac)
+                return True
+        return result
 
     def _handle_controls_settings_input(self, action):
         """Handle input for the Controls Settings view."""

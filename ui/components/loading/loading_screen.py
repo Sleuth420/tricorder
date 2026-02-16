@@ -57,10 +57,11 @@ class LoadingScreen:
                 self.status_y = self.ui_scaler.scale(70)
                 self.bar_y = self.ui_scaler.scale(110)
             
-            self.bar_height = self.ui_scaler.scale(35)
+            self.bar_height = max(8, self.ui_scaler.scale(14))
             
-            # Detail text positioning
-            self.detail_y = self.bar_y + self.bar_height + self.ui_scaler.margin("medium")
+            # Percentage text just under the bar; detail text below that
+            self.percent_y = self.bar_y + self.bar_height + self.ui_scaler.margin("small")
+            self.detail_y = self.percent_y + self.ui_scaler.scale(getattr(self.config, 'FONT_SIZE_MEDIUM', 24)) + self.ui_scaler.margin("medium")
             
             # Responsive font sizes from config (single source of truth)
             self.title_font_size = self.ui_scaler.scale(getattr(self.config, 'FONT_SIZE_LARGE', 30))
@@ -80,10 +81,11 @@ class LoadingScreen:
             self.title_y = max(20, int(30 * scale))
             self.status_y = max(40, int(70 * scale))
             self.bar_width = self.screen_width - margin * 2
-            self.bar_height = max(8, int(35 * scale))
+            self.bar_height = max(8, int(14 * scale))
             self.bar_x = margin
             self.bar_y = max(60, int(110 * scale))
-            self.detail_y = self.bar_y + self.bar_height + margin
+            self.percent_y = self.bar_y + self.bar_height + max(2, int(6 * scale))
+            self.detail_y = self.percent_y + max(12, int(24 * scale)) + margin
             large = getattr(self.config, 'FONT_SIZE_LARGE', 30)
             medium = getattr(self.config, 'FONT_SIZE_MEDIUM', 24)
             small = getattr(self.config, 'FONT_SIZE_SMALL', 20)
@@ -146,8 +148,19 @@ class LoadingScreen:
         status_rect = status_surface.get_rect(center=(content_center_x, self.status_y))
         screen.blit(status_surface, status_rect)
         
-        # Draw progress bar
+        # Draw progress bar (no text inside the bar)
         self._draw_progress_bar(screen)
+        
+        # Draw percentage below the bar so it's not on the yellow fill
+        try:
+            percent_font = pygame.font.Font(None, self.percent_font_size)
+            percent_text = f"{int(self.progress * 100)}%"
+            percent_surface = percent_font.render(percent_text, True, self.config.Theme.FOREGROUND)
+            percent_y = getattr(self, 'percent_y', self.bar_y + self.bar_height + 8)
+            percent_rect = percent_surface.get_rect(center=(content_center_x, percent_y))
+            screen.blit(percent_surface, percent_rect)
+        except Exception:
+            pass
         
         # Draw detail text if provided and screen has room
         if self.detail_text and self.detail_y < self.screen_height - 30:
@@ -183,18 +196,6 @@ class LoadingScreen:
         # Draw border for definition with responsive thickness
         border_thickness = self.ui_scaler.scale(2) if self.ui_scaler else 2
         pygame.draw.rect(screen, self.config.Theme.FOREGROUND, bar_rect, border_thickness)
-        
-        # Draw percentage text with responsive font size
-        try:
-            percent_font = pygame.font.Font(None, self.percent_font_size)
-            percent_text = f"{int(self.progress * 100)}%"
-            percent_surface = percent_font.render(percent_text, True, self.config.Theme.FOREGROUND)
-            
-            # Center percentage in the bar
-            percent_rect = percent_surface.get_rect(center=(self.bar_x + self.bar_width // 2, self.bar_y + self.bar_height // 2))
-            screen.blit(percent_surface, percent_rect)
-        except:
-            pass  # Skip percentage if font fails
 
 class LoadingOperation:
     """Context manager for loading operations with progress tracking."""

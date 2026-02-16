@@ -47,7 +47,7 @@ class FPSTracker:
 class InputTracker:
     """Tracks recent input events for debug display."""
     
-    def __init__(self, max_events=5):
+    def __init__(self, max_events=3):
         """
         Initialize input tracker.
         
@@ -111,25 +111,25 @@ class DebugOverlay:
         """Compute overlay dimensions from screen size or ui_scaler."""
         if self.ui_scaler:
             w = self.ui_scaler.screen_width
-            self.overlay_width = self.ui_scaler.scale(160)
+            self.overlay_width = self.ui_scaler.scale(220)
             self.overlay_x = w - self.overlay_width - self.ui_scaler.margin("small")
             self.overlay_y = self.ui_scaler.margin("small")
-            self.line_height = self.ui_scaler.scale(16)
-            self.max_lines = 8
-            self.font_size = 'tiny'
+            self.line_height = self.ui_scaler.scale(22)
+            self.max_lines = 5
+            self.font_size = 'small'
         elif self.screen_width <= 400:
-            self.overlay_width = 140
+            self.overlay_width = min(self.screen_width - 20, 200)
             self.overlay_x = self.screen_width - self.overlay_width - 10
             self.overlay_y = 5
-            self.line_height = 14
-            self.max_lines = 8
-            self.font_size = 'tiny'
+            self.line_height = 20
+            self.max_lines = 5
+            self.font_size = 'small'
         else:
-            self.overlay_width = 180
+            self.overlay_width = min(self.screen_width - 30, 240)
             self.overlay_x = self.screen_width - self.overlay_width - 15
             self.overlay_y = 10
-            self.line_height = 20
-            self.max_lines = 8
+            self.line_height = 22
+            self.max_lines = 5
             self.font_size = 'small'
 
     def set_enabled(self, enabled):
@@ -196,9 +196,9 @@ class DebugOverlay:
         screen.blit(fps_surface, (self.overlay_x, y_offset))
         y_offset += line_spacing
 
-        # Recent input events (newest last, show last 3)
+        # Recent input events (newest last, show last 2 for small Pi screen)
         recent_events = self.input_tracker.get_recent_events()
-        events_to_show = recent_events[-3:] if len(recent_events) > 3 else recent_events
+        events_to_show = recent_events[-2:] if len(recent_events) > 2 else recent_events
         for ev in events_to_show:
             event_text = self._format_event(ev)
             if event_text:
@@ -217,8 +217,8 @@ class DebugOverlay:
                 text = f"{ev['type']}: {key_name}"
         else:
             text = f"Input: {ev['type']}"
-        # Truncate to fit overlay (roughly 18–22 chars for current widths)
-        max_chars = 20 if self.overlay_width >= 160 else 14
+        # Truncate to fit overlay (wider overlay allows more chars)
+        max_chars = 28 if self.overlay_width >= 200 else 20
         return (text[:max_chars] + "…") if len(text) > max_chars else text
 
     def _get_key_name(self, key_code):

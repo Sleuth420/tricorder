@@ -129,11 +129,8 @@ def draw_menu_base_layout(screen, app_state, fonts, config_module, ui_scaler, ba
     header_shadow = _darken(header_color, 0.25)
     pygame.draw.line(screen, header_highlight, (header_rect.left, header_rect.top), (header_rect.right, header_rect.top), 1)
     pygame.draw.line(screen, header_shadow, (header_rect.left, header_rect.bottom - 1), (header_rect.right, header_rect.bottom - 1), 1)
-    # Tricorder header: scanning line + centre location + IP/freq on right
+    # Tricorder header: scanning line + EARTH/location (rotates to "UPDATE AVAILABLE" when update available) + IP/freq on right
     _draw_header_tricorder_effects(screen, header_rect, header_color, config_module, fonts, ui_scaler, app_state)
-    # Update-available indicator: red dot in top-right of header (not on Settings item)
-    if hasattr(app_state, 'update_available') and app_state.update_available:
-        _draw_update_indicator_header(screen, header_rect, config_module, fonts, ui_scaler)
 
     # --- Part 3: Draw Sidebar Items (Starts BELOW header height, no gap) ---
     sidebar_content_y_start = header_height  # Items start directly under header (no black strip)
@@ -367,12 +364,17 @@ def _draw_header_tricorder_effects(screen, header_rect, header_color, config_mod
     font_tiny = fonts.get('tiny', fonts.get('small', fonts.get('default')))
     digit_color = _darken(header_color, 0.5)
 
-    # Left: EARTH: <location> (LCARS-style); truncate if too long
+    # Left: EARTH: <location> (LCARS-style); when update available, rotate to "UPDATE AVAILABLE" every few seconds
     loc_text = (app_state and getattr(app_state, 'location_from_ip', None) and app_state.location_from_ip) or "--"
-    left_label = f"EARTH: {loc_text}"
+    update_available = app_state and getattr(app_state, 'update_available', False)
+    cycle_seconds = 3
+    if update_available and int(t / cycle_seconds) % 2 == 1:
+        left_label = "UPDATE AVAILABLE"
+    else:
+        left_label = f"EARTH: {loc_text}"
     left_surf = font_tiny.render(left_label, True, digit_color)
     max_left_width = int(header_rect.width * 0.55)
-    if left_surf.get_width() > max_left_width and len(loc_text) > 3:
+    if not update_available and left_surf.get_width() > max_left_width and len(loc_text) > 3:
         # Shorten to fit (keep EARTH: prefix)
         for n in range(len(loc_text), 0, -1):
             trial = f"EARTH: {loc_text[:n]}…"

@@ -121,14 +121,16 @@ def init_display():
 def _init_normal_display(config):
     """Initialize normal pygame display mode."""
     global current_display_mode
-    
+
     if config.FULLSCREEN:
         screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.FULLSCREEN)
         logger.info(f"Display set to fullscreen mode, requesting {config.SCREEN_WIDTH}x{config.SCREEN_HEIGHT}.")
     else:
         screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
         logger.info(f"Display set to windowed mode ({config.SCREEN_WIDTH}x{config.SCREEN_HEIGHT}).")
-    
+
+    # set_mode() resets SDL cursor visibility; re-hide for kiosk mode
+    pygame.mouse.set_visible(False)
     current_display_mode = "NORMAL"
     return screen
 
@@ -154,7 +156,10 @@ def _init_opengl_display(config):
         
         # Set up OpenGL viewport
         gl.glViewport(0, 0, config.SCREEN_WIDTH, config.SCREEN_HEIGHT)
-        
+
+        # set_mode() resets SDL cursor visibility; re-hide for kiosk mode
+        pygame.mouse.set_visible(False)
+
         # Update UIScaler if screen dimensions changed
         if ui_scaler:
             screen_width = opengl_screen.get_width()

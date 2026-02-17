@@ -212,13 +212,34 @@ class MediaPlayerManager:
             return True
         return False
 
+    @staticmethod
+    def _season_episode_sort_key(path):
+        """
+        Return (season, episode) for sorting when path/filename contains SxxEyy (e.g. S01E06).
+        Falls back to (0, 0) so files without a match sort first, then by filename.
+        """
+        base = os.path.basename(path)
+        name_no_ext = os.path.splitext(base)[0]
+        m = re.search(r"s(\d+)e(\d+)", name_no_ext, re.IGNORECASE)
+        if m:
+            return (int(m.group(1)), int(m.group(2)))
+        return (0, 0)
+
+    @staticmethod
+    def _season_folder_sort_key(name):
+        """Sort key for season folder names: numeric order when possible (1, 2, 10), else alphabetical."""
+        try:
+            return (0, int(name))
+        except ValueError:
+            return (1, name)
+
     def _scan_season_folders(self):
-        """Populate _season_folders with subdirs of media_folder that contain at least one media file. Sorted by folder name (1, 2, 3...)."""
+        """Populate _season_folders with subdirs of media_folder that contain at least one media file. Sorted numerically (1, 2, 3, ... 10)."""
         self._season_folders = []
         if not os.path.isdir(self.media_folder):
             return
         try:
-            for name in sorted(os.listdir(self.media_folder)):
+            for name in sorted(os.listdir(self.media_folder), key=self._season_folder_sort_key):
                 folder_path = os.path.join(self.media_folder, name)
                 if not os.path.isdir(folder_path):
                     continue
@@ -280,7 +301,8 @@ class MediaPlayerManager:
                 logger.warning("Media folder not found: %s", self.media_folder)
             return
         try:
-            for name in sorted(os.listdir(scan_folder)):
+            candidates = []
+            for name in os.listdir(scan_folder):
                 if self._is_temporary_media_file(name):
                     continue
                 _, ext = os.path.splitext(name)
@@ -288,7 +310,12 @@ class MediaPlayerManager:
                     path = os.path.join(scan_folder, name)
                     if os.path.isfile(path):
                         display_name = self._get_display_name_for_path(path)
-                        self.track_list.append((display_name, path))
+                        candidates.append((display_name, path))
+            # Sort by season/episode (SxxEyy) then by path so e.g. S01E02 comes before S01E10
+            self.track_list = sorted(
+                candidates,
+                key=lambda item: (self._season_episode_sort_key(item[1]), item[1]),
+            )
             logger.info(
                 "Media player: scanned %s, found %d file(s) (extensions: %s)",
                 scan_folder, len(self.track_list), ", ".join(self.extensions),

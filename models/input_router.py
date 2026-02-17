@@ -23,7 +23,9 @@ STATE_SCHEMATICS = "SCHEMATICS"
 STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU"
 STATE_SCHEMATICS_CATEGORY = "SCHEMATICS_CATEGORY"
 STATE_MEDIA_PLAYER = "MEDIA_PLAYER"
+STATE_ST_WIKI = "ST_WIKI"
 STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
+STATE_SETTINGS_STAPI = "SETTINGS_STAPI"
 STATE_SETTINGS_BLUETOOTH = "SETTINGS_BLUETOOTH"
 STATE_SETTINGS_DEVICE = "SETTINGS_DEVICE"
 STATE_SETTINGS_DISPLAY = "SETTINGS_DISPLAY"
@@ -78,6 +80,8 @@ class InputRouter:
             return self._handle_schematics_category_input(action)
         elif current_state == STATE_MEDIA_PLAYER:
             return self._handle_media_player_input(action)
+        elif current_state == STATE_ST_WIKI:
+            return self._handle_st_wiki_input(action)
         elif current_state == STATE_SETTINGS:
             return self._handle_settings_main_menu_input(action)
         elif current_state == STATE_SETTINGS_DISPLAY:
@@ -88,6 +92,8 @@ class InputRouter:
             return self._handle_controls_settings_input(action)
         elif current_state == STATE_SETTINGS_UPDATE:
             return self._handle_update_settings_input(action)
+        elif current_state == STATE_SETTINGS_STAPI:
+            return self._handle_stapi_settings_input(action)
         elif current_state == STATE_SETTINGS_SOUND_TEST:
             return self._handle_sound_test_input(action)
         elif current_state == STATE_SETTINGS_DEBUG:
@@ -152,9 +158,22 @@ class InputRouter:
                 mgr.on_exit_view()
             return (self.app_state.state_manager.return_to_previous() or
                     self.app_state.state_manager.return_to_menu())
+        elif current_state == STATE_ST_WIKI:
+            from models.st_wiki_manager import VIEW_MODE_CATEGORY, VIEW_MODE_LIST, VIEW_MODE_DETAIL
+            mgr = getattr(self.app_state, 'st_wiki_manager', None)
+            if not mgr:
+                return self.app_state.state_manager.transition_to(STATE_SCHEMATICS_CATEGORY)
+            mode = mgr.get_view_mode()
+            if mode == VIEW_MODE_DETAIL:
+                mgr.back_from_detail()
+                return True
+            if mode == VIEW_MODE_LIST:
+                mgr.back_from_list()
+                return True
+            return self.app_state.state_manager.transition_to(STATE_SCHEMATICS_CATEGORY)
         elif current_state == STATE_SETTINGS:
             return self._handle_settings_main_menu_back()
-        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_VOLUME, STATE_DISPLAY_CYCLE_INTERVAL, STATE_SETTINGS_WIFI_NETWORKS, STATE_SETTINGS_BLUETOOTH_DEVICES, STATE_WIFI_PASSWORD_ENTRY]:
+        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_STAPI, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_VOLUME, STATE_DISPLAY_CYCLE_INTERVAL, STATE_SETTINGS_WIFI_NETWORKS, STATE_SETTINGS_BLUETOOTH_DEVICES, STATE_WIFI_PASSWORD_ENTRY]:
             logger.info(f"BACK from {current_state}, returning to appropriate parent")
             if current_state == STATE_SELECT_COMBO_DURATION or current_state == STATE_SETTINGS_VOLUME:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_DEVICE)
@@ -343,6 +362,8 @@ class InputRouter:
             if hasattr(self.app_state, 'media_player_manager') and self.app_state.media_player_manager:
                 self.app_state.media_player_manager.on_enter_view()
             return self.app_state.state_manager.transition_to(STATE_MEDIA_PLAYER)
+        elif selected_item.target_state == STATE_ST_WIKI:
+            return self.app_state.state_manager.transition_to(STATE_ST_WIKI)
         return False
 
     def _handle_schematics_category_back(self):
@@ -381,6 +402,37 @@ class InputRouter:
             else:
                 mgr.select_track(idx)
                 mgr.play()
+            return True
+        return False
+
+    def _handle_st_wiki_input(self, action):
+        """Handle input for Star Trek wiki: category list -> item list -> detail view. BACK handled in _handle_back_action."""
+        from models.st_wiki_manager import VIEW_MODE_CATEGORY, VIEW_MODE_LIST, VIEW_MODE_DETAIL
+        mgr = getattr(self.app_state, 'st_wiki_manager', None)
+        if not mgr or not mgr.has_data():
+            return False
+        mode = mgr.get_view_mode()
+        if action == app_config.INPUT_ACTION_PREV:
+            if mode == VIEW_MODE_CATEGORY:
+                mgr.navigate_prev_category()
+            elif mode == VIEW_MODE_LIST:
+                mgr.navigate_prev_item()
+            else:
+                mgr.navigate_detail_prev()
+            return True
+        if action == app_config.INPUT_ACTION_NEXT:
+            if mode == VIEW_MODE_CATEGORY:
+                mgr.navigate_next_category()
+            elif mode == VIEW_MODE_LIST:
+                mgr.navigate_next_item()
+            else:
+                mgr.navigate_detail_next()
+            return True
+        if action == app_config.INPUT_ACTION_SELECT:
+            if mode == VIEW_MODE_CATEGORY:
+                mgr.enter_list()
+            elif mode == VIEW_MODE_LIST:
+                mgr.enter_detail()
             return True
         return False
 
@@ -641,6 +693,67 @@ class InputRouter:
                 return True
         return False
     
+    def _handle_stapi_settings_input(self, action):
+        """Handle input for Star Trek Data settings: Fetch data (runs script in background) or Back."""
+        if not hasattr(self.app_state, "stapi_settings_index"):
+            self.app_state.stapi_settings_index = 0
+        idx = self.app_state.stapi_settings_index
+        menu_len = 2  # "Fetch Star Trek Data", "<- Back"
+        if action == app_config.INPUT_ACTION_NEXT:
+            self.app_state.stapi_settings_index = (idx + 1) % menu_len
+            return True
+        if action == app_config.INPUT_ACTION_PREV:
+            self.app_state.stapi_settings_index = (idx - 1 + menu_len) % menu_len
+            return True
+        if action == app_config.INPUT_ACTION_SELECT:
+            if idx == 0:
+                return self._start_stapi_fetch()
+            if idx == 1:
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS)
+        return False
+
+    def _start_stapi_fetch(self):
+        """Run scripts/fetch_stapi_data.py in a background thread with loading screen."""
+        loading_operation = self.app_state.start_loading_operation(
+            STATE_SETTINGS_STAPI,
+            "Fetching Star Trek Data",
+            total_steps=5
+        )
+
+        def perform_fetch():
+            try:
+                import subprocess
+                import sys
+                from pathlib import Path
+                project_root = Path(__file__).resolve().parent.parent
+                script = project_root / "scripts" / "fetch_stapi_data.py"
+                if not script.exists():
+                    logger.error("STAPI fetch script not found: %s", script)
+                    self.app_state.complete_loading_operation()
+                    self.app_state.state_manager.transition_to(STATE_SETTINGS_STAPI)
+                    return
+                subprocess.run(
+                    [sys.executable, str(script)],
+                    cwd=str(project_root),
+                    timeout=300,
+                    capture_output=True,
+                )
+                if hasattr(self.app_state, "st_wiki_manager") and self.app_state.st_wiki_manager:
+                    self.app_state.st_wiki_manager.reload()
+            except subprocess.TimeoutExpired:
+                logger.error("STAPI fetch timed out")
+            except Exception as e:
+                logger.exception("STAPI fetch failed: %s", e)
+            finally:
+                self.app_state.complete_loading_operation()
+                self.app_state.state_manager.transition_to(STATE_SETTINGS_STAPI)
+
+        import threading
+        t = threading.Thread(target=perform_fetch)
+        t.daemon = True
+        t.start()
+        return True
+
     def _handle_debug_settings_input(self, action):
         """Handle input for the Debug Settings menu (View Logs, Debug Overlay, Admin Timer, Back)."""
         if action == app_config.INPUT_ACTION_NEXT:

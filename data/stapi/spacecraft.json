@@ -1,0 +1,3280 @@
+[
+  {
+    "uid": "SRMA0000245113",
+    "name": "042",
+    "registry": "042",
+    "status": "Active",
+    "dateStatus": "3189",
+    "spacecraftClass": {
+      "uid": "SCMA0000226396",
+      "name": "Worker bee"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000174913",
+    "name": "208",
+    "registry": "208",
+    "status": "Destroyed",
+    "dateStatus": "2259",
+    "spacecraftClass": {
+      "uid": "SCMA0000175103",
+      "name": "Jumpship"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000152981",
+    "name": "313-C",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000270891",
+    "name": "5",
+    "registry": "5",
+    "status": "Active",
+    "dateStatus": "2381",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000276018",
+    "name": "ATW-11",
+    "registry": "ATW-11",
+    "status": "Active",
+    "dateStatus": "3190",
+    "spacecraftClass": {
+      "uid": "SCMA0000276004",
+      "name": "UFP-02 type"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000107693",
+    "name": "Abaddon's space station",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000272948",
+    "name": "Adonis",
+    "registry": "NCC-83002",
+    "status": "Active",
+    "dateStatus": "2381",
+    "spacecraftClass": {
+      "uid": "SCMA0000258298",
+      "name": "Type 6A shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000000637",
+    "name": "Aeon",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "29th century",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000040691",
+    "name": "Akritirian maximum security detention facility",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2373",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000002998",
+    "name": "Aldara",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2369",
+    "spacecraftClass": {
+      "uid": "SCMA0000002988",
+      "name": "Galor class"
+    },
+    "owner": {
+      "uid": "ORMA0000000605",
+      "name": "Cardassian Union"
+    },
+    "operator": {
+      "uid": "ORMA0000000285",
+      "name": "Cardassian military"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000009476",
+    "name": "Aldebaran III",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000283171",
+    "name": "Algonquin",
+    "registry": null,
+    "status": null,
+    "dateStatus": "2381",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000018259",
+    "name": "Alice",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "2376",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000131282",
+    "name": "Alpha Nine",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2370",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000131287",
+    "name": "Alpha Seven",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2370",
+    "spacecraftClass": {
+      "uid": "SCMA0000153334",
+      "name": "Maquis fighter"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000004103",
+    "name": "Amargosa observatory",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "2371",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000216345",
+    "name": "Andorian renegade ship",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000013879",
+    "name": "Ansel Adams",
+    "registry": "06",
+    "status": "Active",
+    "dateStatus": "2366",
+    "spacecraftClass": {
+      "uid": "SCMA0000013859",
+      "name": "Type 7 shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000002819",
+    "name": "Antares",
+    "registry": "NCC-501",
+    "status": "Destroyed",
+    "dateStatus": "2266",
+    "spacecraftClass": {
+      "uid": "SCMA0000093001",
+      "name": "Antares type"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000004165",
+    "name": "Apollo 11",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "1969",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": {
+      "uid": "ORMA0000003958",
+      "name": "National Aeronautics and Space Administration"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000214891",
+    "name": "Archanis IV Research Outpost",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000274023",
+    "name": "Archer Spacedock",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "3190",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000001944",
+    "name": "Archon",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "2167",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000002828",
+    "name": "Arcos",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "2367",
+    "spacecraftClass": {
+      "uid": "SCMA0000091404",
+      "name": "Antares class"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000036784",
+    "name": "Arctic One",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "2153",
+    "spacecraftClass": {
+      "uid": "SCMA0000033383",
+      "name": "Arctic One type"
+    },
+    "owner": null,
+    "operator": {
+      "uid": "ORMA0000005972",
+      "name": "Borg Collective"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000003696",
+    "name": "Ares IV",
+    "registry": null,
+    "status": "Derelict",
+    "dateStatus": "2376",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": {
+      "uid": "ORMA0000098079",
+      "name": "International Space Agency"
+    }
+  },
+  {
+    "uid": "SRMA0000003573",
+    "name": "Argo",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2379",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000008210",
+    "name": "Argus Array",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2401",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000116644",
+    "name": "Ariane 1",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000148870",
+    "name": "Armstrong",
+    "registry": "15",
+    "status": "Active",
+    "dateStatus": "2366",
+    "spacecraftClass": {
+      "uid": "SCMA0000005110",
+      "name": "Type 15 shuttlepod"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000258741",
+    "name": "Arridor's shuttle",
+    "registry": null,
+    "status": "Transported",
+    "dateStatus": "2373",
+    "spacecraftClass": {
+      "uid": "SCMA0000014440",
+      "name": "Ferengi shuttle"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000251677",
+    "name": "Artifact",
+    "registry": null,
+    "status": "Crashed",
+    "dateStatus": "2399",
+    "spacecraftClass": {
+      "uid": "SCMA0000000415",
+      "name": "Borg cube"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": {
+      "uid": "ORMA0000005972",
+      "name": "Borg Collective"
+    }
+  },
+  {
+    "uid": "SRMA0000146683",
+    "name": "Assault probe",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000008347",
+    "name": "Astral Queen",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2328",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000143448",
+    "name": "Atlantis",
+    "registry": "OV-104",
+    "status": "Retired",
+    "dateStatus": "2011",
+    "spacecraftClass": {
+      "uid": "SCMA0000125518",
+      "name": "Space shuttle orbiter"
+    },
+    "owner": null,
+    "operator": {
+      "uid": "ORMA0000003958",
+      "name": "National Aeronautics and Space Administration"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000271251",
+    "name": "Atlantis",
+    "registry": null,
+    "status": null,
+    "dateStatus": "2370s",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000094221",
+    "name": "Atmospheric probe",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000008643",
+    "name": "Aurora",
+    "registry": "NC-17740",
+    "status": "Destroyed",
+    "dateStatus": "2269",
+    "spacecraftClass": {
+      "uid": "SCMA0000092710",
+      "name": "Class J starship"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000028145",
+    "name": "Automated repair station",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2152",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000193529",
+    "name": "Axanar Starbase Terminal",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2328",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000055240",
+    "name": "B-24-CLN",
+    "registry": null,
+    "status": "Decommissioned",
+    "dateStatus": "2368",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000179994",
+    "name": "BA-36",
+    "registry": "BA-36",
+    "status": "Active",
+    "dateStatus": "2259",
+    "spacecraftClass": {
+      "uid": "SCMA0000175094",
+      "name": "Takayama type shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000102190",
+    "name": "BCD-31775",
+    "registry": "BCD-31775",
+    "status": "Active",
+    "dateStatus": "2370",
+    "spacecraftClass": {
+      "uid": "SCMA0000050188",
+      "name": "Iyaaran shuttle"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000222679",
+    "name": "Ba'Neth space station",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000048753",
+    "name": "Bahrat's space station",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2373",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000057233",
+    "name": "Bajoran science probe",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000115443",
+    "name": "Bardeen",
+    "registry": "70172",
+    "status": "Active",
+    "dateStatus": "2255",
+    "spacecraftClass": {
+      "uid": "SCMA0000148267",
+      "name": "Military shuttle"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000120686",
+    "name": "Barkano",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2360s",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": {
+      "uid": "ORMA0000000605",
+      "name": "Cardassian Union"
+    }
+  },
+  {
+    "uid": "SRMA0000008785",
+    "name": "Barradas III",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000010848",
+    "name": "Barzai",
+    "registry": null,
+    "status": "Recovered",
+    "dateStatus": "2154",
+    "spacecraftClass": {
+      "uid": "SCMA0000106373",
+      "name": "Denobulan medical ship"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000054808",
+    "name": "Barzan probe",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000264715",
+    "name": "Base 755",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000010927",
+    "name": "Batris",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "2364",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000004628",
+    "name": "Baxial",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2378",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000008239",
+    "name": "Belak",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "2371",
+    "spacecraftClass": {
+      "uid": "SCMA0000024792",
+      "name": "D'deridex class"
+    },
+    "owner": {
+      "uid": "ORMA0000003019",
+      "name": "Romulan Star Empire"
+    },
+    "operator": {
+      "uid": "ORMA0000002945",
+      "name": "Tal Shiar"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000011024",
+    "name": "Berengaria VII",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000013862",
+    "name": "Berman",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2368",
+    "spacecraftClass": {
+      "uid": "SCMA0000092122",
+      "name": "Type 6 shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000023379",
+    "name": "Bersallis III",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000250112",
+    "name": "Bersallis III science station",
+    "registry": null,
+    "status": "Abandoned",
+    "dateStatus": "2369",
+    "spacecraftClass": null,
+    "owner": {
+      "uid": "ORMA0000102839",
+      "name": "United Federation of Planets"
+    },
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000193530",
+    "name": "Beta III Orbital Station",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2328",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000003161",
+    "name": "Bok'Nor",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "2370",
+    "spacecraftClass": {
+      "uid": "SCMA0000026392",
+      "name": "Bok'Nor type"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": {
+      "uid": "ORMA0000000605",
+      "name": "Cardassian Union"
+    }
+  },
+  {
+    "uid": "SRMA0000055968",
+    "name": "Bok's Marauder",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2370",
+    "spacecraftClass": {
+      "uid": "SCMA0000008492",
+      "name": "D'Kora class"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": {
+      "uid": "ORMA0000004256",
+      "name": "Ferengi Alliance"
+    }
+  },
+  {
+    "uid": "SRMA0000266187",
+    "name": "Bok's ship",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000081686",
+    "name": "Bonaventure",
+    "registry": "10281NCC",
+    "status": "Adrift",
+    "dateStatus": "2269",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000093828",
+    "name": "Bonaventure",
+    "registry": "C1-21",
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000072042",
+    "name": "Boradis III",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000057041",
+    "name": "Brunt's shuttle",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2374",
+    "spacecraftClass": {
+      "uid": "SCMA0000014440",
+      "name": "Ferengi shuttle"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000057042",
+    "name": "Brunt's shuttle",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2375",
+    "spacecraftClass": {
+      "uid": "SCMA0000014440",
+      "name": "Ferengi shuttle"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000011105",
+    "name": "C-57-D",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2370",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000018905",
+    "name": "CAR 54-Q",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2370",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000011103",
+    "name": "CGM Gh'aster",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2370",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000189929",
+    "name": "CGN Caroliqe",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2369",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000284465",
+    "name": "CR-721",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "2384",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000278284",
+    "name": "CSS Ahuizotl",
+    "registry": "NCC-93159",
+    "status": "Active",
+    "dateStatus": "2401",
+    "spacecraftClass": {
+      "uid": "SCMA0000278211",
+      "name": "Kaplan F17 Patrol Frigate"
+    },
+    "owner": {
+      "uid": "ORMA0000278020",
+      "name": "Confederation of Earth"
+    },
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000278200",
+    "name": "CSS Cetus",
+    "registry": "NCC-93130",
+    "status": "Active",
+    "dateStatus": "2401",
+    "spacecraftClass": {
+      "uid": "SCMA0000278211",
+      "name": "Kaplan F17 Patrol Frigate"
+    },
+    "owner": {
+      "uid": "ORMA0000278020",
+      "name": "Confederation of Earth"
+    },
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000278199",
+    "name": "CSS Charybdis",
+    "registry": "NCC-93148",
+    "status": "Active",
+    "dateStatus": "2401",
+    "spacecraftClass": {
+      "uid": "SCMA0000278211",
+      "name": "Kaplan F17 Patrol Frigate"
+    },
+    "owner": {
+      "uid": "ORMA0000278020",
+      "name": "Confederation of Earth"
+    },
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000278517",
+    "name": "CSS Dougherty",
+    "registry": "NCC-75489",
+    "status": "Destroyed",
+    "dateStatus": "2401",
+    "spacecraftClass": {
+      "uid": "SCMA0000001183",
+      "name": "Nova class"
+    },
+    "owner": {
+      "uid": "ORMA0000278020",
+      "name": "Confederation of Earth"
+    },
+    "operator": {
+      "uid": "ORMA0000278108",
+      "name": "Confederation Corps"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000278196",
+    "name": "CSS Hydra",
+    "registry": "NCC-93135",
+    "status": "Active",
+    "dateStatus": "2401",
+    "spacecraftClass": {
+      "uid": "SCMA0000278211",
+      "name": "Kaplan F17 Patrol Frigate"
+    },
+    "owner": {
+      "uid": "ORMA0000278020",
+      "name": "Confederation of Earth"
+    },
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000278285",
+    "name": "CSS Kappa",
+    "registry": "NCC-93154",
+    "status": "Destroyed",
+    "dateStatus": "2401",
+    "spacecraftClass": {
+      "uid": "SCMA0000278211",
+      "name": "Kaplan F17 Patrol Frigate"
+    },
+    "owner": {
+      "uid": "ORMA0000278020",
+      "name": "Confederation of Earth"
+    },
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000278186",
+    "name": "CSS La Sirena",
+    "registry": "NCC-93131",
+    "status": "Assimilated",
+    "dateStatus": "2024",
+    "spacecraftClass": {
+      "uid": "SCMA0000278211",
+      "name": "Kaplan F17 Patrol Frigate"
+    },
+    "owner": {
+      "uid": "ORMA0000278020",
+      "name": "Confederation of Earth"
+    },
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000278516",
+    "name": "CSS Leyton",
+    "registry": "NCC-73827",
+    "status": "Destroyed",
+    "dateStatus": "2401",
+    "spacecraftClass": {
+      "uid": "SCMA0000225247",
+      "name": "Steamrunner class"
+    },
+    "owner": {
+      "uid": "ORMA0000278020",
+      "name": "Confederation of Earth"
+    },
+    "operator": {
+      "uid": "ORMA0000278108",
+      "name": "Confederation Corps"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000278198",
+    "name": "CSS Makara",
+    "registry": "NCC-93142",
+    "status": "Active",
+    "dateStatus": "2401",
+    "spacecraftClass": {
+      "uid": "SCMA0000278211",
+      "name": "Kaplan F17 Patrol Frigate"
+    },
+    "owner": {
+      "uid": "ORMA0000278020",
+      "name": "Confederation of Earth"
+    },
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000278518",
+    "name": "CSS Quinn",
+    "registry": "NCC-74536",
+    "status": "Destroyed",
+    "dateStatus": "2401",
+    "spacecraftClass": {
+      "uid": "SCMA0000001183",
+      "name": "Nova class"
+    },
+    "owner": {
+      "uid": "ORMA0000278020",
+      "name": "Confederation of Earth"
+    },
+    "operator": {
+      "uid": "ORMA0000278108",
+      "name": "Confederation Corps"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000278283",
+    "name": "CSS Scylla",
+    "registry": "NCC-93165",
+    "status": "Active",
+    "dateStatus": "2401",
+    "spacecraftClass": {
+      "uid": "SCMA0000278211",
+      "name": "Kaplan F17 Patrol Frigate"
+    },
+    "owner": {
+      "uid": "ORMA0000278020",
+      "name": "Confederation of Earth"
+    },
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000278197",
+    "name": "CSS Selkie",
+    "registry": "NCC-93147",
+    "status": "Active",
+    "dateStatus": "2401",
+    "spacecraftClass": {
+      "uid": "SCMA0000278211",
+      "name": "Kaplan F17 Patrol Frigate"
+    },
+    "owner": {
+      "uid": "ORMA0000278020",
+      "name": "Confederation of Earth"
+    },
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000278021",
+    "name": "CSS World Razer",
+    "registry": null,
+    "status": null,
+    "dateStatus": "2401",
+    "spacecraftClass": null,
+    "owner": {
+      "uid": "ORMA0000278020",
+      "name": "Confederation of Earth"
+    },
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000278282",
+    "name": "CSS Zin Kibaru",
+    "registry": "NCC-93161",
+    "status": "Active",
+    "dateStatus": "2401",
+    "spacecraftClass": {
+      "uid": "SCMA0000278211",
+      "name": "Kaplan F17 Patrol Frigate"
+    },
+    "owner": {
+      "uid": "ORMA0000278020",
+      "name": "Confederation of Earth"
+    },
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000008831",
+    "name": "Calder II",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000013898",
+    "name": "Caleb IV",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000009325",
+    "name": "Callinon VII",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000025212",
+    "name": "Calondon",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2370",
+    "spacecraftClass": {
+      "uid": "SCMA0000042924",
+      "name": "Kressari freighter"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000013883",
+    "name": "Calypso",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "2371",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000013884",
+    "name": "Campbell",
+    "registry": null,
+    "status": "Abandoned",
+    "dateStatus": "2368",
+    "spacecraftClass": {
+      "uid": "SCMA0000005110",
+      "name": "Type 15 shuttlepod"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000102687",
+    "name": "Caretaker's array",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "2371",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000242491",
+    "name": "Cassini",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000281722",
+    "name": "Cervantes",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2259",
+    "spacecraftClass": {
+      "uid": "SCMA0000280261",
+      "name": "Stamets type shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000249081",
+    "name": "Cestus III",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000028943",
+    "name": "Chaffee",
+    "registry": "01",
+    "status": "Active",
+    "dateStatus": "2374",
+    "spacecraftClass": {
+      "uid": "SCMA0000038056",
+      "name": "Chaffee type shuttlepod"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000143445",
+    "name": "Challenger",
+    "registry": "OV-099",
+    "status": "Destroyed",
+    "dateStatus": "1986",
+    "spacecraftClass": {
+      "uid": "SCMA0000125518",
+      "name": "Space shuttle orbiter"
+    },
+    "owner": null,
+    "operator": {
+      "uid": "ORMA0000003958",
+      "name": "National Aeronautics and Space Administration"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000014854",
+    "name": "Charybdis",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "21st century",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": {
+      "uid": "ORMA0000003958",
+      "name": "National Aeronautics and Space Administration"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000148863",
+    "name": "Chris Pike",
+    "registry": "02",
+    "status": "Active",
+    "dateStatus": "2366",
+    "spacecraftClass": {
+      "uid": "SCMA0000005110",
+      "name": "Type 15 shuttlepod"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000148839",
+    "name": "Clarke",
+    "registry": "05",
+    "status": "Active",
+    "dateStatus": "2366",
+    "spacecraftClass": {
+      "uid": "SCMA0000013859",
+      "name": "Type 7 shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000026394",
+    "name": "Class 1 probe",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000019190",
+    "name": "Class 2 probe",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000019205",
+    "name": "Class 3 probe",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000174424",
+    "name": "Class 4 microprobe",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000019191",
+    "name": "Class 4 probe",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000062445",
+    "name": "Class 5 probe",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000010205",
+    "name": "Class 8 probe",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000153034",
+    "name": "Class A probe",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000121892",
+    "name": "Class-5 intelligence drone",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000015280",
+    "name": "Cleponji",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "2366",
+    "spacecraftClass": {
+      "uid": "SCMA0000015351",
+      "name": "Promellian battle cruiser"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000012877",
+    "name": "Cochrane",
+    "registry": "04",
+    "status": "Destroyed",
+    "dateStatus": "2374",
+    "spacecraftClass": {
+      "uid": "SCMA0000010317",
+      "name": "Class 2 shuttle"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000219026",
+    "name": "Cochrane",
+    "registry": "Shuttle 4",
+    "status": null,
+    "dateStatus": "2374",
+    "spacecraftClass": {
+      "uid": "SCMA0000010317",
+      "name": "Class 2 shuttle"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000148869",
+    "name": "Cochrane",
+    "registry": "14",
+    "status": "Active",
+    "dateStatus": "2366",
+    "spacecraftClass": {
+      "uid": "SCMA0000005110",
+      "name": "Type 15 shuttlepod"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000264651",
+    "name": "Coloma",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "3189",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": {
+      "uid": "ORMA0000102839",
+      "name": "United Federation of Planets"
+    }
+  },
+  {
+    "uid": "SRMA0000270509",
+    "name": "Coltrane",
+    "registry": "NCC-80102",
+    "status": "Damaged",
+    "dateStatus": "2381",
+    "spacecraftClass": {
+      "uid": "SCMA0000258298",
+      "name": "Type 6A shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000000395",
+    "name": "Columbia",
+    "registry": "NX-02",
+    "status": "Active",
+    "dateStatus": "2154",
+    "spacecraftClass": {
+      "uid": "SCMA0000000238",
+      "name": "NX class"
+    },
+    "owner": {
+      "uid": "ORMA0000004386",
+      "name": "United Earth"
+    },
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000143446",
+    "name": "Columbia",
+    "registry": "OV-102",
+    "status": "Destroyed",
+    "dateStatus": "2003",
+    "spacecraftClass": {
+      "uid": "SCMA0000125518",
+      "name": "Space shuttle orbiter"
+    },
+    "owner": null,
+    "operator": {
+      "uid": "ORMA0000003958",
+      "name": "National Aeronautics and Space Administration"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000013853",
+    "name": "Columbus",
+    "registry": "NCC-1701<tt>⁄</tt>2",
+    "status": "Active",
+    "dateStatus": "2268",
+    "spacecraftClass": {
+      "uid": "SCMA0000013704",
+      "name": "Class F shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000066765",
+    "name": "Conrad",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2270s",
+    "spacecraftClass": {
+      "uid": "SCMA0000013704",
+      "name": "Class F shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000282420",
+    "name": "Contra Costa",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2381",
+    "spacecraftClass": {
+      "uid": "SCMA0000258298",
+      "name": "Type 6A shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000057938",
+    "name": "Copenhagen Base",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000073301",
+    "name": "Copernicus",
+    "registry": "NCC-1701<tt>⁄</tt>12",
+    "status": "Active",
+    "dateStatus": "2269",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000066689",
+    "name": "Copernicus",
+    "registry": "3",
+    "status": "Destroyed",
+    "dateStatus": "2287",
+    "spacecraftClass": {
+      "uid": "SCMA0000148322",
+      "name": "Galileo type shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000070852",
+    "name": "Copernicus",
+    "registry": "03",
+    "status": "Active",
+    "dateStatus": "2364",
+    "spacecraftClass": {
+      "uid": "SCMA0000013859",
+      "name": "Type 7 shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000010936",
+    "name": "Corsair",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000148850",
+    "name": "Cousteau",
+    "registry": "10",
+    "status": "Active",
+    "dateStatus": "2366",
+    "spacecraftClass": {
+      "uid": "SCMA0000013859",
+      "name": "Type 7 shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000029141",
+    "name": "Cousteau",
+    "registry": "20",
+    "status": "Abandoned",
+    "dateStatus": "2367",
+    "spacecraftClass": {
+      "uid": "SCMA0000005110",
+      "name": "Type 15 shuttlepod"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000003574",
+    "name": "Cousteau",
+    "registry": null,
+    "status": "Damaged",
+    "dateStatus": "2375",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000012020",
+    "name": "Cube 1184",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2377",
+    "spacecraftClass": {
+      "uid": "SCMA0000000415",
+      "name": "Borg cube"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": {
+      "uid": "ORMA0000005972",
+      "name": "Borg Collective"
+    }
+  },
+  {
+    "uid": "SRMA0000012021",
+    "name": "Cube 461",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2377",
+    "spacecraftClass": {
+      "uid": "SCMA0000000415",
+      "name": "Borg cube"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": {
+      "uid": "ORMA0000005972",
+      "name": "Borg Collective"
+    }
+  },
+  {
+    "uid": "SRMA0000057759",
+    "name": "Cube 630",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "2377",
+    "spacecraftClass": {
+      "uid": "SCMA0000000415",
+      "name": "Borg cube"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": {
+      "uid": "ORMA0000005972",
+      "name": "Borg Collective"
+    }
+  },
+  {
+    "uid": "SRMA0000272571",
+    "name": "Cube 90182",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2381",
+    "spacecraftClass": {
+      "uid": "SCMA0000000415",
+      "name": "Borg cube"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": {
+      "uid": "ORMA0000005972",
+      "name": "Borg Collective"
+    }
+  },
+  {
+    "uid": "SRMA0000010767",
+    "name": "Curie",
+    "registry": "03",
+    "status": "Captured",
+    "dateStatus": "2370",
+    "spacecraftClass": {
+      "uid": "SCMA0000092122",
+      "name": "Type 6 shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000148872",
+    "name": "Curie",
+    "registry": "18",
+    "status": "Active",
+    "dateStatus": "2366",
+    "spacecraftClass": {
+      "uid": "SCMA0000005110",
+      "name": "Type 15 shuttlepod"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000012092",
+    "name": "Cygnet XIV",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000049528",
+    "name": "Cytherian probe",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000013882",
+    "name": "D'Alison",
+    "registry": "10",
+    "status": "Active",
+    "dateStatus": "2365",
+    "spacecraftClass": {
+      "uid": "SCMA0000013859",
+      "name": "Type 7 shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000040247",
+    "name": "D'Arsay archive",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2370",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000010618",
+    "name": "D'Vahl",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "1958",
+    "spacecraftClass": {
+      "uid": "SCMA0000034865",
+      "name": "D'Vahl type"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": {
+      "uid": "ORMA0000004225",
+      "name": "Vulcan High Command"
+    }
+  },
+  {
+    "uid": "SRMA0000004177",
+    "name": "D'kyr",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2152",
+    "spacecraftClass": {
+      "uid": "SCMA0000058766",
+      "name": "D'kyr type"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": {
+      "uid": "ORMA0000004225",
+      "name": "Vulcan High Command"
+    }
+  },
+  {
+    "uid": "SRMA0000241805",
+    "name": "D-756",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2250s",
+    "spacecraftClass": {
+      "uid": "SCMA0000241825",
+      "name": "Tellarite merchant ship"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000180339",
+    "name": "DB-5",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000005241",
+    "name": "DEV Eagle Valley",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2183",
+    "spacecraftClass": {
+      "uid": "SCMA0000005239",
+      "name": "DY-950"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000227052",
+    "name": "DSC 01",
+    "registry": "DSC 01",
+    "status": "Active",
+    "dateStatus": "2256",
+    "spacecraftClass": {
+      "uid": "SCMA0000232777",
+      "name": "Class C shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000262316",
+    "name": "DSC 03",
+    "registry": "DSC 03",
+    "status": "Active",
+    "dateStatus": "3189",
+    "spacecraftClass": {
+      "uid": "SCMA0000232777",
+      "name": "Class C shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000244067",
+    "name": "DSC 05",
+    "registry": "DSC 05",
+    "status": "Destroyed",
+    "dateStatus": "2257",
+    "spacecraftClass": {
+      "uid": "SCMA0000232777",
+      "name": "Class C shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000244071",
+    "name": "DSC 06",
+    "registry": "DSC 06",
+    "status": "Active",
+    "dateStatus": "2257",
+    "spacecraftClass": {
+      "uid": "SCMA0000232777",
+      "name": "Class C shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000245226",
+    "name": "DSC 08",
+    "registry": "DSC 08",
+    "status": "Active",
+    "dateStatus": "2257",
+    "spacecraftClass": {
+      "uid": "SCMA0000232777",
+      "name": "Class C shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000248335",
+    "name": "DSC 12",
+    "registry": "DSC 12",
+    "status": "Active",
+    "dateStatus": "2257",
+    "spacecraftClass": {
+      "uid": "SCMA0000232777",
+      "name": "Class C shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000246011",
+    "name": "DSC 23",
+    "registry": "DSC 23",
+    "status": "Abandoned",
+    "dateStatus": "2257",
+    "spacecraftClass": {
+      "uid": "SCMA0000232777",
+      "name": "Class C shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000262317",
+    "name": "DSC 31",
+    "registry": "DSC 31",
+    "status": "Active",
+    "dateStatus": "3189",
+    "spacecraftClass": {
+      "uid": "SCMA0000232777",
+      "name": "Class C shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000276949",
+    "name": "DSC-02",
+    "registry": "DSC-02",
+    "status": "Destroyed",
+    "dateStatus": "3190",
+    "spacecraftClass": {
+      "uid": "SCMA0000276004",
+      "name": "UFP-02 type"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000276739",
+    "name": "DSC-03",
+    "registry": "DSC-03",
+    "status": "Active",
+    "dateStatus": "3190",
+    "spacecraftClass": {
+      "uid": "SCMA0000276004",
+      "name": "UFP-02 type"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000276952",
+    "name": "DSC-04",
+    "registry": "DSC-04",
+    "status": "Active",
+    "dateStatus": "3190",
+    "spacecraftClass": {
+      "uid": "SCMA0000276004",
+      "name": "UFP-02 type"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000277790",
+    "name": "DSC-09",
+    "registry": "DSC-09",
+    "status": "Active",
+    "dateStatus": "3190",
+    "spacecraftClass": {
+      "uid": "SCMA0000276004",
+      "name": "UFP-02 type"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000091933",
+    "name": "Da Vinci",
+    "registry": "SB4-0314<tt>⁄</tt>2",
+    "status": "Recovered",
+    "dateStatus": "2268",
+    "spacecraftClass": {
+      "uid": "SCMA0000013704",
+      "name": "Class F shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000275863",
+    "name": "Damsel",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2383",
+    "spacecraftClass": {
+      "uid": "SCMA0000008492",
+      "name": "D'Kora class"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": {
+      "uid": "ORMA0000004256",
+      "name": "Ferengi Alliance"
+    }
+  },
+  {
+    "uid": "SRMA0000021752",
+    "name": "Dawkins",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2377",
+    "spacecraftClass": {
+      "uid": "SCMA0000010317",
+      "name": "Class 2 shuttle"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000287285",
+    "name": "Daystrom Station",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2401",
+    "spacecraftClass": null,
+    "owner": {
+      "uid": "ORMA0000102839",
+      "name": "United Federation of Planets"
+    },
+    "operator": {
+      "uid": "ORMA0000190404",
+      "name": "Daystrom Institute"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000258111",
+    "name": "Death Valley",
+    "registry": "NCC-75567",
+    "status": "Active",
+    "dateStatus": "2381",
+    "spacecraftClass": {
+      "uid": "SCMA0000258298",
+      "name": "Type 6A shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000148853",
+    "name": "Decartes",
+    "registry": "11",
+    "status": "Active",
+    "dateStatus": "2366",
+    "spacecraftClass": {
+      "uid": "SCMA0000013859",
+      "name": "Type 7 shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000008353",
+    "name": "Decius",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": {
+      "uid": "SCMA0000024792",
+      "name": "D'deridex class"
+    },
+    "owner": {
+      "uid": "ORMA0000003019",
+      "name": "Romulan Star Empire"
+    },
+    "operator": {
+      "uid": "ORMA0000098221",
+      "name": "Romulan military"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000287277",
+    "name": "Deep Space 11",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2401",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000253593",
+    "name": "Deep Space 12",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2399",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000264607",
+    "name": "Deep Space 253",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "3189",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000003030",
+    "name": "Deep Space 3",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2380",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000003028",
+    "name": "Deep Space 4",
+    "registry": null,
+    "status": "Decommissioned",
+    "dateStatus": "2400",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000003029",
+    "name": "Deep Space 5",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2401",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000012666",
+    "name": "Deep Space 7",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2371",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000001078",
+    "name": "Deep Space 9",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2401",
+    "spacecraftClass": null,
+    "owner": {
+      "uid": "ORMA0000009661",
+      "name": "Bajoran Republic"
+    },
+    "operator": {
+      "uid": "ORMA0000003927",
+      "name": "Bajoran Militia"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000262783",
+    "name": "Deep Space Outpost 36",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000262784",
+    "name": "Deep Space Outpost 72",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000274054",
+    "name": "Deep Space Repair Beta Six",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "3190",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000005459",
+    "name": "Deep Space Station K-7",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2401",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": {
+      "uid": "ORMA0000102839",
+      "name": "United Federation of Planets"
+    }
+  },
+  {
+    "uid": "SRMA0000153216",
+    "name": "Deep space probe",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000039533",
+    "name": "Delphi Ardu IV",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000004073",
+    "name": "Delta Flyer",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "2377",
+    "spacecraftClass": {
+      "uid": "SCMA0000119976",
+      "name": "Delta Flyer type"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000004074",
+    "name": "Delta Flyer",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2378",
+    "spacecraftClass": {
+      "uid": "SCMA0000119976",
+      "name": "Delta Flyer type"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000030728",
+    "name": "Delta Flyer",
+    "registry": null,
+    "status": "Captured",
+    "dateStatus": "2376",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000230200",
+    "name": "Delta Outpost",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000229670",
+    "name": "Delta Outpost 10",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000229669",
+    "name": "Delta Outpost 11",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000232904",
+    "name": "Delta Outpost 3",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000232905",
+    "name": "Delta Outpost 4",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000232906",
+    "name": "Delta Outpost 5",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000229741",
+    "name": "Delta Outpost 6",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000229740",
+    "name": "Delta Outpost 7",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000229731",
+    "name": "Delta Outpost 8",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000229723",
+    "name": "Delta Outpost 9",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000115223",
+    "name": "Delta Vega",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000115436",
+    "name": "Delta Vega outpost",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2258",
+    "spacecraftClass": null,
+    "owner": {
+      "uid": "ORMA0000102839",
+      "name": "United Federation of Planets"
+    },
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000281854",
+    "name": "Delta class",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000193511",
+    "name": "Denkir Orbital City",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2328",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000008324",
+    "name": "Devoras",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2367",
+    "spacecraftClass": {
+      "uid": "SCMA0000024792",
+      "name": "D'deridex class"
+    },
+    "owner": {
+      "uid": "ORMA0000003019",
+      "name": "Romulan Star Empire"
+    },
+    "operator": {
+      "uid": "ORMA0000098221",
+      "name": "Romulan military"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000206636",
+    "name": "Devore sensor array",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000009708",
+    "name": "Devos II",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000053691",
+    "name": "Diana",
+    "registry": null,
+    "status": "Plundered",
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000125881",
+    "name": "Dimassa 01",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2258",
+    "spacecraftClass": {
+      "uid": "SCMA0000148267",
+      "name": "Military shuttle"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000143447",
+    "name": "Discovery",
+    "registry": "OV-103",
+    "status": "Retired",
+    "dateStatus": "2011",
+    "spacecraftClass": {
+      "uid": "SCMA0000125518",
+      "name": "Space shuttle orbiter"
+    },
+    "owner": null,
+    "operator": {
+      "uid": "ORMA0000003958",
+      "name": "National Aeronautics and Space Administration"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000008238",
+    "name": "Dividices",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2375",
+    "spacecraftClass": null,
+    "owner": {
+      "uid": "ORMA0000003019",
+      "name": "Romulan Star Empire"
+    },
+    "operator": {
+      "uid": "ORMA0000098221",
+      "name": "Romulan military"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000226286",
+    "name": "Doctari Alpha",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000245170",
+    "name": "Doctari Alpha Research Outpost",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000019385",
+    "name": "Dorian",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2369",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000258098",
+    "name": "Douglas Station",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2381",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000283168",
+    "name": "Dove",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2381",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000279354",
+    "name": "Dragon 2",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2020",
+    "spacecraftClass": {
+      "uid": "SCMA0000279358",
+      "name": "Space capsule"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000013160",
+    "name": "Drake",
+    "registry": null,
+    "status": "Destroyed",
+    "dateStatus": "2372",
+    "spacecraftClass": {
+      "uid": "SCMA0000013158",
+      "name": "Type 8 shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000051399",
+    "name": "Drexler outpost",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2354",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000098792",
+    "name": "Dukat's battle cruiser",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2374",
+    "spacecraftClass": {
+      "uid": "SCMA0000006190",
+      "name": "Jem'Hadar battle cruiser"
+    },
+    "owner": {
+      "uid": "ORMA0000006524",
+      "name": "Dominion"
+    },
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000003717",
+    "name": "ECS Constellation",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2153",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": {
+      "uid": "ORMA0000005053",
+      "name": "Earth Cargo Service"
+    }
+  },
+  {
+    "uid": "SRMA0000003831",
+    "name": "ECS Fortunate",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2151",
+    "spacecraftClass": {
+      "uid": "SCMA0000004789",
+      "name": "Y class"
+    },
+    "owner": null,
+    "operator": {
+      "uid": "ORMA0000005053",
+      "name": "Earth Cargo Service"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000003716",
+    "name": "ECS Horizon",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2153",
+    "spacecraftClass": {
+      "uid": "SCMA0000083868",
+      "name": "J class"
+    },
+    "owner": null,
+    "operator": {
+      "uid": "ORMA0000005053",
+      "name": "Earth Cargo Service"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000003718",
+    "name": "ECS North Star",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "22nd century",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": {
+      "uid": "ORMA0000005053",
+      "name": "Earth Cargo Service"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000009601",
+    "name": "Earth Outpost Station",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000093724",
+    "name": "Earth satellite network",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000072524",
+    "name": "Einstein",
+    "registry": "NCC-1701<tt>⁄</tt>6",
+    "status": "Destroyed",
+    "dateStatus": "2267",
+    "spacecraftClass": {
+      "uid": "SCMA0000013704",
+      "name": "Class F shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000013878",
+    "name": "Einstein",
+    "registry": "02",
+    "status": "Active",
+    "dateStatus": "2366",
+    "spacecraftClass": {
+      "uid": "SCMA0000013859",
+      "name": "Type 7 shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000014687",
+    "name": "Ekina",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2370",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000010766",
+    "name": "El-Baz",
+    "registry": "05",
+    "status": "Active",
+    "dateStatus": "2370",
+    "spacecraftClass": {
+      "uid": "SCMA0000005110",
+      "name": "Type 15 shuttlepod"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000193520",
+    "name": "Elba II Orbital Transit Station",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2328",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000252210",
+    "name": "Ellison",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2396",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000262396",
+    "name": "Emergency drone",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000289085",
+    "name": "Emerson",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2401",
+    "spacecraftClass": {
+      "uid": "SCMA0000277919",
+      "name": "Type 14 shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000193567",
+    "name": "Eminiar VII Starbase",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2328",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000061507",
+    "name": "Empok Nor",
+    "registry": null,
+    "status": "Abandoned",
+    "dateStatus": "2375",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": {
+      "uid": "ORMA0000000605",
+      "name": "Cardassian Union"
+    }
+  },
+  {
+    "uid": "SRMA0000224287",
+    "name": "Endeavour",
+    "registry": "OV-105",
+    "status": "Retired",
+    "dateStatus": "2011",
+    "spacecraftClass": {
+      "uid": "SCMA0000125518",
+      "name": "Space shuttle orbiter"
+    },
+    "owner": null,
+    "operator": {
+      "uid": "ORMA0000003958",
+      "name": "National Aeronautics and Space Administration"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000001640",
+    "name": "Enterprise",
+    "registry": "NX-01",
+    "status": "Preserved",
+    "dateStatus": "2402",
+    "spacecraftClass": {
+      "uid": "SCMA0000000238",
+      "name": "NX class"
+    },
+    "owner": {
+      "uid": "ORMA0000004386",
+      "name": "United Earth"
+    },
+    "operator": {
+      "uid": "ORMA0000003477",
+      "name": "Military Assault Command Operations"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000004190",
+    "name": "Enterprise",
+    "registry": "OV-101",
+    "status": "Retired",
+    "dateStatus": "2011",
+    "spacecraftClass": {
+      "uid": "SCMA0000125518",
+      "name": "Space shuttle orbiter"
+    },
+    "owner": null,
+    "operator": {
+      "uid": "ORMA0000003958",
+      "name": "National Aeronautics and Space Administration"
+    },
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000174858",
+    "name": "Enterprise shuttle 1",
+    "registry": "1",
+    "status": "Destroyed",
+    "dateStatus": "2259",
+    "spacecraftClass": {
+      "uid": "SCMA0000175094",
+      "name": "Takayama type shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000124678",
+    "name": "Enterprise shuttle 2",
+    "registry": "2",
+    "status": "Active",
+    "dateStatus": "2258",
+    "spacecraftClass": {
+      "uid": "SCMA0000148266",
+      "name": "Moore type shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000148790",
+    "name": "Enterprise shuttle 37",
+    "registry": "37",
+    "status": "Active",
+    "dateStatus": "2258",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000174860",
+    "name": "Enterprise shuttle 7",
+    "registry": "7",
+    "status": "Active",
+    "dateStatus": "2259",
+    "spacecraftClass": {
+      "uid": "SCMA0000175094",
+      "name": "Takayama type shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000115439",
+    "name": "Enterprise shuttle 89",
+    "registry": "89",
+    "status": "Destroyed",
+    "dateStatus": "2258",
+    "spacecraftClass": {
+      "uid": "SCMA0000148267",
+      "name": "Military shuttle"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000013851",
+    "name": "Enterprise-D shuttlecraft 13",
+    "registry": "13",
+    "status": "Destroyed",
+    "dateStatus": "2364",
+    "spacecraftClass": {
+      "uid": "SCMA0000013859",
+      "name": "Type 7 shuttlecraft"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000069603",
+    "name": "Enterprise-D shuttlepod 01",
+    "registry": "01",
+    "status": "Active",
+    "dateStatus": "2367",
+    "spacecraftClass": {
+      "uid": "SCMA0000005110",
+      "name": "Type 15 shuttlepod"
+    },
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000229625",
+    "name": "Epsilon IX station",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2369",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000230201",
+    "name": "Epsilon Outpost",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000229640",
+    "name": "Epsilon Outpost 1",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000229632",
+    "name": "Epsilon Outpost 10",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000229633",
+    "name": "Epsilon Outpost 11",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000280390",
+    "name": "Epsilon Outpost 12",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000281896",
+    "name": "Epsilon Outpost 15",
+    "registry": null,
+    "status": "Active",
+    "dateStatus": "2259",
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000229639",
+    "name": "Epsilon Outpost 2",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000229638",
+    "name": "Epsilon Outpost 3",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000229637",
+    "name": "Epsilon Outpost 4",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000229636",
+    "name": "Epsilon Outpost 5",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000229619",
+    "name": "Epsilon Outpost 6",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  },
+  {
+    "uid": "SRMA0000229618",
+    "name": "Epsilon Outpost 7",
+    "registry": null,
+    "status": null,
+    "dateStatus": null,
+    "spacecraftClass": null,
+    "owner": null,
+    "operator": null,
+    "affiliation": null
+  }
+]

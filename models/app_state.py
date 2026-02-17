@@ -22,6 +22,7 @@ from .audio_manager import AudioManager
 from .network_manager import NetworkManager
 from .system_info_manager import SystemInfoManager
 from .media_player_manager import MediaPlayerManager
+from .st_wiki_manager import StWikiManager
 import config as app_config
 
 # Application state constants
@@ -40,6 +41,7 @@ STATE_SCHEMATICS = "SCHEMATICS" # Schematics viewer
 STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU" # Schematics selection menu
 STATE_SCHEMATICS_CATEGORY = "SCHEMATICS_CATEGORY" # Schematics submenu: Schematics | Media Player
 STATE_MEDIA_PLAYER = "MEDIA_PLAYER" # Media player view
+STATE_ST_WIKI = "ST_WIKI"     # Star Trek wiki (schematics)
 STATE_LOADING = "LOADING"     # Loading screen
 
 # New Settings Sub-View States
@@ -54,6 +56,7 @@ STATE_SETTINGS_SOUND_TEST = "SETTINGS_SOUND_TEST"
 STATE_SETTINGS_DEBUG = "SETTINGS_DEBUG"
 STATE_SETTINGS_DEBUG_OVERLAY = "SETTINGS_DEBUG_OVERLAY"
 STATE_SETTINGS_LOG_VIEWER = "SETTINGS_LOG_VIEWER"
+STATE_SETTINGS_STAPI = "SETTINGS_STAPI"  # Star Trek Data fetch
 STATE_SELECT_COMBO_DURATION = "SELECT_COMBO_DURATION" # New state for selecting combo duration
 STATE_SETTINGS_VOLUME = "SETTINGS_VOLUME"  # Device settings: volume control
 STATE_DISPLAY_CYCLE_INTERVAL = "DISPLAY_CYCLE_INTERVAL"  # Display settings: dashboard cycle interval picker
@@ -125,6 +128,7 @@ class AppState:
         self.system_info_manager = SystemInfoManager() # Instantiate SystemInfoManager
         self.media_player_manager = MediaPlayerManager(config_module) # Instantiate MediaPlayerManager
         self._media_last_next_release_time = None  # For double-tap D = volume down in media player
+        self.st_wiki_manager = StWikiManager(config_module)  # Star Trek wiki (STAPI cache)
 
         # Debug overlay - initialized with screen dimensions
         from ui.components.debug import DebugOverlay
@@ -502,7 +506,7 @@ class AppState:
         
         # General key releases for menu navigation or back action
         elif action_name == app_config.INPUT_ACTION_BACK:
-            if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_TETRIS_ACTIVE, STATE_SECRET_GAMES, STATE_SENSORS_MENU, STATE_SETTINGS, STATE_SCHEMATICS_CATEGORY, STATE_MEDIA_PLAYER]:
+            if self.current_state not in [STATE_MENU, STATE_PONG_ACTIVE, STATE_BREAKOUT_ACTIVE, STATE_SNAKE_ACTIVE, STATE_TETRIS_ACTIVE, STATE_SECRET_GAMES, STATE_SENSORS_MENU, STATE_SETTINGS, STATE_SCHEMATICS_CATEGORY, STATE_MEDIA_PLAYER, STATE_ST_WIKI]:
                 state_changed = self.state_manager.return_to_previous()
                 if not state_changed or not self.state_manager.previous_state:
                     state_changed = self.state_manager.return_to_menu()

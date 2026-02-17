@@ -1,0 +1,2162 @@
+[
+  {
+    "uid": "ASMA0000015822",
+    "name": "'aucdet IX",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000264696",
+    "name": "'etnap Nebula",
+    "astronomicalObjectType": "NEBULA",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000289027",
+    "name": "1 Centauri",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000229695",
+    "name": "11 Leonis Minoris",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000177695",
+    "name": "1889 V",
+    "astronomicalObjectType": "COMET",
+    "location": {
+      "uid": "ASMA0000020577",
+      "name": "Earth"
+    }
+  },
+  {
+    "uid": "ASMA0000174468",
+    "name": "1892 III Holmes",
+    "astronomicalObjectType": "COMET",
+    "location": {
+      "uid": "ASMA0000020577",
+      "name": "Earth"
+    }
+  },
+  {
+    "uid": "ASMA0000174419",
+    "name": "1892 V",
+    "astronomicalObjectType": "COMET",
+    "location": {
+      "uid": "ASMA0000020577",
+      "name": "Earth"
+    }
+  },
+  {
+    "uid": "ASMA0000065314",
+    "name": "2279 PL",
+    "astronomicalObjectType": "REGION",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000065315",
+    "name": "2466 PM",
+    "astronomicalObjectType": "REGION",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000189720",
+    "name": "3 kpc Arm",
+    "astronomicalObjectType": "REGION",
+    "location": {
+      "uid": "ASMA0000000662",
+      "name": "Delta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000288988",
+    "name": "39 Serpentis",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000001073",
+    "name": "40 Eridani A",
+    "astronomicalObjectType": "STAR",
+    "location": {
+      "uid": "ASMA0000229674",
+      "name": "Vulcan system"
+    }
+  },
+  {
+    "uid": "ASMA0000068435",
+    "name": "47 Tucanae",
+    "astronomicalObjectType": "CLUSTER",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000288983",
+    "name": "58 Ophiuchi",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000052604",
+    "name": "61 Cygni",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000032818",
+    "name": "61 Ursae Majoris",
+    "astronomicalObjectType": "STAR",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000264532",
+    "name": "81 Cancri",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000015188",
+    "name": "892-IV",
+    "astronomicalObjectType": "M_CLASS_PLANET",
+    "location": {
+      "uid": "ASMA0000018602",
+      "name": "System 892"
+    }
+  },
+  {
+    "uid": "ASMA0000248899",
+    "name": "99 Pegasi",
+    "astronomicalObjectType": "STAR",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000003232",
+    "name": "AR-558",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000091061",
+      "name": "Chin'toka system"
+    }
+  },
+  {
+    "uid": "ASMA0000093814",
+    "name": "Aaamazzara",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000274753",
+    "name": "Abronian homeworld",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000002775",
+      "name": "Milky Way Galaxy"
+    }
+  },
+  {
+    "uid": "ASMA0000219455",
+    "name": "Acamar",
+    "astronomicalObjectType": "STAR",
+    "location": {
+      "uid": "ASMA0000019864",
+      "name": "Acamar system"
+    }
+  },
+  {
+    "uid": "ASMA0000009835",
+    "name": "Acamar III",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000019864",
+      "name": "Acamar system"
+    }
+  },
+  {
+    "uid": "ASMA0000019864",
+    "name": "Acamar system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000264533",
+    "name": "Achernar",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000014071",
+    "name": "Achrady VII",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000273602",
+    "name": "Actium sector",
+    "astronomicalObjectType": "SECTOR",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000007891",
+    "name": "Adarak Prime",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000228528",
+    "name": "Adelphous",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000012121",
+    "name": "Adelphous IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000228528",
+      "name": "Adelphous"
+    }
+  },
+  {
+    "uid": "ASMA0000012208",
+    "name": "Adigeon Prime",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000080805",
+    "name": "Agaron",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000008432",
+    "name": "Agrat-mot Nebula",
+    "astronomicalObjectType": "NEBULA",
+    "location": {
+      "uid": "ASMA0000000662",
+      "name": "Delta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000080756",
+    "name": "Ahmedeen",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000002775",
+      "name": "Milky Way Galaxy"
+    }
+  },
+  {
+    "uid": "ASMA0000253590",
+    "name": "Aia",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000253878",
+      "name": "Eightfold Stars"
+    }
+  },
+  {
+    "uid": "ASMA0000239778",
+    "name": "Ajilon",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000262940",
+      "name": "Klingon Zone"
+    }
+  },
+  {
+    "uid": "ASMA0000229643",
+    "name": "Ajilon Prime",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000239778",
+      "name": "Ajilon"
+    }
+  },
+  {
+    "uid": "ASMA0000060555",
+    "name": "Akaali homeworld",
+    "astronomicalObjectType": "M_CLASS_PLANET",
+    "location": {
+      "uid": "ASMA0000264535",
+      "name": "Akaali system"
+    }
+  },
+  {
+    "uid": "ASMA0000264535",
+    "name": "Akaali system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000288807",
+    "name": "Aklion VII",
+    "astronomicalObjectType": "PLANET",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000274325",
+    "name": "Akoszonam homeworld",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000009021",
+    "name": "Akritiri",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000662",
+      "name": "Delta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000006114",
+    "name": "Alastria",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000196014",
+      "name": "Alastria system"
+    }
+  },
+  {
+    "uid": "ASMA0000196014",
+    "name": "Alastria system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000000662",
+      "name": "Delta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000240554",
+    "name": "Alcor IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000240588",
+      "name": "Alcor system"
+    }
+  },
+  {
+    "uid": "ASMA0000240588",
+    "name": "Alcor system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000012212",
+    "name": "Aldea",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000037360",
+      "name": "Epsilon Mynos system"
+    }
+  },
+  {
+    "uid": "ASMA0000009474",
+    "name": "Aldebaran",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000009476",
+    "name": "Aldebaran III",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000009474",
+      "name": "Aldebaran"
+    }
+  },
+  {
+    "uid": "ASMA0000021715",
+    "name": "Aldebaron III",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000011999",
+    "name": "Alderaan",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000011019",
+    "name": "Alfa 177",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000070469",
+    "name": "Algeron IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000281800",
+      "name": "Algeron system"
+    }
+  },
+  {
+    "uid": "ASMA0000281800",
+    "name": "Algeron system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000047626",
+    "name": "Algira sector",
+    "astronomicalObjectType": "SECTOR",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000280280",
+    "name": "Algol I",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000262937",
+      "name": "Algol system"
+    }
+  },
+  {
+    "uid": "ASMA0000262937",
+    "name": "Algol system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000273855",
+    "name": "Alhena",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000226310",
+    "name": "Alioth",
+    "astronomicalObjectType": "STAR",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000226309",
+    "name": "Alkaid",
+    "astronomicalObjectType": "STAR",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000222565",
+    "name": "Allos' homeworld",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000662",
+      "name": "Delta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000018730",
+    "name": "Almatha sector",
+    "astronomicalObjectType": "SECTOR",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000033789",
+    "name": "Alnitak",
+    "astronomicalObjectType": "STAR",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000048315",
+    "name": "Alondra",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000011006",
+      "name": "Pallas 14 system"
+    }
+  },
+  {
+    "uid": "ASMA0000050268",
+    "name": "Alpha 331",
+    "astronomicalObjectType": "ASTEROID",
+    "location": {
+      "uid": "ASMA0000006563",
+      "name": "Devolin system"
+    }
+  },
+  {
+    "uid": "ASMA0000008428",
+    "name": "Alpha 441",
+    "astronomicalObjectType": "PLANETOID",
+    "location": {
+      "uid": "ASMA0000003156",
+      "name": "Badlands"
+    }
+  },
+  {
+    "uid": "ASMA0000193484",
+    "name": "Alpha Balder IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000281539",
+    "name": "Alpha Braga IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000193496",
+    "name": "Alpha Braga VII",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000012103",
+    "name": "Alpha Carinae II",
+    "astronomicalObjectType": "M_CLASS_PLANET",
+    "location": {
+      "uid": "ASMA0000010991",
+      "name": "Canopus"
+    }
+  },
+  {
+    "uid": "ASMA0000189983",
+    "name": "Alpha Carinae V",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000010991",
+      "name": "Canopus"
+    }
+  },
+  {
+    "uid": "ASMA0000001049",
+    "name": "Alpha Centauri",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000230202",
+    "name": "Alpha Centauri",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000001049",
+      "name": "Alpha Centauri"
+    }
+  },
+  {
+    "uid": "ASMA0000287247",
+    "name": "Alpha Circini",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000189984",
+    "name": "Alpha Cygnus IX",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000174393",
+    "name": "Alpha Delphi IX",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000252658",
+    "name": "Alpha Doradus system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000064910",
+    "name": "Alpha Drapanas",
+    "astronomicalObjectType": "PLANET",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000065737",
+    "name": "Alpha Echevarria IV",
+    "astronomicalObjectType": "PLANET",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000007432",
+    "name": "Alpha Eridani II",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000166252",
+    "name": "Alpha Fernandes III",
+    "astronomicalObjectType": "PLANET",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000280199",
+    "name": "Alpha I",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000012066",
+    "name": "Alpha III",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000012179",
+    "name": "Alpha Laputa IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000007854",
+    "name": "Alpha Leonis system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000245015",
+    "name": "Alpha Lupi",
+    "astronomicalObjectType": "STAR",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000012186",
+    "name": "Alpha Majoris I",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000010992",
+    "name": "Alpha Majoris system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000189772",
+    "name": "Alpha Moab",
+    "astronomicalObjectType": "STAR",
+    "location": {
+      "uid": "ASMA0000045032",
+      "name": "Moab system"
+    }
+  },
+  {
+    "uid": "ASMA0000012190",
+    "name": "Alpha Omicron VII",
+    "astronomicalObjectType": "GAS_GIANT_PLANET",
+    "location": {
+      "uid": "ASMA0000012189",
+      "name": "Alpha Omicron system"
+    }
+  },
+  {
+    "uid": "ASMA0000053490",
+    "name": "Alpha Omicron asteroid belt",
+    "astronomicalObjectType": "ASTEROID_BELT",
+    "location": {
+      "uid": "ASMA0000012189",
+      "name": "Alpha Omicron system"
+    }
+  },
+  {
+    "uid": "ASMA0000012189",
+    "name": "Alpha Omicron system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000015429",
+    "name": "Alpha Onias III",
+    "astronomicalObjectType": "M_CLASS_PLANET",
+    "location": {
+      "uid": "ASMA0000229677",
+      "name": "Alpha Onias system"
+    }
+  },
+  {
+    "uid": "ASMA0000229677",
+    "name": "Alpha Onias system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000016427",
+      "name": "Onias sector"
+    }
+  },
+  {
+    "uid": "ASMA0000025892",
+    "name": "Alpha Quadrant",
+    "astronomicalObjectType": "QUADRANT",
+    "location": {
+      "uid": "ASMA0000002775",
+      "name": "Milky Way Galaxy"
+    }
+  },
+  {
+    "uid": "ASMA0000064902",
+    "name": "Alpha Roller II",
+    "astronomicalObjectType": "PLANET",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000064907",
+    "name": "Alpha Rossi",
+    "astronomicalObjectType": "PLANET",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000193570",
+    "name": "Alpha VII",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000064906",
+    "name": "Alpha Zayra II",
+    "astronomicalObjectType": "PLANET",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000274106",
+    "name": "Alshain IV",
+    "astronomicalObjectType": "M_CLASS_PLANET",
+    "location": {
+      "uid": "ASMA0000002775",
+      "name": "Milky Way Galaxy"
+    }
+  },
+  {
+    "uid": "ASMA0000012213",
+    "name": "Altair III",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000013241",
+      "name": "Altair system"
+    }
+  },
+  {
+    "uid": "ASMA0000020884",
+    "name": "Altair IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000013241",
+      "name": "Altair system"
+    }
+  },
+  {
+    "uid": "ASMA0000011020",
+    "name": "Altair VI",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000013241",
+      "name": "Altair system"
+    }
+  },
+  {
+    "uid": "ASMA0000013241",
+    "name": "Altair system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000022852",
+      "name": "Sector 9"
+    }
+  },
+  {
+    "uid": "ASMA0000210680",
+    "name": "Altamid",
+    "astronomicalObjectType": "M_CLASS_PLANET",
+    "location": {
+      "uid": "ASMA0000234848",
+      "name": "Altamid system"
+    }
+  },
+  {
+    "uid": "ASMA0000234848",
+    "name": "Altamid system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000210817",
+      "name": "Necro Cloud"
+    }
+  },
+  {
+    "uid": "ASMA0000007451",
+    "name": "Alture VII",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000170868",
+    "name": "Alvacorn Major",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000008458",
+    "name": "Alwanir Nebula",
+    "astronomicalObjectType": "NEBULA",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000229744",
+    "name": "Amar system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000004100",
+    "name": "Amargosa",
+    "astronomicalObjectType": "STAR",
+    "location": {
+      "uid": "ASMA0000215345",
+      "name": "Amargosa system"
+    }
+  },
+  {
+    "uid": "ASMA0000008469",
+    "name": "Amargosa Diaspora",
+    "astronomicalObjectType": "CLUSTER",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000215345",
+    "name": "Amargosa system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000019525",
+    "name": "Amerind",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000007831",
+    "name": "Amleth Prime",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000010078",
+      "name": "Amleth system"
+    }
+  },
+  {
+    "uid": "ASMA0000010078",
+    "name": "Amleth system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000262643",
+    "name": "Amma",
+    "astronomicalObjectType": "MOON",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000067269",
+    "name": "Amphion",
+    "astronomicalObjectType": "STAR",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000012744",
+    "name": "Andevian II",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000000389",
+    "name": "Andoria",
+    "astronomicalObjectType": "MOON",
+    "location": {
+      "uid": "ASMA0000028722",
+      "name": "Andorian system"
+    }
+  },
+  {
+    "uid": "ASMA0000180337",
+    "name": "Andoria Prime",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000273605",
+    "name": "Andorian sector",
+    "astronomicalObjectType": "SECTOR",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000239410",
+    "name": "Andorian space",
+    "astronomicalObjectType": "REGION",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000028722",
+    "name": "Andorian system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000287785",
+    "name": "Andreus V",
+    "astronomicalObjectType": "PLANET",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000107155",
+    "name": "Andromeda",
+    "astronomicalObjectType": "CONSTELLATION",
+    "location": {
+      "uid": "ASMA0000011323",
+      "name": "Andromeda Galaxy"
+    }
+  },
+  {
+    "uid": "ASMA0000011323",
+    "name": "Andromeda Galaxy",
+    "astronomicalObjectType": "GALAXY",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000050534",
+    "name": "Andros III",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000227853",
+    "name": "Aneto system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000001122",
+    "name": "Angel I",
+    "astronomicalObjectType": "M_CLASS_PLANET",
+    "location": {
+      "uid": "ASMA0000281801",
+      "name": "Angel system"
+    }
+  },
+  {
+    "uid": "ASMA0000281801",
+    "name": "Angel system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000014019",
+    "name": "Angosia III",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000222586",
+    "name": "Ankari homeworld",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000662",
+      "name": "Delta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000003168",
+    "name": "Antares",
+    "astronomicalObjectType": "STAR",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000003228",
+    "name": "Antares sector",
+    "astronomicalObjectType": "SECTOR",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000074445",
+    "name": "Antede III",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000000809",
+    "name": "Antica",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000001037",
+      "name": "Beta Renner system"
+    }
+  },
+  {
+    "uid": "ASMA0000166053",
+    "name": "Antica IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000166073",
+    "name": "Antide Prime",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000017756",
+    "name": "Antos IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000270315",
+    "name": "Apergos",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000120329",
+    "name": "Apperson's Asteroid",
+    "astronomicalObjectType": "ASTEROID",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000284558",
+    "name": "Aquathawn homeworld",
+    "astronomicalObjectType": "PLANET",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000028896",
+    "name": "Arachna",
+    "astronomicalObjectType": "STAR",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000041509",
+    "name": "Arachnid Nebula",
+    "astronomicalObjectType": "NEBULA",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000067710",
+    "name": "Arakis Prime",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000662",
+      "name": "Delta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000004355",
+    "name": "Arakon system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000001993",
+      "name": "Delphic Expanse"
+    }
+  },
+  {
+    "uid": "ASMA0000288978",
+    "name": "Arbazan",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000049326",
+    "name": "Arcadian system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000165524",
+    "name": "Archanis",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000262940",
+      "name": "Klingon Zone"
+    }
+  },
+  {
+    "uid": "ASMA0000023228",
+    "name": "Archanis IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000165524",
+      "name": "Archanis"
+    }
+  },
+  {
+    "uid": "ASMA0000010726",
+    "name": "Archanis sector",
+    "astronomicalObjectType": "SECTOR",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000011942",
+    "name": "Archer IV",
+    "astronomicalObjectType": "M_CLASS_PLANET",
+    "location": {
+      "uid": "ASMA0000032818",
+      "name": "61 Ursae Majoris"
+    }
+  },
+  {
+    "uid": "ASMA0000018128",
+    "name": "Archer's Comet",
+    "astronomicalObjectType": "COMET",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000024759",
+    "name": "Archer's Planet",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000024817",
+      "name": "Gamma Trianguli sector"
+    }
+  },
+  {
+    "uid": "ASMA0000212578",
+    "name": "Arcturus",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000012543",
+    "name": "Ardana",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000229745",
+      "name": "Ardana system"
+    }
+  },
+  {
+    "uid": "ASMA0000229745",
+    "name": "Ardana system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000283811",
+    "name": "Areolus",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000050453",
+    "name": "Argaya system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000001090",
+      "name": "Bajor sector"
+    }
+  },
+  {
+    "uid": "ASMA0000264635",
+    "name": "Argelius",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000004884",
+    "name": "Argelius II",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000264635",
+      "name": "Argelius"
+    }
+  },
+  {
+    "uid": "ASMA0000288260",
+    "name": "Argelius IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000264635",
+      "name": "Argelius"
+    }
+  },
+  {
+    "uid": "ASMA0000218503",
+    "name": "Argelius sector",
+    "astronomicalObjectType": "SECTOR",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000262903",
+    "name": "Argeth",
+    "astronomicalObjectType": "M_CLASS_PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000013218",
+    "name": "Argo",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000007340",
+    "name": "Argolis Cluster",
+    "astronomicalObjectType": "CLUSTER",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000071728",
+    "name": "Argona II",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000053951",
+    "name": "Argos system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000018718",
+    "name": "Argosian sector",
+    "astronomicalObjectType": "SECTOR",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000041004",
+    "name": "Argratha",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000002016",
+      "name": "Gamma Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000016599",
+    "name": "Argus X",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000262820",
+      "name": "Argus system"
+    }
+  },
+  {
+    "uid": "ASMA0000049459",
+    "name": "Argus sector",
+    "astronomicalObjectType": "SECTOR",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000262820",
+    "name": "Argus system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000011021",
+    "name": "Ariannus",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000166382",
+    "name": "Aries",
+    "astronomicalObjectType": "CONSTELLATION",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000014902",
+    "name": "Arkaria",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000013240",
+    "name": "Arlington IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000070998",
+    "name": "Arloff IX",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000012759",
+    "name": "Armus IX",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000015580",
+    "name": "Arneb",
+    "astronomicalObjectType": "STAR",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000120894",
+    "name": "Arnold's Planet",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000080189",
+    "name": "Arret",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000036394",
+    "name": "Arret",
+    "astronomicalObjectType": "PLANET",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000007463",
+    "name": "Arvada III",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000288973",
+    "name": "Ascella",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000008427",
+    "name": "Aschelan V",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000278037",
+    "name": "Asp XXVII",
+    "astronomicalObjectType": "PLANET",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000190120",
+    "name": "Asteroid belt",
+    "astronomicalObjectType": "ASTEROID_BELT",
+    "location": {
+      "uid": "ASMA0000000683",
+      "name": "Mars"
+    }
+  },
+  {
+    "uid": "ASMA0000012641",
+    "name": "Atalia VII",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000091992",
+      "name": "Atalia system"
+    }
+  },
+  {
+    "uid": "ASMA0000091992",
+    "name": "Atalia system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000007889",
+    "name": "Atbar Prime",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000287239",
+    "name": "Athan Prime",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000008413",
+    "name": "Athos IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000003156",
+      "name": "Badlands"
+    }
+  },
+  {
+    "uid": "ASMA0000050009",
+    "name": "Atifs IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000022576",
+    "name": "Atlec",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000014987",
+      "name": "Omega Sagitta system"
+    }
+  },
+  {
+    "uid": "ASMA0000049679",
+    "name": "Atrea IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000251122",
+    "name": "Augris' homeworld",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000662",
+      "name": "Delta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000067630",
+    "name": "Auriga",
+    "astronomicalObjectType": "CONSTELLATION",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000103567",
+    "name": "Avenal VII",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000008605",
+    "name": "Avery III",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000013619",
+      "name": "Avery system"
+    }
+  },
+  {
+    "uid": "ASMA0000013619",
+    "name": "Avery system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000000662",
+      "name": "Delta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000004050",
+    "name": "Axanar",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000004822",
+    "name": "Azati Prime",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000271528",
+      "name": "Azati Prime system"
+    }
+  },
+  {
+    "uid": "ASMA0000212477",
+    "name": "Azati Prime",
+    "astronomicalObjectType": "STAR",
+    "location": {
+      "uid": "ASMA0000271528",
+      "name": "Azati Prime system"
+    }
+  },
+  {
+    "uid": "ASMA0000271528",
+    "name": "Azati Prime system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000001993",
+      "name": "Delphic Expanse"
+    }
+  },
+  {
+    "uid": "ASMA0000009020",
+    "name": "Azure Nebula",
+    "astronomicalObjectType": "NEBULA",
+    "location": {
+      "uid": "ASMA0000054236",
+      "name": "Federation-Klingon border"
+    }
+  },
+  {
+    "uid": "ASMA0000037716",
+    "name": "B'Saari II",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000268889",
+    "name": "B'omar space",
+    "astronomicalObjectType": "REGION",
+    "location": {
+      "uid": "ASMA0000000662",
+      "name": "Delta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000272612",
+    "name": "B-9-3",
+    "astronomicalObjectType": "MOON",
+    "location": {
+      "uid": "ASMA0000003565",
+      "name": "Benzar"
+    }
+  },
+  {
+    "uid": "ASMA0000229698",
+    "name": "Ba'ku",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000271674",
+      "name": "Ba'ku system"
+    }
+  },
+  {
+    "uid": "ASMA0000271674",
+    "name": "Ba'ku system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000046528",
+      "name": "Briar Patch"
+    }
+  },
+  {
+    "uid": "ASMA0000000534",
+    "name": "Babel",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000120323",
+    "name": "Baber Nebula",
+    "astronomicalObjectType": "NEBULA",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000003156",
+    "name": "Badlands",
+    "astronomicalObjectType": "REGION",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000009088",
+    "name": "Bajor",
+    "astronomicalObjectType": "M_CLASS_PLANET",
+    "location": {
+      "uid": "ASMA0000000708",
+      "name": "Bajoran system"
+    }
+  },
+  {
+    "uid": "ASMA0000107789",
+    "name": "Bajor I",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000708",
+      "name": "Bajoran system"
+    }
+  },
+  {
+    "uid": "ASMA0000107790",
+    "name": "Bajor II",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000708",
+      "name": "Bajoran system"
+    }
+  },
+  {
+    "uid": "ASMA0000168163",
+    "name": "Bajor III",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000708",
+      "name": "Bajoran system"
+    }
+  },
+  {
+    "uid": "ASMA0000168164",
+    "name": "Bajor IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000708",
+      "name": "Bajoran system"
+    }
+  },
+  {
+    "uid": "ASMA0000168166",
+    "name": "Bajor IX",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000708",
+      "name": "Bajoran system"
+    }
+  },
+  {
+    "uid": "ASMA0000107791",
+    "name": "Bajor V",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000708",
+      "name": "Bajoran system"
+    }
+  },
+  {
+    "uid": "ASMA0000168165",
+    "name": "Bajor VI",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000708",
+      "name": "Bajoran system"
+    }
+  },
+  {
+    "uid": "ASMA0000057576",
+    "name": "Bajor VII",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000708",
+      "name": "Bajoran system"
+    }
+  },
+  {
+    "uid": "ASMA0000009339",
+    "name": "Bajor VIII",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000708",
+      "name": "Bajoran system"
+    }
+  },
+  {
+    "uid": "ASMA0000168167",
+    "name": "Bajor X",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000708",
+      "name": "Bajoran system"
+    }
+  },
+  {
+    "uid": "ASMA0000168168",
+    "name": "Bajor XII",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000708",
+      "name": "Bajoran system"
+    }
+  },
+  {
+    "uid": "ASMA0000168170",
+    "name": "Bajor XIII",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000708",
+      "name": "Bajoran system"
+    }
+  },
+  {
+    "uid": "ASMA0000168171",
+    "name": "Bajor XIV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000708",
+      "name": "Bajoran system"
+    }
+  },
+  {
+    "uid": "ASMA0000001090",
+    "name": "Bajor sector",
+    "astronomicalObjectType": "SECTOR",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000028366",
+    "name": "Bajoran space",
+    "astronomicalObjectType": "REGION",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000014005",
+    "name": "Bajoran sun",
+    "astronomicalObjectType": "STAR",
+    "location": {
+      "uid": "ASMA0000000708",
+      "name": "Bajoran system"
+    }
+  },
+  {
+    "uid": "ASMA0000000708",
+    "name": "Bajoran system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000001090",
+      "name": "Bajor sector"
+    }
+  },
+  {
+    "uid": "ASMA0000009568",
+    "name": "Balancar",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000268977",
+      "name": "Balancar system"
+    }
+  },
+  {
+    "uid": "ASMA0000268977",
+    "name": "Balancar system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000056935",
+    "name": "Balder's Planet",
+    "astronomicalObjectType": "PLANET",
+    "location": null
+  },
+  {
+    "uid": "ASMA0000288955",
+    "name": "Balosnee",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000013573",
+    "name": "Balosnee VI",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000019650",
+    "name": "Banea",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000000662",
+      "name": "Delta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000190454",
+    "name": "Barash's species homeworld",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000008461",
+    "name": "Barisa Prime",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000028850",
+    "name": "Barkon IV",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000052611",
+    "name": "Barnard's Star",
+    "astronomicalObjectType": "STAR",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000120895",
+    "name": "Barnes Nebula",
+    "astronomicalObjectType": "NEBULA",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000120904",
+    "name": "Barnett's Star",
+    "astronomicalObjectType": "STAR",
+    "location": {
+      "uid": "ASMA0000002015",
+      "name": "Beta Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000008785",
+    "name": "Barradas III",
+    "astronomicalObjectType": "M_CLASS_PLANET",
+    "location": {
+      "uid": "ASMA0000049872",
+      "name": "Barradas system"
+    }
+  },
+  {
+    "uid": "ASMA0000049872",
+    "name": "Barradas system",
+    "astronomicalObjectType": "STAR_SYSTEM",
+    "location": {
+      "uid": "ASMA0000049465",
+      "name": "Sector 2158"
+    }
+  },
+  {
+    "uid": "ASMA0000023111",
+    "name": "Barson II",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  },
+  {
+    "uid": "ASMA0000012313",
+    "name": "Barzan II",
+    "astronomicalObjectType": "PLANET",
+    "location": {
+      "uid": "ASMA0000025892",
+      "name": "Alpha Quadrant"
+    }
+  }
+]

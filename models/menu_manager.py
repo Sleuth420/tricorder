@@ -15,6 +15,7 @@ STATE_SCHEMATICS = "SCHEMATICS"
 STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU"
 STATE_SCHEMATICS_CATEGORY = "SCHEMATICS_CATEGORY"
 STATE_MEDIA_PLAYER = "MEDIA_PLAYER"
+STATE_ST_WIKI = "ST_WIKI"
 
 # Import new settings states
 STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
@@ -27,6 +28,7 @@ STATE_SETTINGS_SOUND_TEST = "SETTINGS_SOUND_TEST"
 STATE_SETTINGS_DEBUG = "SETTINGS_DEBUG"
 STATE_SETTINGS_DEBUG_OVERLAY = "SETTINGS_DEBUG_OVERLAY"
 STATE_SETTINGS_LOG_VIEWER = "SETTINGS_LOG_VIEWER"
+STATE_SETTINGS_STAPI = "SETTINGS_STAPI"
 
 import config as app_config
 
@@ -159,7 +161,7 @@ class MenuManager:
         return items
 
     def _generate_schematics_category_menu_items(self):
-        """Generates the specs category menu: Specs (3D models) | Media Player."""
+        """Generates the specs category menu: 3D Models | Media Player | Star Trek Wiki | Back."""
         return [
             MenuItem(
                 name="3D Models",
@@ -170,6 +172,11 @@ class MenuManager:
                 name="Media Player",
                 target_state=STATE_MEDIA_PLAYER,
                 color_key="SIDEBAR_SYSTEM"
+            ),
+            MenuItem(
+                name="Star Trek Wiki",
+                target_state=STATE_ST_WIKI,
+                color_key="SIDEBAR_SCHEMATICS"
             ),
             MenuItem(
                 name="<- Back",
@@ -240,6 +247,11 @@ class MenuManager:
                 name="System Updates", # New Update menu item
                 target_state=STATE_SETTINGS_UPDATE,
                 color_key="SIDEBAR_SYSTEM" # Example color
+            ),
+            MenuItem(
+                name="Star Trek Data", # Fetch STAPI data for wiki view
+                target_state=STATE_SETTINGS_STAPI,
+                color_key="SIDEBAR_SYSTEM"
             ),
             MenuItem(
                 name="Sound Test", # New Sound Test menu item

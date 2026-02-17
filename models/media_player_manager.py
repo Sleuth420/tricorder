@@ -60,18 +60,6 @@ class MediaPlayerManager:
         # Season structure: subdirs of media_folder (e.g. 1, 2, 3 for Star Trek). None = browsing seasons; path = browsing episodes in that folder.
         self._season_folders = []  # List of (display_name, folder_path), e.g. ("Season 1", "assets/media/1")
         self._current_season_folder = None  # None = show season list; else path to season folder
-        # Pause menu: when True we detach VLC and draw our menu (position preserved, no stop())
-        self._pause_menu_active = False
-        self._pause_menu_index = 0
-        self._PAUSE_MENU_ITEMS = [
-            ("resume", "Resume"),
-            ("volume_up", "Volume Up"),
-            ("volume_down", "Volume Down"),
-            ("mute", "Mute"),
-            ("prev_track", "Previous Track"),
-            ("next_track", "Next Track"),
-            ("back_to_list", "Back to List"),
-        ]
         if not self.vlc_available:
             logger.info("Media player: VLC not available; install python-vlc and VLC application.")
         else:
@@ -423,7 +411,7 @@ class MediaPlayerManager:
             return False
 
     def pause(self):
-        """Pause playback. VLC stays attached and shows paused frame with track-info marquee."""
+        """Pause playback. VLC stays attached; marquee shows 'Paused' and track info on video."""
         if not self.playing or not self._player:
             return
         try:
@@ -495,100 +483,9 @@ class MediaPlayerManager:
         except Exception as e:
             logger.debug("Media player: toggle_mute failed: %s", e)
 
-    def is_pause_menu_active(self):
-        """True when the pause menu is shown (VLC detached, our menu visible)."""
-        return self._pause_menu_active
-
-    def show_pause_menu(self):
-        """Pause playback (if not already), detach VLC so our menu can draw. Position is preserved."""
-        if not self._player:
-            return
-        if self.playing:
-            self.pause()
-        self._pause_menu_active = True
-        self._pause_menu_index = 0
-        self.detach_from_window()
-        logger.info("Media player: pause menu shown")
-
-    def hide_pause_menu(self):
-        """Re-attach VLC and resume playback. Call when user selects Resume."""
-        if not self._pause_menu_active or not self._player:
-            return
-        self._pause_menu_active = False
-        self._set_pause_marquee(False)
-        self.attach_to_window()
-        try:
-            self._player.set_pause(0)
-        except Exception as e:
-            logger.warning("Media player: unpause failed: %s", e)
-        self.playing = True
-        self.paused = False
-        logger.info("Media player: resumed from pause menu")
-
-    def close_pause_menu_stay_paused(self):
-        """User pressed Back from pause menu: close menu and re-attach VLC so frozen frame shows; position preserved."""
-        if not self._pause_menu_active or not self._player:
-            return
-        self._pause_menu_active = False
-        self.attach_to_window()
-        # VLC remains paused; we only re-attached for display
-        logger.info("Media player: pause menu closed, staying paused")
-
-    def close_pause_menu_to_list(self):
-        """User chose Back to List: stop playback and close menu so track list shows."""
-        self._pause_menu_active = False
-        self.stop()
-
-    def get_pause_menu_items(self):
-        """List of (id, label) for the pause menu."""
-        return list(self._PAUSE_MENU_ITEMS)
-
-    def get_pause_menu_index(self):
-        return self._pause_menu_index
-
-    def pause_menu_next(self):
-        n = len(self._PAUSE_MENU_ITEMS)
-        if n:
-            self._pause_menu_index = (self._pause_menu_index + 1) % n
-            return True
-        return False
-
-    def pause_menu_prev(self):
-        n = len(self._PAUSE_MENU_ITEMS)
-        if n:
-            self._pause_menu_index = (self._pause_menu_index - 1 + n) % n
-            return True
-        return False
-
-    def activate_pause_menu_item(self):
-        """Run the action for the currently selected pause menu item. Returns True if handled."""
-        if not self._PAUSE_MENU_ITEMS or self._pause_menu_index >= len(self._PAUSE_MENU_ITEMS):
-            return False
-        item_id = self._PAUSE_MENU_ITEMS[self._pause_menu_index][0]
-        if item_id == "resume":
-            self.hide_pause_menu()
-        elif item_id == "volume_up":
-            self.volume_up()
-        elif item_id == "volume_down":
-            self.volume_down()
-        elif item_id == "mute":
-            self.toggle_mute()
-        elif item_id == "prev_track":
-            self._pause_menu_active = False
-            self.prev_track()
-        elif item_id == "next_track":
-            self._pause_menu_active = False
-            self.next_track()
-        elif item_id == "back_to_list":
-            self.close_pause_menu_to_list()
-        else:
-            return False
-        return True
-
     def stop(self):
         """Stop playback and release current media. Detach VLC so track list is visible."""
         try:
-            self._pause_menu_active = False
             self._set_pause_marquee(False)
             if self._player:
                 self._player.stop()

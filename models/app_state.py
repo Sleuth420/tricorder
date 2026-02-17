@@ -143,8 +143,6 @@ class AppState:
         
         # Initialize input router
         self.input_router = InputRouter(self)
-        # When True, next KEYUP for SELECT in media player should be ignored (we already opened pause menu on KEYDOWN)
-        self._media_player_select_handled_on_keydown = False
         
         # Set up cross-component dependencies
         self.input_manager.set_settings_menu_index(
@@ -300,15 +298,6 @@ class AppState:
                 if hasattr(self, 'debug_overlay'):
                     self.debug_overlay.add_input_event('KEYDOWN', key)
                 
-                # Media player: open pause menu on SELECT key down when playing/paused (so menu opens even if KEYUP is lost, e.g. focus)
-                if (action_name == app_config.INPUT_ACTION_SELECT and self.current_state == STATE_MEDIA_PLAYER and
-                        hasattr(self, 'media_player_manager') and self.media_player_manager and
-                        (self.media_player_manager.is_playing() or self.media_player_manager.is_paused())):
-                    self.media_player_manager.pause()
-                    self.media_player_manager.show_pause_menu()
-                    self._media_player_select_handled_on_keydown = True
-                    state_changed_by_action = True
-                
                 # Check for secret combo start (on main menu settings item)
                 if (self.current_state == STATE_MENU and
                     not self.input_manager.secret_combo_start_time and
@@ -386,13 +375,6 @@ class AppState:
 
             elif event_type == 'JOYSTICK_MIDDLE_PRESS':
                 self.input_manager.handle_joystick_press()
-                # Media player: open pause menu on middle press when playing/paused (same as KEYDOWN SELECT)
-                if (self.current_state == STATE_MEDIA_PLAYER and hasattr(self, 'media_player_manager') and self.media_player_manager and
-                        (self.media_player_manager.is_playing() or self.media_player_manager.is_paused())):
-                    self.media_player_manager.pause()
-                    self.media_player_manager.show_pause_menu()
-                    self._media_player_select_handled_on_keydown = True
-                    state_changed_by_action = True
             
             elif event_type == 'JOYSTICK_MIDDLE_RELEASE':
                 release_event = self.input_manager.handle_joystick_release()
@@ -404,9 +386,6 @@ class AppState:
                     self.menu_manager.get_current_menu_index(STATE_MENU) == self.menu_manager.get_settings_main_menu_idx() and
                     press_duration >= self.config.CURRENT_SECRET_COMBO_DURATION):
                     logger.debug("Joystick long press for secret menu (on Settings item) handled by update()")
-                elif getattr(self, '_media_player_select_handled_on_keydown', False):
-                    # Media player: we already opened pause menu on middle press; don't route SELECT or we'd activate first item
-                    self._media_player_select_handled_on_keydown = False
                 elif current_state_before_select != STATE_SECRET_GAMES: 
                     logger.info(f"Joystick short press: Processing SELECT in {current_state_before_select}")
                     
@@ -418,15 +397,6 @@ class AppState:
             elif event_type == 'MOUSEDOWN':
                 button = result.get('button')
                 self.input_manager.handle_mousedown(button)
-                # Media player: open pause menu on middle click (Select) when playing/paused
-                if (result.get('action') == app_config.INPUT_ACTION_SELECT and self.current_state == STATE_MEDIA_PLAYER and
-                        hasattr(self, 'media_player_manager') and self.media_player_manager and
-                        (self.media_player_manager.is_playing() or self.media_player_manager.is_paused())):
-                    self.media_player_manager.pause()
-                    self.media_player_manager.show_pause_menu()
-                    self._media_player_select_handled_on_keydown = True
-                    state_changed_by_action = True
-                
                 # Check for secret combo start (on main menu settings item) - same as keyboard
                 if (self.current_state == STATE_MENU and
                     not self.input_manager.secret_combo_start_time and
@@ -443,21 +413,17 @@ class AppState:
                 if not self.input_manager.secret_combo_start_time:
                     action_name = result.get('action')
                     if action_name:
-                        # Media player: we already opened pause menu on middle click down; don't route SELECT on release
-                        if (action_name == app_config.INPUT_ACTION_SELECT and getattr(self, '_media_player_select_handled_on_keydown', False)):
-                            self._media_player_select_handled_on_keydown = False
-                        else:
-                            press_dur = mouseup_event.get('press_duration')
-                            # Mouse left release: if this was a long press, BACK was already handled in update().
-                            if (action_name == app_config.INPUT_ACTION_PREV and
-                                    button == self.config.MOUSE_LEFT):
-                                if (press_dur is not None and
-                                        press_dur >= getattr(self.config, 'INPUT_LONG_PRESS_DURATION', 2.0)):
-                                    pass  # skip routing PREV on release after long press
-                                else:
-                                    state_changed_by_action = self._route_action(action_name) or state_changed_by_action
+                        press_dur = mouseup_event.get('press_duration')
+                        # Mouse left release: if this was a long press, BACK was already handled in update().
+                        if (action_name == app_config.INPUT_ACTION_PREV and
+                                button == self.config.MOUSE_LEFT):
+                            if (press_dur is not None and
+                                    press_dur >= getattr(self.config, 'INPUT_LONG_PRESS_DURATION', 2.0)):
+                                pass  # skip routing PREV on release after long press
                             else:
                                 state_changed_by_action = self._route_action(action_name) or state_changed_by_action
+                        else:
+                            state_changed_by_action = self._route_action(action_name) or state_changed_by_action
                 
         return state_changed_by_action
         
@@ -517,10 +483,6 @@ class AppState:
                 if not state_changed or not self.state_manager.previous_state:
                     state_changed = self.state_manager.return_to_menu()
         elif action_name:
-            # Media player: SELECT was already handled on KEYDOWN (opened pause menu); don't route again or we'd activate first item.
-            if (action_name == app_config.INPUT_ACTION_SELECT and getattr(self, '_media_player_select_handled_on_keydown', False)):
-                self._media_player_select_handled_on_keydown = False
-                return state_changed
             # PREV release: if this was a long press, BACK was already handled in update();
             # do not also route PREV on release (would cause extra "up one menu item" action).
             if action_name == app_config.INPUT_ACTION_PREV:

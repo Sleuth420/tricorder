@@ -87,33 +87,8 @@ def draw_media_player_view(screen, app_state, fonts, config_module, ui_scaler=No
     # Process end-reached from VLC (main-thread tick)
     mgr.tick()
 
-    # Attach VLC when playing or paused and pause menu is not open; detach when stopped or when pause menu is shown (so we can draw our menu).
-    mgr.update_window_attachment((mgr.is_playing() or mgr.is_paused()) and not mgr.is_pause_menu_active())
-
-    # Pause menu: our screen (VLC detached), position preserved
-    if mgr.is_pause_menu_active():
-        items = mgr.get_pause_menu_items()
-        menu_items = [label for _, label in items]
-        selected_index = mgr.get_pause_menu_index()
-        labels = config_module.get_control_labels()
-        pos_sec = mgr.get_position_sec()
-        length_sec = mgr.get_length_sec()
-        pos_str = _format_time(pos_sec)
-        len_str = _format_time(length_sec) if length_sec and length_sec > 0 else "—"
-        title = f"Paused — {pos_str} / {len_str}"
-        footer_hint = f"< {labels['prev']}=Up | {labels['next']}=Down | {labels['select']}=Select | {labels['back']}=Close menu >"
-        draw_scrollable_list_menu(
-            screen=screen,
-            title=title,
-            menu_items=menu_items,
-            selected_index=selected_index,
-            fonts=fonts,
-            config_module=config_module,
-            footer_hint=footer_hint,
-            item_style="simple",
-            ui_scaler=ui_scaler
-        )
-        return
+    # Attach VLC when playing or paused (video + pause marquee); detach when stopped so track list is visible.
+    mgr.update_window_attachment(mgr.is_playing() or mgr.is_paused())
 
     if not mgr.is_playing() and not mgr.is_paused():
         # Season structure: show season list first, then episode list (episode title = MP4 comment, order = filename)
@@ -137,7 +112,7 @@ def draw_media_player_view(screen, app_state, fonts, config_module, ui_scaler=No
                 selected_index = max(0, len(menu_items) - 1)
 
             labels = config_module.get_control_labels()
-            footer_hint = f"< {labels['prev']}=Vol- | {labels['next']}=Vol+ | {labels['select']}=Pause menu | {labels['back']}=Back >"
+            footer_hint = f"< {labels['prev']}=Vol- | {labels['next']}=Vol+ | {labels['select']}=Play/Pause | {labels['back']}=Back >"
             title = "Media Player"
             if not mgr.vlc_available:
                 footer_hint += "  (Install python-vlc for playback)"

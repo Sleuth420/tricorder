@@ -48,7 +48,7 @@ UI_DEBUG_DRAWING = False    # Enable detailed drawing/layout logging (shows dime
 # When True, logs elapsed time, scenario (menu/video/sensors etc.), CPU%, RAM%, temp, battery to a
 # separate file at regular intervals. Flush+fsync after each write so data survives power loss when
 # the Pi dies from battery drain.
-ADMIN_TIMER = False
+ADMIN_TIMER = True
 ADMIN_TIMER_LOG_INTERVAL_SEC = 30   # How often to append a row (balance detail vs. write load)
 ADMIN_TIMER_LOG_DIR = "logs"
 ADMIN_TIMER_LOG_FILENAME = "battery_timer_2.log"

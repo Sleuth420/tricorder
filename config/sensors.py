@@ -11,6 +11,20 @@ ENABLE_MOCK_SENSOR_DYNAMICS = False
 # Set to False to leave the matrix off after init (saves a small amount of I2C traffic)
 SENSE_HAT_LED_ENABLED = True
 
+# Display rotation for the 8x8 matrix (and joystick coordinate mapping). Use when the Pi is mounted
+# in a different orientation. Values: 0, 90, 180, 270 (degrees). For vertical mount with joystick
+# at the top, use 180 so animations and "up" align with the physical top.
+SENSE_HAT_DISPLAY_ROTATION = 180
+
+# Lid / matrix on when "open": the Sense HAT has no dedicated ambient light sensor, but on Sense HAT
+# *v2* the colour sensor provides RGBC (red, green, blue, clear); the "clear" channel is ambient
+# light and can be used as a light sensor. Use the "LED matrix (lid open)" toggle in Settings >
+# Display Settings for manual control, or set SENSE_HAT_LID_AUTO_FROM_COLOUR = True for automatic
+# lid detection from the colour sensor (v2 only).
+# When auto is enabled, clear channel above SENSE_HAT_LID_LIGHT_THRESHOLD = lid open (matrix on).
+SENSE_HAT_LID_AUTO_FROM_COLOUR = False   # True = use colour sensor clear channel (Sense HAT v2)
+SENSE_HAT_LID_LIGHT_THRESHOLD = 50       # Clear value above this = lid open (tune for your build)
+
 # -- Sensor Mode Constants --
 SENSOR_TEMPERATURE = "TEMPERATURE"
 SENSOR_HUMIDITY = "HUMIDITY"

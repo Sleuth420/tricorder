@@ -481,6 +481,10 @@ class InputRouter:
         if isinstance(result, str):
             if result == "DISPLAY_CYCLE_INTERVAL":
                 return self.app_state.state_manager.transition_to(STATE_DISPLAY_CYCLE_INTERVAL)
+            if result == "TOGGLE_LED_MATRIX":
+                self.app_state.led_matrix_enabled = not self.app_state.led_matrix_enabled
+                logger.info("LED matrix (lid open) %s", "on" if self.app_state.led_matrix_enabled else "off")
+                return True
             if result == "GO_BACK":
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS)
         return result

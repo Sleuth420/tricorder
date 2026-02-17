@@ -349,9 +349,29 @@ def update_led_display(app_state, sensor_values, config_module):
     """
     Update the Sense HAT 8x8 LED matrix based on app state and sensor data.
     Safe to call every frame; updates are throttled. No-op if Sense HAT is not available.
+    When led_matrix_enabled is False (e.g. "lid closed"), the matrix is cleared and left off.
     """
     global _last_led_update_time
     if not getattr(config_module, "SENSE_HAT_LED_ENABLED", True):
+        return
+    # Optional: auto lid detection from Sense HAT v2 colour sensor's clear (ambient) channel
+    if getattr(config_module, "SENSE_HAT_LID_AUTO_FROM_COLOUR", False):
+        try:
+            from data.sensors import get_ambient_light_clear
+            clear = get_ambient_light_clear()
+            if clear is not None:
+                threshold = getattr(config_module, "SENSE_HAT_LID_LIGHT_THRESHOLD", 50)
+                app_state.led_matrix_enabled = clear >= threshold
+        except Exception:
+            pass
+    # When led_matrix_enabled is False, keep matrix off (manual "lid closed" or auto from light)
+    if not getattr(app_state, "led_matrix_enabled", True):
+        try:
+            from data.sensors import sense
+            if sense is not None:
+                sense.clear()
+        except Exception:
+            pass
         return
     try:
         from data.sensors import sense

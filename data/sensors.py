@@ -131,6 +131,11 @@ def init_sensors():
         try:
             sense = SenseHat()
             sense.low_light = True  # Optional: Dim the 8x8 matrix if distracting
+            # Apply display rotation (e.g. 180 for vertical mount with joystick at top)
+            rotation = getattr(sensor_config, "SENSE_HAT_DISPLAY_ROTATION", 0)
+            if rotation in (0, 90, 180, 270):
+                sense.set_rotation(rotation)
+                logger.info("Sense HAT display rotation set to %s", rotation)
             
             # Joystick direction callbacks have been REMOVED.
             # We will rely solely on sense.stick.get_events() in input_handler.py
@@ -239,6 +244,27 @@ def get_acceleration():
     except Exception as e:
         logger.error(f"Error reading acceleration: {e}", exc_info=True)
         return None
+
+
+def get_ambient_light_clear():
+    """
+    Return the colour sensor's 'clear' (ambient light) channel value, or None if not available.
+    Sense HAT v2 only: RGBC sensor; the 4th value is clear/ambient. Older Sense HAT has no colour sensor.
+    """
+    if not sense:
+        return None
+    try:
+        # Sense HAT v2: sense.colour.colour returns (red, green, blue, clear)
+        colour_attr = getattr(sense, "colour", None) or getattr(sense, "color", None)
+        if colour_attr is None:
+            return None
+        rgbc = getattr(colour_attr, "colour", None) or getattr(colour_attr, "color", None)
+        if rgbc is not None and len(rgbc) >= 4:
+            return float(rgbc[3])  # clear channel
+    except Exception as e:
+        logger.debug("Colour sensor clear channel not available: %s", e)
+    return None
+
 
 def cleanup_sensors():
     """

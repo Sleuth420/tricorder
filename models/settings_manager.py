@@ -55,13 +55,14 @@ class SettingsManager:
             logger.warning(f"Could not find current CURRENT_SECRET_COMBO_DURATION {self.config.CURRENT_SECRET_COMBO_DURATION} in options, defaulting index to 0.")
             self.combo_duration_selection_index = 0
 
-    # Display settings main menu: 0=Dashboard auto-cycle, 1=Back
+    # Display settings main menu: 0=Dashboard auto-cycle, 1=LED matrix (lid open), 2=Back
     DISPLAY_MENU_ACTION_CYCLE = "DISPLAY_CYCLE_INTERVAL"
+    DISPLAY_MENU_ACTION_LED_MATRIX = "TOGGLE_LED_MATRIX"
     DISPLAY_MENU_ACTION_BACK = "GO_BACK"
-    DISPLAY_SETTINGS_MENU_LEN = 2
+    DISPLAY_SETTINGS_MENU_LEN = 3
 
     def handle_display_settings_input(self, action):
-        """Handle input for the Display Settings main menu (2 items)."""
+        """Handle input for the Display Settings main menu (3 items)."""
         state_changed = False
         if action == app_config.INPUT_ACTION_NEXT:
             self.display_settings_option_index = (self.display_settings_option_index + 1) % self.DISPLAY_SETTINGS_MENU_LEN
@@ -82,6 +83,8 @@ class SettingsManager:
         if idx == 0:
             return self.DISPLAY_MENU_ACTION_CYCLE
         if idx == 1:
+            return self.DISPLAY_MENU_ACTION_LED_MATRIX
+        if idx == 2:
             return self.DISPLAY_MENU_ACTION_BACK
         return False
 

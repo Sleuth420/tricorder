@@ -134,6 +134,8 @@ class AppState:
         self.debug_overlay = DebugOverlay(screen_width, screen_height)
         # Admin timer: runtime toggle (main.py sets .admin_timer reference after creating it)
         self.admin_timer_enabled = getattr(config_module, "ADMIN_TIMER", False)
+        # LED matrix on/off (simulates "lid open" when True; Sense HAT has no light sensor)
+        self.led_matrix_enabled = getattr(config_module, "SENSE_HAT_LED_ENABLED", True)
         self.admin_timer = None
         
         # Password entry manager - initialized with screen dimensions

@@ -10,8 +10,10 @@ logger = logging.getLogger(__name__)
 
 def _build_display_settings_menu_items(app_state):
     """Build Display Settings main menu items."""
+    led_on = getattr(app_state, "led_matrix_enabled", True)
     return [
         "Dashboard auto-cycle",
+        "LED matrix (lid open): " + ("On" if led_on else "Off"),
         "<- Back to Settings",
     ]
 

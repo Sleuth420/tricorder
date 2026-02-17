@@ -325,8 +325,10 @@ class VerticalBarGraph:
         pad = self.ui_scaler.margin("medium") if self.ui_scaler else 15
         top_band_center_y = self.scale_rect.top + pad + self.unit_band_height // 2
         bottom_band_center_y = self.scale_rect.bottom - pad - self.unit_band_height // 2
-        top_units_rect = units_surface.get_rect(centery=top_band_center_y, right=self.scale_line_x - self.label_offset_x - 8)
-        bottom_units_rect = units_surface.get_rect(centery=bottom_band_center_y, right=self.scale_line_x - self.label_offset_x - 8)
+        # Extra gap so unit (e.g. "K") does not sit too close to multi-digit tick labels (match spacing of other graphs)
+        unit_gap = self.ui_scaler.scale(24) if self.ui_scaler else 24
+        top_units_rect = units_surface.get_rect(centery=top_band_center_y, right=self.scale_line_x - self.label_offset_x - unit_gap)
+        bottom_units_rect = units_surface.get_rect(centery=bottom_band_center_y, right=self.scale_line_x - self.label_offset_x - unit_gap)
         self.screen.blit(units_surface, top_units_rect)
         self.screen.blit(units_surface, bottom_units_rect)
 

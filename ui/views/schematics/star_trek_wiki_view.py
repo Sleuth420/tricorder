@@ -1,12 +1,11 @@
 # --- ui/views/schematics/star_trek_wiki_view.py ---
 # Star Trek wiki: category list -> item list -> scrollable detail view.
-# Uses: draw_scrollable_list_menu (list_menu_base), render_footer (text_display),
-#       config.get_control_labels(), UIScaler (safe_rect, margin, scale) — same patterns as log_viewer_view.
+# Uses: draw_scrollable_list_menu (list_menu_base), config.get_control_labels(), UIScaler (safe_rect, margin, scale).
+# Detail view has no footer so scroll numbers don't overlap; navigation is self-explanatory.
 
 import pygame
 import logging
 from ui.components.menus.list_menu_base import draw_scrollable_list_menu
-from ui.components.text.text_display import render_footer
 from models.st_wiki_manager import VIEW_MODE_CATEGORY, VIEW_MODE_LIST, VIEW_MODE_DETAIL
 
 logger = logging.getLogger(__name__)
@@ -208,7 +207,4 @@ def _draw_detail_view(screen, mgr, fonts, config_module, ui_scaler):
         scroll_surface = content_font.render(scroll_text, True, config_module.Theme.ACCENT)
         scroll_bottom = safe_rect.bottom - (ui_scaler.scale(25) if ui_scaler else 25)
         screen.blit(scroll_surface, (safe_rect.left + margin, scroll_bottom))
-
-    labels = config_module.get_control_labels()
-    footer_text = f"{labels['prev']}/{labels['next']}: Scroll | {labels['back']}: Back to list"
-    render_footer(screen, footer_text, fonts, config_module.Theme.FOREGROUND, screen_width, screen_height, ui_scaler=ui_scaler, content_center_x=safe_rect.centerx)
+    # No footer in detail view so scroll numbers don't overlap; simple navigation is self-explanatory.

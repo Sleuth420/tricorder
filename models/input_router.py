@@ -353,16 +353,20 @@ class InputRouter:
         return self.app_state.state_manager.return_to_menu()
 
     def _handle_media_player_input(self, action):
-        """Handle input for the media player view. PREV/NEXT = scroll list, SELECT = play selected track (or pause)."""
+        """Handle input for the media player view. When playing/paused: PREV/NEXT = prev/next track; else scroll list. SELECT = play/pause or select."""
         mgr = getattr(self.app_state, 'media_player_manager', None)
         if not mgr:
             return False
         if action == app_config.INPUT_ACTION_BACK:
-            # Handled in _handle_back_action
+            # Handled in _handle_back_action (long-press A/Left)
             return False
         if action == app_config.INPUT_ACTION_PREV:
+            if mgr.is_playing() or mgr.is_paused():
+                return mgr.prev_track()
             return mgr.navigate_prev()
         if action == app_config.INPUT_ACTION_NEXT:
+            if mgr.is_playing() or mgr.is_paused():
+                return mgr.next_track()
             return mgr.navigate_next()
         if action == app_config.INPUT_ACTION_SELECT:
             if mgr.is_browsing_seasons():

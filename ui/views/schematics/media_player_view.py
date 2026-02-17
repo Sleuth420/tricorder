@@ -63,8 +63,6 @@ def _draw_file_info_overlay(screen, mgr, fonts, config_module, ui_scaler):
     size_b = mgr.get_current_file_size()
     size_str = _format_size(size_b)
     screen.blit(font_tiny.render(f"Length: {length_str}  |  Size: {size_str}", True, config_module.Theme.ACCENT), (panel.x + 6, y))
-    y += font_tiny.get_height() + 4
-    screen.blit(font_tiny.render("Long-press D = file info", True, config_module.Theme.FOREGROUND), (panel.x + 6, y))
 
 
 def draw_media_player_view(screen, app_state, fonts, config_module, ui_scaler=None):
@@ -100,7 +98,7 @@ def draw_media_player_view(screen, app_state, fonts, config_module, ui_scaler=No
             selected_index = mgr.get_current_index() % max(1, len(menu_items))
             title = "Media Player"
             labels = config_module.get_control_labels()
-            footer_hint = f"< {labels['prev']}=Up | {labels['next']}=Down | {labels['select']}=Open season | {labels['back']}=Exit >"
+            footer_hint = f"< {labels['prev']}=Up | {labels['next']}=Down | {labels['select']}=Open | {labels['back']}=Exit >"
         else:
             track_list = mgr.get_track_list()
             if track_list:
@@ -114,7 +112,7 @@ def draw_media_player_view(screen, app_state, fonts, config_module, ui_scaler=No
                 selected_index = max(0, len(menu_items) - 1)
 
             labels = config_module.get_control_labels()
-            footer_hint = f"< {labels['prev']}=Prev | {labels['next']}=Next | {labels['select']}=Play/Pause | Long {labels['next']}=Info | {labels['back']}=Season list >"
+            footer_hint = f"< {labels['prev']}=Prev | {labels['next']}=Next | {labels['select']}=Play/Pause | Long {labels['next']}=Vol+ | Double {labels['next']}=Vol- | Long {labels['select']}=Mute | {labels['back']}=Back >"
             title = "Media Player"
             if not mgr.vlc_available:
                 footer_hint += "  (Install python-vlc for playback)"

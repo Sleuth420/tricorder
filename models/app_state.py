@@ -124,7 +124,8 @@ class AppState:
         self.network_manager = NetworkManager() # Instantiate NetworkManager
         self.system_info_manager = SystemInfoManager() # Instantiate SystemInfoManager
         self.media_player_manager = MediaPlayerManager(config_module) # Instantiate MediaPlayerManager
-        
+        self._media_last_next_release_time = None  # For double-tap D = volume down in media player
+
         # Debug overlay - initialized with screen dimensions
         from ui.components.debug import DebugOverlay
         self.debug_overlay = DebugOverlay(screen_width, screen_height)
@@ -410,16 +411,22 @@ class AppState:
                 if not self.input_manager.secret_combo_start_time:
                     action_name = result.get('action')
                     if action_name:
-                        # Mouse left release: if this was a long press, BACK was already handled in update();
-                        # do not also route PREV on release (would cause extra "up one menu item" action).
+                        press_dur = mouseup_event.get('press_duration')
+                        # Mouse left release: if this was a long press, BACK was already handled in update().
                         if (action_name == app_config.INPUT_ACTION_PREV and
                                 button == self.config.MOUSE_LEFT):
-                            press_dur = mouseup_event.get('press_duration')
                             if (press_dur is not None and
                                     press_dur >= getattr(self.config, 'INPUT_LONG_PRESS_DURATION', 2.0)):
                                 pass  # skip routing PREV on release after long press
                             else:
                                 state_changed_by_action = self._route_action(action_name) or state_changed_by_action
+                        # Mouse middle release in media player: if long press, mute was already handled; don't route SELECT
+                        elif (action_name == app_config.INPUT_ACTION_SELECT and
+                                button == self.config.MOUSE_MIDDLE and
+                                self.current_state == STATE_MEDIA_PLAYER and
+                                press_dur is not None and
+                                press_dur >= getattr(self.config, 'INPUT_LONG_PRESS_DURATION', 2.0)):
+                            pass
                         else:
                             state_changed_by_action = self._route_action(action_name) or state_changed_by_action
                 
@@ -430,15 +437,24 @@ class AppState:
         state_changed = False
         key_event = key_event or {}
 
-        # Long-press D (KEY_NEXT) in media player: show file info overlay; don't navigate on release
+        # KEY_NEXT (D) release in media player: long press = volume up (handled in update); double-tap = volume down; else navigate
         if self.current_state == STATE_MEDIA_PLAYER and (
             key == self.config.KEY_NEXT or action_name == app_config.INPUT_ACTION_NEXT
         ):
             next_dur = key_event.get("next_press_duration")
-            if next_dur is not None and next_dur >= getattr(self.config, "INPUT_LONG_PRESS_DURATION", 2.0):
+            now = time.time()
+            last_release = getattr(self, "_media_last_next_release_time", None)
+            # Double-tap: second tap within 0.5s and short press (< 0.3s) = volume down
+            if last_release is not None and (now - last_release) < 0.5 and (next_dur is not None and next_dur < 0.3):
                 if hasattr(self, "media_player_manager") and self.media_player_manager:
-                    self.media_player_manager.set_show_file_info(6.0)
+                    self.media_player_manager.volume_down()
+                self._media_last_next_release_time = now
                 return True
+            # Long press was already handled in update() as volume up; don't route NEXT
+            if next_dur is not None and next_dur >= getattr(self.config, "INPUT_LONG_PRESS_DURATION", 2.0):
+                self._media_last_next_release_time = now
+                return True
+            self._media_last_next_release_time = now
 
         if self.current_state == STATE_PONG_ACTIVE and self.active_pong_game:
             if self.active_pong_game.game_over and action_name == app_config.INPUT_ACTION_PREV:
@@ -689,12 +705,12 @@ class AppState:
                     # Consumed so KEYUP does not route PREV (would move selection up one)
                     self.input_manager.reset_long_press_timer(consumed_as_long_press=True)
                 
-        # Check D key long press: media player = file info overlay, 3D viewer = pause menu
+        # Check D key long press: media player = volume up, 3D viewer = pause menu
         if self.input_manager.check_next_key_long_press():
             if self.current_state == STATE_MEDIA_PLAYER:
                 if hasattr(self, "media_player_manager") and self.media_player_manager:
-                    self.media_player_manager.set_show_file_info(6.0)
-                # Don't reset timer here so KEYUP still gets duration and we don't navigate on release
+                    self.media_player_manager.volume_up()
+                self.input_manager.reset_next_key_timer()
                 state_changed = True
             elif (self.current_state == STATE_SCHEMATICS and 
                 not self.schematics_pause_menu_active):
@@ -702,6 +718,14 @@ class AppState:
                 if handled:
                     state_changed = True
                 self.input_manager.reset_next_key_timer()
+        
+        # Check mouse middle long press in media player = mute (duration only, no secret combo)
+        if (self.current_state == STATE_MEDIA_PLAYER and 
+            self.input_manager.check_mouse_middle_long_press_duration()):
+            if hasattr(self, "media_player_manager") and self.media_player_manager:
+                self.media_player_manager.toggle_mute()
+            self.input_manager.reset_mouse_middle_timer()
+            state_changed = True
         
         # Check zoom combos for schematics view (Return+A/D)
         if (self.current_state == STATE_SCHEMATICS and 

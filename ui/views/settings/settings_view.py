@@ -4,6 +4,7 @@
 import pygame
 import logging
 from ui.components.menus.list_menu_base import draw_simple_list_menu
+from utils.ui_scaler import UIScaler
 # import config as app_config # Not strictly needed if config_module is always passed and used
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ def draw_settings_view(screen, app_state, fonts, config_module, ui_scaler=None):
         ui_scaler (UIScaler, optional): UI scaling system for responsive design
     """
     # Add update available header if needed (respect safe area for curved bezel)
+    menu_ui_scaler = ui_scaler
     if hasattr(app_state, 'update_available') and app_state.update_available:
         screen.fill(config_module.Theme.BACKGROUND)
         w = ui_scaler.screen_width if ui_scaler else screen.get_width()
@@ -35,9 +37,11 @@ def draw_settings_view(screen, app_state, fonts, config_module, ui_scaler=None):
         screen.blit(header_surface, (header_inset, safe_rect.top + (ui_scaler.margin("small") if ui_scaler else 8)))
         content_rect = pygame.Rect(safe_rect.left, content_top, safe_rect.width, safe_rect.bottom - content_top)
         menu_screen = screen.subsurface(content_rect)
+        # Use a scaler for the content area so the list menu lays out for the reduced height
+        # instead of full screen (avoids pushed/cramped layout)
+        menu_ui_scaler = UIScaler(content_rect.width, content_rect.height, config_module)
     else:
         menu_screen = screen
-        content_rect = None
     
     # Get menu items and selection from app_state
     menu_items = app_state.get_current_menu_items()
@@ -52,5 +56,5 @@ def draw_settings_view(screen, app_state, fonts, config_module, ui_scaler=None):
         fonts=fonts,
         config_module=config_module,
         footer_hint=None,  # No footer for settings
-        ui_scaler=ui_scaler
+        ui_scaler=menu_ui_scaler
     ) 

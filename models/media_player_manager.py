@@ -53,6 +53,7 @@ class MediaPlayerManager:
         self._window_handle = None  # HWND (Windows) or X11 window ID (Linux) for embedding
         self._is_attached = False  # True when VLC is currently drawing into our window (avoid per-frame set_xwindow on Linux)
         self.show_file_info_until = 0.0  # Time until which to show file info overlay (long-press D)
+        self._volume_before_mute = None  # Restore volume when unmuting (VLC 0-100)
         self._lock = threading.Lock()
         self._vlc_init_failed = False  # Avoid repeated failed inits
         self.vlc_available = _VLC_AVAILABLE
@@ -428,6 +429,59 @@ class MediaPlayerManager:
             self.pause()
         else:
             self.play()
+
+    def get_volume(self):
+        """Current VLC volume 0-100. Returns 0 if unavailable."""
+        if not self._player:
+            return 0
+        try:
+            v = self._player.audio_get_volume()
+            return max(0, v) if v >= 0 else 0
+        except Exception:
+            return 0
+
+    def set_volume(self, level):
+        """Set VLC volume (0-100)."""
+        if not self._player:
+            return
+        try:
+            level = max(0, min(100, int(level)))
+            self._player.audio_set_volume(level)
+            if level > 0:
+                self._volume_before_mute = None
+        except Exception as e:
+            logger.debug("Media player: set_volume failed: %s", e)
+
+    def volume_up(self):
+        """Increase VLC volume by 10, cap at 100."""
+        v = self.get_volume()
+        self.set_volume(min(100, v + 10))
+        logger.debug("Media player: volume up -> %d", self.get_volume())
+
+    def volume_down(self):
+        """Decrease VLC volume by 10, floor at 0."""
+        v = self.get_volume()
+        self.set_volume(max(0, v - 10))
+        logger.debug("Media player: volume down -> %d", self.get_volume())
+
+    def toggle_mute(self):
+        """Toggle mute: if current volume is 0, restore previous; else save and set 0."""
+        if not self._player:
+            return
+        try:
+            v = self._player.audio_get_volume()
+            if v is None or v <= 0:
+                # Unmute: restore saved level or 70
+                restore = self._volume_before_mute if self._volume_before_mute is not None else 70
+                self._volume_before_mute = None
+                self._player.audio_set_volume(restore)
+                logger.info("Media player: unmuted -> %d", restore)
+            else:
+                self._volume_before_mute = v
+                self._player.audio_set_volume(0)
+                logger.info("Media player: muted")
+        except Exception as e:
+            logger.debug("Media player: toggle_mute failed: %s", e)
 
     def stop(self):
         """Stop playback and release current media. Detach VLC so track list is visible."""

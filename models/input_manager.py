@@ -416,10 +416,10 @@ class InputManager:
     def check_mouse_middle_long_press(self, current_state):
         """
         Check if mouse middle button has been held long enough for secret menu.
-        
+
         Args:
             current_state (str): Current application state
-            
+
         Returns:
             bool: True if mouse middle long press conditions are met
         """
@@ -430,6 +430,16 @@ class InputManager:
         current_time = time.time()
         duration = current_time - self.mouse_middle_press_start_time
         return duration >= self.config.CURRENT_SECRET_COMBO_DURATION
+
+    def check_mouse_middle_long_press_duration(self):
+        """
+        Check if mouse middle has been held at least INPUT_LONG_PRESS_DURATION.
+        Used for media player mute (no MENU/secret combo check).
+        """
+        if not self.mouse_middle_press_start_time:
+            return False
+        hold_duration = time.time() - self.mouse_middle_press_start_time
+        return hold_duration >= self.config.INPUT_LONG_PRESS_DURATION
         
     def reset_mouse_left_timer(self, consumed_as_long_press=False):
         """Reset the mouse left press timer. If consumed_as_long_press, next MOUSE_LEFT release will report long duration so PREV is skipped."""

@@ -59,8 +59,8 @@ class LoadingScreen:
             
             self.bar_height = max(8, self.ui_scaler.scale(14))
             
-            # Percentage text just under the bar; detail text below that
-            self.percent_y = self.bar_y + self.bar_height + self.ui_scaler.margin("small")
+            # Percentage text clearly below the bar (medium gap so it doesn't overlap)
+            self.percent_y = self.bar_y + self.bar_height + self.ui_scaler.margin("medium") + self.ui_scaler.scale(4)
             self.detail_y = self.percent_y + self.ui_scaler.scale(getattr(self.config, 'FONT_SIZE_MEDIUM', 24)) + self.ui_scaler.margin("medium")
             
             # Responsive font sizes from config (single source of truth)
@@ -84,7 +84,7 @@ class LoadingScreen:
             self.bar_height = max(8, int(14 * scale))
             self.bar_x = margin
             self.bar_y = max(60, int(110 * scale))
-            self.percent_y = self.bar_y + self.bar_height + max(2, int(6 * scale))
+            self.percent_y = self.bar_y + self.bar_height + max(10, int(14 * scale))  # Clear gap below bar
             self.detail_y = self.percent_y + max(12, int(24 * scale)) + margin
             large = getattr(self.config, 'FONT_SIZE_LARGE', 30)
             medium = getattr(self.config, 'FONT_SIZE_MEDIUM', 24)
@@ -180,22 +180,22 @@ class LoadingScreen:
             screen.blit(detail_surface, detail_rect)
     
     def _draw_progress_bar(self, screen):
-        """Draw the progress bar with responsive sizing."""
-        # Progress bar background
+        """Draw the progress bar with responsive sizing (matches main loading screen style)."""
+        # Outer border (green/foreground)
+        border = 2
+        if self.ui_scaler:
+            border = max(1, self.ui_scaler.scale(2))
+        bar_bg_rect = pygame.Rect(self.bar_x - border, self.bar_y - border,
+                                  self.bar_width + border * 2, self.bar_height + border * 2)
+        pygame.draw.rect(screen, self.config.Theme.FOREGROUND, bar_bg_rect)
+        # Inner background (dark)
         bar_rect = pygame.Rect(self.bar_x, self.bar_y, self.bar_width, self.bar_height)
-        
-        # Draw background with good contrast
-        pygame.draw.rect(screen, self.config.Theme.GRAPH_BORDER, bar_rect)
-        
-        # Draw progress fill
+        pygame.draw.rect(screen, (20, 20, 20), bar_rect)
+        # Progress fill
         if self.progress > 0:
             fill_width = int(self.bar_width * self.progress)
             fill_rect = pygame.Rect(self.bar_x, self.bar_y, fill_width, self.bar_height)
             pygame.draw.rect(screen, self.config.Theme.ACCENT, fill_rect)
-        
-        # Draw border for definition with responsive thickness
-        border_thickness = self.ui_scaler.scale(2) if self.ui_scaler else 2
-        pygame.draw.rect(screen, self.config.Theme.FOREGROUND, bar_rect, border_thickness)
 
 class LoadingOperation:
     """Context manager for loading operations with progress tracking."""

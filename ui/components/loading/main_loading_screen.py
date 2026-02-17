@@ -143,7 +143,7 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
         spacing_after_logo = ui_scaler.margin("large")
         progress_spacing = ui_scaler.margin("large")
         stage_spacing = ui_scaler.margin("large")
-        lines_spacing = ui_scaler.margin("large")
+        lines_spacing = ui_scaler.margin("medium")  # Tighter under "matrices" so no blank gap
         bottom_margin = ui_scaler.margin("xlarge")
     else:
         screen_w = screen.get_width()
@@ -155,7 +155,7 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
         spacing_after_logo = max(30, screen_h // 20)
         progress_spacing = max(25, screen_h // 24)
         stage_spacing = max(25, screen_h // 24)
-        lines_spacing = max(20, screen_h // 30)
+        lines_spacing = max(8, screen_h // 40)  # Tighter under "matrices" so no blank gap
         bottom_margin = max(40, screen_h // 15)
     
     # Get font for text measurements (used for centering and drawing)
@@ -178,7 +178,6 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
     if lines_surface:
         content_below_logo += lines_spacing + lines_surface.get_height()
     total_content_height = logo_rect.height + spacing_after_logo + content_below_logo
-    # Center the entire block vertically in the safe area
     content_top = safe_rect.top + max(0, (safe_rect.height - total_content_height) // 2)
     logo_rect.midtop = (center_x, content_top)
     

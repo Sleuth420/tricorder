@@ -150,6 +150,10 @@ class InputRouter:
             return self._handle_schematics_category_back()
         elif current_state == STATE_MEDIA_PLAYER:
             mgr = getattr(self.app_state, 'media_player_manager', None)
+            if mgr and mgr.is_pause_menu_active():
+                # Close pause menu; stay paused (VLC re-attached, position preserved)
+                mgr.close_pause_menu_stay_paused()
+                return True
             if mgr and not mgr.is_browsing_seasons():
                 # In episode list: back goes to season list
                 mgr.clear_season()
@@ -374,20 +378,43 @@ class InputRouter:
         return self.app_state.state_manager.return_to_menu()
 
     def _handle_media_player_input(self, action):
-        """Handle input for the media player view. When playing/paused: PREV/NEXT = prev/next track; else scroll list. SELECT = play/pause or select."""
+        """Handle input: list = navigate; playing = A/D volume; paused + menu = navigate menu / select; SELECT = play or open pause menu."""
         mgr = getattr(self.app_state, 'media_player_manager', None)
         if not mgr:
             return False
         if action == app_config.INPUT_ACTION_BACK:
             # Handled in _handle_back_action (long-press A/Left)
             return False
+
+        # Pause menu is open: PREV/NEXT = menu navigation, SELECT = activate item
+        if mgr.is_pause_menu_active():
+            if action == app_config.INPUT_ACTION_PREV:
+                return mgr.pause_menu_prev()
+            if action == app_config.INPUT_ACTION_NEXT:
+                return mgr.pause_menu_next()
+            if action == app_config.INPUT_ACTION_SELECT:
+                return mgr.activate_pause_menu_item()
+            return False
+
+        # When playing or paused (menu not open): A = volume down, D = volume up
+        if mgr.is_playing() or mgr.is_paused():
+            if action == app_config.INPUT_ACTION_PREV:
+                mgr.volume_down()
+                return True
+            if action == app_config.INPUT_ACTION_NEXT:
+                mgr.volume_up()
+                return True
+            if action == app_config.INPUT_ACTION_SELECT:
+                # Pause and show pause menu (position preserved)
+                mgr.pause()
+                mgr.show_pause_menu()
+                return True
+            return False
+
+        # Track list (not playing): PREV/NEXT = list, SELECT = play or open season
         if action == app_config.INPUT_ACTION_PREV:
-            if mgr.is_playing() or mgr.is_paused():
-                return mgr.prev_track()
             return mgr.navigate_prev()
         if action == app_config.INPUT_ACTION_NEXT:
-            if mgr.is_playing() or mgr.is_paused():
-                return mgr.next_track()
             return mgr.navigate_next()
         if action == app_config.INPUT_ACTION_SELECT:
             if mgr.is_browsing_seasons():
@@ -395,10 +422,10 @@ class InputRouter:
                 if folder:
                     mgr.set_season(folder)
                 return True
-            # Episode list: play selected track or toggle play/pause if already loaded
             idx = mgr.get_current_index()
             if idx == mgr.get_playing_index() and (mgr.is_playing() or mgr.is_paused()):
-                mgr.toggle_play_pause()
+                mgr.pause()
+                mgr.show_pause_menu()
             else:
                 mgr.select_track(idx)
                 mgr.play()

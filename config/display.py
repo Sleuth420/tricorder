@@ -31,9 +31,9 @@ MEDIA_FOLDER = "assets/media"  # Default folder (overridden by Logs menu source)
 MEDIA_EXTENSIONS = (".mp3", ".wav", ".ogg", ".mp4", ".avi", ".mov")  # Audio and video (VLC must be installed)
 # Logs menu sources: TV shows (season subdirs 1, 2, 3, Secret etc), movies, captains logs (MP3)
 MEDIA_SOURCE_FOLDERS = {
-    "tv_show": "media/TV Shows/Star Trek",
-    "movies": "media/Movies",
-    "captains_logs": "media/Logs/Captain",
+    "tv_show": "assets/media/TV Shows/Star Trek",
+    "movies": "assets/media/Movies",
+    "captains_logs": "assets/media/Logs/Captain",
 }
 
 # -- 3D Schematics Zoom Settings --

@@ -156,8 +156,8 @@ class InputRouter:
                 # Stop playback so track list is visible; next Back goes to season list or exit
                 mgr.stop()
                 return True
-            if mgr and not mgr.is_browsing_seasons():
-                # In episode list: back goes to season list
+            if mgr and mgr.get_selected_season_folder():
+                # In episode list (season selected): back goes to season list
                 mgr.clear_season()
                 return True
             if mgr:
@@ -410,7 +410,7 @@ class InputRouter:
                 return True
             return False
 
-        # Track list (not playing): PREV/NEXT = list, SELECT = play or open season
+        # Track list (not playing): PREV/NEXT = list, SELECT = play or open season or Back (when no media)
         if action == app_config.INPUT_ACTION_PREV:
             return mgr.navigate_prev()
         if action == app_config.INPUT_ACTION_NEXT:
@@ -421,6 +421,10 @@ class InputRouter:
                 if folder:
                     mgr.set_season(folder)
                 return True
+            # When no media, index 1 is the "Back" item
+            if not mgr.get_track_list() and mgr.get_current_index() == 1:
+                mgr.on_exit_view()
+                return self.app_state.state_manager.return_to_previous() or self.app_state.state_manager.return_to_menu()
             mgr.select_track(mgr.get_current_index())
             mgr.play()
             return True

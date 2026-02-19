@@ -37,7 +37,8 @@ class MediaPlayerManager:
 
     def __init__(self, config):
         self.config = config
-        self.media_folder = getattr(config, "MEDIA_FOLDER", "assets/media")
+        self._project_root = self._get_project_root()
+        self.media_folder = self._resolve_media_path(getattr(config, "MEDIA_FOLDER", "assets/media"))
         self.extensions = tuple(
             getattr(config, "MEDIA_EXTENSIONS", (".mp3", ".wav", ".ogg", ".mp4"))
         )
@@ -67,6 +68,22 @@ class MediaPlayerManager:
         self._scan_season_folders()
         self._refresh_track_list()
 
+    def _get_project_root(self):
+        """Project root (directory containing config/). Used to resolve relative media paths."""
+        try:
+            config_file = getattr(self.config, "__file__", None)
+            if config_file:
+                return os.path.dirname(os.path.dirname(os.path.abspath(config_file)))
+        except Exception:
+            pass
+        return os.getcwd()
+
+    def _resolve_media_path(self, path):
+        """Resolve path relative to project root so media/Logs/Captain works regardless of cwd."""
+        if not path or os.path.isabs(path):
+            return path or ""
+        return os.path.normpath(os.path.join(self._project_root, path))
+
     def set_media_source(self, media_source):
         """
         Switch to a Logs source folder (tv_show, movies, captains_logs).
@@ -74,10 +91,11 @@ class MediaPlayerManager:
         """
         folders = getattr(self.config, "MEDIA_SOURCE_FOLDERS", None)
         if folders and media_source and media_source in folders:
-            self.media_folder = folders[media_source]
+            self.media_folder = self._resolve_media_path(folders[media_source])
             logger.info("Media player: source=%s, folder=%s", media_source, self.media_folder)
         else:
-            self.media_folder = getattr(self.config, "MEDIA_FOLDER", "assets/media")
+            self.media_folder = self._resolve_media_path(
+                getattr(self.config, "MEDIA_FOLDER", "assets/media"))
         self._current_season_folder = None
         self._scan_season_folders()
         self._refresh_track_list()
@@ -246,10 +264,14 @@ class MediaPlayerManager:
         """
         Sort key that splits the filename on digit groups so 'Episode 2' comes before 'Episode 10'.
         Used as tie-breaker when SxxEyy is absent or equal.
+        Each part is (0, n) for numbers or (1, s) for strings so we never compare str to int.
         """
         base = os.path.basename(path).lower()
         parts = re.split(r"(\d+)", base)
-        return tuple(int(p) if p.isdigit() else p for p in parts if p)
+        return tuple(
+            (0, int(p)) if p.isdigit() else (1, p)
+            for p in parts if p
+        )
 
     @staticmethod
     def _season_folder_sort_key(name):
@@ -565,7 +587,9 @@ class MediaPlayerManager:
             self.current_index = (self.current_index + 1) % len(self._season_folders)
             return True
         if not self.track_list:
-            return False
+            # Empty state: two virtual items (no-media message, Back)
+            self.current_index = (self.current_index + 1) % 2
+            return True
         self.current_index = (self.current_index + 1) % len(self.track_list)
         return True
 
@@ -577,7 +601,9 @@ class MediaPlayerManager:
             self.current_index = (self.current_index - 1) % len(self._season_folders)
             return True
         if not self.track_list:
-            return False
+            # Empty state: two virtual items (no-media message, Back)
+            self.current_index = (self.current_index - 1) % 2
+            return True
         self.current_index = (self.current_index - 1) % len(self.track_list)
         return True
 

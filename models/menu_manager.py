@@ -179,18 +179,12 @@ class MenuManager:
         ]
 
     def _generate_logs_menu_items(self):
-        """Generates the Logs submenu: TV show | movies | captains logs | Back."""
+        """Generates the Logs submenu: TV show | captains logs | Back."""
         return [
             MenuItem(
                 name="TV show",
                 target_state=STATE_MEDIA_PLAYER,
                 data={"media_source": "tv_show"},
-                color_key="SIDEBAR_SYSTEM"
-            ),
-            MenuItem(
-                name="movies",
-                target_state=STATE_MEDIA_PLAYER,
-                data={"media_source": "movies"},
                 color_key="SIDEBAR_SYSTEM"
             ),
             MenuItem(

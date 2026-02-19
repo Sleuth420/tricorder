@@ -12,9 +12,9 @@ ENABLE_MOCK_SENSOR_DYNAMICS = False
 SENSE_HAT_LED_ENABLED = True
 
 # Display rotation for the 8x8 matrix (and joystick coordinate mapping). Use when the Pi is mounted
-# in a different orientation. Values: 0, 90, 180, 270 (degrees). For vertical mount with joystick
-# at the top, use 180 so animations and "up" align with the physical top.
-SENSE_HAT_DISPLAY_ROTATION = 180
+# in a different orientation. Values: 0, 90, 180, 270 (degrees). For horizontal mount, 90 or 270
+# flips which way is "up" so the display matches the physical orientation.
+SENSE_HAT_DISPLAY_ROTATION = 270
 
 # Lid / matrix on when "open": the Sense HAT has no dedicated ambient light sensor, but on Sense HAT
 # *v2* the colour sensor provides RGBC (red, green, blue, clear); the "clear" channel is ambient

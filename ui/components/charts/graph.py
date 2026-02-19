@@ -152,8 +152,10 @@ def draw_graph(screen, history, rect, color, min_val=None, max_val=None, sensor_
     if len(points_to_draw) >= 2:
         pygame.draw.lines(screen, color, False, points_to_draw, line_width)
 
+    # Green dots at each data point (radius >= 2 so they stay visible when scaled)
+    radius = max(2, int(point_size))
     for point_x, point_y in points_to_draw:
-        pygame.draw.circle(screen, color, (int(point_x), int(point_y)), point_size)
+        pygame.draw.circle(screen, color, (int(point_x), int(point_y)), radius)
 
     # logger.debug(f"Drew graph for {sensor_name} with {len(valid_history)} points. Range: {y_min:.2f}-{y_max:.2f}")
 

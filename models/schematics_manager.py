@@ -105,15 +105,16 @@ class SchematicsManager:
         self.zoom_step = config_module.SCHEMATICS_ZOOM_STEP
         self.zoom_fast_step = config_module.SCHEMATICS_ZOOM_FAST_STEP
         
-        # Available schematics models
+        # Available schematics models (all defined here; only SCHEMATICS_VISIBLE_KEYS are shown in Ship menu)
         self.schematics_models = {
+            'ncc_1701': self._generate_ncc_1701_model(),
             'worf': self._generate_worf_model(),
             'apollo_1570': self._generate_apollo_model(),
             'apollo_1701_refit': self._generate_apollo_1701_refit_model()
         }
         
-        # Current active model
-        self.current_schematics_model = 'worf'
+        # Current active model (default to the visible ship)
+        self.current_schematics_model = 'ncc_1701'
         
         # Initialize renderers
         self.wireframe_renderer = Simple3DRenderer(screen_width, screen_height)
@@ -140,8 +141,21 @@ class SchematicsManager:
     
     # UIScaler removed - UI concerns handled by display_manager.py
     
+    def _generate_ncc_1701_model(self):
+        """Generate NCC-1701 Enterprise model definition (from assets/ship)."""
+        return {
+            "name": "NCC-1701 Enterprise",
+            "type": "opengl_model",
+            "model_key": "ncc_1701",
+            "file_path": "assets/ship/NCC Enterprise/NCC-1701 MESH.obj",
+            "implemented": True,
+            "vertices": [],
+            "edges": [],
+            "description": "Constitution-class starship"
+        }
+
     def _generate_worf_model(self):
-        """Generate Worf 3D model definition."""
+        """Generate Worf 3D model definition (not shown in Ship menu)."""
         return {
             "name": "Worf",
             "type": "opengl_model",

@@ -132,39 +132,30 @@ class MenuManager:
         return items
 
     def _generate_schematics_menu_items(self):
-        """Generates the schematics selection menu items."""
-        items = [
-            MenuItem(
-                name="Worf", 
+        """Generates the Ship submenu items (only models in config.schematics.SCHEMATICS_VISIBLE_KEYS)."""
+        from config import schematics as schematics_config
+        items = []
+        for i, model_key in enumerate(schematics_config.SCHEMATICS_VISIBLE_KEYS, start=1):
+            cfg = schematics_config.SCHEMATICS_CONFIG.get(model_key, {})
+            name = cfg.get('name', model_key)
+            items.append(MenuItem(
+                name=name,
                 target_state=STATE_SCHEMATICS,
-                data={"schematics_model": "worf", "schematics_id": 1},
+                data={"schematics_model": model_key, "schematics_id": i},
                 color_key="SIDEBAR_SCHEMATICS"
-            ),
-            MenuItem(
-                name="Apollo NCC-1570", 
-                target_state=STATE_SCHEMATICS,
-                data={"schematics_model": "apollo_1570", "schematics_id": 2},
-                color_key="SIDEBAR_SCHEMATICS"
-            ),
-            MenuItem(
-                name="Apollo NCC-1701 Refit", 
-                target_state=STATE_SCHEMATICS,
-                data={"schematics_model": "apollo_1701_refit", "schematics_id": 3},
-                color_key="SIDEBAR_SCHEMATICS"
-            ),
-            MenuItem(
-                name="<- Back", 
-                target_state=STATE_MENU,
-                color_key="SIDEBAR_SETTINGS"
-            )
-        ]
+            ))
+        items.append(MenuItem(
+            name="<- Back",
+            target_state=STATE_MENU,
+            color_key="SIDEBAR_SETTINGS"
+        ))
         return items
 
     def _generate_schematics_category_menu_items(self):
-        """Generates the specs category menu: 3D Models | Media Player | Star Trek Wiki | Back."""
+        """Generates the specs category menu: Ship | Media Player | Star Trek Wiki | Back."""
         return [
             MenuItem(
-                name="3D Models",
+                name="Ship",
                 target_state=STATE_SCHEMATICS_MENU,
                 color_key="SIDEBAR_SCHEMATICS"
             ),

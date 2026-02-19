@@ -2,7 +2,16 @@
 # Schematics configuration for 3D models - handles model-specific settings
 
 # Model-specific configuration for initial orientations and behavior
+# Models listed here but not in SCHEMATICS_VISIBLE_KEYS are not shown in the Ship menu (e.g. worf, apollo_1570, apollo_1701_refit).
 SCHEMATICS_CONFIG = {
+    'ncc_1701': {
+        'name': 'NCC-1701 Enterprise',
+        'initial_pitch': 0.0,
+        'initial_roll': 0.0,
+        'initial_yaw': 90.0,
+        'description': 'Constitution-class starship',
+        'type': 'spaceship'
+    },
     'worf': {
         'name': 'Worf',
         'initial_pitch': -90.0,  # Face camera (front view)
@@ -14,7 +23,7 @@ SCHEMATICS_CONFIG = {
     'apollo_1570': {
         'name': 'Apollo NCC-1570',
         'initial_pitch': 0.0,    # Keep horizontal
-        'initial_roll': 0.0, 
+        'initial_roll': 0.0,
         'initial_yaw': 90.0,     # Rotate to side view like arrow
         'description': 'Spaceship - side profile view',
         'type': 'spaceship'
@@ -28,6 +37,9 @@ SCHEMATICS_CONFIG = {
         'type': 'spaceship'
     }
 }
+
+# Model keys shown in the Ship submenu (others remain in config but are not rendered in the UI).
+SCHEMATICS_VISIBLE_KEYS = ('ncc_1701',)
 
 # Sensor configuration for 3D viewer (separate from other app sensor usage)
 SENSOR_3D_CONFIG = {

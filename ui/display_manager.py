@@ -186,13 +186,12 @@ def _needs_opengl_mode(app_state):
         return False
         
     if app_state.current_state == STATE_SCHEMATICS:
-        # Check if current schematics model needs OpenGL rendering
-        current_schematics_info = app_state.schematics_manager.get_current_schematics_info()
-        if current_schematics_info:
-            model_key = current_schematics_info.get('model_key')
-            # OpenGL models need OpenGL mode
-            if model_key in ['worf', 'apollo_1570', 'apollo_1701_refit']:
-                return True
+        # Use OpenGL for any opengl_model type (e.g. ship, legacy models)
+        current_model = app_state.schematics_manager.schematics_models.get(
+            app_state.schematics_manager.current_schematics_model
+        )
+        if current_model and current_model.get('type') == 'opengl_model':
+            return True
     return False
 
 def _switch_display_mode_if_needed(app_state):

@@ -31,10 +31,10 @@ def draw_schematics_view(screen, app_state, fonts, config_module, ui_scaler=None
             logger.debug(f"3D Viewer: Schematics model mismatch, correcting to '{schematics_model_key}'")
             app_state.schematics_manager.set_schematics_model(schematics_model_key)
     
-    # Check if we're using OpenGL mode
+    # Check if we're using OpenGL mode (any opengl_model type uses internal UI)
     current_schematics_info = app_state.schematics_manager.get_current_schematics_info()
-    is_opengl_mode = (current_schematics_info and 
-                     current_schematics_info.get('model_key') in ['worf', 'apollo_1570', 'apollo_1701_refit'])
+    current_model = app_state.schematics_manager.schematics_models.get(app_state.schematics_manager.current_schematics_model)
+    is_opengl_mode = current_model and current_model.get('type') == 'opengl_model'
     
     # Update rotation from sensors only if in auto mode
     if app_state.schematics_manager.auto_rotation_mode:

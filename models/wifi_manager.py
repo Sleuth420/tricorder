@@ -23,6 +23,8 @@ WIFI_ACTION_BROWSE_NETWORKS = "WIFI_BROWSE_NETWORKS"
 WIFI_ACTION_BACK_TO_WIFI = "WIFI_BACK_TO_WIFI"
 WIFI_ACTION_CONNECT_TO_NETWORK = "WIFI_CONNECT_TO_NETWORK"
 WIFI_ACTION_ENTER_PASSWORD = "WIFI_ENTER_PASSWORD"
+WIFI_ACTION_DISCONNECT = "WIFI_DISCONNECT"
+WIFI_ACTION_FORGET_NETWORK = "WIFI_FORGET_NETWORK"
 
 
 
@@ -40,11 +42,7 @@ class WifiManager:
         self.wifi_status_str = "Unknown"  # e.g., "Enabled", "Disabled", "Unknown", "Error"
         self.last_known_enabled_state = None # True, False, or None
         self.wifi_interface_name = self._determine_wifi_interface_name()
-        self.wifi_options = [
-            {"name": f"Wi-Fi Status: {self.wifi_status_str} (Toggle)", "action": WIFI_ACTION_TOGGLE, "status_key": "wifi_status"},
-            {"name": "Browse Networks", "action": WIFI_ACTION_BROWSE_NETWORKS},
-            {"name": "<- Back to Settings", "action": WIFI_ACTION_BACK_TO_SETTINGS}
-        ]
+        self.wifi_options = []  # Built dynamically in _update_wifi_options_display
         self.selected_option_index = 0
         
         # Network browsing state
@@ -62,7 +60,91 @@ class WifiManager:
         self.scan_results_queue = queue.Queue()  # Thread-safe queue for results
         self.pending_completion_callback = None
         
+        # Forget-network list state
+        self.forget_list_selected_index = 0
+        
         self.update_wifi_status() # Get initial status
+
+    def get_current_connection_ssid(self):
+        """
+        Get the SSID/name of the currently connected WiFi network, if any.
+        Returns:
+            str or None: SSID when connected, None when disconnected or on error.
+        """
+        system = platform.system()
+        try:
+            if system == "Linux":
+                # nmcli -t -f NAME connection show --active (one line per active connection)
+                result = subprocess.run(
+                    ['nmcli', '-t', '-f', 'NAME,TYPE', 'connection', 'show', '--active'],
+                    capture_output=True, text=True, timeout=5
+                )
+                if result.returncode != 0 or not result.stdout.strip():
+                    return None
+                for line in result.stdout.strip().split('\n'):
+                    parts = line.split(':', 1)
+                    if len(parts) >= 2 and '802-11-wireless' in parts[1]:
+                        return parts[0].strip() or None
+                return None
+            elif system == "Windows":
+                # netsh wlan show interfaces -> find SSID in the interface that is connected
+                result = subprocess.run(
+                    ['netsh', 'wlan', 'show', 'interfaces'],
+                    capture_output=True, text=True, timeout=5,
+                    creationflags=subprocess.CREATE_NO_WINDOW
+                )
+                if result.returncode != 0:
+                    return None
+                for line in result.stdout.splitlines():
+                    if 'SSID' in line and ':' in line and 'BSSID' not in line:
+                        parts = line.split(':', 1)
+                        if len(parts) == 2:
+                            ssid = parts[1].strip()
+                            if ssid and ssid != "":
+                                return ssid
+                return None
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as e:
+            logger.debug(f"Could not get current connection: {e}")
+            return None
+        return None
+
+    def disconnect_from_current(self):
+        """
+        Disconnect from the current WiFi network (radio stays on).
+        Returns:
+            bool: True if disconnect was attempted successfully.
+        """
+        system = platform.system()
+        try:
+            if system == "Linux":
+                if not self.wifi_interface_name:
+                    return False
+                result = subprocess.run(
+                    ['nmcli', 'device', 'disconnect', self.wifi_interface_name],
+                    capture_output=True, text=True, timeout=10
+                )
+                if result.returncode == 0:
+                    logger.info("Disconnected from WiFi")
+                    self.update_wifi_status()
+                    return True
+                logger.warning(f"Disconnect failed: {result.stderr.strip()}")
+                return False
+            elif system == "Windows":
+                result = subprocess.run(
+                    ['netsh', 'wlan', 'disconnect'],
+                    capture_output=True, text=True, timeout=10,
+                    creationflags=subprocess.CREATE_NO_WINDOW
+                )
+                if result.returncode == 0:
+                    logger.info("Disconnected from WiFi")
+                    self.update_wifi_status()
+                    return True
+                logger.warning(f"Disconnect failed: {result.stderr.strip()}")
+                return False
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as e:
+            logger.error(f"Disconnect error: {e}")
+            return False
+        return False
 
     def _determine_wifi_interface_name(self):
         """Determines the Wi-Fi interface name based on the OS using subprocess."""
@@ -287,12 +369,20 @@ class WifiManager:
 
 
     def _update_wifi_options_display(self):
-        """Updates the name of the toggle option based on current status string."""
-        for option in self.wifi_options:
-            if option["action"] == WIFI_ACTION_TOGGLE:
-                option["name"] = f"Wi-Fi: {self.wifi_status_str} (Toggle)"
-                break
-        logger.debug(f"Updated WiFi display option to: {self.wifi_options[0]['name']}")
+        """Build menu options: Toggle, Disconnect (if connected), Browse, Forget, Back."""
+        options = [
+            {"name": f"Wi-Fi: {self.wifi_status_str} (Toggle)", "action": WIFI_ACTION_TOGGLE, "status_key": "wifi_status"},
+        ]
+        current_ssid = self.get_current_connection_ssid()
+        if current_ssid:
+            display_ssid = current_ssid[:16] + "..." if len(current_ssid) > 16 else current_ssid
+            options.append({"name": f"Disconnect from {display_ssid}", "action": WIFI_ACTION_DISCONNECT})
+        options.append({"name": "Browse Networks", "action": WIFI_ACTION_BROWSE_NETWORKS})
+        options.append({"name": "Forget a network", "action": WIFI_ACTION_FORGET_NETWORK})
+        options.append({"name": "<- Back to Settings", "action": WIFI_ACTION_BACK_TO_SETTINGS})
+        self.wifi_options = options
+        self.selected_option_index = min(self.selected_option_index, max(0, len(self.wifi_options) - 1))
+        logger.debug(f"Updated WiFi options: {len(self.wifi_options)} items")
 
 
     def handle_input(self, action_from_app_state):
@@ -415,6 +505,23 @@ class WifiManager:
         
         try:
             if system == "Linux":
+                # Populate saved (known) networks so is_saved is correct
+                try:
+                    saved_result = subprocess.run(
+                        ['nmcli', '-t', '-f', 'NAME,TYPE', 'connection', 'show'],
+                        capture_output=True, text=True, timeout=5
+                    )
+                    if saved_result.returncode == 0 and saved_result.stdout.strip():
+                        self.saved_networks = []
+                        for line in saved_result.stdout.strip().split('\n'):
+                            parts = line.split(':', 1)
+                            if len(parts) >= 2 and '802-11-wireless' in parts[1]:
+                                name = parts[0].strip()
+                                if name and name not in self.saved_networks:
+                                    self.saved_networks.append(name)
+                        logger.debug(f"Linux saved networks: {len(self.saved_networks)}")
+                except Exception as e:
+                    logger.debug(f"Could not list saved connections: {e}")
                 # Use nmcli to scan and list networks
                 cmd_list = ['nmcli', '-t', '-f', 'SSID,SIGNAL,SECURITY,IN-USE', 'device', 'wifi', 'list']
             elif system == "Windows":
@@ -684,6 +791,52 @@ class WifiManager:
         # Sort by signal strength (strongest first)
         self.available_networks.sort(key=lambda x: x['signal_strength'], reverse=True)
     
+    def forget_network(self, ssid):
+        """
+        Remove a saved WiFi network (forget credentials).
+        Args:
+            ssid (str): The SSID/profile name to remove.
+        Returns:
+            bool: True if the profile was removed.
+        """
+        if not ssid or not ssid.strip():
+            logger.error("Cannot forget: SSID is empty")
+            return False
+        ssid = ssid.strip()
+        system = platform.system()
+        try:
+            if system == "Linux":
+                # Connection name in NM is often the SSID
+                result = subprocess.run(
+                    ['nmcli', 'connection', 'delete', 'id', ssid],
+                    capture_output=True, text=True, timeout=10
+                )
+                if result.returncode == 0:
+                    if ssid in self.saved_networks:
+                        self.saved_networks.remove(ssid)
+                    logger.info(f"Forget network '{ssid}' succeeded")
+                    return True
+                logger.warning(f"Forget failed for '{ssid}': {result.stderr.strip()}")
+                return False
+            elif system == "Windows":
+                result = subprocess.run(
+                    ['netsh', 'wlan', 'delete', 'profile', f'name="{ssid}"'],
+                    capture_output=True, text=True, timeout=10,
+                    creationflags=subprocess.CREATE_NO_WINDOW
+                )
+                if result.returncode == 0:
+                    if ssid in self.saved_networks:
+                        self.saved_networks.remove(ssid)
+                    logger.info(f"Forget network '{ssid}' succeeded")
+                    return True
+                logger.warning(f"Forget failed for '{ssid}': {result.stderr.strip()}")
+                return False
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as e:
+            logger.error(f"Forget error for '{ssid}': {e}")
+            return False
+        logger.warning(f"Forget not supported on platform: {system}")
+        return False
+
     def connect_to_saved_network(self, ssid):
         """
         Connect to a saved WiFi network.
@@ -734,6 +887,38 @@ class WifiManager:
             
         return False
     
+    def refresh_saved_networks(self):
+        """Refresh the list of saved/known networks (no scan). Call before showing Forget or Saved list."""
+        system = platform.system()
+        try:
+            if system == "Linux":
+                result = subprocess.run(
+                    ['nmcli', '-t', '-f', 'NAME,TYPE', 'connection', 'show'],
+                    capture_output=True, text=True, timeout=5
+                )
+                if result.returncode == 0 and result.stdout.strip():
+                    self.saved_networks = []
+                    for line in result.stdout.strip().split('\n'):
+                        parts = line.split(':', 1)
+                        if len(parts) >= 2 and '802-11-wireless' in parts[1]:
+                            name = parts[0].strip()
+                            if name and name not in self.saved_networks:
+                                self.saved_networks.append(name)
+            elif system == "Windows":
+                result = subprocess.run(
+                    ['netsh', 'wlan', 'show', 'profiles'],
+                    capture_output=True, text=True, timeout=5,
+                    creationflags=subprocess.CREATE_NO_WINDOW
+                )
+                if result.returncode == 0:
+                    self._parse_windows_saved_networks(result.stdout)
+        except Exception as e:
+            logger.debug(f"Refresh saved networks: {e}")
+
+    def get_saved_networks(self):
+        """Return a copy of the saved network names (call refresh_saved_networks first if needed)."""
+        return list(self.saved_networks)
+
     def get_available_networks(self):
         """Get the list of available networks from last scan."""
         return self.available_networks

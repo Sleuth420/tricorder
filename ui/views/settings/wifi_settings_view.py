@@ -242,4 +242,64 @@ def draw_wifi_networks_view(screen, app_state, fonts, config_module, ui_scaler=N
     
     # Footer hint (consistent with other settings list views)
     labels = config_module.get_control_labels()
-    render_footer(screen, f"{labels.get('select', 'Select')} to connect · {labels.get('back', 'Back')} to Wi‑Fi Settings", fonts, config_module.Theme.FOREGROUND, screen_width, screen_height, ui_scaler=ui_scaler) 
+    render_footer(screen, f"{labels.get('select', 'Select')} to connect · {labels.get('back', 'Back')} to Wi‑Fi Settings", fonts, config_module.Theme.FOREGROUND, screen_width, screen_height, ui_scaler=ui_scaler)
+
+
+def draw_wifi_forget_view(screen, app_state, fonts, config_module, ui_scaler=None):
+    """
+    Draw the "Forget a network" list (saved networks only).
+    """
+    screen.fill(config_module.Theme.BACKGROUND)
+    wm = app_state.wifi_manager
+    if not wm:
+        return
+    saved = wm.get_saved_networks()
+    selected_index = wm.forget_list_selected_index
+    if ui_scaler:
+        screen_width = ui_scaler.screen_width
+        screen_height = ui_scaler.screen_height
+        safe_rect = ui_scaler.get_safe_area_rect() if ui_scaler.safe_area_enabled else pygame.Rect(0, 0, screen_width, screen_height)
+    else:
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
+        safe_rect = pygame.Rect(0, 0, screen_width, screen_height)
+    list_margin = ui_scaler.margin("medium") if ui_scaler else 15
+    title_margin = list_margin
+    footer_reserved = ui_scaler.scale(32) if ui_scaler else 32
+    if ui_scaler:
+        header_block = ui_scaler.header_height() + ui_scaler.margin("medium")
+        content_start_y = safe_rect.top + header_block
+        item_height = ui_scaler.scale(32)
+    else:
+        content_start_y = safe_rect.top + 50
+        item_height = 32
+    title_font = fonts['large']
+    title_text = title_font.render("Forget a network", True, config_module.Theme.FOREGROUND)
+    title_top = safe_rect.top + (ui_scaler.margin("small") if ui_scaler else 8)
+    screen.blit(title_text, (safe_rect.left + title_margin, title_top))
+    if not saved:
+        no_saved = fonts['medium'].render("No saved networks", True, config_module.Theme.FOREGROUND)
+        screen.blit(no_saved, (safe_rect.left + title_margin, content_start_y))
+    else:
+        max_visible = 4
+        scroll_offset = max(0, selected_index - max_visible + 1)
+        for i in range(max_visible):
+            idx = i + scroll_offset
+            if idx >= len(saved):
+                break
+            ssid = saved[idx]
+            y_pos = content_start_y + (i * item_height)
+            pad = ui_scaler.scale(2) if ui_scaler else 2
+            row_h = item_height - pad * 2
+            is_selected = idx == selected_index
+            if is_selected:
+                highlight_rect = pygame.Rect(safe_rect.left + list_margin + pad, y_pos - pad, safe_rect.width - list_margin * 2 - pad * 2, row_h)
+                pygame.draw.rect(screen, config_module.Theme.MENU_SELECTED_BG, highlight_rect, border_radius=config_module.Theme.CORNER_CURVE_RADIUS)
+                text_color = config_module.Theme.MENU_SELECTED_TEXT
+            else:
+                text_color = config_module.Theme.FOREGROUND
+            display_ssid = ssid[:20] + "..." if len(ssid) > 20 else ssid
+            surf = fonts['medium'].render(display_ssid, True, text_color)
+            screen.blit(surf, (safe_rect.left + list_margin + (ui_scaler.scale(6) if ui_scaler else 6), y_pos + 4))
+    labels = config_module.get_control_labels()
+    render_footer(screen, f"{labels.get('select', 'Select')} to forget · {labels.get('back', 'Back')} to Wi‑Fi", fonts, config_module.Theme.FOREGROUND, screen_width, screen_height, ui_scaler=ui_scaler) 

@@ -14,7 +14,7 @@ SENSE_HAT_LED_ENABLED = True
 # Display rotation for the 8x8 matrix (and joystick coordinate mapping). Use when the Pi is mounted
 # in a different orientation. Values: 0, 90, 180, 270 (degrees). For horizontal mount, 90 or 270
 # flips which way is "up" so the display matches the physical orientation.
-SENSE_HAT_DISPLAY_ROTATION = 270
+SENSE_HAT_DISPLAY_ROTATION = 90
 
 # Lid / matrix on when "open": the Sense HAT has no dedicated ambient light sensor, but on Sense HAT
 # *v2* the colour sensor provides RGBC (red, green, blue, clear); the "clear" channel is ambient

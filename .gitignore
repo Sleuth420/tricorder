@@ -60,5 +60,5 @@ wifi_scan_output.txt
 .env.example
 
 # Media under assets
-assets/media/
-assets/ship/
+/assets/media/
+/assets/ship/NCC Enterprise/

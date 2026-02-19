@@ -66,9 +66,14 @@ class CharacterSelector:
             return pygame.font.Font(None, size)
         try:
             if self.ui_scaler:
-                char_font_size = self.ui_scaler.scale(small_pt)
+                # On Pi/small screens use smaller key font so labels fit in compact cells
+                tiny_pt = getattr(cfg, 'FONT_SIZE_TINY', 14)
+                if self.ui_scaler.is_small_screen():
+                    char_font_size = self.ui_scaler.scale(tiny_pt)
+                else:
+                    char_font_size = self.ui_scaler.scale(small_pt)
                 title_font_size = self.ui_scaler.scale(medium_pt)
-                footer_font_size = self.ui_scaler.scale(small_pt)
+                footer_font_size = self.ui_scaler.scale(tiny_pt) if self.ui_scaler.is_small_screen() else self.ui_scaler.scale(small_pt)
                 self.char_font = _font(char_font_size)
                 self.title_font = _font(title_font_size)
                 self.footer_font = _font(footer_font_size)
@@ -102,15 +107,24 @@ class CharacterSelector:
     def _calculate_layout(self):
         """Calculate the layout dimensions with responsive design."""
         # Use UIScaler for responsive dimensions if available
+        compact = False
         if self.ui_scaler:
-            title_height = self.ui_scaler.scale(30)
-            password_field_height = self.ui_scaler.scale(40)
-            footer_height = self.ui_scaler.scale(60)
-            padding = self.ui_scaler.margin("medium")
+            # On Pi/small screens use a compact layout so the keyboard doesn't dominate
+            compact = self.ui_scaler.is_small_screen()
+            if compact:
+                title_height = self.ui_scaler.scale(20)
+                password_field_height = self.ui_scaler.scale(28)
+                footer_height = self.ui_scaler.scale(36)
+                padding = self.ui_scaler.margin("small")
+            else:
+                title_height = self.ui_scaler.scale(30)
+                password_field_height = self.ui_scaler.scale(40)
+                footer_height = self.ui_scaler.scale(60)
+                padding = self.ui_scaler.margin("medium")
             
             # Debug logging for character selector layout
             if self.ui_scaler.debug_mode:
-                logger.info(f"🎨 CharacterSelector: screen={self.screen_rect.width}x{self.screen_rect.height}, title_h={title_height}px, padding={padding}px")
+                logger.info(f"🎨 CharacterSelector: screen={self.screen_rect.width}x{self.screen_rect.height}, title_h={title_height}px, padding={padding}px, compact={compact}")
         else:
             # Fallback to original calculations
             title_height = 30
@@ -130,10 +144,14 @@ class CharacterSelector:
         self.cell_width = available_width // max_cols
         self.cell_height = available_height // num_rows
         
-        # Ensure minimum cell size with responsive scaling
+        # Ensure minimum cell size; use smaller minimums on Pi so keys don't get huge
         if self.ui_scaler:
-            min_cell_width = self.ui_scaler.scale(40)
-            min_cell_height = self.ui_scaler.scale(25)
+            if compact:
+                min_cell_width = self.ui_scaler.scale(22)
+                min_cell_height = self.ui_scaler.scale(14)
+            else:
+                min_cell_width = self.ui_scaler.scale(40)
+                min_cell_height = self.ui_scaler.scale(25)
         else:
             min_cell_width = 40
             min_cell_height = 25
@@ -373,8 +391,11 @@ class CharacterSelector:
                 f"{labels['select']}: Select character | {labels['back']}: Cancel"
             ]
             
-            # Responsive line spacing
-            line_spacing = self.ui_scaler.scale(20) if self.ui_scaler else 20
+            # Responsive line spacing (tighter on Pi/small screens)
+            if self.ui_scaler and self.ui_scaler.is_small_screen():
+                line_spacing = self.ui_scaler.scale(14)
+            else:
+                line_spacing = self.ui_scaler.scale(20) if self.ui_scaler else 20
             
             y_offset = self.footer_y
             for instruction in instructions:

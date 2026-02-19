@@ -24,6 +24,8 @@ STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU"
 STATE_SCHEMATICS_CATEGORY = "SCHEMATICS_CATEGORY"
 STATE_LOGS_MENU = "LOGS_MENU"
 STATE_DATA_MENU = "DATA_MENU"
+STATE_CREW_MENU = "CREW_MENU"
+STATE_CREW_DETAIL = "CREW_DETAIL"
 STATE_MEDIA_PLAYER = "MEDIA_PLAYER"
 STATE_ST_WIKI = "ST_WIKI"
 STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
@@ -43,6 +45,8 @@ STATE_DISPLAY_CYCLE_INTERVAL = "DISPLAY_CYCLE_INTERVAL"
 STATE_SETTINGS_WIFI_NETWORKS = "SETTINGS_WIFI_NETWORKS"
 STATE_SETTINGS_BLUETOOTH_DEVICES = "SETTINGS_BLUETOOTH_DEVICES"
 STATE_WIFI_PASSWORD_ENTRY = "WIFI_PASSWORD_ENTRY"
+STATE_SETTINGS_WIFI_FORGET = "SETTINGS_WIFI_FORGET"
+STATE_CONFIRM_FORGET_WIFI = "CONFIRM_FORGET_WIFI"
 STATE_CONFIRM_REBOOT = "CONFIRM_REBOOT"
 STATE_CONFIRM_SHUTDOWN = "CONFIRM_SHUTDOWN"
 STATE_CONFIRM_RESTART_APP = "CONFIRM_RESTART_APP"
@@ -76,8 +80,10 @@ class InputRouter:
             return self._handle_menu_input(action)
         elif current_state == STATE_SENSORS_MENU:
             return self._handle_sensors_menu_input(action)
-        elif current_state in (STATE_SCHEMATICS_MENU, STATE_LOGS_MENU, STATE_DATA_MENU):
+        elif current_state in (STATE_SCHEMATICS_MENU, STATE_LOGS_MENU, STATE_DATA_MENU, STATE_CREW_MENU):
             return self._handle_schematics_menu_input(action, current_state)
+        elif current_state == STATE_CREW_DETAIL:
+            return self._handle_crew_detail_input(action)
         elif current_state == STATE_SCHEMATICS_CATEGORY:
             return self._handle_schematics_category_input(action)
         elif current_state == STATE_MEDIA_PLAYER:
@@ -112,6 +118,10 @@ class InputRouter:
             return self._handle_display_cycle_interval_input(action)
         elif current_state in [STATE_CONFIRM_REBOOT, STATE_CONFIRM_SHUTDOWN, STATE_CONFIRM_RESTART_APP]:
             return self._handle_confirmation_input(action)
+        elif current_state == STATE_CONFIRM_FORGET_WIFI:
+            return self._handle_wifi_forget_confirmation_input(action)
+        elif current_state == STATE_SETTINGS_WIFI_FORGET:
+            return self._handle_wifi_forget_input(action)
         elif current_state == STATE_SECRET_GAMES:
             return self._handle_secret_games_input(action)
         elif current_state == STATE_PONG_ACTIVE:
@@ -146,8 +156,11 @@ class InputRouter:
             return self.app_state.state_manager.return_to_menu()
         elif current_state == STATE_SENSORS_MENU:
             return self._handle_sensors_menu_back()
-        elif current_state in (STATE_SCHEMATICS_MENU, STATE_LOGS_MENU, STATE_DATA_MENU):
+        elif current_state in (STATE_SCHEMATICS_MENU, STATE_LOGS_MENU, STATE_DATA_MENU, STATE_CREW_MENU):
             return self._handle_schematics_menu_back()
+        elif current_state == STATE_CREW_DETAIL:
+            self.app_state.selected_crew_data = None
+            return self.app_state.state_manager.transition_to(STATE_CREW_MENU)
         elif current_state == STATE_SCHEMATICS_CATEGORY:
             return self._handle_schematics_category_back()
         elif current_state == STATE_MEDIA_PLAYER:
@@ -179,8 +192,13 @@ class InputRouter:
             return self.app_state.state_manager.transition_to(STATE_SCHEMATICS_CATEGORY)
         elif current_state == STATE_SETTINGS:
             return self._handle_settings_main_menu_back()
-        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_STAPI, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_VOLUME, STATE_DISPLAY_CYCLE_INTERVAL, STATE_SETTINGS_WIFI_NETWORKS, STATE_SETTINGS_BLUETOOTH_DEVICES, STATE_WIFI_PASSWORD_ENTRY]:
+        elif current_state in [STATE_SETTINGS_WIFI, STATE_SETTINGS_BLUETOOTH, STATE_SETTINGS_DEVICE, STATE_SETTINGS_DISPLAY, STATE_SETTINGS_CONTROLS, STATE_SETTINGS_UPDATE, STATE_SETTINGS_STAPI, STATE_SETTINGS_SOUND_TEST, STATE_SETTINGS_DEBUG, STATE_SETTINGS_DEBUG_OVERLAY, STATE_SETTINGS_LOG_VIEWER, STATE_SELECT_COMBO_DURATION, STATE_SETTINGS_VOLUME, STATE_DISPLAY_CYCLE_INTERVAL, STATE_SETTINGS_WIFI_NETWORKS, STATE_SETTINGS_BLUETOOTH_DEVICES, STATE_WIFI_PASSWORD_ENTRY, STATE_SETTINGS_WIFI_FORGET, STATE_CONFIRM_FORGET_WIFI]:
             logger.info(f"BACK from {current_state}, returning to appropriate parent")
+            if current_state == STATE_CONFIRM_FORGET_WIFI:
+                self.app_state.wifi_forget_ssid = None
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS_WIFI_FORGET)
+            if current_state == STATE_SETTINGS_WIFI_FORGET:
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS_WIFI)
             if current_state == STATE_SELECT_COMBO_DURATION or current_state == STATE_SETTINGS_VOLUME:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_DEVICE)
             elif current_state == STATE_DISPLAY_CYCLE_INTERVAL:
@@ -300,6 +318,9 @@ class InputRouter:
                 return self.app_state.state_manager.transition_to(STATE_MEDIA_PLAYER)
             elif selected_item.target_state == STATE_ST_WIKI:
                 return self.app_state.state_manager.transition_to(STATE_ST_WIKI)
+            elif selected_item.target_state == STATE_CREW_DETAIL:
+                self.app_state.selected_crew_data = selected_item.data
+                return self.app_state.state_manager.transition_to(STATE_CREW_DETAIL)
             elif selected_item.target_state == STATE_SCHEMATICS:
                 # Schematics selected, store the selected schematics data and go to 3D viewer
                 logger.debug(f"Schematics menu: Selected schematics '{selected_item.name}' with data {selected_item.data}")
@@ -335,6 +356,13 @@ class InputRouter:
                     # No model specified, go directly to schematics
                     self.app_state.state_manager.transition_to(STATE_SCHEMATICS)
             return True
+        return False
+
+    def _handle_crew_detail_input(self, action):
+        """Handle input on crew detail view: SELECT, PREV, or NEXT goes back to crew list (BACK handled in _handle_back_action)."""
+        if action in (app_config.INPUT_ACTION_SELECT, app_config.INPUT_ACTION_PREV, app_config.INPUT_ACTION_NEXT):
+            self.app_state.selected_crew_data = None
+            return self.app_state.state_manager.transition_to(STATE_CREW_MENU)
         return False
 
     def _handle_schematics_menu_back(self):
@@ -380,6 +408,11 @@ class InputRouter:
             self.app_state.menu_manager.enter_submenu(
                 data_menu_items, STATE_SCHEMATICS_CATEGORY, STATE_DATA_MENU)
             return self.app_state.state_manager.transition_to(STATE_DATA_MENU)
+        elif selected_item.target_state == STATE_CREW_MENU:
+            crew_menu_items = self.app_state.menu_manager._generate_crew_menu_items()
+            self.app_state.menu_manager.enter_submenu(
+                crew_menu_items, STATE_SCHEMATICS_CATEGORY, STATE_CREW_MENU)
+            return self.app_state.state_manager.transition_to(STATE_CREW_MENU)
         return False
 
     def _handle_schematics_category_back(self):
@@ -1145,7 +1178,7 @@ class InputRouter:
         wifi_manager_action_result = self.app_state.wifi_manager.handle_input(action)
 
         if isinstance(wifi_manager_action_result, str):
-            from .wifi_manager import WIFI_ACTION_TOGGLE, WIFI_ACTION_BROWSE_NETWORKS, WIFI_ACTION_BACK_TO_SETTINGS
+            from .wifi_manager import WIFI_ACTION_TOGGLE, WIFI_ACTION_BROWSE_NETWORKS, WIFI_ACTION_BACK_TO_SETTINGS, WIFI_ACTION_DISCONNECT, WIFI_ACTION_FORGET_NETWORK
             
             if wifi_manager_action_result == WIFI_ACTION_TOGGLE:
                 logger.info("WIFI_ACTION_TOGGLE received. Calling wifi_manager.toggle_wifi()")
@@ -1171,11 +1204,61 @@ class InputRouter:
                 return True
             elif wifi_manager_action_result == WIFI_ACTION_BACK_TO_SETTINGS:
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS)
+            elif wifi_manager_action_result == WIFI_ACTION_DISCONNECT:
+                self.app_state.wifi_manager.disconnect_from_current()
+                return True
+            elif wifi_manager_action_result == WIFI_ACTION_FORGET_NETWORK:
+                self.app_state.wifi_manager.refresh_saved_networks()
+                if not self.app_state.wifi_manager.get_saved_networks():
+                    logger.info("No saved networks to forget")
+                    return True
+                self.app_state.wifi_manager.forget_list_selected_index = 0
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS_WIFI_FORGET)
             else:
                 logger.warning(f"Unknown action string from WifiManager: {wifi_manager_action_result}")
                 return False
         
         return wifi_manager_action_result
+
+    def _handle_wifi_forget_input(self, action):
+        """Handle input for the Forget a network list (saved networks)."""
+        wm = self.app_state.wifi_manager
+        if not wm:
+            return self.app_state.state_manager.transition_to(STATE_SETTINGS_WIFI)
+        saved = wm.get_saved_networks()
+        if not saved:
+            return self.app_state.state_manager.transition_to(STATE_SETTINGS_WIFI)
+        idx = wm.forget_list_selected_index
+        if action == app_config.INPUT_ACTION_NEXT:
+            wm.forget_list_selected_index = (idx + 1) % len(saved)
+            return True
+        if action == app_config.INPUT_ACTION_PREV:
+            wm.forget_list_selected_index = (idx - 1 + len(saved)) % len(saved)
+            return True
+        if action == app_config.INPUT_ACTION_SELECT:
+            ssid = saved[idx]
+            self.app_state.wifi_forget_ssid = ssid
+            self.app_state.device_manager.confirmation_option_index = 0  # Yes
+            return self.app_state.state_manager.transition_to(STATE_CONFIRM_FORGET_WIFI)
+        return False
+
+    def _handle_wifi_forget_confirmation_input(self, action):
+        """Handle confirmation for Forget WiFi (Yes/No)."""
+        dm = self.app_state.device_manager
+        if action == app_config.INPUT_ACTION_NEXT or action == app_config.INPUT_ACTION_PREV:
+            dm.confirmation_option_index = 1 - dm.confirmation_option_index
+            return True
+        if action == app_config.INPUT_ACTION_SELECT:
+            if dm.confirmation_option_index == 0:  # Yes
+                ssid = self.app_state.wifi_forget_ssid
+                if ssid and self.app_state.wifi_manager:
+                    self.app_state.wifi_manager.forget_network(ssid)
+                self.app_state.wifi_forget_ssid = None
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS_WIFI)
+            else:  # No
+                self.app_state.wifi_forget_ssid = None
+                return self.app_state.state_manager.transition_to(STATE_SETTINGS_WIFI_FORGET)
+        return False
 
     def _handle_wifi_networks_input(self, action):
         """Handle input for the WiFi network browsing view."""

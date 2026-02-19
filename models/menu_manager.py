@@ -16,6 +16,8 @@ STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU"
 STATE_SCHEMATICS_CATEGORY = "SCHEMATICS_CATEGORY"
 STATE_LOGS_MENU = "LOGS_MENU"
 STATE_DATA_MENU = "DATA_MENU"
+STATE_CREW_MENU = "CREW_MENU"
+STATE_CREW_DETAIL = "CREW_DETAIL"
 STATE_MEDIA_PLAYER = "MEDIA_PLAYER"
 STATE_ST_WIKI = "ST_WIKI"
 
@@ -154,7 +156,7 @@ class MenuManager:
         return items
 
     def _generate_schematics_category_menu_items(self):
-        """Generates the schematics top-level menu: Ship | Logs | Data | Back."""
+        """Generates the schematics top-level menu: Ship | Logs | Data | Crew | Back."""
         return [
             MenuItem(
                 name="Ship",
@@ -172,11 +174,43 @@ class MenuManager:
                 color_key="SIDEBAR_SCHEMATICS"
             ),
             MenuItem(
+                name="Crew",
+                target_state=STATE_CREW_MENU,
+                color_key="SIDEBAR_SCHEMATICS"
+            ),
+            MenuItem(
                 name="<- Back",
                 target_state=STATE_MENU,
                 color_key="SIDEBAR_SETTINGS"
             )
         ]
+
+    def _generate_crew_menu_items(self):
+        """Generates crew list from assets/ship/Crew (image files). Name = filename without extension."""
+        import os
+        crew_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets", "ship", "Crew"))
+        items = []
+        if not os.path.isdir(crew_dir):
+            return items
+        allowed = (".png", ".jpg", ".jpeg", ".gif", ".webp")
+        for fn in sorted(os.listdir(crew_dir)):
+            base, ext = os.path.splitext(fn)
+            if ext.lower() in allowed:
+                path = os.path.abspath(os.path.join(crew_dir, fn))
+                if os.path.isfile(path):
+                    name = base.strip()
+                    items.append(MenuItem(
+                        name=name,
+                        target_state=STATE_CREW_DETAIL,
+                        data={"image_path": path, "name": name},
+                        color_key="SIDEBAR_SCHEMATICS"
+                    ))
+        items.append(MenuItem(
+            name="<- Back",
+            target_state=STATE_MENU,
+            color_key="SIDEBAR_SETTINGS"
+        ))
+        return items
 
     def _generate_logs_menu_items(self):
         """Generates the Logs submenu: TV show | captains logs | Back."""
@@ -411,7 +445,7 @@ class MenuManager:
             # Schematics menu should use the submenu stack like sensors and settings
             # If we're in STATE_SCHEMATICS_MENU, it should be managed by the stack
             return self.current_menu_definition
-        elif current_state == STATE_LOGS_MENU or current_state == STATE_DATA_MENU:
+        elif current_state == STATE_LOGS_MENU or current_state == STATE_DATA_MENU or current_state == STATE_CREW_MENU:
             return self.current_menu_definition
         elif current_state == STATE_SCHEMATICS_CATEGORY:
             return self.current_menu_definition

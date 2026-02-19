@@ -40,6 +40,9 @@ class BluetoothManager:
         self._scan_result_queue = queue.Queue()
         self._scan_completion_callback = None
 
+        # User-visible message after toggle attempt (e.g. error or "Unsupported on Windows")
+        self.last_toggle_message = None
+
         self.update_bluetooth_status()
 
     def _build_options(self):
@@ -69,9 +72,11 @@ class BluetoothManager:
 
     def toggle_bluetooth(self):
         """Toggle Bluetooth power on/off. Linux only (bluetoothctl)."""
+        self.last_toggle_message = None
         if platform.system() != "Linux":
             logger.warning("Bluetooth toggle not supported on %s", platform.system())
             self.status_str = "N/A"
+            self.last_toggle_message = "Bluetooth toggle is not supported on this OS."
             self._update_options_display()
             return False
 
@@ -84,11 +89,18 @@ class BluetoothManager:
             self.status_str = "Toggling..."
             self._update_options_display()
 
-            subprocess.run(cmd, capture_output=True, text=True, timeout=5, check=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=5, check=True)
             time.sleep(0.5)
             self.update_bluetooth_status()
             return True
         except subprocess.CalledProcessError as e:
+            stderr = (e.stderr or e.stdout or str(e)).strip()
+            if "denied" in stderr.lower() or "not authorized" in stderr.lower() or "access" in stderr.lower():
+                self.last_toggle_message = "Permission denied. Try: add user to 'bluetooth' group."
+            elif stderr:
+                self.last_toggle_message = stderr[:80] if len(stderr) > 80 else stderr
+            else:
+                self.last_toggle_message = "Command failed. Check logs."
             logger.error("Bluetooth toggle failed: %s", e)
             self.status_str = "Error"
             self._update_options_display()
@@ -96,11 +108,13 @@ class BluetoothManager:
         except FileNotFoundError:
             logger.error("bluetoothctl not found")
             self.status_str = "No bluetoothctl"
+            self.last_toggle_message = "bluetoothctl not found. Install bluez (e.g. sudo apt install bluez)."
             self._update_options_display()
             return False
         except Exception as e:
             logger.exception("Bluetooth toggle error: %s", e)
             self.status_str = "Error"
+            self.last_toggle_message = "Error: " + str(e)[:60]
             self._update_options_display()
             return False
 

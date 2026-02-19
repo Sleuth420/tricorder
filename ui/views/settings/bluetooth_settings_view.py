@@ -36,7 +36,9 @@ def draw_bluetooth_settings_view(screen, app_state, fonts, config_module, ui_sca
     menu_items = [opt["name"] for opt in options_data]
     selected_index = app_state.bluetooth_manager.get_selected_index()
     footer = None
-    if app_state.bluetooth_manager.device_str and app_state.bluetooth_manager.device_str not in (
+    if getattr(app_state.bluetooth_manager, "last_toggle_message", None):
+        footer = app_state.bluetooth_manager.last_toggle_message
+    elif app_state.bluetooth_manager.device_str and app_state.bluetooth_manager.device_str not in (
         "N/A", "Not Available", "Windows", "Unsupported", "Available", "No Devices", "Disabled"
     ):
         footer = f"Connected: {app_state.bluetooth_manager.device_str}"

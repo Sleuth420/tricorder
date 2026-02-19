@@ -42,6 +42,8 @@ STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU" # Ship submenu (NCC Enterprise, etc.)
 STATE_SCHEMATICS_CATEGORY = "SCHEMATICS_CATEGORY" # Schematics top-level: Ship | Logs | Data
 STATE_LOGS_MENU = "LOGS_MENU" # Logs submenu (TV show, movies, captains logs)
 STATE_DATA_MENU = "DATA_MENU" # Data submenu (star trek wiki)
+STATE_CREW_MENU = "CREW_MENU" # Crew list (under Schematics)
+STATE_CREW_DETAIL = "CREW_DETAIL" # Single crew member: image + name
 STATE_MEDIA_PLAYER = "MEDIA_PLAYER" # Media player view
 STATE_ST_WIKI = "ST_WIKI"     # Star Trek wiki (schematics)
 STATE_LOADING = "LOADING"     # Loading screen
@@ -66,6 +68,8 @@ STATE_DISPLAY_CYCLE_INTERVAL = "DISPLAY_CYCLE_INTERVAL"  # Display settings: das
 # WiFi Sub-States
 STATE_SETTINGS_WIFI_NETWORKS = "SETTINGS_WIFI_NETWORKS"  # Browse available networks
 STATE_WIFI_PASSWORD_ENTRY = "WIFI_PASSWORD_ENTRY"  # Enter password for WiFi connection
+STATE_SETTINGS_WIFI_FORGET = "SETTINGS_WIFI_FORGET"  # List saved networks to forget
+STATE_CONFIRM_FORGET_WIFI = "CONFIRM_FORGET_WIFI"  # Confirm forget SSID
 
 # Confirmation States (New)
 STATE_CONFIRM_REBOOT = "CONFIRM_REBOOT"
@@ -111,6 +115,8 @@ class AppState:
         
         # Schematics selection data for 3D viewer
         self.selected_schematics_data = None  # Data from schematics menu selection
+        # Crew selection: { "image_path": str, "name": str } when viewing a crew member
+        self.selected_crew_data = None
         
         # 3D viewer pause menu state
         self.schematics_pause_menu_active = False
@@ -144,6 +150,7 @@ class AppState:
         import pygame
         screen_rect = pygame.Rect(0, 0, screen_width, screen_height)
         self.password_entry_manager = PasswordEntryManager(config_module, screen_rect, None)  # Fonts will be set later
+        self.wifi_forget_ssid = None  # SSID selected for forget (set before STATE_CONFIRM_FORGET_WIFI)
         
         # Initialize input router
         self.input_router = InputRouter(self)

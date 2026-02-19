@@ -216,7 +216,7 @@ class MediaPlayerManager:
     def _season_episode_sort_key(path):
         """
         Return (season, episode) for sorting when path/filename contains SxxEyy (e.g. S01E06).
-        Falls back to (0, 0) so files without a match sort first, then by filename.
+        Falls back to (0, 0) so files without a match sort first, then by natural filename order.
         """
         base = os.path.basename(path)
         name_no_ext = os.path.splitext(base)[0]
@@ -224,6 +224,16 @@ class MediaPlayerManager:
         if m:
             return (int(m.group(1)), int(m.group(2)))
         return (0, 0)
+
+    @staticmethod
+    def _natural_sort_key(path):
+        """
+        Sort key that splits the filename on digit groups so 'Episode 2' comes before 'Episode 10'.
+        Used as tie-breaker when SxxEyy is absent or equal.
+        """
+        base = os.path.basename(path).lower()
+        parts = re.split(r"(\d+)", base)
+        return tuple(int(p) if p.isdigit() else p for p in parts if p)
 
     @staticmethod
     def _season_folder_sort_key(name):
@@ -311,10 +321,14 @@ class MediaPlayerManager:
                     if os.path.isfile(path):
                         display_name = self._get_display_name_for_path(path)
                         candidates.append((display_name, path))
-            # Sort by season/episode (SxxEyy) then by path so e.g. S01E02 comes before S01E10
+            # Sort by season/episode (SxxEyy), then by natural filename (so Episode 2 < Episode 10), then path
             self.track_list = sorted(
                 candidates,
-                key=lambda item: (self._season_episode_sort_key(item[1]), item[1]),
+                key=lambda item: (
+                    self._season_episode_sort_key(item[1]),
+                    self._natural_sort_key(item[1]),
+                    item[1],
+                ),
             )
             logger.info(
                 "Media player: scanned %s, found %d file(s) (extensions: %s)",

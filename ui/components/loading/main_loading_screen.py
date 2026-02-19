@@ -186,13 +186,24 @@ def draw_loading_screen(screen, fonts, logo_splash, logo_rect, progress, current
     bar_y = logo_rect.bottom + spacing_after_logo
     
     content_height = content_below_logo
+    bottom_ref = safe_rect.bottom if (ui_scaler and ui_scaler.safe_area_enabled) else screen_h
     # Adjust spacing if content would extend too close to bottom
-    remaining_space = screen_h - (bar_y + content_height)
+    remaining_space = bottom_ref - (bar_y + content_height)
     if remaining_space < bottom_margin and content_height > 0:
         scale_factor = max(0.7, (available_space_below_logo - bottom_margin) / content_height)
         progress_spacing = int(progress_spacing * scale_factor)
         stage_spacing = int(stage_spacing * scale_factor)
         lines_spacing = int(lines_spacing * scale_factor)
+        # Recompute actual content height and re-center so there's no black gap below matrices
+        content_below_logo = (bar_height + progress_spacing + progress_surface.get_height() +
+                             stage_spacing + stage_surface.get_height())
+        if lines_surface:
+            content_below_logo += lines_spacing + lines_surface.get_height()
+        total_content_height = logo_rect.height + spacing_after_logo + content_below_logo
+        content_top = safe_rect.top + max(0, (safe_rect.height - total_content_height) // 2)
+        logo_rect.midtop = (center_x, content_top)
+        bar_y = logo_rect.bottom + spacing_after_logo
+        content_height = content_below_logo
     
     # Debug logging for loading screen layout - only log once at start
     if ui_scaler and ui_scaler.debug_mode and progress <= 0.01:

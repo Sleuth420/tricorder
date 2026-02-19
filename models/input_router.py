@@ -22,6 +22,8 @@ STATE_TETRIS_ACTIVE = "TETRIS_ACTIVE"
 STATE_SCHEMATICS = "SCHEMATICS"
 STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU"
 STATE_SCHEMATICS_CATEGORY = "SCHEMATICS_CATEGORY"
+STATE_LOGS_MENU = "LOGS_MENU"
+STATE_DATA_MENU = "DATA_MENU"
 STATE_MEDIA_PLAYER = "MEDIA_PLAYER"
 STATE_ST_WIKI = "ST_WIKI"
 STATE_SETTINGS_WIFI = "SETTINGS_WIFI"
@@ -74,8 +76,8 @@ class InputRouter:
             return self._handle_menu_input(action)
         elif current_state == STATE_SENSORS_MENU:
             return self._handle_sensors_menu_input(action)
-        elif current_state == STATE_SCHEMATICS_MENU:
-            return self._handle_schematics_menu_input(action)
+        elif current_state in (STATE_SCHEMATICS_MENU, STATE_LOGS_MENU, STATE_DATA_MENU):
+            return self._handle_schematics_menu_input(action, current_state)
         elif current_state == STATE_SCHEMATICS_CATEGORY:
             return self._handle_schematics_category_input(action)
         elif current_state == STATE_MEDIA_PLAYER:
@@ -144,7 +146,7 @@ class InputRouter:
             return self.app_state.state_manager.return_to_menu()
         elif current_state == STATE_SENSORS_MENU:
             return self._handle_sensors_menu_back()
-        elif current_state == STATE_SCHEMATICS_MENU:
+        elif current_state in (STATE_SCHEMATICS_MENU, STATE_LOGS_MENU, STATE_DATA_MENU):
             return self._handle_schematics_menu_back()
         elif current_state == STATE_SCHEMATICS_CATEGORY:
             return self._handle_schematics_category_back()
@@ -265,24 +267,23 @@ class InputRouter:
             return self.app_state.state_manager.transition_to(previous_menu_state_name)
         return self.app_state.state_manager.return_to_menu()
 
-    def _handle_schematics_menu_input(self, action):
-        """Handle input for the schematics selection menu."""
+    def _handle_schematics_menu_input(self, action, current_state=STATE_SCHEMATICS_MENU):
+        """Handle input for schematics submenus (Ship, Logs, Data)."""
         if action in [app_config.INPUT_ACTION_NEXT, app_config.INPUT_ACTION_PREV]:
-            # Navigate the schematics menu
             if action == app_config.INPUT_ACTION_NEXT:
-                self.app_state.menu_manager.navigate_next(STATE_SCHEMATICS_MENU)
+                self.app_state.menu_manager.navigate_next(current_state)
             else:
-                self.app_state.menu_manager.navigate_prev(STATE_SCHEMATICS_MENU)
+                self.app_state.menu_manager.navigate_prev(current_state)
             return True
         elif action == app_config.INPUT_ACTION_SELECT:
-            return self._handle_schematics_menu_select()
+            return self._handle_schematics_menu_select(current_state)
         elif action == app_config.INPUT_ACTION_BACK:
             return self._handle_schematics_menu_back()
         return False
 
-    def _handle_schematics_menu_select(self):
-        """Handle selection in the schematics menu."""
-        selected_item = self.app_state.menu_manager.get_selected_item(STATE_SCHEMATICS_MENU)
+    def _handle_schematics_menu_select(self, current_state=STATE_SCHEMATICS_MENU):
+        """Handle selection in a schematics submenu (Ship / Logs / Data)."""
+        selected_item = self.app_state.menu_manager.get_selected_item(current_state)
         if selected_item:
             if selected_item.target_state == STATE_MENU:
                 # Back option selected - use submenu system
@@ -292,6 +293,13 @@ class InputRouter:
                     self.app_state.state_manager.transition_to(previous_menu_state_name)
                 else:
                     self.app_state.state_manager.return_to_menu()
+            elif selected_item.target_state == STATE_MEDIA_PLAYER:
+                if hasattr(self.app_state, 'media_player_manager') and self.app_state.media_player_manager:
+                    media_source = (selected_item.data or {}).get("media_source")
+                    self.app_state.media_player_manager.on_enter_view(media_source=media_source)
+                return self.app_state.state_manager.transition_to(STATE_MEDIA_PLAYER)
+            elif selected_item.target_state == STATE_ST_WIKI:
+                return self.app_state.state_manager.transition_to(STATE_ST_WIKI)
             elif selected_item.target_state == STATE_SCHEMATICS:
                 # Schematics selected, store the selected schematics data and go to 3D viewer
                 logger.debug(f"Schematics menu: Selected schematics '{selected_item.name}' with data {selected_item.data}")
@@ -362,12 +370,16 @@ class InputRouter:
             self.app_state.menu_manager.enter_submenu(
                 schematics_menu_items, STATE_SCHEMATICS_CATEGORY, STATE_SCHEMATICS_MENU)
             return self.app_state.state_manager.transition_to(STATE_SCHEMATICS_MENU)
-        elif selected_item.target_state == STATE_MEDIA_PLAYER:
-            if hasattr(self.app_state, 'media_player_manager') and self.app_state.media_player_manager:
-                self.app_state.media_player_manager.on_enter_view()
-            return self.app_state.state_manager.transition_to(STATE_MEDIA_PLAYER)
-        elif selected_item.target_state == STATE_ST_WIKI:
-            return self.app_state.state_manager.transition_to(STATE_ST_WIKI)
+        elif selected_item.target_state == STATE_LOGS_MENU:
+            logs_menu_items = self.app_state.menu_manager._generate_logs_menu_items()
+            self.app_state.menu_manager.enter_submenu(
+                logs_menu_items, STATE_SCHEMATICS_CATEGORY, STATE_LOGS_MENU)
+            return self.app_state.state_manager.transition_to(STATE_LOGS_MENU)
+        elif selected_item.target_state == STATE_DATA_MENU:
+            data_menu_items = self.app_state.menu_manager._generate_data_menu_items()
+            self.app_state.menu_manager.enter_submenu(
+                data_menu_items, STATE_SCHEMATICS_CATEGORY, STATE_DATA_MENU)
+            return self.app_state.state_manager.transition_to(STATE_DATA_MENU)
         return False
 
     def _handle_schematics_category_back(self):

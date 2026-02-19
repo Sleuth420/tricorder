@@ -14,6 +14,8 @@ STATE_SECRET_GAMES = "SECRET_GAMES"
 STATE_SCHEMATICS = "SCHEMATICS"
 STATE_SCHEMATICS_MENU = "SCHEMATICS_MENU"
 STATE_SCHEMATICS_CATEGORY = "SCHEMATICS_CATEGORY"
+STATE_LOGS_MENU = "LOGS_MENU"
+STATE_DATA_MENU = "DATA_MENU"
 STATE_MEDIA_PLAYER = "MEDIA_PLAYER"
 STATE_ST_WIKI = "ST_WIKI"
 
@@ -152,7 +154,7 @@ class MenuManager:
         return items
 
     def _generate_schematics_category_menu_items(self):
-        """Generates the specs category menu: Ship | Media Player | Star Trek Wiki | Back."""
+        """Generates the schematics top-level menu: Ship | Logs | Data | Back."""
         return [
             MenuItem(
                 name="Ship",
@@ -160,12 +162,55 @@ class MenuManager:
                 color_key="SIDEBAR_SCHEMATICS"
             ),
             MenuItem(
-                name="Media Player",
-                target_state=STATE_MEDIA_PLAYER,
+                name="Logs",
+                target_state=STATE_LOGS_MENU,
                 color_key="SIDEBAR_SYSTEM"
             ),
             MenuItem(
-                name="Star Trek Wiki",
+                name="Data",
+                target_state=STATE_DATA_MENU,
+                color_key="SIDEBAR_SCHEMATICS"
+            ),
+            MenuItem(
+                name="<- Back",
+                target_state=STATE_MENU,
+                color_key="SIDEBAR_SETTINGS"
+            )
+        ]
+
+    def _generate_logs_menu_items(self):
+        """Generates the Logs submenu: TV show | movies | captains logs | Back."""
+        return [
+            MenuItem(
+                name="TV show",
+                target_state=STATE_MEDIA_PLAYER,
+                data={"media_source": "tv_show"},
+                color_key="SIDEBAR_SYSTEM"
+            ),
+            MenuItem(
+                name="movies",
+                target_state=STATE_MEDIA_PLAYER,
+                data={"media_source": "movies"},
+                color_key="SIDEBAR_SYSTEM"
+            ),
+            MenuItem(
+                name="captains logs",
+                target_state=STATE_MEDIA_PLAYER,
+                data={"media_source": "captains_logs"},
+                color_key="SIDEBAR_SYSTEM"
+            ),
+            MenuItem(
+                name="<- Back",
+                target_state=STATE_MENU,
+                color_key="SIDEBAR_SETTINGS"
+            )
+        ]
+
+    def _generate_data_menu_items(self):
+        """Generates the Data submenu: star trek wiki | Back."""
+        return [
+            MenuItem(
+                name="star trek wiki",
                 target_state=STATE_ST_WIKI,
                 color_key="SIDEBAR_SCHEMATICS"
             ),
@@ -371,6 +416,8 @@ class MenuManager:
         elif current_state == STATE_SCHEMATICS_MENU:
             # Schematics menu should use the submenu stack like sensors and settings
             # If we're in STATE_SCHEMATICS_MENU, it should be managed by the stack
+            return self.current_menu_definition
+        elif current_state == STATE_LOGS_MENU or current_state == STATE_DATA_MENU:
             return self.current_menu_definition
         elif current_state == STATE_SCHEMATICS_CATEGORY:
             return self.current_menu_definition

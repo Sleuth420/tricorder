@@ -67,6 +67,22 @@ class MediaPlayerManager:
         self._scan_season_folders()
         self._refresh_track_list()
 
+    def set_media_source(self, media_source):
+        """
+        Switch to a Logs source folder (tv_show, movies, captains_logs).
+        Uses config.MEDIA_SOURCE_FOLDERS; falls back to MEDIA_FOLDER if source unknown.
+        """
+        folders = getattr(self.config, "MEDIA_SOURCE_FOLDERS", None)
+        if folders and media_source and media_source in folders:
+            self.media_folder = folders[media_source]
+            logger.info("Media player: source=%s, folder=%s", media_source, self.media_folder)
+        else:
+            self.media_folder = getattr(self.config, "MEDIA_FOLDER", "assets/media")
+        self._current_season_folder = None
+        self._scan_season_folders()
+        self._refresh_track_list()
+        self.current_index = 0
+
     def _ensure_vlc_instance(self):
         """Create VLC instance and player if possible. Safe to call multiple times."""
         if not _VLC_AVAILABLE or self._vlc_instance is not None or self._vlc_init_failed:
@@ -262,7 +278,7 @@ class MediaPlayerManager:
                         has_media = True
                         break
                 if has_media:
-                    display_name = f"Season {name}"
+                    display_name = "Secret" if name.lower() == "secret" else f"Season {name}"
                     self._season_folders.append((display_name, folder_path))
             if self._season_folders:
                 logger.info("Media player: found %d season folder(s): %s", len(self._season_folders), [t[0] for t in self._season_folders])
@@ -629,12 +645,19 @@ class MediaPlayerManager:
         """True if file info overlay should be visible."""
         return time.time() < self.show_file_info_until
 
-    def on_enter_view(self):
-        """Called when entering media player view. Start at season list if using seasons; refresh episode list and reset index otherwise."""
+    def on_enter_view(self, media_source=None):
+        """
+        Called when entering media player view.
+        If media_source is set (tv_show, movies, captains_logs), switch to that folder first.
+        Then start at season list if using seasons; refresh episode list and reset index otherwise.
+        """
         self.stop()
-        self._scan_season_folders()
-        self.clear_season()  # Back to top level: season list or flat file list
-        if not self.is_browsing_seasons() and self.current_index >= len(self.track_list) and self.track_list:
+        if media_source is not None:
+            self.set_media_source(media_source)
+        else:
+            self._scan_season_folders()
+            self.clear_season()
+        if not self.is_browsing_seasons() and self.track_list and self.current_index >= len(self.track_list):
             self.current_index = 0
 
     def on_exit_view(self):

@@ -104,8 +104,8 @@ def draw_media_player_view(screen, app_state, fonts, config_module, ui_scaler=No
             if track_list:
                 menu_items = [name for name, _ in track_list]  # Episode title from MP4 comment
             else:
-                media_folder = getattr(config_module, "MEDIA_FOLDER", "assets/media")
-                menu_items = [f"No episodes in {media_folder}"]
+                media_folder = getattr(mgr, "media_folder", None) or getattr(config_module, "MEDIA_FOLDER", "assets/media")
+                menu_items = [f"No media in {media_folder}"]
 
             selected_index = mgr.get_current_index()
             if selected_index >= len(menu_items):

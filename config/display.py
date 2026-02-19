@@ -27,8 +27,14 @@ SPLASH_DURATION_MS = 3000  # Original splash duration (not used in loading scree
 LOADING_SCREEN_MIN_DURATION = 5.0  # Minimum loading screen duration in seconds
 
 # -- Media Player (VLC in separate window; UI and navigation in Pygame) --
-MEDIA_FOLDER = "assets/media"  # Folder scanned for media files
+MEDIA_FOLDER = "assets/media"  # Default folder (overridden by Logs menu source)
 MEDIA_EXTENSIONS = (".mp3", ".wav", ".ogg", ".mp4", ".avi", ".mov")  # Audio and video (VLC must be installed)
+# Logs menu sources: TV shows (season subdirs 1, 2, 3, Secret etc), movies, captains logs (MP3)
+MEDIA_SOURCE_FOLDERS = {
+    "tv_show": "media/TV Shows/Star Trek",
+    "movies": "media/Movies",
+    "captains_logs": "media/Logs/Captain",
+}
 
 # -- 3D Schematics Zoom Settings --
 SCHEMATICS_ZOOM_DEFAULT = 1.0      # Default zoom level (1.0 = normal size)

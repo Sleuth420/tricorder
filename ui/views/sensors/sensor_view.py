@@ -122,10 +122,11 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
 
     if graph_type == "LINE":
         history_data = sensor_history.get_history(current_sensor_key)
-        # No footer when graph is shown; reserve only space for time axis label below graph
+        # Reserve space: time axis label + orange/yellow scanning strip below graph
         time_label_height = (config_module.FONT_SIZE_SMALL or 14) + (ui_scaler.scale(8) if ui_scaler else 8)
+        scan_strip_height = ui_scaler.scale(24) if ui_scaler else 24
         min_graph_h = ui_scaler.scale(100) if ui_scaler else 100
-        graph_height = safe_rect.bottom - value_rect.bottom - graph_margin * 2 - time_label_height
+        graph_height = safe_rect.bottom - value_rect.bottom - graph_margin * 2 - time_label_height - scan_strip_height
         graph_width = safe_rect.width - graph_margin * 2
         graph_rect = pygame.Rect(
             safe_rect.left + graph_margin,
@@ -133,6 +134,7 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
             graph_width,
             max(min_graph_h, graph_height)
         )
+        scan_strip_rect = pygame.Rect(graph_rect.left, graph_rect.bottom, graph_rect.width, scan_strip_height)
         range_override = display_props.get("range_override", (None, None))
         min_val_cfg, max_val_cfg = range_override if range_override is not None else (None, None)
 
@@ -145,11 +147,14 @@ def draw_sensor_view(screen, app_state, sensor_values, sensor_history, fonts, co
                 config_module,
                 ui_scaler
             )
-            # Draw time axis label with better positioning
+            # Orange/yellow scanning lines animation below the graph (tricorder-style)
+            if not app_state.is_frozen and scan_strip_rect.height >= 12:
+                _draw_line_graph_scanning_effect(screen, scan_strip_rect, current_time, config_module, ui_scaler)
+            # Draw time axis label below the scanning strip
             time_font = fonts.get('small', fonts['medium'])
             time_text = f"Time ({config_module.GRAPH_HISTORY_SIZE}s →)"
             time_surf = time_font.render(time_text, True, config_module.Theme.GRAPH_GRID)
-            time_label_offset = (config_module.FONT_SIZE_SMALL + (ui_scaler.scale(5) if ui_scaler else 5))
+            time_label_offset = scan_strip_height + (config_module.FONT_SIZE_SMALL or 14) + (ui_scaler.scale(5) if ui_scaler else 5)
             time_rect = time_surf.get_rect(center=(graph_rect.centerx, graph_rect.bottom + time_label_offset))
             screen.blit(time_surf, time_rect)
         except Exception as e:
@@ -269,6 +274,37 @@ def _draw_subtle_title_glow(screen, text, font, color, center_pos, current_time)
     """Draw title with subtle animated glow effect behind the main text."""
     # Remove glow effect - not visible on small screen, just draw normal text
     pass  # No glow effect needed
+
+def _draw_line_graph_scanning_effect(screen, strip_rect, current_time, config_module, ui_scaler=None):
+    """Draw orange/yellow tricorder-style scanning lines (growing/shrinking bars) below the line graph."""
+    scan_speed = 2.2
+    scan_height = max(2, ui_scaler.scale(2) if ui_scaler else 2)
+    scan_spacing = max(10, (ui_scaler.scale(12) if ui_scaler else 12))
+    if strip_rect.height < scan_spacing:
+        return
+    num_lines = max(1, strip_rect.height // scan_spacing)
+    max_width = strip_rect.width * 0.75
+    # Orange and yellow (theme accent / engineering gold)
+    primary = getattr(config_module.Palette, "ORANGE", (255, 165, 0))
+    secondary = getattr(config_module.Palette, "ENGINEERING_GOLD", (255, 200, 0))
+    for i in range(num_lines):
+        line_offset = i * 0.25
+        line_progress = (current_time * scan_speed + line_offset) % 4.0
+        if line_progress >= 2.0:
+            continue
+        line_y = strip_rect.top + (i * scan_spacing) + 2
+        if line_progress < 1.0:
+            line_width = int(max_width * line_progress)
+        else:
+            line_width = int(max_width * (2.0 - line_progress))
+        if line_width < 6:
+            continue
+        line_x = strip_rect.centerx - line_width // 2
+        line_rect = pygame.Rect(line_x, line_y, line_width, scan_height)
+        scan_color = secondary if i % 2 else primary
+        pygame.draw.rect(screen, scan_color, line_rect)
+        highlight = (min(255, scan_color[0] + 30), min(255, scan_color[1] + 25), min(255, scan_color[2] + 10))
+        pygame.draw.line(screen, highlight, (line_rect.left, line_rect.top), (line_rect.right, line_rect.top), 1)
 
 def _draw_sensor_ambient_effects(screen, screen_width, screen_height, graph_rect, sensor_data, current_time, config_module, ui_scaler, is_frozen=False):
     """Draw ambient tricorder effects in available spaces around the graph. Uses ui_scaler for insets when available."""

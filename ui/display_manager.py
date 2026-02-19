@@ -271,6 +271,10 @@ def update_display(screen, app_state, sensor_values, sensor_history, fonts, conf
     if not current_ui_scaler:
         logger.warning("No UIScaler available, creating temporary instance")
         current_ui_scaler = UIScaler(screen.get_width(), screen.get_height(), config_module)
+
+    # Re-hide mouse cursor every frame (kiosk mode). VLC detach, games, and display mode
+    # switches can cause SDL/OS to show the cursor again; re-assert hidden here.
+    pygame.mouse.set_visible(False)
     
     # Handle UI component setup for managers that need UI components
     # Note: We handle UI components here in display_manager, not in the models themselves

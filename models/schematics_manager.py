@@ -148,7 +148,7 @@ class SchematicsManager:
             "name": "NCC-1701 Enterprise",
             "type": "opengl_model",
             "model_key": "ncc_1701",
-            "file_path": "assets/ship/NCC Enterprise/NCC-1701 MESH.obj",
+            "file_path": "assets/ship/NCC Enterprise/NCC-1701.obj",
             "implemented": True,
             "vertices": [],
             "edges": [],

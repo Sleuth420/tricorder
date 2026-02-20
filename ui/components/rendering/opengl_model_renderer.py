@@ -66,7 +66,7 @@ class OpenGLModelRenderer:
         
         # Calculate model scaling and centering
         self.model_center = model.get_center()
-        self.model_scale = model.get_scale_factor(target_size=3.5)  # Larger for better visibility on small screens
+        self.model_scale = model.get_scale_factor(target_size=5.0)  # Scale so model fills view
         
         logger.info(f"Model loaded: center={self.model_center}, scale={self.model_scale}")
         
@@ -300,7 +300,7 @@ class OpenGLModelRenderer:
         
         # Move camera back - adjust distance based on zoom level
         # Higher zoom = closer camera (smaller distance)
-        camera_distance = 5.0 / zoom_level
+        camera_distance = 4.0 / zoom_level
         glTranslatef(0.0, 0.0, -camera_distance)
         
         # Apply rotations (pitch, roll, yaw are already in degrees)

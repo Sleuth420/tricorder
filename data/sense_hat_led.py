@@ -194,44 +194,173 @@ def _pattern_settings(pixels):
         _set_pixel(pixels, x, 4, c, c, 0)
 
 
-def _pattern_media_player(pixels, app_state):
-    """Media player: play (triangle) or pause (two bars) indicator."""
+def _pattern_media_player(pixels, app_state, t=None):
+    """Media player: play (triangle + equalizer) or pause (two bars) indicator."""
+    if t is None:
+        t = time.time()
     try:
         is_playing = app_state.media_player_manager.is_playing()
     except Exception:
         is_playing = False
     c = _MID
     if is_playing:
-        # Play triangle (right-pointing) centered
-        _set_pixel(pixels, 4, 2, 0, c, 0)
-        _set_pixel(pixels, 4, 3, 0, c, 0)
-        _set_pixel(pixels, 4, 4, 0, c, 0)
-        _set_pixel(pixels, 4, 5, 0, c, 0)
+        # Equalizer bars (left side): 4 bars, heights vary with time
+        for col, phase in enumerate([0, 0.25, 0.5, 0.75]):
+            h = int(1 + 5 * (0.5 + 0.5 * math.sin(t * 4 + phase * 2 * math.pi)))
+            h = max(1, min(6, h))
+            for row in range(7, 7 - h, -1):
+                _set_pixel(pixels, col, row, 0, _MID + int(20 * math.sin(t * 2 + col)), 0)
+        # Play triangle (right side) – right-pointing
         _set_pixel(pixels, 5, 2, 0, c, 0)
         _set_pixel(pixels, 5, 3, 0, c, 0)
         _set_pixel(pixels, 5, 4, 0, c, 0)
         _set_pixel(pixels, 5, 5, 0, c, 0)
         _set_pixel(pixels, 6, 3, 0, c, 0)
         _set_pixel(pixels, 6, 4, 0, c, 0)
+        _set_pixel(pixels, 7, 4, 0, _DIM, 0)
     else:
-        # Pause: two vertical bars
+        # Pause: two vertical bars (static)
         for y in range(2, 6):
             _set_pixel(pixels, 3, y, c, c, 0)
             _set_pixel(pixels, 5, y, c, c, 0)
+        # Dim "stopped" corner
+        _set_pixel(pixels, 7, 7, _DIM, 0, 0)
 
 
-def _pattern_schematics(pixels):
+def _pattern_schematics(pixels, t=None):
     """Schematics / 3D viewer: small “frame” outline."""
+    if t is None:
+        t = time.time()
     c = _DIM
     for i in range(8):
         _set_pixel(pixels, i, 0, 0, 0, c)
         _set_pixel(pixels, i, 7, 0, 0, c)
         _set_pixel(pixels, 0, i, 0, 0, c)
         _set_pixel(pixels, 7, i, 0, 0, c)
+    corner = int(t * 1.5) % 4
+    cx, cy = [(0, 0), (7, 0), (7, 7), (0, 7)][corner]
+    _set_pixel(pixels, cx, cy, 0, 0, _BRIGHT)
+
+
+def _pattern_loading(pixels, t=None):
+    """Loading screen: rotating spinner / scanning sweep."""
+    if t is None:
+        t = time.time()
+    c = _MID
+    # Spinner: one bright segment moving around the border
+    step = int((t * 3) % 8)  # 0..7
+    for i in range(8):
+        r, g, b = (0, _BRIGHT, 0) if i == step else (0, _DIM, 0)
+        _set_pixel(pixels, i, 0, r, g, b)
+        _set_pixel(pixels, 7, i, r, g, b)
+        _set_pixel(pixels, 7 - i, 7, r, g, b)
+        _set_pixel(pixels, 0, 7 - i, r, g, b)
+
+
+def _pattern_secret_games(pixels, t=None):
+    """Secret games menu: animated smiley with bouncing eyes."""
+    if t is None:
+        t = time.time()
+    c = _MID
+    # Eyes bounce vertically (row 2 or 3)
+    eye_row = 2 if int(t * 2) % 2 == 0 else 3
+    _set_pixel(pixels, 2, eye_row, c, c, 0)
+    _set_pixel(pixels, 5, eye_row, c, c, 0)
+    # Smile
+    _set_pixel(pixels, 1, 4, c, c, 0)
+    _set_pixel(pixels, 2, 5, c, c, 0)
+    _set_pixel(pixels, 3, 5, c, c, 0)
+    _set_pixel(pixels, 4, 5, c, c, 0)
+    _set_pixel(pixels, 5, 5, c, c, 0)
+    _set_pixel(pixels, 6, 4, c, c, 0)
+    # Corner “game” beacons
+    bc = _DIM // 2
+    _set_pixel(pixels, 0, 0, bc, bc, 0)
+    _set_pixel(pixels, 7, 0, bc, bc, 0)
+
+
+def _pattern_pong(pixels, t=None):
+    """Pong: two paddles (left/right) and ball moving vertically."""
+    if t is None:
+        t = time.time()
+    c = _MID
+    # Left paddle (col 0), right paddle (col 7) – 3 pixels tall centered
+    paddle_phase = (t * 1.5) % 8.0
+    py = int(paddle_phase) % 6 + 1  # row 1..6
+    for dy in (-1, 0, 1):
+        row = py + dy
+        if 0 <= row <= 7:
+            _set_pixel(pixels, 0, row, 0, c, 0)
+            _set_pixel(pixels, 7, row, 0, c, 0)
+    # Ball: moves left-right and up-down (bouncing)
+    bx = int(1 + (t * 2) % 6)
+    by = int(1 + (t * 2.5) % 6)
+    _set_pixel(pixels, bx, by, _BRIGHT, _BRIGHT, 0)
+
+
+def _pattern_breakout(pixels, t=None):
+    """Breakout: brick row at top, paddle at bottom moving horizontally."""
+    if t is None:
+        t = time.time()
+    c = _MID
+    # Bricks: top two rows, alternating on/off
+    for x in range(8):
+        _set_pixel(pixels, x, 0, c, 0, 0)
+        _set_pixel(pixels, x, 1, _DIM, 0, 0)
+    # Paddle: 3 pixels wide, moving
+    px = int((t * 2) % 6) + 1  # 1..6
+    for dx in (-1, 0, 1):
+        col = px + dx
+        if 0 <= col <= 7:
+            _set_pixel(pixels, col, 7, 0, c, 0)
+
+
+def _pattern_snake(pixels, t=None):
+    """Snake: single moving dot (head) with short trail."""
+    if t is None:
+        t = time.time()
+    # Head moves in a simple path (e.g. clockwise border then inner)
+    step = int(t * 3) % 24
+    positions = [
+        (4, 0), (5, 0), (6, 0), (7, 0), (7, 1), (7, 2), (7, 3), (6, 3), (5, 3), (4, 3),
+        (3, 3), (2, 3), (1, 3), (0, 3), (0, 2), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1),
+        (4, 2), (5, 2), (6, 2), (6, 1),
+    ]
+    head = positions[step % len(positions)]
+    trail = positions[(step - 1) % len(positions)]
+    trail2 = positions[(step - 2) % len(positions)]
+    _set_pixel(pixels, head[0], head[1], 0, _BRIGHT, 0)
+    _set_pixel(pixels, trail[0], trail[1], 0, _MID, 0)
+    _set_pixel(pixels, trail2[0], trail2[1], 0, _DIM, 0)
+
+
+def _pattern_tetris(pixels, t=None):
+    """Tetris: falling L-block or line shape animation."""
+    if t is None:
+        t = time.time()
+    c = _MID
+    # Falling offset (row) – block descends over time
+    row_off = int((t * 2) % 10) - 1  # -1..8 so it “falls” and resets
+    if row_off < 0:
+        row_off = 0
+    # Simple L-shape: col 3–4, rows row_off..row_off+2, plus one at (4, row_off+2) to the right
+    for dr in range(3):
+        r = row_off + dr
+        if 0 <= r <= 7:
+            _set_pixel(pixels, 3, r, 0, 0, c)
+            _set_pixel(pixels, 4, r, 0, 0, c)
+    r = row_off + 2
+    if 0 <= r <= 7:
+        _set_pixel(pixels, 5, r, 0, 0, c)
+    # Fixed “ground” line at bottom
+    _set_pixel(pixels, 2, 7, _DIM, _DIM, 0)
+    _set_pixel(pixels, 3, 7, _DIM, _DIM, 0)
+    _set_pixel(pixels, 4, 7, _DIM, _DIM, 0)
+    _set_pixel(pixels, 5, 7, _DIM, _DIM, 0)
 
 
 def _pattern_games(pixels):
-    """Secret games: simple smiley or dots."""
+    """Fallback games: simple static smiley (used only if state not matched)."""
     c = _MID
     _set_pixel(pixels, 2, 2, c, c, 0)
     _set_pixel(pixels, 5, 2, c, c, 0)
@@ -318,8 +447,11 @@ def _choose_and_build_pattern(app_state, sensor_values, config_module):
     """Pick pattern by state and fill the 64-pixel list."""
     state = app_state.current_state
     pixels = _empty_pixels()
+    t = time.time()
 
-    if state == "SYSTEM":
+    if state == "LOADING":
+        _pattern_loading(pixels, t)
+    elif state == "SYSTEM":
         _pattern_system(pixels, app_state, sensor_values, config_module)
     elif state == "SENSORS_MENU":
         _pattern_sensors_menu(pixels, app_state, sensor_values, config_module)
@@ -328,19 +460,28 @@ def _choose_and_build_pattern(app_state, sensor_values, config_module):
     elif state == "DASHBOARD":
         _pattern_dashboard_or_sensor(pixels, app_state, sensor_values, config_module)
     elif state == "MENU":
-        _pattern_menu(pixels, time.time())
+        _pattern_menu(pixels, t)
+    elif state == "SECRET_GAMES":
+        _pattern_secret_games(pixels, t)
     elif state == "MEDIA_PLAYER":
-        _pattern_media_player(pixels, app_state)
+        _pattern_media_player(pixels, app_state, t)
     elif state in ("SCHEMATICS", "SCHEMATICS_MENU", "SCHEMATICS_CATEGORY"):
-        _pattern_schematics(pixels)
-    elif state in ("PONG_ACTIVE", "BREAKOUT_ACTIVE", "SNAKE_ACTIVE"):
-        _pattern_games(pixels)
+        _pattern_schematics(pixels, t)
+    elif state == "PONG_ACTIVE":
+        _pattern_pong(pixels, t)
+    elif state == "BREAKOUT_ACTIVE":
+        _pattern_breakout(pixels, t)
+    elif state == "SNAKE_ACTIVE":
+        _pattern_snake(pixels, t)
+    elif state == "TETRIS_ACTIVE":
+        _pattern_tetris(pixels, t)
     elif state in ("SETTINGS_WIFI", "SETTINGS_WIFI_NETWORKS", "WIFI_PASSWORD_ENTRY"):
         _pattern_wifi(pixels, app_state)
     elif "SETTINGS" in state or "CONFIRM" in state or "SELECT_COMBO" in state:
         _pattern_settings(pixels)
     else:
-        _pattern_menu(pixels, time.time())
+        # All other menus and views: crew, wiki, logs, data, etc.
+        _pattern_menu(pixels, t)
 
     return pixels
 

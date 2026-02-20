@@ -27,7 +27,7 @@ class CharacterSelector:
             ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
             ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', '@'],
             ['z', 'x', 'c', 'v', 'b', 'n', 'm', '.', '-', '_'],
-            ['SPACE', 'CAPS', 'DELETE', 'SHOW', 'GO', 'CANCEL']
+            ['SPC', 'CAPS', 'DEL', 'SHOW', 'GO >', 'CANC']
         ]
         
         # Cursor position
@@ -105,60 +105,52 @@ class CharacterSelector:
             logger.error(f"Font rendering test failed: {e}")
 
     def _calculate_layout(self):
-        """Calculate the layout dimensions with responsive design."""
-        # Use UIScaler for responsive dimensions if available
-        compact = False
-        if self.ui_scaler:
-            # On Pi/small screens use a compact layout so the keyboard doesn't dominate
-            compact = self.ui_scaler.is_small_screen()
-            if compact:
-                title_height = self.ui_scaler.scale(20)
-                password_field_height = self.ui_scaler.scale(28)
-                footer_height = self.ui_scaler.scale(36)
-                padding = self.ui_scaler.margin("small")
-            else:
-                title_height = self.ui_scaler.scale(30)
-                password_field_height = self.ui_scaler.scale(40)
-                footer_height = self.ui_scaler.scale(60)
-                padding = self.ui_scaler.margin("medium")
-            
-            # Debug logging for character selector layout
-            if self.ui_scaler.debug_mode:
-                logger.info(f"🎨 CharacterSelector: screen={self.screen_rect.width}x{self.screen_rect.height}, title_h={title_height}px, padding={padding}px, compact={compact}")
+        """Calculate the layout dimensions with responsive design. Uses screen_rect (safe area) and ui_scaler."""
+        # Base layout on actual content area (screen_rect) so safe area is respected
+        w = self.screen_rect.width
+        h = self.screen_rect.height
+        max_cols = max(len(row) for row in self.characters)
+        num_rows = len(self.characters)
+        compact = self.ui_scaler and self.ui_scaler.is_small_screen()
+
+        if compact:
+            # 320x240 / safe area: minimal chrome so keyboard fits; no scaling up
+            padding = max(2, min(6, w // 80))
+            title_height = max(10, h // 22)
+            password_field_height = max(12, h // 18)
+            footer_height = max(26, h // 9)  # room for two instruction lines
+            available_height = h - title_height - password_field_height - footer_height - padding * 4
+            available_width = w - padding * 2
+            self.cell_width = max(8, available_width // max_cols)
+            self.cell_height = max(6, available_height // num_rows)
+            # Cap cell size so keys don't dominate on small screens (~320x240)
+            max_cell_w = max(12, w // 11)
+            max_cell_h = max(10, available_height // (num_rows + 1))
+            self.cell_width = min(self.cell_width, max_cell_w)
+            self.cell_height = min(self.cell_height, max_cell_h)
+        elif self.ui_scaler:
+            padding = self.ui_scaler.margin("medium")
+            title_height = self.ui_scaler.scale(30)
+            password_field_height = self.ui_scaler.scale(40)
+            footer_height = self.ui_scaler.scale(60)
+            available_height = h - title_height - password_field_height - footer_height - padding * 4
+            available_width = w - padding * 2
+            self.cell_width = available_width // max_cols
+            self.cell_height = available_height // num_rows
+            min_cell_width = self.ui_scaler.scale(40)
+            min_cell_height = self.ui_scaler.scale(25)
+            self.cell_width = max(self.cell_width, min_cell_width)
+            self.cell_height = max(self.cell_height, min_cell_height)
         else:
-            # Fallback to original calculations
+            padding = 20
             title_height = 30
             password_field_height = 40
             footer_height = 60
-            padding = 20
-        
-        # Available space for character grid
-        available_height = (self.screen_rect.height - 
-                          title_height - password_field_height - footer_height - padding * 4)
-        available_width = self.screen_rect.width - padding * 2
-        
-        # Calculate cell dimensions
-        max_cols = max(len(row) for row in self.characters)
-        num_rows = len(self.characters)
-        
-        self.cell_width = available_width // max_cols
-        self.cell_height = available_height // num_rows
-        
-        # Ensure minimum cell size; use smaller minimums on Pi so keys don't get huge
-        if self.ui_scaler:
-            if compact:
-                min_cell_width = self.ui_scaler.scale(22)
-                min_cell_height = self.ui_scaler.scale(14)
-            else:
-                min_cell_width = self.ui_scaler.scale(40)
-                min_cell_height = self.ui_scaler.scale(25)
-        else:
-            min_cell_width = 40
-            min_cell_height = 25
-            
-        self.cell_width = max(self.cell_width, min_cell_width)
-        self.cell_height = max(self.cell_height, min_cell_height)
-        
+            available_height = h - title_height - password_field_height - footer_height - padding * 4
+            available_width = w - padding * 2
+            self.cell_width = max(40, available_width // max_cols)
+            self.cell_height = max(25, available_height // num_rows)
+
         # Grid position - center the grid
         total_grid_width = max_cols * self.cell_width
         total_grid_height = num_rows * self.cell_height
@@ -391,9 +383,9 @@ class CharacterSelector:
                 f"{labels['select']}: Select character | {labels['back']}: Cancel"
             ]
             
-            # Responsive line spacing (tighter on Pi/small screens)
+            # Responsive line spacing (tighter on Pi/small screens so two lines fit in footer)
             if self.ui_scaler and self.ui_scaler.is_small_screen():
-                line_spacing = self.ui_scaler.scale(14)
+                line_spacing = max(10, min(12, self.screen_rect.height // 18))
             else:
                 line_spacing = self.ui_scaler.scale(20) if self.ui_scaler else 20
             

@@ -47,9 +47,9 @@ def draw_wifi_password_entry_view(screen, app_state, fonts, config_module, ui_sc
             draw_surface = screen.subsurface(safe_rect)
         else:
             draw_surface = screen
-        if ui_scaler and hasattr(password_manager, 'character_selector') and password_manager.character_selector:
-            if hasattr(password_manager.character_selector, 'set_ui_scaler'):
-                password_manager.character_selector.set_ui_scaler(ui_scaler)
+        # Ensure manager gets ui_scaler so character selector uses safe-area rect and compact layout (320x240)
+        if ui_scaler and hasattr(password_manager, 'set_ui_scaler'):
+            password_manager.set_ui_scaler(ui_scaler)
         password_manager.draw(draw_surface)
         
         logger.debug("WiFi password entry view drawn successfully")

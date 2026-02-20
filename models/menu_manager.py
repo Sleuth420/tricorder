@@ -136,7 +136,7 @@ class MenuManager:
         return items
 
     def _generate_schematics_menu_items(self):
-        """Generates the Ship submenu items (only models in config.schematics.SCHEMATICS_VISIBLE_KEYS)."""
+        """Generates the Ship submenu: NCC-1701 Enterprise (3D viewer) | Crew (crew images) | Back."""
         from config import schematics as schematics_config
         items = []
         for i, model_key in enumerate(schematics_config.SCHEMATICS_VISIBLE_KEYS, start=1):
@@ -149,6 +149,11 @@ class MenuManager:
                 color_key="SIDEBAR_SCHEMATICS"
             ))
         items.append(MenuItem(
+            name="Crew",
+            target_state=STATE_CREW_MENU,
+            color_key="SIDEBAR_SCHEMATICS"
+        ))
+        items.append(MenuItem(
             name="<- Back",
             target_state=STATE_MENU,
             color_key="SIDEBAR_SETTINGS"
@@ -156,7 +161,7 @@ class MenuManager:
         return items
 
     def _generate_schematics_category_menu_items(self):
-        """Generates the schematics top-level menu: Ship | Logs | Data | Crew | Back."""
+        """Generates the schematics top-level menu: Ship | Logs | Data | Back."""
         return [
             MenuItem(
                 name="Ship",
@@ -171,11 +176,6 @@ class MenuManager:
             MenuItem(
                 name="Data",
                 target_state=STATE_DATA_MENU,
-                color_key="SIDEBAR_SCHEMATICS"
-            ),
-            MenuItem(
-                name="Crew",
-                target_state=STATE_CREW_MENU,
                 color_key="SIDEBAR_SCHEMATICS"
             ),
             MenuItem(

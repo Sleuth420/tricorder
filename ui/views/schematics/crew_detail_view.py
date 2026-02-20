@@ -53,7 +53,7 @@ def draw_crew_detail_view(screen, app_state, fonts, config_module, ui_scaler=Non
 
     # Name below image (or centered if no image)
     font_large = fonts["large"]
-    name_surf = font_large.render(name, True, config_module.Theme.TEXT_ACCENT)
+    name_surf = font_large.render(name, True, config_module.Theme.ACCENT)
     name_rect = name_surf.get_rect(centerx=safe_rect.centerx, y=name_y)
     screen.blit(name_surf, name_rect)
 

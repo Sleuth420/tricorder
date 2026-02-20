@@ -318,6 +318,12 @@ class InputRouter:
                 return self.app_state.state_manager.transition_to(STATE_MEDIA_PLAYER)
             elif selected_item.target_state == STATE_ST_WIKI:
                 return self.app_state.state_manager.transition_to(STATE_ST_WIKI)
+            elif selected_item.target_state == STATE_CREW_MENU:
+                # Crew is under Ship: enter crew list submenu, parent = Ship (STATE_SCHEMATICS_MENU)
+                crew_menu_items = self.app_state.menu_manager._generate_crew_menu_items()
+                self.app_state.menu_manager.enter_submenu(
+                    crew_menu_items, STATE_SCHEMATICS_MENU, STATE_CREW_MENU)
+                return self.app_state.state_manager.transition_to(STATE_CREW_MENU)
             elif selected_item.target_state == STATE_CREW_DETAIL:
                 self.app_state.selected_crew_data = selected_item.data
                 return self.app_state.state_manager.transition_to(STATE_CREW_DETAIL)
@@ -408,11 +414,6 @@ class InputRouter:
             self.app_state.menu_manager.enter_submenu(
                 data_menu_items, STATE_SCHEMATICS_CATEGORY, STATE_DATA_MENU)
             return self.app_state.state_manager.transition_to(STATE_DATA_MENU)
-        elif selected_item.target_state == STATE_CREW_MENU:
-            crew_menu_items = self.app_state.menu_manager._generate_crew_menu_items()
-            self.app_state.menu_manager.enter_submenu(
-                crew_menu_items, STATE_SCHEMATICS_CATEGORY, STATE_CREW_MENU)
-            return self.app_state.state_manager.transition_to(STATE_CREW_MENU)
         return False
 
     def _handle_schematics_category_back(self):

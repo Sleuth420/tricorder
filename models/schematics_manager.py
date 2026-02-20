@@ -123,6 +123,7 @@ class SchematicsManager:
         
         # Loaded OBJ models cache
         self.loaded_obj_models = {}  # Cache for loaded OBJ models
+        self._failed_obj_paths = set()  # Paths that failed to load (avoid retry every frame)
         
         # Sensor smoothing for noise reduction (parameters now come from config)
         self.smoothing_enabled = True
@@ -248,11 +249,16 @@ class SchematicsManager:
             logger.error("No file path specified for OBJ model")
             return None
         
-        # Check cache first
+        # Return cached success
         if file_path in self.loaded_obj_models:
             loading_operation.set_detail("Loading from cache...")
             self._refresh_loading_display(loading_operation)
             return self.loaded_obj_models[file_path]
+        # Skip retry if this path already failed
+        if file_path in self._failed_obj_paths:
+            loading_operation.set_detail("Model unavailable")
+            self._refresh_loading_display(loading_operation)
+            return None
         
         # Load from file with progress updates
         loading_operation.set_detail(f"Loading {os.path.basename(file_path)}...")
@@ -269,6 +275,7 @@ class SchematicsManager:
             self._refresh_loading_display(loading_operation)
             logger.info(f"OBJ model loaded and cached: {file_path}")
         else:
+            self._failed_obj_paths.add(file_path)
             loading_operation.set_detail("Failed to load model")
             self._refresh_loading_display(loading_operation)
         
@@ -281,9 +288,12 @@ class SchematicsManager:
             logger.error("No file path specified for OBJ model")
             return None
         
-        # Check cache first
+        # Return cached success
         if file_path in self.loaded_obj_models:
             return self.loaded_obj_models[file_path]
+        # Skip retry if this path already failed (stops per-frame load spam)
+        if file_path in self._failed_obj_paths:
+            return None
         
         # Load from file
         logger.info(f"Loading OBJ model from: {file_path}")
@@ -295,6 +305,7 @@ class SchematicsManager:
             self.loaded_obj_models[file_path] = obj_model
             logger.info(f"OBJ model loaded and cached: {file_path}")
         else:
+            self._failed_obj_paths.add(file_path)
             logger.error(f"Failed to load OBJ model: {file_path}")
         
         return obj_model

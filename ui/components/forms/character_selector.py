@@ -66,14 +66,16 @@ class CharacterSelector:
             return pygame.font.Font(None, size)
         try:
             if self.ui_scaler:
-                # On Pi/small screens use smaller key font so labels fit in compact cells
+                # Small key font when content area is small (~320x240 or safe area), not just display
                 tiny_pt = getattr(cfg, 'FONT_SIZE_TINY', 14)
-                if self.ui_scaler.is_small_screen():
-                    char_font_size = self.ui_scaler.scale(tiny_pt)
+                small_content = self.screen_rect.width <= 400 and self.screen_rect.height <= 300
+                if small_content:
+                    char_font_size = max(8, min(tiny_pt, self.screen_rect.width // 20))
+                    footer_font_size = max(8, min(tiny_pt, self.screen_rect.width // 22))
                 else:
                     char_font_size = self.ui_scaler.scale(small_pt)
-                title_font_size = self.ui_scaler.scale(medium_pt)
-                footer_font_size = self.ui_scaler.scale(tiny_pt) if self.ui_scaler.is_small_screen() else self.ui_scaler.scale(small_pt)
+                    footer_font_size = self.ui_scaler.scale(small_pt)
+                title_font_size = self.ui_scaler.scale(medium_pt) if not small_content else max(10, self.ui_scaler.scale(tiny_pt))
                 self.char_font = _font(char_font_size)
                 self.title_font = _font(title_font_size)
                 self.footer_font = _font(footer_font_size)
@@ -111,7 +113,8 @@ class CharacterSelector:
         h = self.screen_rect.height
         max_cols = max(len(row) for row in self.characters)
         num_rows = len(self.characters)
-        compact = self.ui_scaler and self.ui_scaler.is_small_screen()
+        # Use content area size, not display size: compact when keyboard area is ~320x240 or smaller
+        compact = w <= 400 and h <= 300
 
         if compact:
             # 320x240 / safe area: minimal chrome so keyboard fits; no scaling up
@@ -383,8 +386,9 @@ class CharacterSelector:
                 f"{labels['select']}: Select character | {labels['back']}: Cancel"
             ]
             
-            # Responsive line spacing (tighter on Pi/small screens so two lines fit in footer)
-            if self.ui_scaler and self.ui_scaler.is_small_screen():
+            # Tighter line spacing when content area is small so two lines fit in footer
+            small_content = self.screen_rect.width <= 400 and self.screen_rect.height <= 300
+            if small_content:
                 line_spacing = max(10, min(12, self.screen_rect.height // 18))
             else:
                 line_spacing = self.ui_scaler.scale(20) if self.ui_scaler else 20

@@ -634,13 +634,10 @@ class AppState:
             
             return True  # State will change when loading completes
         
-        # Check secret combo duration (only from main menu on settings item)
+        # Check secret combo duration (keyboard: A+D held from main menu for configured duration)
         if (self.current_state == STATE_MENU and
             self.input_manager.check_secret_combo_duration() and
-            self.input_manager.check_secret_combo_conditions(
-                self.current_state,
-                self.menu_manager.get_current_menu_index(STATE_MENU)
-            )):
+            self.input_manager.check_secret_combo_conditions(self.current_state)):
             logger.info("Secret combo detected! Activating secret games menu")
             state_changed = self.state_manager.transition_to(STATE_SECRET_GAMES)
             # Ignore the follow-up key releases from the combo

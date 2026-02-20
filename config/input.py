@@ -116,9 +116,8 @@ MOUSE_ACTION_MAP = {
 
 # Input related timing
 INPUT_LONG_PRESS_DURATION = 2.0 # Seconds to qualify as a long press for Back action (Adjusted)
-DEFAULT_SECRET_HOLD_DURATION = 5.0 # Default seconds to hold keys for secret menu
-CURRENT_SECRET_COMBO_DURATION = DEFAULT_SECRET_HOLD_DURATION # Current configurable duration
-# SECRET_HOLD_DURATION = 5.0 # Original line, commented out or removed
+DEFAULT_SECRET_HOLD_DURATION = 2.0 # Default: hold A+D for 2 seconds to open secret menu (keyboard)
+CURRENT_SECRET_COMBO_DURATION = DEFAULT_SECRET_HOLD_DURATION # Configurable in Settings → Device → Secret Combo Duration
 
 # -- Action Name Constants (for MenuItem.action_name) --
 ACTION_LAUNCH_PONG = "LAUNCH_PONG"

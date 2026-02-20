@@ -164,27 +164,26 @@ class InputManager:
             'press_duration': press_duration
         }
         
-    def check_secret_combo_conditions(self, current_state, menu_index):
+    def check_secret_combo_conditions(self, current_state, menu_index=None):
         """
-        Check if conditions are met to START the secret combo timer.
+        Check if conditions are met to START the secret combo timer (keyboard/mouse).
+        Keyboard: from main menu, both A and D held (no need to be on Settings).
+        Joystick uses its own path (long press on Settings item) and does not use this.
         
         Args:
             current_state (str): Current application state
-            menu_index (int): Current menu index
+            menu_index (int, optional): Current menu index (unused for keyboard; kept for API compatibility)
             
         Returns:
             bool: True if secret combo conditions are met
         """
         required_keys = {self.config.KEY_PREV, self.config.KEY_NEXT}
         state_ok = current_state == "MENU"
-        index_ok = menu_index == self.settings_menu_index
         keys_ok = required_keys.issubset(self.keys_held)
         
-        logger.debug(f"Combo check: state='{current_state}'({state_ok}), "
-                    f"index={menu_index}({index_ok}), settings_idx={self.settings_menu_index}, "
-                    f"keys={self.keys_held}({keys_ok})")
+        logger.debug(f"Combo check: state='{current_state}'({state_ok}), keys={self.keys_held}({keys_ok})")
         
-        return state_ok and index_ok and keys_ok
+        return state_ok and keys_ok
         
     def start_secret_combo_timer(self):
         """Start the secret combo timer."""

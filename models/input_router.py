@@ -71,8 +71,8 @@ class InputRouter:
         """
         logger.debug(f"Routing action '{action}' for state '{current_state}'")
         
-        # Handle back action universally first
-        if action == app_config.INPUT_ACTION_BACK:
+        # Handle back action universally first (Tetris handles BACK itself for pause/quit)
+        if action == app_config.INPUT_ACTION_BACK and current_state != STATE_TETRIS_ACTIVE:
             return self._handle_back_action(current_state)
             
         # Route to state-specific handlers
@@ -1366,7 +1366,7 @@ class InputRouter:
             return False
         game_result = self.app_state.game_manager.handle_tetris_input(action)
         if game_result == "QUIT_TO_MENU":
-            return self.app_state.state_manager.return_to_menu()
+            return self.app_state._quit_tetris_to_menu()
         elif game_result:
             return True
         return False

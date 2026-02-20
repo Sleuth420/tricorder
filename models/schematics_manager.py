@@ -174,7 +174,7 @@ class SchematicsManager:
             "name": "Apollo NCC-1570",
             "type": "opengl_model",
             "model_key": "apollo_1570",
-            "file_path": "assets/apollo_ncc1570/Apollo_NCC1570.obj",
+            "file_path": "assets/ship/apollo_ncc1570/Apollo_NCC1570.obj",
             "implemented": True,
             "vertices": [],  # Will be loaded from OBJ file
             "edges": [],
@@ -187,7 +187,7 @@ class SchematicsManager:
             "name": "Apollo NCC-1701 Refit",
             "type": "opengl_model",
             "model_key": "apollo_1701_refit",
-            "file_path": "assets/apollo_nc1701_refit/Untitled.obj",
+            "file_path": "assets/ship/apollo_nc1701_refit/Untitled.obj",
             "implemented": True,
             "vertices": [],  # Will be loaded from OBJ file
             "edges": [],

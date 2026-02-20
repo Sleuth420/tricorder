@@ -378,12 +378,15 @@ class GameManager:
     def handle_tetris_input(self, action_name, event_type=None):
         """
         Handle input for the active Tetris game.
-        PREV=left, NEXT=right, SELECT=rotate clockwise. BACK on game over = quit.
+        PREV=left, NEXT=right, SELECT=rotate. BACK=pause during play; BACK/PREV on game over = quit.
         """
         if not self.active_tetris_game:
             return None
         g = self.active_tetris_game
         if not g.paused and not g.game_over:
+            if action_name == app_config.INPUT_ACTION_BACK:
+                g.toggle_pause()
+                return "GAME_PAUSED"
             if action_name == app_config.INPUT_ACTION_PREV:
                 g.move_left()
             elif action_name == app_config.INPUT_ACTION_NEXT:
@@ -391,6 +394,9 @@ class GameManager:
             elif action_name == app_config.INPUT_ACTION_SELECT:
                 g.rotate_cw()
         elif g.paused:
+            if action_name == app_config.INPUT_ACTION_BACK:
+                g.toggle_pause()
+                return "RESUME_GAME"
             if action_name == app_config.INPUT_ACTION_PREV:
                 g.navigate_pause_menu_up()
             elif action_name == app_config.INPUT_ACTION_NEXT:
@@ -401,7 +407,7 @@ class GameManager:
                     return "RESUME_GAME"
                 if menu_action == "QUIT_TO_MENU":
                     return "QUIT_TO_MENU"
-        elif g.game_over and action_name == app_config.INPUT_ACTION_BACK:
+        elif g.game_over and action_name in (app_config.INPUT_ACTION_BACK, app_config.INPUT_ACTION_PREV):
             return "QUIT_TO_MENU"
         return None
 

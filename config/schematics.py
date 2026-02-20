@@ -39,7 +39,7 @@ SCHEMATICS_CONFIG = {
 }
 
 # Model keys shown in the Ship submenu (others remain in config but are not rendered in the UI).
-SCHEMATICS_VISIBLE_KEYS = ('ncc_1701',)
+SCHEMATICS_VISIBLE_KEYS = ('ncc_1701', 'apollo_1570')
 
 # Sensor configuration for 3D viewer (separate from other app sensor usage)
 SENSOR_3D_CONFIG = {

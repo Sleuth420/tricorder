@@ -306,12 +306,14 @@ class TetrisGame:
                 ry = next_y + dr * tiny
                 pygame.draw.rect(screen, SHAPE_COLORS[idx], (rx, ry, tiny - 1, tiny - 1))
 
-        # Controls hint
+        # Controls hint (include Back to pause / exit)
         try:
             labels = config_module.get_control_labels()
+            back_label = labels.get('back', 'Back')
         except Exception:
-            labels = {'prev': 'A', 'next': 'D', 'select': 'Enter'}
-        hint = f"{labels['prev']}=Left {labels['next']}=Right {labels['select']}=Rotate"
+            labels = {'prev': 'A', 'next': 'D', 'select': 'Enter', 'back': 'B'}
+            back_label = 'B'
+        hint = f"{labels['prev']}=Left {labels['next']}=Right {labels['select']}=Rotate  {back_label}=Pause"
         hint_surf = self.font.render(hint, True, config_module.COLOR_FOREGROUND)
         screen.blit(hint_surf, (self.board_left, self.board_top + self.board_pixel_h + 4))
 
@@ -327,9 +329,10 @@ class TetrisGame:
             screen.blit(go_text, (go_x, go_y))
             try:
                 labels = config_module.get_control_labels()
-                quit_hint = f"Press {labels['prev']} to quit"
+                back_label = labels.get('back', 'Back')
+                quit_hint = f"Press {labels['prev']} or {back_label} to quit"
             except Exception:
-                quit_hint = "Press A to quit"
+                quit_hint = "Press A or Back to quit"
             hint_surf = self.font.render(quit_hint, True, config_module.COLOR_FOREGROUND)
             hint_x = self.width // 2 - hint_surf.get_width() // 2
             screen.blit(hint_surf, (hint_x, self.height // 2 + 15))
@@ -346,3 +349,11 @@ class TetrisGame:
                 text = self.font.render(option, True, color)
                 text_pos = (self.width // 2 - text.get_width() // 2, menu_y + i * 28)
                 screen.blit(text, text_pos)
+            try:
+                back_label = config_module.get_control_labels().get('back', 'Back')
+                if back_label and len(back_label) > 10:
+                    back_label = 'Back'
+            except Exception:
+                back_label = 'Back'
+            pause_hint = self.font.render(f"{back_label} = Resume", True, config_module.COLOR_FOREGROUND)
+            screen.blit(pause_hint, (self.width // 2 - pause_hint.get_width() // 2, menu_y + len(self.pause_menu_options) * 28 + 12))

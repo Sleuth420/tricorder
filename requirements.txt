@@ -2,7 +2,7 @@
 
 # Core dependencies
 pygame==2.6.1
-numpy==2.4.2
+numpy==2.5.4
 
 # Raspberry Pi specific libraries
 sense-hat==2.6.0    # For Sense HAT sensor access
@@ -19,12 +19,12 @@ PyGLM==2.8.3
 pygltflib==1.16.5
 
 # Image processing
-Pillow==12.1.1
+Pillow==13.0.0
 
 # Media player (audio + video via VLC in separate window)
 python-vlc>=3.0.0   # Requires VLC application installed on system (Windows / Raspberry Pi)
 mutagen>=1.47.0     # Read MP4 (and MP3) metadata e.g. Comment for display name
 
 # Optional utilities
-matplotlib==3.10.8
-python-dotenv==1.2.1
+matplotlib==3.11.2
+python-dotenv==1.2.4

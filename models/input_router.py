@@ -1319,7 +1319,7 @@ class InputRouter:
                 logger.info("Password entry cancelled")
                 return self.app_state.state_manager.transition_to(STATE_SETTINGS_WIFI_NETWORKS)
             else:
-                logger.warning(f"Unknown action string from PasswordEntryManager: {password_manager_result}")
+                logger.warning("Unknown action from Wi-Fi password entry")
                 return False
         
         return password_manager_result 

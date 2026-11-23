@@ -49,8 +49,7 @@ class PasswordEntryManager:
         """Set the network to connect to."""
         self.target_network = network
         self.current_password = ""  # Reset password for new network
-        ssid = network.get('ssid', 'Unknown') if network else 'None'
-        logger.info(f"Password entry started for network: {ssid}")
+        logger.debug("Password entry started")
         
     def handle_input(self, action_from_app_state):
         """
@@ -62,7 +61,6 @@ class PasswordEntryManager:
         Returns:
             str or bool: Action string or boolean for navigation
         """
-        logger.debug(f"Password entry received action: '{action_from_app_state}'")
         
         if action_from_app_state == app_config.INPUT_ACTION_NEXT:
             # D key cycles to next character in reading order
@@ -85,7 +83,7 @@ class PasswordEntryManager:
             logger.info("Processing BACK action - cancelling password entry")
             return 'CANCEL_PASSWORD_ENTRY'
         else:
-            logger.warning(f"Unknown action received in password entry: '{action_from_app_state}'")
+            logger.warning("Unknown action received in password entry")
             
         return False
         
@@ -110,7 +108,6 @@ class PasswordEntryManager:
         current_row = self.character_selector.cursor_row
         current_col = self.character_selector.cursor_col
         
-        logger.debug(f"Sequential navigation: current position ({current_row}, {current_col}), direction {direction}")
         
         # Convert 2D position to 1D index
         current_index = 0
@@ -124,19 +121,13 @@ class PasswordEntryManager:
         # Move in direction
         new_index = (current_index + direction) % total_chars
         
-        logger.debug(f"Sequential navigation: index {current_index} -> {new_index} (total: {total_chars})")
         
         # Convert back to 2D position
         char_count = 0
         for row_idx, row in enumerate(chars):
             if char_count + len(row) > new_index:
-                old_row, old_col = self.character_selector.cursor_row, self.character_selector.cursor_col
                 self.character_selector.cursor_row = row_idx
                 self.character_selector.cursor_col = new_index - char_count
-                
-                selected_char = self.character_selector.get_selected_character()
-                logger.debug(f"Sequential navigation complete: ({old_row}, {old_col}) -> "
-                           f"({row_idx}, {new_index - char_count}), selected: '{selected_char}'")
                 return True
             char_count += len(row)
         
@@ -147,13 +138,10 @@ class PasswordEntryManager:
         """Handle selection of a character from the grid."""
         selected = self.character_selector.get_selected_character()
         
-        logger.info(f"Character selection: selected '{selected}', current password length: {len(self.current_password)}")
         
         if selected == 'DELETE':
             if self.current_password:
-                removed_char = self.current_password[-1]
                 self.current_password = self.current_password[:-1]
-                logger.info(f"Delete: removed '{removed_char}', new length: {len(self.current_password)}")
             else:
                 logger.debug("Delete pressed but password is empty")
             return True
@@ -164,13 +152,11 @@ class PasswordEntryManager:
             
         elif selected == 'SHOW':
             self.show_password = not self.show_password
-            logger.info(f"Password visibility toggled: {self.show_password}")
             return True
             
         elif selected == 'GO':
             if self.current_password or self._is_open_network():
-                ssid = self.target_network.get('ssid', 'Unknown') if self.target_network else 'Unknown'
-                logger.info(f"Connect requested for '{ssid}' with password length: {len(self.current_password)}")
+                logger.info("Wi-Fi connection requested from password entry")
                 return 'ATTEMPT_CONNECTION'
             else:
                 logger.warning("Cannot connect: no password entered for secured network")
@@ -183,22 +169,20 @@ class PasswordEntryManager:
         elif selected == 'SPACE':
             if len(self.current_password) < 63:
                 self.current_password += ' '
-                logger.info(f"Space added, password length: {len(self.current_password)}")
             else:
                 logger.warning("Cannot add space: password at maximum length")
             return True
             
         elif selected and len(selected) == 1 and len(self.current_password) < 63:  # WiFi password max length
             self.current_password += selected
-            logger.info(f"Character '{selected}' added, password length: {len(self.current_password)}")
             return True
         
         elif selected and len(selected) == 1:
-            logger.warning(f"Cannot add character '{selected}': password at maximum length (63)")
+            logger.warning("Cannot add a character: password at maximum length")
             return False
             
         else:
-            logger.warning(f"Unhandled character selection: '{selected}' (type: {type(selected)})")
+            logger.warning("Unhandled character selection")
             return False
         
     def _is_open_network(self):

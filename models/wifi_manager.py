@@ -1061,18 +1061,21 @@ class WifiManager:
                     self.update_wifi_status()  # Update status after connection
                     return True
                 else:
-                    logger.error(f"Failed to connect to {ssid}: {result.stderr}")
+                    logger.error("Wi-Fi connection failed (exit status %s)", result.returncode)
                     return False
                     
             elif system == "Windows":
                 if password:
                     # For Windows, we need to create a profile first, then connect
+                    from xml.sax.saxutils import escape
+                    ssid_xml = escape(ssid)
+                    password_xml = escape(password)
                     profile_xml = f'''<?xml version="1.0"?>
 <WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">
-    <name>{ssid}</name>
+    <name>{ssid_xml}</name>
     <SSIDConfig>
         <SSID>
-            <name>{ssid}</name>
+            <name>{ssid_xml}</name>
         </SSID>
     </SSIDConfig>
     <connectionType>ESS</connectionType>
@@ -1087,7 +1090,7 @@ class WifiManager:
             <sharedKey>
                 <keyType>passPhrase</keyType>
                 <protected>false</protected>
-                <keyMaterial>{password}</keyMaterial>
+                <keyMaterial>{password_xml}</keyMaterial>
             </sharedKey>
         </security>
     </MSM>
@@ -1131,10 +1134,10 @@ class WifiManager:
                     return True
                     
         except subprocess.CalledProcessError as e:
-            logger.error(f"Failed to connect to {ssid}: {e.stderr}")
+            logger.error("Wi-Fi connection command failed (exit status %s)", e.returncode)
             return False
         except Exception as e:
-            logger.error(f"Unexpected error connecting to {ssid}: {e}")
+            logger.error("Unexpected Wi-Fi connection error (%s)", type(e).__name__)
             return False
             
         logger.warning(f"Network connection not supported on platform: {system}")

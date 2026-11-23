@@ -197,15 +197,7 @@ class CharacterSelector:
             if self.cursor_col < len(self.characters[self.cursor_row]) - 1:
                 self.cursor_col += 1
         
-        new_pos = (self.cursor_row, self.cursor_col)
-        if old_pos != new_pos:
-            selected_char = self.get_selected_character()
-            logger.debug(f"Navigation {direction}: moved from {old_pos} to {new_pos}, "
-                        f"selected character: '{selected_char}'")
-            return True
-        else:
-            logger.debug(f"Navigation {direction}: no movement from {old_pos}")
-            return False
+        return old_pos != (self.cursor_row, self.cursor_col)
 
     def get_selected_character(self):
         """Get the currently selected character."""
@@ -217,7 +209,6 @@ class CharacterSelector:
             if char.isalpha() and self.caps_lock:
                 char = char.upper()
             
-            logger.debug(f"Selected character at ({self.cursor_row}, {self.cursor_col}): '{char}' (caps: {self.caps_lock})")
             return char
         logger.warning(f"Invalid cursor position: ({self.cursor_row}, {self.cursor_col})")
         return None
@@ -246,7 +237,6 @@ class CharacterSelector:
             # Draw footer
             self._draw_footer(screen)
             
-            logger.debug(f"Character selector drawn successfully, cursor at ({self.cursor_row}, {self.cursor_col})")
             
         except Exception as e:
             logger.error(f"Error drawing character selector: {e}", exc_info=True)
@@ -293,10 +283,9 @@ class CharacterSelector:
             count_rect = count_surface.get_rect(centery=field_rect.centery, right=field_rect.right - 5)
             screen.blit(count_surface, count_rect)
             
-            logger.debug(f"Password field drawn with {len(text)} characters, show_password={show_password}")
             
-        except Exception as e:
-            logger.error(f"Error drawing password field: {e}")
+        except Exception:
+            logger.error("Error drawing password field")
 
     def _draw_character_grid(self, screen):
         """Draw the character selection grid with responsive sizing."""
